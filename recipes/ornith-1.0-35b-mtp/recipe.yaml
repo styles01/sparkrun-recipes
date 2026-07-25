@@ -1,5 +1,5 @@
 recipe_version: "2"
-model: azampatti/Ornith-1.0-35B-int4-AutoRound-SAR
+model: deepreinforce-ai/Ornith-1.0-35B-FP8
 runtime: vllm
 container: ghcr.io/spark-arena/dgx-vllm-eugr-nightly:latest
 
