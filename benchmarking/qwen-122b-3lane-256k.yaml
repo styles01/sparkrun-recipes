@@ -1,0 +1,42 @@
+framework: llama-benchy
+metadata:
+  description: Qwen 122B 3-lane 256K benchmark profile for vLLM 26 fp8 KV + DFlash
+  maintainer: styles01
+  notes: |
+    This profile matches the locked Qwen 122B production recipe:
+    max_num_seqs=3, max_model_len=262144, fp8 KV, DFlash n=7.
+    It intentionally caps concurrency at 3. The official Spark Arena v2
+    profile tests c=[1,2,5,10], which is not appropriate for a locked
+    3-lane recipe and fails at c=5 before measuring the recipe.
+args:
+  depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
+  pp: [2048]
+  tg: [128]
+  concurrency: [1, 2, 3]
+  prefix_caching: true
+  runs: 3
+
+# Same depths as spark-arena-v2, capped to concurrency 3.
+# Interleaved to avoid only testing easiest cases first.
+schedule:
+  - { depth: 8192, concurrency: 3 }
+  - { depth: 4096, concurrency: 3 }
+  - { depth: 8192, concurrency: 2 }
+  - { depth: 100000, concurrency: 3 }
+  - { depth: 65535, concurrency: 1 }
+  - { depth: 0, concurrency: 1 }
+  - { depth: 65535, concurrency: 3 }
+  - { depth: 32768, concurrency: 2 }
+  - { depth: 16384, concurrency: 1 }
+  - { depth: 8192, concurrency: 1 }
+  - { depth: 32768, concurrency: 3 }
+  - { depth: 0, concurrency: 3 }
+  - { depth: 16384, concurrency: 3 }
+  - { depth: 32768, concurrency: 1 }
+  - { depth: 0, concurrency: 2 }
+  - { depth: 16384, concurrency: 2 }
+  - { depth: 100000, concurrency: 1 }
+  - { depth: 65535, concurrency: 2 }
+  - { depth: 4096, concurrency: 1 }
+  - { depth: 100000, concurrency: 2 }
+  - { depth: 4096, concurrency: 2 }
