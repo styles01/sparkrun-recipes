@@ -1,5 +1,0 @@
-registries:
-  - name: styles01
-    description: Custom recipes for DGX Spark — Qwen 122B DFlash hybrid
-    recipes: recipes
-    visible: true

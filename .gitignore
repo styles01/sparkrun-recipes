@@ -1,0 +1,36 @@
+# Internal project files
+INDEX.md
+PROJECT-PLAN.md
+SUCCESS-CRITERIA.md
+MODEL-SWITCH-PLAYBOOK.md
+STATE.md
+LOCA-BRIEF.md
+
+# Internal ADRs
+adr/
+
+# Archive and temp files
+archive/
+handoffs/
+plans/
+sources/
+.sparkrun/
+
+# Dashboard (internal tools)
+dashboard/
+sparkdash/
+
+# Internal research notes
+research/__pycache__/
+
+# Scripts that are internal
+scripts/fix_*.py
+scripts/weighted-score*.py
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local configs
+.env
+*.env
