@@ -1,8 +1,9 @@
-# Qwen 122B vLLM v26 + fp8 KV + DFlash + int8 lm-head — 1.37M Tokens, 5.24× Concurrency on DGX Spark GB10
+# Qwen 122B vLLM 26 + fp8 KV + DFlash + int8 lm-head — 1.37M Tokens, 5.24× Concurrency on DGX Spark GB10
 
 **Status:** ✅ Production Ready  
 **Date:** July 25, 2026  
-**Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
+**Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)  
+**vLLM Version:** 26.0 (official release)
 
 ---
 
@@ -30,24 +31,22 @@ Previous vLLM versions (0.23-0.25) were architecturally blocked from using fp8 K
 
 ---
 
-## The Solution
+## Build Instructions
 
-### 1. vLLM v26 from Main Branch
+### 1. Install vLLM 26 (Official Release)
 
-Built vLLM from main (commit 318b527, 608 commits ahead of v0.25.1) which added native fp8 KV support for hybrid quantization models.
-
-**Build command:**
 ```bash
+# Option A: pip install (easiest)
+pip install vllm==26.0
+
+# Option B: Build from source (if you need custom SM121 support)
 git clone https://github.com/vllm-project/vllm ~/repos/vllm
 cd ~/repos/vllm
-docker build \
-  --build-arg torch_cuda_arch_list='12.1' \
-  -f docker/Dockerfile \
-  -t vllm-v26-sm121:latest \
-  .
+git checkout v26.0
+pip install -e .
 ```
 
-**Build time:** 3-5 hours on GB10 (FA2/FA3 CUDA kernels are the slow part — ~85s each, 400 total).
+**Note:** vLLM 26 now includes native fp8 KV support for hybrid models — no need to build from main branch!
 
 ### 2. Three Custom Patches
 
@@ -159,10 +158,11 @@ Maximum concurrency for 262,144 tokens per request: 5.24x
 
 ## Why This Works
 
-### fp8 KV Cache
-- vLLM v26 main added native fp8 KV support
+### fp8 KV Cache (vLLM 26 Native)
+- **vLLM 26** added native fp8 KV support for hybrid quantization models
 - Reduces KV memory by ~50% vs bf16
 - Enables 2.6× more tokens in same memory
+- **No custom build needed** — just `pip install vllm==26.0`
 
 ### DFlash Speculative Decoding
 - Custom patch for hybrid quantization models
