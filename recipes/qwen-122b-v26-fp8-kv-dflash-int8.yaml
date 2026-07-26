@@ -1,7 +1,7 @@
 recipe_version: "2"
 model: bleysg/Qwen3.5-122B-A10B-int4-fp8-hybrid
 runtime: vllm
-container: vllm/vllm-openai:v26.0
+container: vllm-v26-patched:latest
 
 metadata:
   description: "Qwen3.5 122B A10B hybrid INT4+FP8 on vLLM 26 with fp8 KV, DFlash n=7, FlashInfer, and int8 lm-head patch"
@@ -15,7 +15,7 @@ metadata:
     - dflash
     - int8-lmhead
 
-cluster_only: true
+cluster_only: false
 mods: []
 
 defaults:
