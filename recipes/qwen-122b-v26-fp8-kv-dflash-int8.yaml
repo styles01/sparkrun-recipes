@@ -15,6 +15,8 @@ metadata:
     - dflash
     - int8-lmhead
 
+min_nodes: 1
+max_nodes: 1
 cluster_only: false
 mods: []
 
@@ -41,6 +43,15 @@ executor_config:
   entrypoint: ""
   auto_remove: false
   user: root
+
+benchmark:
+  framework: llama-benchy
+  pp: [2048]
+  tg: [128]
+  depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
+  concurrency: [1, 2, 3]
+  prefix_caching: true
+  runs: 3
 
 command: |
   vllm serve {model} \
