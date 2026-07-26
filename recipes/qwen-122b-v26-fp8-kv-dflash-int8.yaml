@@ -40,6 +40,7 @@ env:
 executor_config:
   entrypoint: ""
   auto_remove: false
+  user: root
 
 command: |
   vllm serve {model} \
