@@ -1,0 +1,65 @@
+recipe_version: "2"
+name: qwen-122b-v26-fp8-kv-dflash-int8
+description: Qwen 122B with vLLM 26, fp8 KV cache, DFlash speculative decoding, and int8 lm-head optimization
+
+model:
+  id: bleysg/Qwen3.5-122B-A10B-int4-fp8-hybrid
+  runtime: vllm
+  container: vllm/vllm-openai:v26.0
+
+defaults:
+  gpu_memory_utilization: 0.85
+  max_model_len: 262144
+  kv_cache_dtype: fp8
+  attention_backend: FLASHINFER
+  max_num_seqs: 3
+  max_num_batched_tokens: 8192
+  speculative_method: dflash
+  speculative_model: z-lab/Qwen3.5-122B-A10B-DFlash
+  num_speculative_tokens: 7
+  tool_call_parser: qwen3_xml
+  reasoning_parser: qwen3
+
+command: |
+  python -m vllm.entrypoints.api_server \
+    --model bleysg/Qwen3.5-122B-A10B-int4-fp8-hybrid \
+    --served-model-name qwen-122b \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --trust-remote-code \
+    --max-model-len 262144 \
+    --kv-cache-dtype fp8 \
+    --gpu-memory-utilization 0.85 \
+    --max-num-seqs 3 \
+    --max-num-batched-tokens 8192 \
+    --enable-prefix-caching \
+    --enable-chunked-prefill \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_xml \
+    --reasoning-parser qwen3 \
+    --attention-backend FLASHINFER \
+    --speculative-config '{"method":"dflash","model":"z-lab/Qwen3.5-122B-A10B-DFlash","num_speculative_tokens":7}'
+
+metadata:
+  author: styles01
+  created: "2026-07-25"
+  benchmark_id: bench_0c19a5931c1c
+  tags:
+    - qwen
+    - qwen3.5
+    - 122b
+    - fp8
+    - dflash
+    - int8-lmhead
+    - high-concurrency
+    - vllm-26
+
+notes: |
+  BREAKTHROUGH CONFIGURATION:
+  - First working fp8 KV + DFlash on GB10
+  - 2.6x more KV tokens vs bf16 (1.37M vs 549K)
+  - int8 lm-head frees 1.4 GB and recovers decode speed
+  - Prefill: 957 tok/s (+32% vs bf16)
+  - Decode: 45.98 tok/s (recovered from 43.6)
+  - 5.24x concurrency at 256K context
+  - ~16 GB free RAM for co-location
