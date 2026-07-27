@@ -1,12 +1,12 @@
 recipe_version: "2"
 model: Qwen/Qwen3.6-27B-FP8
 runtime: vllm
-container: ghcr.io/spark-arena/dgx-vllm-eugr-nightly:latest
+container: ghcr.io/styles01/vllm-v26-patched:latest
 min_nodes: 1
 max_nodes: 1
 
 metadata:
-  description: "Qwen3.6 27B FP8 with MTP k=2, fp8 KV, 5 lanes, 256K context"
+  description: "Qwen3.6 27B FP8 on vLLM 26 with fp8 KV, MTP k=2, async scheduling, 5 lanes, 256K context"
   maintainer: styles01
   tags:
     - qwen
@@ -14,8 +14,9 @@ metadata:
     - 27b
     - fp8
     - mtp
-    - vllm
-    - flashinfer
+    - vllm-26
+    - fp8-kv
+    - async-scheduling
 
 defaults:
   port: 8000
@@ -33,6 +34,7 @@ defaults:
   reasoning_parser: qwen3
   served_model_name: Qwen/Qwen3.6-27B-FP8
   speculative_config: '{"method":"mtp","num_speculative_tokens":2}'
+  async_scheduling: true
 
 env:
   VLLM_MARLIN_USE_ATOMIC_ADD: "1"
@@ -42,7 +44,7 @@ benchmark:
   pp: [2048]
   tg: [128]
   depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
-  concurrency: [1, 2, 5]
+  concurrency: [1, 2, 3]
   prefix_caching: true
   runs: 3
 
@@ -62,6 +64,7 @@ command: |
     --kv-cache-dtype {kv_cache_dtype} \
     --load-format {load_format} \
     --attention-backend {attention_backend} \
+    --async-scheduling \
     --speculative-config '{speculative_config}' \
     --enable-prefix-caching \
     --enable-chunked-prefill \
