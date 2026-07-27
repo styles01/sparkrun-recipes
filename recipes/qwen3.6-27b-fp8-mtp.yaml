@@ -33,7 +33,7 @@ defaults:
   tool_call_parser: qwen3_coder
   reasoning_parser: qwen3
   served_model_name: Qwen/Qwen3.6-27B-FP8
-  speculative_config: '{"method":"mtp","num_speculative_tokens":4}'
+  speculative_config: '{"method":"mtp","num_speculative_tokens":7}'
   async_scheduling: true
 
 env:
