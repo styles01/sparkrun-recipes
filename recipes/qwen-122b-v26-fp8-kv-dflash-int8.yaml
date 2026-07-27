@@ -33,7 +33,7 @@ defaults:
   attention_backend: FLASHINFER
   tool_call_parser: qwen3_xml
   reasoning_parser: qwen3
-  served_model_name: qwen-122b
+  served_model_name: bleysg/Qwen3.5-122B-A10B-int4-fp8-hybrid
 
 env:
   HF_HOME: /root/.cache/huggingface
