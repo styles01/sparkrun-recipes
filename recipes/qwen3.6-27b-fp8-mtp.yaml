@@ -29,7 +29,7 @@ defaults:
   max_num_batched_tokens: 32768
   kv_cache_dtype: fp8
   attention_backend: flashinfer
-  load_format: instanttensor
+  load_format: safetensors
   tool_call_parser: qwen3_coder
   reasoning_parser: qwen3
   served_model_name: Qwen/Qwen3.6-27B-FP8
