@@ -6,7 +6,7 @@ min_nodes: 1
 max_nodes: 1
 
 metadata:
-  description: "Qwen3.6 27B FP8 on vLLM 26 with fp8 KV, MTP k=2, async scheduling, 5 lanes, 256K context"
+  description: "Qwen3.6 27B FP8 — MTP k=7 (82.9% accept), fp8 KV, async scheduling, 5 lanes, 256K context, GMU 0.70"
   maintainer: styles01
   tags:
     - qwen
