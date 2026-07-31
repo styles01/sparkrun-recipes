@@ -1,50 +1,32 @@
-# Recipe: DeepSeek-V4-Flash
+# Recipe: DeepSeek-V4-Flash (0731)
 
-**Status:** ❌ Tool calling MISSING from serve script. Needs patch.
+**Status:** ✅ Tool calling enabled, cgroup contained, MTP k=2
 **Served name:** `deepseek-v4-flash`
 **Stack:** vLLM-Moet venv (NOT Docker) — `~/venvs/vllm-moet/`
-**Tool parser needed:** `deepseek_v4` (confirmed available in venv)
-**Reasoning parser needed:** `deepseek_v4` (confirmed available in venv)
+**Tool parser:** `deepseek_v4`
+**Reasoning parser:** `deepseek_v4`
+**Updated:** July 31, 2026 — new weight update `DeepSeek-V4-Flash-0731`
 
 ## Model Location on Spark
 
 ```
-~/models/hf/DeepSeek-V4-Flash/                    (~222GB, 46 safetensors)
-~/models/hf/DeepSeek-V4-Flash/moe_w2_planes/      (~75GB, 216 prepacked planes)
+~/models/hf/DeepSeek-V4-Flash-0731/                 (~167GB, 48 safetensors, FP8)
+~/models/hf/DeepSeek-V4-Flash-0731/moe_w2_planes/   (~75GB, prepacked planes, built on first load)
 ```
+
+Old `DeepSeek-V4-Flash` (June 22 weights) deleted. Replaced by 0731 update.
 
 ## Current Serve Script
 
 `~/vllm-moet-spark/spark/serve-ds4-flash-1node.sh`
 
-### Current ARGS (the problem)
+### ARGS
 
 ```bash
 ARGS=(
   --served-model-name deepseek-v4-flash --trust-remote-code
-  --kv-cache-dtype fp8 --block-size 256 --max-model-len 8192
-  --gpu-memory-utilization 0.78
-  --max-num-batched-tokens 1024 --max-num-seqs 4
-  --tokenizer-mode deepseek_v4 --no-scheduler-reserve-full-isl
-  --speculative-config '{"method": "deepseek_mtp", "num_speculative_tokens": 2}'
-  --port 8000
-)
-```
-
-**MISSING:**
-- `--enable-auto-tool-choice`
-- `--tool-call-parser deepseek_v4`
-- `--reasoning-parser deepseek_v4`
-
-## Proposed Patch
-
-Add three lines to the ARGS array in `serve-ds4-flash-1node.sh`:
-
-```bash
-ARGS=(
-  --served-model-name deepseek-v4-flash --trust-remote-code
-  --enable-auto-tool-choice --tool-call-parser deepseek_v4    # ← ADD
-  --reasoning-parser deepseek_v4                                # ← ADD
+  --enable-auto-tool-choice --tool-call-parser deepseek_v4
+  --reasoning-parser deepseek_v4
   --kv-cache-dtype fp8 --block-size 256 --max-model-len 8192
   --gpu-memory-utilization 0.78
   --max-num-batched-tokens 1024 --max-num-seqs 4
@@ -80,15 +62,13 @@ ssh jaita@larryspark.local '/usr/bin/bash ~/vllm-moet-spark/spark/serve-ds4-flas
   > /tmp/ds4-256k.log 2>&1 &'
 ```
 
-Note: `--max-model-len 262144 --max-num-seqs 1` are passed as extra args AFTER the script's defaults, and vLLM takes the last value. This gives 256K context with 1 concurrent.
-
 ## Stop Command
 
 ```bash
 ssh jaita@larryspark.local 'ps aux | grep "vllm serve" | grep -v grep | awk "{print \$2}" | xargs kill -9'
 ```
 
-## Performance (Oracle's benchmarks, July 5 2026)
+## Performance (July 11, 2026 benchmarks — pre-0731 weights)
 
 | Parameter | Value |
 |---|---|
@@ -100,6 +80,8 @@ ssh jaita@larryspark.local 'ps aux | grep "vllm serve" | grep -v grep | awk "{pr
 | Model memory | ~98GB resident |
 | Free RAM | ~2GB (tight) |
 | Startup | ~5 min (JIT compilation on first boot) |
+
+**0731 weights:** Benchmarks pending. Will update after first run.
 
 ## Trade-Off
 
