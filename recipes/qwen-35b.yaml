@@ -1,0 +1,104 @@
+recipe_version: "2"
+name: qwen-35b-nvfp4
+description: "Qwen 3.6 35B A3B NVFP4 — MTP k=3, fp8 KV, FlashInfer, marlin MoE, 4 lanes, 256K context"
+model: nvidia/Qwen3.6-35B-A3B-NVFP4
+runtime: vllm
+container: vllm/vllm-openai:v0.24.0
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-07-11"
+  updated: "2026-07-11"
+  tags:
+    - qwen
+    - qwen3.6
+    - 35b
+    - nvfp4
+    - mtp
+    - fp8-kv
+    - flashinfer
+    - marlin
+  runbook: runbooks/qwen-35b.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.65
+  max_model_len: 262144
+  max_num_seqs: 4
+  max_num_batched_tokens: 32768
+  kv_cache_dtype: fp8
+  attention_backend: flashinfer
+  moe_backend: marlin
+  load_format: fastsafetensors
+  served_model_name: qwen35b
+  tool_call_parser: qwen3_xml
+  reasoning_parser: qwen3
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  async_scheduling: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3,"moe_backend":"triton"}'
+
+env:
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+
+patches:
+  - patch_mamba_drop_eagle.sh
+
+variants:
+  recipe_a:
+    description: "Community-validated — MTP k=3, 4 seqs, GMU 0.65"
+    gpu_memory_utilization: 0.65
+    max_num_seqs: 4
+  recipe_c_headless:
+    description: "Headless maxout — GMU 0.85, 32 seqs, no async scheduling"
+    gpu_memory_utilization: 0.85
+    max_num_seqs: 32
+    max_num_batched_tokens: 16384
+    async_scheduling: false
+    env:
+      VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS: "1"
+
+benchmark:
+  framework: community
+  results:
+    single_user_tok_s: 109.3
+    c2_aggregate: 151.6
+    c5_aggregate: 175.5
+    c10_aggregate: 165.0
+    prefill_2k_c1: "5529 tok/s, TTFT 373ms"
+    mtp_acceptance: "71%"
+  notes: "104 community benchmark runs. PR #48375 patch required for MTP + prefix caching."
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --enable-chunked-prefill \
+    --async-scheduling \
+    --enable-prefix-caching \
+    --attention-backend {attention_backend} \
+    --moe-backend {moe_backend} \
+    --load-format {load_format} \
+    --reasoning-parser {reasoning_parser} \
+    --tool-call-parser {tool_call_parser} \
+    --enable-auto-tool-choice \
+    --speculative-config '{speculative_config}' \
+    -tp {tensor_parallel}

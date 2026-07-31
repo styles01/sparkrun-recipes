@@ -6,6 +6,8 @@
 **Tool calling:** ✅ `--enable-auto-tool-choice --tool-call-parser qwen3_xml`
 **Reasoning parser:** `qwen3`
 
+> **Recipe contract:** [`recipes/qwen-35b.yaml`](../recipes/qwen-35b.yaml)
+
 ## Model Location on Spark
 
 ```

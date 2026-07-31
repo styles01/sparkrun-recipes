@@ -217,7 +217,9 @@ sparkrun stop <workload-id>
 
 ## Notes
 
-- All recipes should be in `recipes/` directory
+- All recipes should be in `recipes/` directory (YAML contracts)
+- All runbooks should be in `runbooks/` directory (detailed markdown guides)
+- Runbooks link to recipes and vice versa
 - Use `@registry/name` format for registered recipes
 - Use `./path/to/recipe.yaml` for local recipes
 - Always authenticate first: `sparkrun arena login`

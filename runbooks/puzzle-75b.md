@@ -6,6 +6,8 @@
 **Source:** https://github.com/joeynyc/Nemotron-Puzzle-75B-NVFP4-1x-DGX-Spark
 **Community validation:** 3 independent users on DGX Spark (joeynyc, VramJon, brian322)
 
+> **Recipe contract:** [`recipes/puzzle-75b.yaml`](../recipes/puzzle-75b.yaml)
+
 ## Why This Recipe Works (and our previous attempts didn't)
 
 Our previous OOM crashes used `vllm/vllm-openai:v0.24.0` / `v0.25.0` which hit the FlashInfer PR #3738 regression. The NGC image `nvcr.io/nvidia/vllm:26.06-py3` (vLLM 0.22.1) auto-selects FLASHINFER_CUTLASS MoE backend instead of TRTLLM, avoiding the 20GB autotune workspace that caused our OOM. Two independent users (VramJon, joeynyc) confirm GMU 0.88 + 262K + MTP k=3 works with zero OOM.

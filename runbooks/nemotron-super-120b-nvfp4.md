@@ -6,6 +6,8 @@
 **Claimed speed:** 30+ tok/s (21.66 at single-stream baseline)
 **Date observed:** July 14, 2026
 
+> **Recipe contract:** [`recipes/nemotron-super-120b-nvfp4.yaml`](../recipes/nemotron-super-120b-nvfp4.yaml)
+
 ## Recipe (from Spark Arena)
 
 ```yaml

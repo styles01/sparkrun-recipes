@@ -1,0 +1,73 @@
+recipe_version: "2"
+name: medgemma-27b-medicomp
+description: "MedGemma 27B FP8 — Medicomp VPN deployment (dgxspark-a), 75 seqs, GMU 0.83, 3.8K context, inference only"
+model: SaitBurak/medgemma-27b-text-it-FP8-dynamic
+runtime: vllm
+container: vllm/vllm-openai:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-07-11"
+  updated: "2026-07-11"
+  tags:
+    - medgemma
+    - 27b
+    - fp8
+    - medicomp
+    - vpn
+    - inference-only
+  runbook: runbooks/medgemma-27b-medicomp.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+target_host: "192.168.11.210"
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.83
+  max_model_len: 3800
+  max_num_seqs: 75
+  kv_cache_dtype: fp8
+  attention_backend: flashinfer
+  served_model_name: medgemma-27b
+  enable_prefix_caching: true
+  trust_remote_code: true
+
+env:
+  HF_HOME: /root/.cache/huggingface
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+
+volumes:
+  - ~/models/medgemma-27b-fp8:/model:ro
+  - ~/.cache/huggingface:/root/.cache/huggingface
+
+benchmark:
+  framework: ai-scribe
+  results:
+    model_load: "~27 GiB, ~3 min"
+    kv_cache_tokens: "~575K"
+    max_concurrency_at_3_8k: "151x"
+    free_ram: "~21 GB"
+    aggregate_tok_s: "~336+"
+    per_request_tok_s: "~7 (bandwidth-bound)"
+  notes: "No SparkDash — inference only on Medicomp VPN."
+
+command: |
+  vllm serve /model \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --attention-backend {attention_backend} \
+    --enable-prefix-caching

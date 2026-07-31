@@ -5,6 +5,8 @@
 **Served name:** `medgemma-27b`
 **No SparkDash — inference only**
 
+> **Recipe contract:** [`recipes/medgemma-27b-medicomp.yaml`](../recipes/medgemma-27b-medicomp.yaml)
+
 ## Config
 
 | Parameter | Value |

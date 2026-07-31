@@ -1,0 +1,86 @@
+recipe_version: "2"
+name: nemotron-super-120b-nvfp4
+description: "Nemotron 3 Super 120B A12B NVFP4 — MTP k=1, fp8 KV, marlin MoE, 10 seqs, 128K context, from Spark Arena"
+model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+runtime: vllm
+container: vllm/vllm-openai:v0.20.0-aarch64-cu130-ubuntu2404
+maintainer: seth-hobson
+
+metadata:
+  author: seth-hobson
+  source: "https://spark-arena.com/benchmark/3f73ed2d-73b2-446a-bb5f-d64d7da041eb"
+  created: "2026-07-14"
+  updated: "2026-07-14"
+  tags:
+    - nemotron
+    - 120b
+    - nvfp4
+    - mtp
+    - fp8-kv
+    - marlin
+    - spark-arena
+  runbook: runbooks/nemotron-super-120b-nvfp4.md
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.85
+  max_model_len: 131072
+  max_num_seqs: 10
+  max_num_batched_tokens: 32768
+  kv_cache_dtype: fp8
+  mamba_ssm_cache_dtype: float32
+  quantization: fp4
+  moe_backend: marlin
+  served_model_name: "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4 nemotron-3-super"
+  tool_call_parser: qwen3_coder
+  reasoning_parser: nemotron_v3
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  async_scheduling: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
+  speculative_config: '{"method":"mtp","num_speculative_tokens":1,"moe_backend":"triton"}'
+
+env:
+  OMP_NUM_THREADS: "4"
+  CUDA_MANAGED_FORCE_DEVICE_ALLOC: "1"
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+  VLLM_USE_FLASHINFER_MOE_FP4: "0"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  VLLM_NVFP4_GEMM_BACKEND: marlin
+
+benchmark:
+  framework: spark-arena
+  claimed_speed: "30+ tok/s (21.66 single-stream baseline)"
+  notes: "Community recipe from Spark Arena. Our tweaks to test: MTP k=3, GMU 0.83, 150K context, 3 lanes, v0.24.0 container."
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --tensor-parallel-size {tensor_parallel} \
+    --port {port} --host {host} \
+    --max-model-len {max_model_len} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --quantization {quantization} \
+    --moe-backend {moe_backend} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --mamba-ssm-cache-dtype {mamba_ssm_cache_dtype} \
+    --async-scheduling \
+    --enable-chunked-prefill \
+    --enable-prefix-caching \
+    --reasoning-parser {reasoning_parser} \
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --speculative-config '{speculative_config}' \
+    --trust-remote-code

@@ -1,13 +1,15 @@
 recipe_version: "2"
+name: qwen3.6-27b-fp8-mtp
+description: "Qwen3.6 27B FP8 — MTP k=7 (48.7% accept), fp8 KV, async scheduling, 5 lanes, 256K context, GMU 0.79"
 model: Qwen/Qwen3.6-27B-FP8
 runtime: vllm
 container: ghcr.io/styles01/vllm-v26-patched:latest
-min_nodes: 1
-max_nodes: 1
+maintainer: styles01
 
 metadata:
-  description: "Qwen3.6 27B FP8 on eugr — MTP k=7 (48.7% accept), fp8 KV, async scheduling, 5 lanes, 256K context, GMU 0.70"
-  maintainer: styles01
+  author: styles01
+  created: "2026-07-27"
+  updated: "2026-07-27"
   tags:
     - qwen
     - qwen3.6
@@ -17,6 +19,13 @@ metadata:
     - vllm-26
     - fp8-kv
     - async-scheduling
+  runbook: runbooks/qwen-27b.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
 
 defaults:
   port: 8000
@@ -35,6 +44,10 @@ defaults:
   served_model_name: Qwen/Qwen3.6-27B-FP8
   speculative_config: '{"method":"mtp","num_speculative_tokens":7}'
   async_scheduling: true
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
 
 env:
   VLLM_MARLIN_USE_ATOMIC_ADD: "1"
@@ -64,8 +77,8 @@ command: |
     --load-format {load_format} \
     --attention-backend {attention_backend} \
     --async-scheduling \
-    --speculative-config '{speculative_config}' \
     --enable-prefix-caching \
     --enable-chunked-prefill \
+    --speculative-config '{speculative_config}' \
     -tp {tensor_parallel} \
     -pp {pipeline_parallel}

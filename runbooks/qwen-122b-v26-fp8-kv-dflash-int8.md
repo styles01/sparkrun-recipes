@@ -5,6 +5,8 @@
 **Author:** Oracle (James A / DGX Spark team)  
 **Unique:** This configuration is **not publicly available** — built from unreleased vLLM main branch with custom patches.
 
+> **Recipe contract:** [`recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml`](../recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml)
+
 ---
 
 ## What This Is

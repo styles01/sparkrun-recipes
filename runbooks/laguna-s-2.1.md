@@ -7,6 +7,8 @@
 **Drafter:** `poolside/Laguna-S-2.1-DFlash` (2.1GB, EAGLE-style, shares embeddings + lm_head with target)
 **License:** OpenMDW-1.1 (commercial use OK)
 
+> **Recipe contract:** [`recipes/laguna-s-2.1.yaml`](../recipes/laguna-s-2.1.yaml)
+
 ## Model Specs
 
 | Spec | Value |

@@ -7,6 +7,8 @@
 **Reasoning parser:** `deepseek_v4`
 **Updated:** July 31, 2026 — new weight update `DeepSeek-V4-Flash-0731`
 
+> **Recipe contract:** [`recipes/deepseek-v4-flash-0731.yaml`](../recipes/deepseek-v4-flash-0731.yaml)
+
 ## Model Location on Spark
 
 ```

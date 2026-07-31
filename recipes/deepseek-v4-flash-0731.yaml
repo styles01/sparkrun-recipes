@@ -1,0 +1,88 @@
+recipe_version: "2"
+name: deepseek-v4-flash-0731
+description: "DeepSeek-V4-Flash (0731 weights) — MTP k=2, fp8 KV, 256K context, single-user max context on DGX Spark"
+model: DeepSeek-V4-Flash-0731
+runtime: vllm
+container: vllm-moet-venv
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-07-31"
+  updated: "2026-07-31"
+  tags:
+    - deepseek
+    - v4-flash
+    - 0731
+    - mtp
+    - fp8-kv
+    - moet-venv
+    - single-user
+  runbook: runbooks/deepseek-v4-flash.md
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.78
+  max_model_len: 262144
+  max_num_seqs: 4
+  max_num_batched_tokens: 1024
+  kv_cache_dtype: fp8
+  block_size: 256
+  served_model_name: deepseek-v4-flash
+  tool_call_parser: deepseek_v4
+  reasoning_parser: deepseek_v4
+  tokenizer_mode: deepseek_v4
+  no_scheduler_reserve_full_isl: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
+  speculative_config: '{"method": "deepseek_mtp", "num_speculative_tokens": 2}'
+
+env:
+  VLLM_MOET_VENV: ~/venvs/vllm-moet
+
+variants:
+  max_context:
+    description: "256K context, 1 concurrent — maximum context window"
+    max_model_len: 262144
+    max_num_seqs: 1
+    gpu_memory_utilization: 0.78
+  dual_concurrent:
+    description: "128K per stream, 2 concurrent — enables subagents"
+    max_model_len: 131072
+    max_num_seqs: 2
+    gpu_memory_utilization: 0.78
+
+benchmark:
+  framework: llama-benchy
+  context: 256K
+  concurrency: 1
+  mtp_acceptance: "~60%"
+  decode_speed: "~21 tok/s"
+  prefill_speed: "~10K tok/s at 200K prompt"
+  notes: "Pre-0731 weights benchmarked July 11. 0731 benchmarks pending."
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --trust-remote-code \
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser {reasoning_parser} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --block-size {block_size} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --max-num-seqs {max_num_seqs} \
+    --tokenizer-mode {tokenizer_mode} \
+    --no-scheduler-reserve-full-isl \
+    --speculative-config '{speculative_config}' \
+    --host {host} \
+    --port {port}

@@ -7,6 +7,8 @@
 **Source:** AI-Scribe corpus formatter (docs/CORPUS.md, ADRs 0004/0005/0008)
 **Tested:** 4,961/4,963 MTSamples notes completed on larryspark
 
+> **Recipe contract:** [`recipes/medgemma-27b.yaml`](../recipes/medgemma-27b.yaml)
+
 ## Container
 
 | Key | Value |

@@ -6,6 +6,8 @@
 **Tool calling:** ✅ `--enable-auto-tool-choice --tool-call-parser qwen3_xml`
 **Reasoning parser:** `qwen3`
 
+> **Recipe contract:** [`recipes/qwen-122b.yaml`](../recipes/qwen-122b.yaml) (aeon v0.23) · [`recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml`](../recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) (v26 breakthrough)
+
 ## What Changed (July 24, 2026)
 
 Applied lessons from Laguna S 2.1 deployment and community benchmarks.

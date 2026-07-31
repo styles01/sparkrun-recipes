@@ -1,0 +1,73 @@
+recipe_version: "2"
+name: medgemma-27b-fp8
+description: "MedGemma 27B FP8 — AI-Scribe corpus formatting, 256 seqs, GMU 0.88, 8K context, flashinfer"
+model: SaitBurak/medgemma-27b-text-it-FP8-dynamic
+runtime: vllm
+container: vllm-node:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-07-11"
+  updated: "2026-07-11"
+  tags:
+    - medgemma
+    - 27b
+    - fp8
+    - ai-scribe
+    - corpus-formatting
+    - high-concurrency
+  runbook: runbooks/medgemma-27b.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.88
+  max_model_len: 8192
+  max_num_seqs: 256
+  kv_cache_dtype: fp8
+  attention_backend: flashinfer
+  served_model_name: medgemma
+  enable_prefix_caching: true
+  trust_remote_code: true
+
+env:
+  HF_HOME: /root/.cache/huggingface
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+
+volumes:
+  - ~/models/medgemma-27b-fp8:/model:ro
+  - ~/.cache/huggingface:/root/.cache/huggingface
+
+benchmark:
+  framework: ai-scribe
+  results:
+    model_load: "26.79 GiB, ~177s"
+    kv_cache_tokens: 618265
+    kv_cache_gib: 76.93
+    max_concurrency_at_8k: "75.47x"
+    aggregate_tok_s: "~336 (32 seqs)"
+    per_request_tok_s: "~7 (bandwidth-bound)"
+    gpu_util: "96% at 37W"
+    prefix_cache_hit: "88%"
+  notes: "4,961/4,963 MTSamples notes completed. SparkDash co-location supported."
+
+command: |
+  vllm serve /model \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --attention-backend {attention_backend} \
+    --enable-prefix-caching
