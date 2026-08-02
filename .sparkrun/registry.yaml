@@ -1,0 +1,8 @@
+registries:
+  - name: styles01
+    description: |
+      styles01's sparkrun recipes — custom runtimes and model configs for
+      DGX Spark. Includes the ds4-cuda runtime plugin (native C/CUDA engine,
+      Bleysg's fork of antirez/ds4) and recipes for DeepSeek-V4-Flash,
+      Qwen, MedGemma, Laguna, Nemotron, and Puzzle models.
+    recipes: recipes

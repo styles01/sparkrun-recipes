@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sparkrun-ds4"
+version = "0.1.0"
+description = "sparkrun custom runtime plugin for the ds4 CUDA engine (Bleysg's fork of antirez/ds4)"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "styles01"}]
+keywords = ["sparkrun", "ds4", "cuda", "llm", "inference", "runtime", "plugin"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    # Runtime plugins are loaded by sparkrun at runtime via entry points.
+    # We declare sparkrun as a dependency so the package is importable in
+    # isolated environments, but sparkrun's own pyproject lists scitrera-app-framework.
+    "sparkrun",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-mock>=3.10"]
+
+[project.entry-points."sparkrun.runtimes"]
+ds4-cuda = "sparkrun_ds4:Ds4CudaRuntime"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sparkrun_ds4 = ["py.typed"]

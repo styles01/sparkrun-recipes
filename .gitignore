@@ -14,7 +14,7 @@ archive/
 handoffs/
 plans/
 sources/
-.sparkrun/
+# .sparkrun/ is now tracked (registry manifest)
 
 # Dashboard (internal tools)
 dashboard/

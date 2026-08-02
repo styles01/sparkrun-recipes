@@ -1,0 +1,67 @@
+recipe_version: "2"
+name: deepseek-v4-flash-0731-ds4
+description: "DeepSeek-V4-Flash (0731 weights) on the ds4 CUDA engine — IQ2XXS quant, DSpark MTP k=2, 128K context, native (no Docker)"
+model: ~/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf
+runtime: ds4-cuda
+executor: local
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-02"
+  updated: "2026-08-02"
+  tags:
+    - deepseek
+    - v4-flash
+    - 0731
+    - ds4
+    - cuda
+    - iq2xxs
+    - dspark
+    - mtp
+    - native
+    - gguf
+  category: agent
+  model_params: 280B
+  model_dtype: iq2xxs
+  quantization: iq2xxs
+  kv_dtype: q2k
+  runbook: runbooks/deepseek-v4-flash-ds4.md
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  # ds4-native keys
+  context: 131072
+  port: 8000
+  host: 0.0.0.0
+  threads: 8
+  n_gpu_layers: -1
+  served_model_name: deepseek-v4-flash
+
+env:
+  # Batch/memory planning
+  DS4_BATCH_FIT_HEADROOM_MB: "8192"
+  DS4_SERVER_SERIAL_MAX_TOKENS: "131072"
+  DS4_SERVER_COALESCE_MAX: "2"
+  # DSpark speculative decoding drafter
+  DS4_CONT_DSPARK: "1"
+  DS4_CONT_MTP_MODE: "2"
+  DS4_DSPARK_MODEL: "~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf"
+
+benchmark:
+  framework: llama-benchy
+  context: 128K
+  concurrency: 1
+  mtp_acceptance: "~73% (DSpark MTP k=2)"
+  notes: "ds4 native engine. DSpark drafter enables speculative decoding with 2 draft tokens. Prompts /metrics at port 8000."
+
+post_exec:
+  - curl -s localhost:8000/v1/models | head -20
+
+post_commands:
+  - echo "DS4 engine ready at {head_host}:{port} — OpenAI API at /v1/chat/completions, metrics at /metrics"
