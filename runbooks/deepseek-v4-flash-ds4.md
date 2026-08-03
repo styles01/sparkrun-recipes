@@ -22,8 +22,8 @@ DeepSeek-V4-Flash 0731 (284B params, 12B active MoE) served on a single DGX Spar
 ## Model Files on Spark
 
 ```
-/home/jaita/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf  (~87 GB, main model)
-/home/jaita/gguf/DSpark-drafter-Q2K-Q8-0731.gguf                                             (~7 GB, DSpark drafter)
+~/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf  (~87 GB, main model)
+~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf                                             (~7 GB, DSpark drafter)
 ```
 
 ## Installation
@@ -44,7 +44,7 @@ This installs:
 
 | Flag | Value | Description |
 |------|-------|-------------|
-| `-m` | `/home/jaita/gguf/DeepSeek-V4-Flash-...0731.gguf` | Model path |
+| `-m` | `~/gguf/DeepSeek-V4-Flash-...0731.gguf` | Model path |
 | `-c` | `131072` | Context window (131K) |
 | `--port` | `8000` | HTTP API port |
 | `--host` | `0.0.0.0` | Bind address |
@@ -58,7 +58,7 @@ This installs:
 | `DS4_SERVER_COALESCE_MAX` | `2` | Max concurrent lanes (coalesce limit) |
 | `DS4_CONT_DSPARK` | `1` | Enable DSpark drafter |
 | `DS4_CONT_MTP_MODE` | `2` | MTP speculative decode mode |
-| `DS4_DSPARK_MODEL` | `/home/jaita/gguf/DSpark-drafter-Q2K-Q8-0731.gguf` | DSpark drafter model path |
+| `DS4_DSPARK_MODEL` | `~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf` | DSpark drafter model path |
 
 ### Memory Budget
 
@@ -140,7 +140,7 @@ features:
   executor.local: true
 plugins:
   paths:
-    - /path/to/sparkrun-recipes/runtime/sparkrun-ds4/src
+    - ~/sparkrun-recipes/runtime/sparkrun-ds4/src
 ```
 
 A PR to add `ds4-cuda` as a built-in runtime in sparkrun is open at:
