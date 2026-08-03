@@ -20,8 +20,8 @@ The existing [vLLM recipe](deepseek-v4-flash.md) uses a Moet venv on top of vLLM
 ## Model Files on Spark
 
 ```
-~/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf  (~87 GB, main model)
-~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf                                             (~7 GB, MTP drafter)
+/home/jaita/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf  (~87 GB, main model)
+/home/jaita/gguf/DSpark-drafter-Q2K-Q8-0731.gguf                                             (~7 GB, MTP drafter)
 ```
 
 ## ds4 Binary
@@ -39,12 +39,10 @@ Install: `curl -sSL https://raw.githubusercontent.com/Entrpi/ds4-on-spark/main/i
 
 | Flag | Value | Description |
 |------|-------|-------------|
-| `-m` | `~/gguf/DeepSeek-V4-Flash-...0731.gguf` | Model path |
+| `-m` | `/home/jaita/gguf/DeepSeek-V4-Flash-...0731.gguf` | Model path |
 | `-c` | `131072` | Context window |
 | `--port` | `8000` | HTTP API port |
 | `--host` | `0.0.0.0` | Bind address |
-| `-ngl` | `-1` | All layers on GPU |
-| `-t` | `8` | CPU threads |
 
 ### Environment Variables (DS4_*)
 
@@ -55,7 +53,7 @@ Install: `curl -sSL https://raw.githubusercontent.com/Entrpi/ds4-on-spark/main/i
 | `DS4_SERVER_COALESCE_MAX` | `2` | Decode coalescing steps |
 | `DS4_CONT_DSPARK` | `1` | Enable DSpark drafter |
 | `DS4_CONT_MTP_MODE` | `2` | MTP speculative decode mode |
-| `DS4_DSPARK_MODEL` | `~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf` | Drafter model path |
+| `DS4_DSPARK_MODEL` | `/home/jaita/gguf/DSpark-drafter-Q2K-Q8-0731.gguf` | Drafter model path |
 
 ## API Endpoints
 
