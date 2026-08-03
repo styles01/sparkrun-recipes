@@ -53,10 +53,9 @@ env:
 
 benchmark:
   framework: llama-benchy
-  context: 128K
-  concurrency: 1
-  mtp_acceptance: "~73% (DSpark MTP k=2)"
-  notes: "ds4 native engine. DSpark drafter enables speculative decoding with 2 draft tokens. Prompts /metrics at port 8000."
+  pp: [2048, 4096]
+  depth: [0, 4096]
+  concurrency: [1, 2]
 
 post_exec:
   - curl -s localhost:8000/v1/models | head -20
