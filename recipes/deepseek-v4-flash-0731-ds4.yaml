@@ -40,8 +40,6 @@ defaults:
   context: 131072
   port: 8000
   host: 0.0.0.0
-  threads: 8
-  n_gpu_layers: -1
   served_model_name: deepseek-v4-flash
 
 env:
