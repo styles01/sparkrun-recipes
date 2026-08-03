@@ -101,6 +101,7 @@ ds4-serve -c 131072 --host 0.0.0.0 --port 8000
 | `DS4_CONT_DSPARK` | `1` | Enable DSpark drafter |
 | `DS4_CONT_MTP_MODE` | `2` | MTP speculative decode mode |
 | `DS4_DSPARK_MODEL` | `~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf` | DSpark drafter model path |
+| `DS4_DSPARK_MAX_NLIVE` | `2` | Max concurrent DSpark streams (both lanes get speculation) |
 
 ### Memory Budget
 
@@ -127,8 +128,8 @@ ds4-serve -c 131072 --host 0.0.0.0 --port 8000
 
 ## DSpark Speculative Decoding
 
-- DSpark only accelerates at 1 concurrent request (`DS4_DSPARK_MAX_NLIVE=1` default)
-- At 2+ concurrent, falls back to plain batched decode
+- DSpark accelerates both lanes (`DS4_DSPARK_MAX_NLIVE=2`)
+- At NLIVE=2: ~66% acceptance at c1, ~38 tok/s peak aggregate at c2 (vs 33 at NLIVE=1)
 - Quench controller auto-disables speculation when acceptance can't pay verify cost
 - Acceptance: ~75% average at k=2
 
