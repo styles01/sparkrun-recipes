@@ -305,11 +305,6 @@ class Ds4CudaRuntime(RuntimePlugin):
             )
         )
 
-        # Served model name → --served-model-name (OpenAI API model field).
-        served_name = config.get("served_model_name")
-        if served_name and "served_model_name" not in skip_keys:
-            parts.extend(["--served-model-name", str(served_name)])
-
         return " ".join(parts)
 
     # --- Version reporting ---
