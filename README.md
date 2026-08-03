@@ -1,8 +1,39 @@
 # SparkRun Recipes
 
 **Status:** ✅ Production Ready  
-**Last Updated:** July 31, 2026  
+**Last Updated:** August 2, 2026  
 **Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
+
+---
+
+## ⭐ Featured: DeepSeek-V4-Flash 0731 on DS4 CUDA Engine
+
+The smartest model available, now serving on a single DGX Spark via [Bleysg's ds4 CUDA engine](https://github.com/Entrpi/ds4-on-spark) — a ground-up C/CUDA inference engine with DSpark lossless speculative decoding.
+
+| Metric | Value |
+|---|---|
+| **Model** | DeepSeek-V4-Flash 0731 (284B params, 12B active MoE) |
+| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.0) |
+| **Quant** | IQ2XXS 2-bit with imatrix (~87 GB GGUF) |
+| **Spec Decode** | DSpark k=2, ~75% acceptance |
+| **Context** | 131K per lane, 2 lanes |
+| **Decode** | ~20 tok/s single-stream, ~25 tok/s aggregate |
+| **Prefill** | ~1000 tok/s |
+| **TTFT** | ~200ms |
+| **Author** | [@bleysg](https://x.com/bleysg) (Bleys Goodson) / [@antirez](https://x.com/antirez) (Salvatore Sanfilippo) |
+
+```bash
+# Register our recipes
+sparkrun registry add https://github.com/styles01/sparkrun-recipes.git
+
+# Launch DS4-Flash on a single Spark
+sparkrun run @styles01/deepseek-v4-flash-0731-ds4 --hosts <spark-ip> --trust
+
+# Benchmark it
+sparkrun benchmark performance @styles01/deepseek-v4-flash-0731-ds4 --hosts <spark-ip> --skip-run --no-stop -b model=deepseek-v4-flash
+```
+
+> **Requires:** ds4 CUDA engine installed (`curl -sSL https://raw.githubusercontent.com/Entrpi/ds4-on-spark/main/install.sh | bash`) and the `ds4-cuda` runtime plugin. See the [runbook](runbooks/deepseek-v4-flash-ds4.md) for setup details.
 
 ---
 
@@ -12,9 +43,11 @@
 sparkrun-recipes/
 ├── runbooks/          # Detailed markdown docs — commands, tradeoffs, context, troubleshooting
 ├── recipes/           # YAML arena recipe contracts — structured format for sparkrun/arena consumption
+├── runtime/           # Custom runtime plugins (ds4-cuda)
 ├── benchmarks/        # Benchmark results and database
 ├── docker/            # Dockerfiles and patches
 ├── scripts/           # One-command switch scripts
+├── .sparkrun/         # Registry manifest for sparkrun
 └── SPARKRUN-REFERENCE.md  # SparkRun CLI reference
 ```
 
@@ -31,7 +64,8 @@ Each runbook links to its corresponding recipe contract and vice versa.
 
 | Flavor | Runbook | Recipe | Status |
 |---|---|---|---|
-| **DeepSeek-V4-Flash (0731)** | [runbook](runbooks/deepseek-v4-flash.md) | [recipe](recipes/deepseek-v4-flash-0731.yaml) | ✅ Production |
+| ⭐ **DS4-Flash 0731 (ds4 CUDA)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
+| **DS4-Flash 0731 (vLLM-Moet)** | [runbook](runbooks/deepseek-v4-flash.md) | [recipe](recipes/deepseek-v4-flash-0731.yaml) | ⚠️ OOM risk (167GB) |
 | **Qwen 3.5 122B DFlash** | [runbook](runbooks/qwen-122b.md) | [recipe](recipes/qwen-122b.yaml) | ✅ Production |
 | **Qwen 122B v26 fp8 KV** | [runbook](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md) | [recipe](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | ✅ Breakthrough |
 | **Qwen 3.6 35B NVFP4** | [runbook](runbooks/qwen-35b.md) | [recipe](recipes/qwen-35b.yaml) | ✅ Production |
@@ -117,15 +151,15 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 
 ## Benchmark Highlights
 
-| Model | Decode tok/s | Context | Lanes | KV Tokens | Notes |
-|---|---|---|---|---|---|
-| DS4-Flash 0731 | ~21 | 256K | 1 | — | Smartest, most constrained |
-| Qwen 122B (aeon) | 50.2 | 256K | 3 | 549K | Stable across workloads |
-| Qwen 122B (v26 fp8) | 45.98 | 256K | 3 | 1.37M | 2.6× KV, int8 lm-head |
-| Qwen 35B | 109.3 | 256K | 4 | — | Fastest, best concurrency |
-| Qwen 27B | TBD | 256K | 5 | — | MTP k=7, 48.7% accept |
-| Laguna S 2.1 | TBD | 300K | 3 | 918K | Terminal-Bench 70.2% |
-| MedGemma 27B | 336 agg | 8K | 75 | 618K | Corpus formatting |
-| Puzzle 75B | 35.9 | 256K | 4 | 2.0M | MTP k=3, 74.7% accept |
+| Model | Decode tok/s | Prefill tok/s | Context | Lanes | Engine | Notes |
+|---|---|---|---|---|---|---|
+| ⭐ **DS4-Flash 0731** | 20 | 1000 | 131K | 2 | ds4 CUDA | DSpark k=2, 75% accept, IQ2XXS |
+| Qwen 122B (aeon) | 50.2 | — | 256K | 3 | vLLM | Stable across workloads |
+| Qwen 122B (v26 fp8) | 45.98 | — | 256K | 3 | vLLM v26 | 2.6× KV, int8 lm-head |
+| Qwen 35B | 109.3 | — | 256K | 4 | vLLM | Fastest, best concurrency |
+| Qwen 27B | TBD | — | 256K | 5 | vLLM v26 | MTP k=7, 48.7% accept |
+| Laguna S 2.1 | 30 | — | 250K | 2 | vLLM v26 | DFlash k=7, 33% accept |
+| MedGemma 27B | 336 agg | — | 8K | 75 | vLLM | Corpus formatting |
+| Puzzle 75B | 35.9 | — | 256K | 4 | vLLM | MTP k=3, 74.7% accept |
 
 See `benchmarks/` for detailed benchmark reports.
