@@ -70,20 +70,11 @@ _DS4_FLAG_MAP = {
     "host": "--host",
     # ds4-native keys
     "context": "-c",          # context window size (e.g. 131072)
-    "model": "-m",             # GGUF model file path
-    "drafter_model": "--drafter",  # DSpark drafter GGUF path (if using --drafter flag form)
-    "threads": "-t",          # CPU threads for non-CUDA portions
-    "cont_batching": "--cont-batching",  # continuous batching toggle
-    "n_gpu_layers": "-ngl",   # GPU layers to offload (usually -1 = all)
 }
 
 # Boolean flags (present when truthy, absent when falsy).
 # ds4-server treats these as bare flags.
-_DS4_BOOL_FLAGS = frozenset({
-    "cont_batching",
-    "metrics",            # expose Prometheus /metrics endpoint
-    "nobrowser",          # disable the browser auto-open
-})
+_DS4_BOOL_FLAGS = frozenset()
 
 # ─── Environment variables ────────────────────────────────────────
 # ds4 reads runtime tuning exclusively from DS4_* env vars.  The recipe
