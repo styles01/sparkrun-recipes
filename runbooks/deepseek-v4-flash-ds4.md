@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production — DSpark k=2, native execution  
 **Served name:** `deepseek-v4-flash`  
-**Engine:** ds4 CUDA (Entrpi/ds4 fork v0.5.0) — native C/CUDA binary  
+**Engine:** ds4 CUDA (Entrpi/ds4 fork v0.5.4) — native C/CUDA binary  
 **Author:** [@bleysg](https://x.com/bleysg) (Bleys Goodson) / [@antirez](https://x.com/antirez) (Salvatore Sanfilippo)  
 **Updated:** August 2, 2026
 
@@ -17,7 +17,7 @@ The smartest model available, now serving on a single DGX Spark via [Bleysg's ds
 | Metric | Value |
 |---|---|
 | **Model** | DeepSeek-V4-Flash 0731 (284B params, 12B active MoE) |
-| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.0) |
+| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.4) |
 | **Quant** | IQ2XXS 2-bit with imatrix (~87 GB GGUF) |
 | **Spec Decode** | DSpark k=2, ~75% acceptance |
 | **Context** | 131K per lane, 2 lanes |
@@ -96,7 +96,6 @@ ds4-serve -c 131072 --host 0.0.0.0 --port 8000
 | Env var | Value | Description |
 |---------|-------|-------------|
 | `DS4_BATCH_FIT_HEADROOM_MB` | `8192` | GPU memory headroom (controls max lanes) |
-| `DS4_SERVER_SERIAL_MAX_TOKENS` | `131072` | Max tokens per response (match context) |
 | `DS4_SERVER_COALESCE_MAX` | `2` | Max concurrent lanes |
 | `DS4_CONT_DSPARK` | `1` | Enable DSpark drafter |
 | `DS4_CONT_MTP_MODE` | `2` | MTP speculative decode mode |
@@ -125,6 +124,15 @@ ds4-serve -c 131072 --host 0.0.0.0 --port 8000
 | `GET /metrics` | Prometheus-format metrics (`ds4_*` prefix) |
 
 ---
+
+## v0.5.4 Upgrade (August 2026)
+
+Upgraded from v0.5.0 → v0.5.4. Critical fixes:
+- **v0.5.1:** Trim-on-evict — comp-cache pool shrinks when banks are evicted (was grow-only, caused OOM at 131K)
+- **v0.5.2:** Serial graph rightsize — sizes session graph to actual request, not full context (fixes "lazy session graph alloc failed" at 131K)
+- **v0.5.4:** `--mem-floor-gb` (default 4 GiB) — admissions gate against live free memory, rejects before OOM
+- **Auto context compression** — engine now compresses context automatically under pressure
+- Build: `make cuda-spark` (not `make CUDA_ARCH=sm_121`)
 
 ## DSpark Speculative Decoding
 
