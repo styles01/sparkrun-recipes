@@ -10,7 +10,7 @@ maintainer: styles01
 metadata:
   author: styles01
   created: "2026-08-02"
-  updated: "2026-08-02"
+  updated: "2026-08-04"
   tags:
     - deepseek
     - v4-flash
@@ -36,21 +36,17 @@ min_nodes: 1
 max_nodes: 1
 
 defaults:
-  # ds4-native keys
   context: 131072
   port: 8000
   host: 0.0.0.0
 
 env:
-  # Batch/memory planning
   DS4_BATCH_FIT_HEADROOM_MB: "8192"
-  DS4_SERVER_SERIAL_MAX_TOKENS: "131072"
-  DS4_SERVER_COALESCE_MAX: "2"
-  # DSpark speculative decoding drafter
+  DS4_SERVER_COALESCE_MAX: "32"
   DS4_CONT_DSPARK: "1"
   DS4_CONT_MTP_MODE: "2"
-  # DS4_DSPARK_MAX_NLIVE: "1"  # Default: DSpark on 1 lane only (stable). NLIVE=2 causes CUDA fragmentation over time.
   DS4_DSPARK_MODEL: "~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf"
+  DS4_METAL_GRAPH_RAW_CAP: "131072"
 
 benchmark:
   framework: llama-benchy
