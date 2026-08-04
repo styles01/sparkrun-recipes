@@ -1,7 +1,7 @@
 # SparkRun Recipes
 
 **Status:** ✅ Production Ready  
-**Last Updated:** August 2, 2026  
+**Last Updated:** August 4, 2026  
 **Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
 
 ---
@@ -13,14 +13,22 @@ The smartest model available, now serving on a single DGX Spark via [Bleysg's ds
 | Metric | Value |
 |---|---|
 | **Model** | DeepSeek-V4-Flash 0731 (284B params, 12B active MoE) |
-| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.0) |
+| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.4) |
 | **Quant** | IQ2XXS 2-bit with imatrix (~87 GB GGUF) |
-| **Spec Decode** | DSpark k=2, ~75% acceptance |
-| **Context** | 131K per lane, 2 lanes |
+| **Spec Decode** | DSpark k=2, ~60-75% acceptance |
+| **Context** | 131K per lane, 14 banks (auto-scaled) |
 | **Decode** | ~20 tok/s single-stream, ~25 tok/s aggregate |
 | **Prefill** | ~1000 tok/s |
 | **TTFT** | ~200ms |
 | **Author** | [@bleysg](https://x.com/bleysg) (Bleys Goodson) / [@antirez](https://x.com/antirez) (Salvatore Sanfilippo) |
+
+### Build & Upgrade
+
+```bash
+# Build (on Spark): make cuda-spark
+# Upgrade: cd ~/code/ds4 && git fetch --all --tags && git checkout v0.5.4 && make cuda-spark
+# v0.5.4 fixes: trim-on-evict, serial graph rightsize, mem-floor-gb admission gate, auto context compression
+```
 
 ```bash
 # Register our recipes
@@ -64,7 +72,7 @@ Each runbook links to its corresponding recipe contract and vice versa.
 
 | Flavor | Runbook | Recipe | Status |
 |---|---|---|---|
-| ⭐ **DS4-Flash 0731 (ds4 CUDA)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
+| ⭐ **DS4-Flash 0731 (ds4 CUDA v0.5.4)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
 | **DS4-Flash 0731 (vLLM-Moet)** | [runbook](runbooks/deepseek-v4-flash.md) | [recipe](recipes/deepseek-v4-flash-0731.yaml) | ⚠️ OOM risk (167GB) |
 | **Qwen 3.5 122B DFlash** | [runbook](runbooks/qwen-122b.md) | [recipe](recipes/qwen-122b.yaml) | ✅ Production |
 | **Qwen 122B v26 fp8 KV** | [runbook](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md) | [recipe](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | ✅ Breakthrough |
