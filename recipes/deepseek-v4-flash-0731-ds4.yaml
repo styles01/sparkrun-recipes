@@ -49,7 +49,7 @@ env:
   # DSpark speculative decoding drafter
   DS4_CONT_DSPARK: "1"
   DS4_CONT_MTP_MODE: "2"
-  DS4_DSPARK_MAX_NLIVE: "2"  # Enable DSpark on both lanes (2 concurrent spec streams)
+  # DS4_DSPARK_MAX_NLIVE: "1"  # Default: DSpark on 1 lane only (stable). NLIVE=2 causes CUDA fragmentation over time.
   DS4_DSPARK_MODEL: "~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf"
 
 benchmark:
