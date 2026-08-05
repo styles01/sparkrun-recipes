@@ -1,61 +1,82 @@
-recipe_version: "2"
+recipe_version: "3"
 name: deepseek-v4-flash-0731-ds4
-description: "DeepSeek-V4-Flash (0731 weights) on the ds4 CUDA engine v0.5.4 — IQ2XXS quant, DSpark MTP k=2, 131K context, native (no Docker)"
+description: "DeepSeek-V4-Flash (0731 weights) on the ds4 CUDA engine v0.5.5 — IQ2XXS quant, DSpark MTP k=2, 196K context, native (no Docker)"
 model: ~/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf
 runtime: ds4-cuda
-container: native
-executor: local
-maintainer: styles01
+engine_version: v0.5.5
+build: make cuda-spark
+context: 196608
 
-metadata:
-  author: styles01
-  created: "2026-08-02"
-  updated: "2026-08-04"
-  tags:
-    - deepseek
-    - v4-flash
-    - 0731
-    - ds4
-    - cuda
-    - iq2xxs
-    - dspark
-    - mtp
-    - native
-    - gguf
-  category: agent
-  model_params: 280B
-  model_dtype: iq2xxs
-  quantization: iq2xxs
-  kv_dtype: q2k
-  runbook: runbooks/deepseek-v4-flash-ds4.md
+# Three flavor configs available:
+#   speed   — 131K ctx, ~40 tok/s aggregate, max concurrency
+#   balanced — 196K ctx, ~65 tok/s peak, 20 banks (DEFAULT)
+#   deep    — 1M ctx, ~25 tok/s aggregate, disk KV overflow
 
-solo_only: true
-cluster_only: false
-
-min_nodes: 1
-max_nodes: 1
-
-defaults:
-  context: 131072
-  port: 8000
-  host: 0.0.0.0
-
+# === Balanced (DEFAULT) ===
 env:
   DS4_BATCH_FIT_HEADROOM_MB: "8192"
-  DS4_SERVER_COALESCE_MAX: "32"
+  DS4_SERVER_SERIAL_MAX_TOKENS: "196608"
   DS4_CONT_DSPARK: "1"
   DS4_CONT_MTP_MODE: "2"
-  DS4_DSPARK_MODEL: "~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf"
-  DS4_METAL_GRAPH_RAW_CAP: "131072"
+  DS4_DSPARK_MODEL: ~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf
+  FORK_PARTIAL: "0"
+
+launch: |
+  DS4_BATCH_FIT_HEADROOM_MB=8192 \
+  DS4_SERVER_SERIAL_MAX_TOKENS=*** \
+  DS4_CONT_DSPARK=1 \
+  DS4_CONT_MTP_MODE=2 \
+  DS4_DSPARK_MODEL=~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf \
+  FORK_PARTIAL=0 \
+  ds4-serve -c 196608 --host 0.0.0.0 --port 8000
+
+# === Speed (131K, max concurrency) ===
+# env:
+#   DS4_BATCH_FIT_HEADROOM_MB: "8192"
+#   DS4_SERVER_COALESCE_MAX: "32"
+#   DS4_CONT_DSPARK: "1"
+#   DS4_CONT_MTP_MODE: "2"
+#   DS4_DSPARK_MODEL: ~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf
+#   FORK_PARTIAL: "0"
+# launch: ds4-serve -c 131072 --host 0.0.0.0 --port 8000
+
+# === Deep (1M context, disk KV overflow) ===
+# env:
+#   DS4_BATCH_FIT_HEADROOM_MB: "6272"
+#   DS4_BATCH_VMM_BUDGET_MB: "6144"
+#   DS4_SERVER_COALESCE_MAX: "8"
+#   DS4_CONT_PREFILL_CHUNK: "2048"
+#   DS4_CONT_CAPTURE: "1"
+#   DS4_SERVER_DEFAULT_TEMP: "0"
+#   DS4_SERVER_SERIAL_MAX_TOKENS: "1048576"
+#   DS4_CONT_DSPARK: "1"
+#   DS4_CONT_MTP_MODE: "2"
+#   DS4_DSPARK_MODEL: ~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf
+#   FORK_PARTIAL: "0"
+# launch: ds4-serve -c 1048576 --host 0.0.0.0 --port 8000 --kv-disk-dir ~/.cache/ds4-kv --kv-disk-space-mb 32768
 
 benchmark:
-  framework: llama-benchy
-  pp: [2048, 4096]
-  depth: [0, 4096]
-  concurrency: [1, 2]
+  single_stream_tok_s: "20-22"
+  peak_tok_s: "65"
+  prefill_tok_s: "1,127"
+  banks: "20"
+  dspark_acceptance: "~60-75%"
+  context: "196K"
+  concurrency: "1-8"
 
-post_exec:
-  - curl -s localhost:8000/v1/models | head -20
+specs:
+  model_params: "284B (12B active MoE)"
+  quant: "IQ2XXS 2-bit with imatrix"
+  model_size_gb: 87
+  engine: "ds4 CUDA v0.5.5"
+  build_target: "make cuda-spark (HBM cache enabled)"
+  speculative: "DSpark k=2, lossless"
+  vram: "121GB unified memory"
+  hardware: "NVIDIA DGX Spark (GB10, SM121, aarch64)"
 
-post_commands:
-  - echo "DS4 engine ready at {head_host}:{port} — OpenAI API at /v1/chat/completions, metrics at /metrics"
+notes:
+  - "Build with 'make cuda-spark' for HBM weight cache (~8% decode speedup)"
+  - "FORK_PARTIAL=0 prevents context corruption from client disconnects"
+  - "No COALESCE_MAX cap lets engine auto-scale to 20 banks at 196K"
+  - "Three flavor configs: speed (131K), balanced (196K default), deep (1M + disk KV)"
+  - "Switch flavors by changing env vars and -c value, no rebuild needed"

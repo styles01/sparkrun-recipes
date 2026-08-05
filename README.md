@@ -1,7 +1,7 @@
 # SparkRun Recipes
 
 **Status:** ✅ Production Ready  
-**Last Updated:** August 4, 2026  
+**Last Updated:** August 5, 2026  
 **Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
 
 ---
@@ -13,21 +13,31 @@ The smartest model available, now serving on a single DGX Spark via [Bleysg's ds
 | Metric | Value |
 |---|---|
 | **Model** | DeepSeek-V4-Flash 0731 (284B params, 12B active MoE) |
-| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.4) |
+| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.5) |
 | **Quant** | IQ2XXS 2-bit with imatrix (~87 GB GGUF) |
 | **Spec Decode** | DSpark k=2, ~60-75% acceptance |
-| **Context** | 131K per lane, 14 banks (auto-scaled) |
-| **Decode** | ~20 tok/s single-stream, ~25 tok/s aggregate |
-| **Prefill** | ~1000 tok/s |
+| **Context** | 196K per lane, 20 banks (auto-scaled) |
+| **Decode** | ~20 tok/s single-stream, ~65 tok/s peak (8 concurrent) |
+| **Prefill** | ~1,127 tok/s |
 | **TTFT** | ~200ms |
 | **Author** | [@bleysg](https://x.com/bleysg) (Bleys Goodson) / [@antirez](https://x.com/antirez) (Salvatore Sanfilippo) |
+
+### Three Flavor Configs
+
+| Flavor | Context | Banks | Peak tok/s | Use Case |
+|---|---|---|---|---|
+| **Balanced ⭐ (default)** | 196K | 20 | 65 | Best balance, forum-proven sweet spot |
+| **Speed** | 131K | 14 | ~40 | Max concurrency |
+| **Deep** | 1M | 8 | ~25 | Deep context with disk KV overflow |
+
+Switch flavors by changing env vars and `-c` value — no rebuild needed.
 
 ### Build & Upgrade
 
 ```bash
 # Build (on Spark): make cuda-spark
-# Upgrade: cd ~/code/ds4 && git fetch --all --tags && git checkout v0.5.4 && make cuda-spark
-# v0.5.4 fixes: trim-on-evict, serial graph rightsize, mem-floor-gb admission gate, auto context compression
+# Upgrade: cd ~/code/ds4 && git fetch --all --tags && git checkout v0.5.5 && make cuda-spark
+# v0.5.5 fixes: stream512 race (Xid 13 root cause), admission governance, budget double-booking
 ```
 
 ```bash
@@ -72,7 +82,7 @@ Each runbook links to its corresponding recipe contract and vice versa.
 
 | Flavor | Runbook | Recipe | Status |
 |---|---|---|---|
-| ⭐ **DS4-Flash 0731 (ds4 CUDA v0.5.4)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
+| ⭐ **DS4-Flash 0731 (ds4 CUDA v0.5.5)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
 | **DS4-Flash 0731 (vLLM-Moet)** | [runbook](runbooks/deepseek-v4-flash.md) | [recipe](recipes/deepseek-v4-flash-0731.yaml) | ⚠️ OOM risk (167GB) |
 | **Qwen 3.5 122B DFlash** | [runbook](runbooks/qwen-122b.md) | [recipe](recipes/qwen-122b.yaml) | ✅ Production |
 | **Qwen 122B v26 fp8 KV** | [runbook](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md) | [recipe](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | ✅ Breakthrough |
@@ -159,9 +169,11 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 
 ## Benchmark Highlights
 
-| Model | Decode tok/s | Prefill tok/s | Context | Lanes | Engine | Notes |
+| Model | Decode tok/s | Prefill tok/s | Context | Banks | Engine | Notes |
 |---|---|---|---|---|---|---|
-| ⭐ **DS4-Flash 0731** | 20 | 1000 | 131K | 2 | ds4 CUDA | DSpark k=2, 75% accept, IQ2XXS |
+| ⭐ **DS4-Flash 0731 (balanced)** | 20 single / 65 peak | 1127 | 196K | 20 | ds4 CUDA v0.5.5 | DSpark k=2, 75% accept, IQ2XXS |
+| **DS4-Flash 0731 (speed)** | 20 single / 40 peak | 1000 | 131K | 14 | ds4 CUDA v0.5.5 | Max concurrency |
+| **DS4-Flash 0731 (deep)** | 20 single / 25 peak | 1000 | 1M | 8 | ds4 CUDA v0.5.5 | Disk KV overflow |
 | Qwen 122B (aeon) | 50.2 | — | 256K | 3 | vLLM | Stable across workloads |
 | Qwen 122B (v26 fp8) | 45.98 | — | 256K | 3 | vLLM v26 | 2.6× KV, int8 lm-head |
 | Qwen 35B | 109.3 | — | 256K | 4 | vLLM | Fastest, best concurrency |
