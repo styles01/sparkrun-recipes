@@ -1,0 +1,99 @@
+recipe_version: "3"
+name: muse-glimmer-30b
+description: "Meta Muse-Glimmer-30B — multimodal (text+vision+video), 30B params, 52 layers, sliding+full attention, 131K context, BF16, reasoning model with ATEM tool calling"
+model: ~/models/hf/Muse-Glimmer-30B
+runtime: vllm
+container: vllm/vllm-openai:muse-glimmer
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-10"
+  tags:
+    - meta
+    - muse-glimmer
+    - 30b
+    - multimodal
+    - vision
+    - video
+    - reasoning
+    - atem-tools
+    - vllm-27
+  runbook: runbooks/muse-glimmer-30b.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.79
+  max_model_len: 131072
+  max_num_seqs: 5
+  max_num_batched_tokens: 32768
+  kv_cache_dtype: fp8
+  load_format: safetensors
+  served_model_name: muse-glimmer-30b
+  trust_remote_code: true
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  enforce_eager: true
+  tool_call_parser: muse_glimmer
+  reasoning_parser: muse_glimmer
+
+env: {}
+
+benchmark:
+  framework: llama-benchy
+  pp: [2048, 4096]
+  tg: [128, 256]
+  depth: [0, 4096, 32768, 65536]
+  concurrency: [1, 2, 3]
+  prefix_caching: true
+  runs: 3
+
+command: |
+  docker run -d \
+    --name muse-glimmer \
+    --gpus all \
+    --network host \
+    --ipc host \
+    --shm-size 8gb \
+    -v ~/models/hf/Muse-Glimmer-30B:/model \
+    -v /tmp:/tmp \
+    vllm/vllm-openai:muse-glimmer \
+    --model /model \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --max-model-len 131072 \
+    --max-num-seqs 5 \
+    --max-num-batched-tokens 32768 \
+    --trust-remote-code \
+    --gpu-memory-utilization 0.79 \
+    --kv-cache-dtype fp8 \
+    --load-format safetensors \
+    --enforce-eager \
+    --enable-prefix-caching \
+    --enable-chunked-prefill \
+    --served-model-name muse-glimmer-30b \
+    --tool-call-parser muse_glimmer \
+    --reasoning-parser muse_glimmer \
+    -tp 1 \
+    -pp 1
+
+notes:
+  - "Requires vLLM 0.27.0+ (vllm/vllm-openai:muse-glimmer Docker image) — vLLM v26 does NOT have native MuseGlimmer support"
+  - "Model is a reasoning model — generates reasoning first, then content. Reasoning is separated by --reasoning-parser muse_glimmer"
+  - "Tool calls use ATEM XML format, NOT JSON — do not enable JSON guided decoding"
+  - "Sampling: temp=1.0, top_p=0.95, top_k=64 — do NOT run greedy (model produces empty responses with greedy)"
+  - "--enforce-eager required on GB10/SM121 (torch.compile hits CUBLAS error)"
+  - "FlashInfer warmup may hang on SM121 — remove --attention-backend flashinfer and let vLLM auto-select"
+  - "DFlash draft head available: meta-models/Muse-Glimmer-30B-assistant (3B, 4.8 GB) at ~/models/hf/Muse-Glimmer-30B-assistant/"
+  - "GGUF k-quants available: meta-models/Muse-Glimmer-30B-GGUF (for llama.cpp)"
+  - "Stop: docker rm -f muse-glimmer"
+  - "Monitor: docker logs -f muse-glimmer"
