@@ -1,7 +1,7 @@
 recipe_version: "3"
 name: muse-glimmer-30b
 description: "Meta Muse-Glimmer-30B — multimodal (text+vision+video), 30B params, 52 layers, sliding+full attention, 131K context, BF16, reasoning model with ATEM tool calling"
-model: ~/models/hf/Muse-Glimmer-30B
+model: meta-models/Muse-Glimmer-30B
 runtime: vllm-distributed
 container: vllm/vllm-openai:muse-glimmer
 maintainer: styles01
