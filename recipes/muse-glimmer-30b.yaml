@@ -1,37 +1,32 @@
-recipe_version: "3"
+recipe_version: "2"
 name: muse-glimmer-30b
-description: "Meta Muse-Glimmer-30B — multimodal reasoning model, 30B, 131K context, BF16, ATEM tools"
 model: meta-models/Muse-Glimmer-30B
 runtime: vllm-distributed
 container: vllm/vllm-openai:muse-glimmer
-maintainer: styles01
+max_nodes: 1
 
 metadata:
-  author: styles01
-  created: "2026-08-10"
-  tags:
-    - meta
-    - muse-glimmer
-    - 30b
-    - multimodal
-    - reasoning
-    - vllm-27
-  runbook: runbooks/muse-glimmer-30b.md
-
-solo_only: false
-cluster_only: false
-min_nodes: 1
-max_nodes: 1
+  description: |
+    Meta Muse-Glimmer-30B — multimodal reasoning model, 30B dense,
+    131K context, BF16. ATEM XML tool calling. Reasoning separated
+    by --reasoning-parser muse_glimmer. Requires vLLM 0.27+ Docker image.
+    On GB10/SM121: --enforce-eager (CUBLAS without it), --attention-backend
+    FLASH_ATTN (FlashInfer hangs), no fp8 KV (unsupported with FLASH_ATTN).
+    Sampling: temp=1.0, top_p=0.95, top_k=64 — do NOT run greedy.
+  maintainer: styles01
+  category: chat
+  model_params: 30B
+  model_dtype: bf16
+  kv_dtype: bf16
 
 defaults:
   port: 8000
   host: 0.0.0.0
-  tensor_parallel: 1
-  pipeline_parallel: 1
-  gpu_memory_utilization: 0.85
   max_model_len: 131072
   max_num_seqs: 4
   max_num_batched_tokens: 32768
+  gpu_memory_utilization: 0.85
+  kv_cache_dtype: bf16
   load_format: safetensors
   served_model_name: muse-glimmer-30b
   trust_remote_code: true
@@ -41,45 +36,8 @@ defaults:
   attention_backend: FLASH_ATTN
   tool_call_parser: muse_glimmer
   reasoning_parser: muse_glimmer
+  tensor_parallel: 1
+  pipeline_parallel: 1
 
 env:
   HF_HOME: /home/jaita/models/hf
-
-benchmark:
-  framework: llama-benchy
-  pp: [2048]
-  tg: [128]
-  depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
-  concurrency: [1, 2, 5, 10]
-  prefix_caching: true
-  runs: 3
-
-command: |
-  --model meta-models/Muse-Glimmer-30B
-  --host 0.0.0.0
-  --port 8000
-  --max-model-len 131072
-  --max-num-seqs 4
-  --max-num-batched-tokens 32768
-  --trust-remote-code
-  --gpu-memory-utilization 0.85
-  --load-format safetensors
-  --enforce-eager
-  --attention-backend FLASH_ATTN
-  --enable-prefix-caching
-  --enable-chunked-prefill
-  --served-model-name muse-glimmer-30b
-  --tool-call-parser muse_glimmer
-  --reasoning-parser muse_glimmer
-  -tp 1
-  -pp 1
-
-notes:
-  - "Requires vLLM 0.27.0+ (vllm/vllm-openai:muse-glimmer Docker image)"
-  - "Reasoning model — reasoning separated by --reasoning-parser muse_glimmer"
-  - "ATEM XML tool calling — NOT JSON"
-  - "Sampling: temp=1.0, top_p=0.95, top_k=64 — do NOT run greedy"
-  - "--enforce-eager required on GB10/SM121 (CUBLAS error without it)"
-  - "--attention-backend FLASH_ATTN required (FlashInfer hangs on SM121)"
-  - "No fp8 KV cache (not supported with FLASH_ATTN on SM121)"
-  - "DFlash draft head: meta-models/Muse-Glimmer-30B-assistant (3B, 4.8 GB)"
