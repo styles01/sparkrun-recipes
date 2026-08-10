@@ -26,7 +26,7 @@ defaults:
   max_num_seqs: 4
   max_num_batched_tokens: 32768
   gpu_memory_utilization: 0.85
-  kv_cache_dtype: bf16
+  kv_cache_dtype: auto
   load_format: safetensors
   served_model_name: muse-glimmer-30b
   trust_remote_code: true
