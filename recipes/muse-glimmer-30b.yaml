@@ -39,5 +39,4 @@ defaults:
   tensor_parallel: 1
   pipeline_parallel: 1
 
-env:
-  HF_HOME: /home/jaita/models/hf
+env: {}
