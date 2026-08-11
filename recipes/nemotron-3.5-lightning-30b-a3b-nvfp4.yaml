@@ -1,0 +1,81 @@
+recipe_version: "2"
+name: nemotron-3.5-lightning-30b-a3b-nvfp4
+description: "NVIDIA Nemotron 3.5 Lightning 30B-A3B NVFP4 — DSpark spec decode, fp8 KV, marlin MoE, mamba flashinfer, 1M ctx. From NVIDIA vLLM DGX Spark cookbook."
+model: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
+runtime: vllm
+container: vllm/vllm-openai:v0.27.1
+
+metadata:
+  description: |
+    NVIDIA Nemotron 3.5 Lightning 30B-A3B NVFP4 (hybrid Mamba-2+MoE+Attention)
+    with DSpark speculative decoding. Adapted from the official NVIDIA vLLM
+    DGX Spark recipe (vLLM Nightly v0.27.1). 3B active MoE, ~21GiB weights incl
+    draft head. TP=1 on GB10.
+  maintainer: styles01
+  source: "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+  created: "2026-08-11"
+  updated: "2026-08-11"
+  tags:
+    - nemotron
+    - nemotron-3.5
+    - lightning
+    - 30b
+    - a3b
+    - nvfp4
+    - dspark
+    - mamba
+    - moe
+    - fp8-kv
+    - marlin
+    - dgx-spark
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.91
+  max_model_len: 1048576
+  kv_cache_dtype: fp8
+  speculative_config: '{"method":"dspark","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark","num_speculative_tokens":3}'
+  served_model_name: nemotron-3.5-lightning
+
+env:
+  HF_HOME: /cache/huggingface
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+
+executor_config:
+  entrypoint: ""
+  auto_remove: false
+  user: root
+
+benchmark:
+  framework: llama-benchy
+  claimed_speed: "~124 tok/s single-stream (MiaAI-Lab DGX Spark SGLang+DSpark reference)"
+  notes: |
+    vLLM adaptation of the official NVIDIA DGX Spark cookbook recipe.
+    Verify tool-calling (qwen3_coder) and reasoning parser (nemotron_v3)
+    before agent use. sparkrun resolves {model} and the spec draft model
+    from the HF cache snapshot paths.
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} --port {port} \
+    --trust-remote-code \
+    --moe-backend marlin \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --max-model-len {max_model_len} \
+    --enable-prefix-caching \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --speculative-config '{speculative_config}' \
+    --mamba-backend flashinfer \
+    --mamba-cache-mode align \
+    --reasoning-parser nemotron_v3 \
+    --tool-call-parser qwen3_coder \
+    --enable-auto-tool-choice
