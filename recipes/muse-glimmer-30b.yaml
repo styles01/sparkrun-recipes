@@ -1,44 +1,36 @@
 recipe_version: "2"
 name: muse-glimmer-30b
-model: Inferact/Muse-Glimmer-30B-NVFP4-W4A4
-runtime: vllm-distributed
-container: vllm/vllm-openai:muse-glimmer
+model: RadixArk/Muse-Glimmer-NVFP4
+runtime: sglang
+container: lmsysorg/sglang:dev-muse-glimmer
 max_nodes: 1
 
 metadata:
   description: |
-    Meta Muse-Glimmer-30B NVFP4 + DFlash speculative decoding.
-    30B dense, 131K context, 24GB NVFP4 weights, 15-token DFlash draft.
+    Meta Muse-Glimmer-30B NVFP4 + DFlash speculative decoding via SGLang.
+    30B dense, 131K context, 19GB NVFP4 weights, 15-token DFlash draft.
+    SGLang is the correct serving stack — vLLM DFlash is broken (PR #51655 unmerged).
     ATEM XML tool calling. Reasoning model.
-    On GB10/SM121: --enforce-eager, --attention-backend FLASH_ATTN, no fp8 KV.
+    On GB10/SM121: --enable-metrics for SparkDash telemetry.
   maintainer: styles01
   category: chat
   model_params: 30B
   model_dtype: nvfp4
-  kv_dtype: auto
+  kv_dtype: fp8_e4m3
 
 defaults:
   port: 8000
   host: 0.0.0.0
-  max_model_len: 131072
-  max_num_seqs: 4
-  max_num_batched_tokens: 32768
-  gpu_memory_utilization: 0.85
-  kv_cache_dtype: auto
-  load_format: safetensors
   served_model_name: muse-glimmer-30b
-  trust_remote_code: true
-  enable_prefix_caching: true
-  enable_chunked_prefill: true
-  enforce_eager: true
-  attention_backend: FLASH_ATTN
-  tool_call_parser: muse_glimmer
-  reasoning_parser: muse_glimmer
-  enable_auto_tool_choice: true
-  spec_method: dflash
-  spec_model: meta-models/Muse-Glimmer-30B-assistant
-  spec_tokens: 15
-  tensor_parallel: 1
-  pipeline_parallel: 1
+  reasoning_parser: muse
+  tool_call_parser: muse
+  speculative_algorithm: DFLASH
+  speculative_draft_model_path: meta-models/Muse-Glimmer-30B-assistant
+  speculative_draft_model_quantization: fp8
+  kv_cache_dtype: fp8_e4m3
+  mem_fraction_static: 0.38
+  max_running_requests: 4
+  language_model_only: true
+  enable_metrics: true
 
 env: {}
