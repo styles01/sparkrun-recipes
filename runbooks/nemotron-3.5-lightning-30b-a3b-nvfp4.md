@@ -27,28 +27,33 @@ through vLLM). It ships with NVIDIA's **DSpark draft model** for speculative dec
 | Context | 1,048,576 (1M) max |
 | Quant | NVFP4 (modelopt) — ~20 GiB weights |
 | Draft model | `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark` |
-| Spec decode | DSpark, block size 4 |
+| Spec decode | DSpark, block size 4 (n=4) |
 | KV cache | FP8 e4m3 (~3 KB/token) |
 | Tool parser | `qwen3_coder` |
 | Reasoning parser | `nemotron_v3` |
 
 ## Benchmark Results (Spark Arena, 2026-08-11)
 
-Submission: `sub1786493259764` — profile `@official/spark-arena-v2` (pp 2048, tg 128, 3 runs)
+Submission: `sub1786523649341` — profile `@official/spark-arena-v2` (pp 2048, tg 128, 3 runs)
+Config: DSpark n=4, GMU 0.60, max_num_seqs 10, 1M ctx, chunked-prefill, async-scheduling, marlin
 
 | Depth | Conc 1 | Conc 2 | Conc 5 | Conc 10 |
 |---|---|---|---|---|
-| 0 | **118.1** | 154.7 | 179.2 | **210.2** |
-| 4K | **120.4** | 105.7 | 94.3 | 103.1 |
-| 8K | 118.0 | 73.8 | 71.8 | 67.3 |
-| 16K | 86.8 | 77.3 | 65.9 | 62.7 |
-| 32K | 96.7 | 73.0 | 59.5 | 58.9 |
-| 64K | 93.8 | 67.2 | 55.6 | 54.9 |
-| 100K | 85.6 | 64.0 | 48.4 | 46.3 |
+| 0 | 90.6 | 145.3 | 180.9 | **224.4** |
+| 4K | **108.1** | 103.5 | 105.9 | 118.7 |
+| 8K | 90.8 | 100.3 | 103.0 | 100.2 |
+| 16K | 83.5 | 87.3 | 89.4 | 85.1 |
+| 32K | 96.4 | 90.7 | 75.4 | 77.9 |
+| 64K | 96.2 | 72.4 | 59.7 | 65.2 |
+| 100K | 85.4 | 54.7 | 51.9 | 54.2 |
 
-Table shows **generation tok/s** (tg). Prefill peaked at **~5,775 tok/s** (depth 0).
+Table shows **generation tok/s** (tg). Prefill peaked at **7,665 tok/s** (depth 0, c10).
 
-**Headline:** 120.4 tok/s single-lane (4K ctx), 210.2 tok/s aggregate (10 concurrent).
+**Headline:** 108.1 tok/s single-lane (4K ctx), 224.4 tok/s aggregate (10 concurrent).
+
+> **Tradeoff vs v1 (DSpark n=3):** n=4 + safe wins gives +49% at 8K/c10 and +7% aggregate at
+> c10, but costs ~10-23% single-stream (the draft-depth tradeoff Saiyam's stock-image run
+> noted). v3 is tuned for concurrent/multi-agent use; drop to n=3 if you want peak single-lane.
 
 ## Launch
 
