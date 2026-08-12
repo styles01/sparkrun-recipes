@@ -27,7 +27,7 @@ through vLLM). It ships with NVIDIA's **DSpark draft model** for speculative dec
 | Context | 1,048,576 (1M) max |
 | Quant | NVFP4 (modelopt) — ~20 GiB weights |
 | Draft model | `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark` |
-| Spec decode | DSpark, block size 3 |
+| Spec decode | DSpark, block size 4 |
 | KV cache | FP8 e4m3 (~3 KB/token) |
 | Tool parser | `qwen3_coder` |
 | Reasoning parser | `nemotron_v3` |
