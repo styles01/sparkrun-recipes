@@ -1,4 +1,4 @@
-recipe_version: "2"
+recipe_version: "3"
 name: nemotron-3.5-lightning-30b-a3b-nvfp4
 description: "NVIDIA Nemotron 3.5 Lightning 30B-A3B NVFP4 — DSpark spec decode, fp8 KV, marlin MoE, mamba flashinfer, 1M ctx. From NVIDIA vLLM DGX Spark cookbook."
 model: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
