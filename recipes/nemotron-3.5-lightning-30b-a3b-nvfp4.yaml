@@ -41,7 +41,7 @@ defaults:
   tensor_parallel: 1
   gpu_memory_utilization: 0.60
   max_model_len: 1048576
-  max_num_seqs: 3
+  max_num_seqs: 4
   kv_cache_dtype: fp8
   speculative_config: '{"method":"dspark","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark","num_speculative_tokens":4}'
   served_model_name: "nemotron-3.5-lightning nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
