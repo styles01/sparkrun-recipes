@@ -184,6 +184,8 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 | **Muse-Glimmer 30B** | 40.5 single | — | 131K | 4 | SGLang | NVFP4 + DFlash (prefill spikes 1.7–8.5M tok/s) |
 | MedGemma 27B | 336 agg | — | 8K | 75 | vLLM | Corpus formatting |
 | **Nemotron 3.5 Lightning 30B-A3B** | 120.4 single / 210 agg | 5775 | 100K | 10 | vLLM 0.27.1 | DSpark block=3, marlin, fp8 KV — arena sub `sub1786493259764` |
+| **Nemotron Super 120B** | 30+ | — | 128K | 10 | vLLM v0.20 | MTP k=1, marlin, fp8 KV (community recipe) |
+| **MedGemma 27B Medicomp** | 336 agg | — | 3.8K | 75 | vLLM | FlashInfer, fp8 KV, VPN host |
 | Puzzle 75B | 35.9 | — | 256K | 4 | vLLM | MTP k=3, 74.7% accept |
 
 See `benchmarks/` for detailed benchmark reports.
