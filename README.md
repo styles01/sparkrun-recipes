@@ -89,6 +89,7 @@ Each runbook links to its corresponding recipe contract and vice versa.
 | **Qwen 3.6 35B NVFP4** | [runbook](runbooks/qwen-35b.md) | [recipe](recipes/qwen-35b.yaml) | ✅ Production |
 | **Qwen 3.6 27B FP8** | [runbook](runbooks/qwen-27b.md) | [recipe](recipes/qwen-27b.yaml) | ✅ Production |
 | **Laguna S 2.1 NVFP4** | [runbook](runbooks/laguna-s-2.1.md) | [recipe](recipes/laguna-s-2.1.yaml) | ✅ Production |
+| **Muse-Glimmer 30B** | [runbook](runbooks/muse-glimmer-30b.md) | [recipe](recipes/muse-glimmer-30b.yaml) | ✅ Production (SGLang) |
 | **MedGemma 27B FP8** | [runbook](runbooks/medgemma-27b.md) | [recipe](recipes/medgemma-27b.yaml) | ✅ Production |
 | **MedGemma 27B Medicomp** | [runbook](runbooks/medgemma-27b-medicomp.md) | [recipe](recipes/medgemma-27b-medicomp.yaml) | ✅ Production |
 | **Nemotron Super 120B** | [runbook](runbooks/nemotron-super-120b-nvfp4.md) | [recipe](recipes/nemotron-super-120b-nvfp4.yaml) | 🧪 Community recipe |
@@ -180,6 +181,7 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 | Qwen 35B | 109.3 | — | 256K | 4 | vLLM | Fastest, best concurrency |
 | Qwen 27B | TBD | — | 256K | 5 | vLLM v26 | MTP k=7, 48.7% accept |
 | Laguna S 2.1 | 30 | — | 250K | 2 | vLLM v26 | DFlash k=7, 33% accept |
+| **Muse-Glimmer 30B** | 40.5 single | — | 131K | 4 | SGLang | NVFP4 + DFlash (prefill spikes 1.7–8.5M tok/s) |
 | MedGemma 27B | 336 agg | — | 8K | 75 | vLLM | Corpus formatting |
 | **Nemotron 3.5 Lightning 30B-A3B** | 120.4 single / 210 agg | 5775 | 100K | 10 | vLLM 0.27.1 | DSpark block=3, marlin, fp8 KV — arena sub `sub1786493259764` |
 | Puzzle 75B | 35.9 | — | 256K | 4 | vLLM | MTP k=3, 74.7% accept |
