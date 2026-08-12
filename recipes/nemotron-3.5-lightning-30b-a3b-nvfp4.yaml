@@ -42,13 +42,20 @@ defaults:
   gpu_memory_utilization: 0.60
   max_model_len: 1048576
   max_num_seqs: 4
+  max_num_batched_tokens: 32768
   kv_cache_dtype: fp8
   speculative_config: '{"method":"dspark","model":"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark","num_speculative_tokens":4}'
   served_model_name: "nemotron-3.5-lightning nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+  override_generation_config: '{"temperature":1.0,"top_p":0.95}'
 
 env:
   HF_HOME: /cache/huggingface
   PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  VLLM_MARLIN_USE_ATOMIC_ADD: '1'
+  TORCH_MATMUL_PRECISION: high
+  FLASHINFER_DISABLE_VERSION_CHECK: '1'
+  NVIDIA_FORWARD_COMPAT: '1'
+  VLLM_HTTP_TIMEOUT_KEEP_ALIVE: '600'
 
 executor_config:
   entrypoint: ""
@@ -72,11 +79,17 @@ command: |
     --moe-backend marlin \
     --kv-cache-dtype {kv_cache_dtype} \
     --max-model-len {max_model_len} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --enable-chunked-prefill \
+    --async-scheduling \
     --enable-prefix-caching \
     --gpu-memory-utilization {gpu_memory_utilization} \
+    --load-format fastsafetensors \
     --speculative-config '{speculative_config}' \
     --mamba-backend flashinfer \
     --mamba-cache-mode align \
     --reasoning-parser nemotron_v3 \
     --tool-call-parser qwen3_coder \
-    --enable-auto-tool-choice
+    --enable-auto-tool-choice \
+    --override-generation-config '{override_generation_config}'
