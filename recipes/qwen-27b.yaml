@@ -42,12 +42,13 @@ defaults:
   tool_call_parser: qwen3_coder
   reasoning_parser: qwen3
   served_model_name: "qwen3.8-27b Qwen/Qwen3.8-27B-FP8"
-  speculative_config: '{"method":"mtp","num_speculative_tokens":7}'
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
   async_scheduling: true
   enable_prefix_caching: true
   enable_chunked_prefill: true
   trust_remote_code: true
   enable_auto_tool_choice: true
+  enforce_eager: true
 
 env:
   VLLM_MARLIN_USE_ATOMIC_ADD: "1"
