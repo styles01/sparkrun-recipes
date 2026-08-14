@@ -58,8 +58,9 @@ executor_config:
   auto_remove: false
   user: root
 
-patches:
-  - patch_mamba_drop_eagle_v0271.sh
+# NO Mamba patch needed for Qwen 3.8 — vLLM v0.27.1 has native MTP support.
+# The PR #48375 patch was designed for Qwen 3.6 and CORRUPTS Qwen 3.8's built-in MTP.
+# vLLM logs: "Detected MTP model. Sharing target model embedding/lm_head weights with the draft model."
 
 variants:
   recipe_production:
