@@ -31,6 +31,19 @@
 | MTP | Built-in (mtp_num_hidden_layers=1, mtp_use_dedicated_embeddings=false) |
 | Acceptance | ~84.8% (FP8, per vLLM announcement) |
 
+## CRITICAL: Disable Prefix Caching + 2048 Batch Tokens
+
+**MTP crashes at concurrency >= 5 when prefix caching is enabled.**
+
+The EAGLE/MTP peek-and-drop path in `kv_cache_coordinator.py` overreads Mamba/GDN recurrent state groups because `MambaManager.find_longest_cache_hit` never reads `drop_eagle_block` (GitHub #50630, PR #47861 unmerged). With prefix caching OFF, the peek-and-drop path is never invoked, avoiding the `cudaErrorIllegalAddress`.
+
+Also: `--max-num-batched-tokens 2048` (not 32768) — GDN/Mamba cache alignment constraint. Default 8192 is too large and triggers illegal memory access under concurrency.
+
+- **GitHub #37754:** FlashInfer + MTP crashes on SM121 (DGX Spark) — confirmed fix: disable prefix caching
+- **vLLM Recipes Qwen3.5.md:** "Enable MTP-1 speculative decoding and disable prefix caching"
+- **StepCodex:** "Disabling prefix caching also works (~31 tok/s). The bug only manifests when prefix caching=on"
+- **PR #47861:** Full fix (MambaManager capability check) — still unmerged
+
 ## CRITICAL: enforce-eager Required
 
 **CUDA graph capture crashes MTP on Qwen 3.8's hybrid Mamba architecture.**
