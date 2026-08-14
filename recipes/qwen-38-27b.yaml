@@ -1,5 +1,5 @@
 recipe_version: "4"
-name: qwen3.8-27b-nvfp4
+name: qwen-38-27b
 description: "Qwen3.8 27B NVFP4 — triton_attn, MTP k=2, fp8 KV (auto from checkpoint), 256K context, vision. Mia Lab config."
 model: unsloth/Qwen3.8-27B-NVFP4
 runtime: vllm
@@ -18,7 +18,7 @@ metadata:
     - mtp
     - triton-attn
     - vision
-  runbook: runbooks/qwen-27b.md
+  runbook: runbooks/qwen-38-27b.md
 
 solo_only: false
 cluster_only: false
@@ -62,7 +62,7 @@ executor_config:
 # The NVFP4 checkpoint auto-applies FP8 KV cache scheme (calibrated), doubling KV capacity.
 # Using FP8 checkpoint (Qwen/Qwen3.8-27B-FP8) instead of NVFP4 causes OOM during MTP — that was our root crash cause.
 # NOTE: max_num_batched_tokens=8192 is REQUIRED for GDN/Mamba cache alignment (32768 crashes under concurrency).
-# See runbooks/qwen-27b.md for alternative configs (erdaltoprak GMU 0.50, SGLang FP8, Radix DSpark).
+# See runbooks/qwen-38-27b.md for alternative configs (erdaltoprak GMU 0.50, SGLang FP8, Radix DSpark).
 
 benchmark:
   framework: llama-benchy

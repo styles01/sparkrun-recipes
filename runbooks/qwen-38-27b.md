@@ -7,7 +7,7 @@
 **Reasoning parser:** `qwen3`
 **Vision:** ✅ Multimodal (image_token_id present, vision_config)
 
-> **Recipe contract:** [`recipes/qwen-27b.yaml`](../recipes/qwen-27b.yaml)
+> **Recipe contract:** [`recipes/qwen-38-27b.yaml`](../recipes/qwen-38-27b.yaml)
 > **Reference:** [MiaAI-Lab/Qwen3.8-27B-DGX-Spark-RTX-6000](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-RTX-6000)
 
 ## Model Location on Spark

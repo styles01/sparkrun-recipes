@@ -87,7 +87,7 @@ Each runbook links to its corresponding recipe contract and vice versa.
 | **Qwen 3.5 122B DFlash** | [runbook](runbooks/qwen-122b.md) | [recipe](recipes/qwen-122b.yaml) | ✅ Production |
 | **Qwen 122B v26 fp8 KV** | [runbook](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md) | [recipe](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | ✅ Breakthrough |
 | **Qwen 3.6 35B NVFP4** | [runbook](runbooks/qwen-35b.md) | [recipe](recipes/qwen-35b.yaml) | ✅ Production |
-| **Qwen 3.8 27B FP8** | [runbook](runbooks/qwen-27b.md) | [recipe](recipes/qwen-27b.yaml) | ✅ Production |
+| **Qwen 3.8 27B NVFP4** | [runbook](runbooks/qwen-38-27b.md) | [recipe](recipes/qwen-38-27b.yaml) | ✅ Production |
 | **Laguna S 2.1 NVFP4** | [runbook](runbooks/laguna-s-2.1.md) | [recipe](recipes/laguna-s-2.1.yaml) | ✅ Production |
 | **Muse-Glimmer 30B** | [runbook](runbooks/muse-glimmer-30b.md) | [recipe](recipes/muse-glimmer-30b.yaml) | ✅ Production (SGLang) |
 | **MedGemma 27B FP8** | [runbook](runbooks/medgemma-27b.md) | [recipe](recipes/medgemma-27b.yaml) | ✅ Production |
@@ -179,7 +179,7 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 | Qwen 122B (aeon) | 50.2 | — | 256K | 3 | vLLM | Stable across workloads |
 | Qwen 122B (v26 fp8) | 45.98 | — | 256K | 3 | vLLM v26 | 2.6× KV, int8 lm-head |
 | Qwen 35B | 109.3 | — | 256K | 4 | vLLM | Fastest, best concurrency |
-| Qwen 3.8 27B | TBD | — | 256K | 5 | vLLM nightly | triton_attn, MTP k=2, fp8 KV (flashinfer crashes on GDN+MTP) |
+| Qwen 3.8 27B | TBD | — | 256K | 4 | vLLM nightly | triton_attn, MTP k=2, fp8 KV (flashinfer crashes on GDN+MTP) |
 | Laguna S 2.1 | 30 | — | 250K | 2 | vLLM v26 | DFlash k=7, 33% accept |
 | **Muse-Glimmer 30B** | 40.5 single | — | 131K | 4 | SGLang | NVFP4 + DFlash (prefill spikes 1.7–8.5M tok/s) |
 | MedGemma 27B | 336 agg | — | 8K | 75 | vLLM | Corpus formatting |
