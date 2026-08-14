@@ -1,6 +1,6 @@
 recipe_version: "3"
 name: qwen3.8-27b-fp8
-description: "Qwen3.8 27B FP8 — MTP k=3, fp8 KV, enforce-eager, 256K context, vision support. Updated from Qwen 3.6."
+description: "Qwen3.8 27B FP8 — triton_attn, MTP k=2, fp8 KV, 256K context, vision support. Mia Lab config."
 model: Qwen/Qwen3.8-27B-FP8
 runtime: vllm
 container: vllm/vllm-openai:nightly-aarch64

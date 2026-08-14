@@ -1,13 +1,14 @@
 # Recipe: Qwen 3.8 27B FP8
 
-**Status:** ✅ Production (enforce-eager + MTP k=3, stable)
+**Status:** ✅ Production (triton_attn + MTP k=2, stable with concurrency)
 **Served name:** `qwen3.8-27b`
-**Docker image:** `vllm/vllm-openai:v0.27.1` (stock — also tagged `latest`)
+**Docker image:** `vllm/vllm-openai:nightly-aarch64` (v0.27.2rc1.dev77+)
 **Tool calling:** ✅ `--enable-auto-tool-choice --tool-call-parser qwen3_coder`
 **Reasoning parser:** `qwen3`
 **Vision:** ✅ Multimodal (image_token_id present, vision_config)
 
 > **Recipe contract:** [`recipes/qwen-27b.yaml`](../recipes/qwen-27b.yaml)
+> **Reference:** [MiaAI-Lab/Qwen3.8-27B-DGX-Spark-RTX-6000](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-RTX-6000)
 
 ## Model Location on Spark
 
@@ -29,41 +30,39 @@
 | Quant | FP8 (compressed-tensors) |
 | Size | ~29 GB safetensors |
 | MTP | Built-in (mtp_num_hidden_layers=1, mtp_use_dedicated_embeddings=false) |
-| Acceptance | ~84.8% (FP8, per vLLM announcement) |
+| Acceptance | ~45-85% (varies by load, FP8 checkpoint) |
 
-## CRITICAL: Disable Prefix Caching + 2048 Batch Tokens
+## CRITICAL: triton_attn Required (NOT flashinfer)
 
-**MTP crashes at concurrency >= 5 when prefix caching is enabled.**
+**FlashInfer + MTP crashes on SM121 (DGX Spark) with `cudaErrorIllegalAddress`.**
 
-The EAGLE/MTP peek-and-drop path in `kv_cache_coordinator.py` overreads Mamba/GDN recurrent state groups because `MambaManager.find_longest_cache_hit` never reads `drop_eagle_block` (GitHub #50630, PR #47861 unmerged). With prefix caching OFF, the peek-and-drop path is never invoked, avoiding the `cudaErrorIllegalAddress`.
+FlashInfer's MTP speculative decode path corrupts the Gated DeltaNet (GDN) recurrent state cache under concurrency (c≥5). The crash happens in `kv_cache_coordinator.py` where the EAGLE/MTP peek-and-drop path overreads Mamba/GDN recurrent state groups.
 
-Also: `--max-num-batched-tokens 2048` (not 32768) — GDN/Mamba cache alignment constraint. Default 8192 is too large and triggers illegal memory access under concurrency.
+**Fix:** Use `--attention-backend triton_attn`. Only the 16 full-attention layers use this backend; the 48 GDN layers use their own Triton/FLA kernel unaffected by the bug.
 
-- **GitHub #37754:** FlashInfer + MTP crashes on SM121 (DGX Spark) — confirmed fix: disable prefix caching
-- **vLLM Recipes Qwen3.5.md:** "Enable MTP-1 speculative decoding and disable prefix caching"
-- **StepCodex:** "Disabling prefix caching also works (~31 tok/s). The bug only manifests when prefix caching=on"
-- **PR #47861:** Full fix (MambaManager capability check) — still unmerged
+- **GitHub #37754:** FlashInfer + MTP crashes on SM121 — confirmed fix: triton_attn
+- **MiaAI-Lab:** Confirmed working with triton_attn + nightly-aarch64, no enforce-eager, MTP k=2
 
-## CRITICAL: enforce-eager Required
-
-**CUDA graph capture crashes MTP on Qwen 3.8's hybrid Mamba architecture.**
-
-The `cudaErrorIllegalAddress` error occurs when CUDA graphs replay MTP draft tokens through the Gated DeltaNet (linear attention) layers. The recurrent state cache layout doesn't match the graph's captured memory addresses.
-
-- **GitHub issue #38643:** FLA linear attention tensor format mismatch
-- **PR #34571:** CUDA graph capture on hybrid models (not yet merged)
-- **Fix:** `--enforce-eager` disables CUDA graphs entirely. MTP works perfectly without graphs.
-- **Tradeoff:** ~10-20% throughput cost vs CUDA graphs, but MTP gives 3x+ speedup. Net positive.
+Note: FlashInfer may still appear in logs for the full-attention layers — this is expected. The GDN layers use their own kernel.
 
 ## CRITICAL: NO Mamba Patch
 
-**Do NOT apply the PR #48375 Mamba patch (`patch_mamba_drop_eagle.sh`) to Qwen 3.8.**
+**Do NOT apply the PR #48375 Mamba patch to Qwen 3.8.**
 
 - The patch was designed for Qwen 3.6's code layout (~48 layers)
 - Qwen 3.8 has 64 layers with a different MTP implementation
-- vLLM v0.27.1 has **native MTP support** for Qwen 3.8 — it auto-detects the MTP model in the checkpoint
+- vLLM has **native MTP support** for Qwen 3.8 — auto-detects MTP model in checkpoint
 - vLLM logs: *"Detected MTP model. Sharing target model embedding/lm_head weights with the draft model."*
 - Applying the patch corrupts the native MTP support and causes `EngineDeadError`
+
+## Docker Image: nightly-aarch64
+
+Use `vllm/vllm-openai:nightly-aarch64` (not `v0.27.1` or `latest`).
+
+- Nightly version: `v0.27.2rc1.dev77+gac7509e2b`
+- Contains GDN speculative decoding optimizations (#48577), Mamba hybrid fixes (#49291)
+- The `latest` tag resolves to v0.27.1 which lacks some fixes
+- Set `CUTE_DSL_ARCH=sm_121a` for GB10 cutlass kernels (Mia Lab reference)
 
 ## Locked Config (Production)
 
@@ -72,7 +71,7 @@ docker run -d --name qwen38-spark \
   --gpus all --network host --ipc host --shm-size 32gb \
   --entrypoint "" \
   -v ~/models/hf:/cache/huggingface \
-  vllm/vllm-openai:v0.27.1 \
+  vllm/vllm-openai:nightly-aarch64 \
   vllm serve /cache/huggingface/hub/models--Qwen--Qwen3.8-27B-FP8/snapshots/017b9c7af6b5689d5dd426a76e0bc077eb5ca20a \
     --served-model-name qwen3.8-27b \
     --host 0.0.0.0 --port 8000 \
@@ -82,8 +81,7 @@ docker run -d --name qwen38-spark \
     --max-num-batched-tokens 32768 \
     --gpu-memory-utilization 0.79 \
     --kv-cache-dtype fp8 \
-    --attention-backend flashinfer \
-    --moe-backend marlin \
+    --attention-backend triton_attn \
     --load-format fastsafetensors \
     --reasoning-parser qwen3 \
     --tool-call-parser qwen3_coder \
@@ -91,36 +89,26 @@ docker run -d --name qwen38-spark \
     --async-scheduling \
     --enable-prefix-caching \
     --enable-chunked-prefill \
-    --enforce-eager \
-    --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+    --speculative-config '{"method":"mtp","num_speculative_tokens":2}' \
     -tp 1
 ```
+
+## What Was Tried and Failed
+
+| Config | Result | Root Cause |
+|---|---|---|
+| flashinfer + MTP k=7 + Mamba patch | EngineDeadError on 2nd request | Mamba patch corrupts native MTP |
+| flashinfer + MTP k=3, no patch | cudaErrorIllegalAddress at c≥5 | FlashInfer GDN MTP crash |
+| flashinfer + MTP k=3 + enforce-eager | Stable but ~11 tok/s | No CUDA graphs = slow |
+| flashinfer + MTP k=3 + no prefix caching | Still crashes | Prefix caching not the only issue |
+| **triton_attn + MTP k=2 + nightly** | **✅ Stable with concurrency** | **triton_attn avoids GDN crash** |
 
 ## Variants
 
 | Variant | GMU | Seqs | Description |
 |---|---|---|---|
-| `recipe_production` | 0.79 | 5 | Default — max throughput, headless |
+| `recipe_production` | 0.79 | 5 | Default — max throughput |
 | `recipe_concurrent` | 0.50 | 8 | Leaves ~80 GB free for ComfyUI + GNOME |
-
-## Troubleshooting
-
-### EngineDeadError with MTP
-- **Cause:** CUDA graph capture corrupts MTP on hybrid Mamba architecture
-- **Fix:** Add `--enforce-eager` (already in recipe)
-- **DO NOT apply Mamba patch** — it makes the crash worse
-
-### cudaErrorIllegalAddress
-- **Cause:** CUDA graph replay hits invalid memory in linear attention layers
-- **Fix:** `--enforce-eager` (disables all CUDA graphs)
-
-### Engine dies under sustained load (no MTP)
-- **Cause:** Same CUDA graph issue, triggered by heavy concurrent load
-- **Fix:** `--enforce-eager` (MTP + eager mode is stable)
-
-### Slow generation (~20 tok/s without MTP)
-- **Cause:** No speculative decoding
-- **Fix:** Enable MTP k=3 with `--enforce-eager`. Expected ~60-80 tok/s with MTP.
 
 ## Key Differences from Qwen 3.6
 
@@ -128,11 +116,11 @@ docker run -d --name qwen38-spark \
 |---|---|---|
 | Layers | ~48 | 64 |
 | MTP | Requires PR #48375 patch | Native (no patch needed) |
-| CUDA graphs | ✅ Works with MTP | ❌ Crashes with MTP |
-| enforce-eager | Not needed | **Required** |
-| vLLM version | v0.24.0+ | v0.27.1 (latest) |
-| Container | ghcr.io/styles01/vllm-v26-patched | vllm/vllm-openai:v0.27.1 (stock) |
-| Image | Custom patched | Stock — no patching needed |
+| Attention backend | flashinfer | **triton_attn** (flashinfer crashes) |
+| enforce-eager | Not needed | Not needed (with triton_attn) |
+| vLLM version | v0.24.0+ | nightly-aarch64 (v0.27.2rc1) |
+| Container | ghcr.io/styles01/vllm-v26-patched | vllm/vllm-openai:nightly-aarch64 |
+| Image | Custom patched | Stock nightly — no patching needed |
 
 ## vLLM Announcement Reference
 

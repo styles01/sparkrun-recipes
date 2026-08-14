@@ -179,7 +179,7 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 | Qwen 122B (aeon) | 50.2 | — | 256K | 3 | vLLM | Stable across workloads |
 | Qwen 122B (v26 fp8) | 45.98 | — | 256K | 3 | vLLM v26 | 2.6× KV, int8 lm-head |
 | Qwen 35B | 109.3 | — | 256K | 4 | vLLM | Fastest, best concurrency |
-| Qwen 3.8 27B | TBD | — | 256K | 5 | vLLM 0.27.1 | MTP k=3, enforce-eager (CUDA graphs crash on hybrid Mamba), ~84.8% accept |
+| Qwen 3.8 27B | TBD | — | 256K | 5 | vLLM nightly | triton_attn, MTP k=2, fp8 KV (flashinfer crashes on GDN+MTP) |
 | Laguna S 2.1 | 30 | — | 250K | 2 | vLLM v26 | DFlash k=7, 33% accept |
 | **Muse-Glimmer 30B** | 40.5 single | — | 131K | 4 | SGLang | NVFP4 + DFlash (prefill spikes 1.7–8.5M tok/s) |
 | MedGemma 27B | 336 agg | — | 8K | 75 | vLLM | Corpus formatting |
