@@ -34,7 +34,7 @@ defaults:
   gpu_memory_utilization: 0.84
   max_model_len: 262144
   max_num_seqs: 4
-  max_num_batched_tokens: 32768
+  max_num_batched_tokens: 8192
   kv_cache_dtype: fp8
   attention_backend: triton_attn
   load_format: fastsafetensors
