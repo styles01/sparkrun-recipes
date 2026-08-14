@@ -57,7 +57,7 @@ Applied lessons from Laguna S 2.1 deployment and community benchmarks.
 ## Start Command
 
 ```bash
-ssh jaita@larryspark.local 'cd ~/qwen3.5-122B-A10B-on-spark && \
+ssh user@<spark-host> 'cd ~/qwen3.5-122B-A10B-on-spark && \
   CTX=262144 GPU_MEM=0.85 MAX_NUM_SEQS=3 MAX_BATCHED_TOKENS=8192 \
   SERVED_NAME=qwen bash install.sh --start --profile dense --nspec 7 --no-smoke'
 ```
@@ -65,7 +65,7 @@ ssh jaita@larryspark.local 'cd ~/qwen3.5-122B-A10B-on-spark && \
 ## Stop Command
 
 ```bash
-ssh jaita@larryspark.local 'docker rm -f qwen-spark'
+ssh user@<spark-host> 'docker rm -f qwen-spark'
 ```
 
 ## Why n=7 (not n=12)

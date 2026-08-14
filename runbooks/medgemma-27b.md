@@ -5,7 +5,7 @@
 **Stack:** Docker — `vllm-node:latest`
 **Model path:** `~/models/medgemma-27b-fp8` (SaitBurak/medgemma-27b-text-it-FP8-dynamic, 27GB)
 **Source:** AI-Scribe corpus formatter (docs/CORPUS.md, ADRs 0004/0005/0008)
-**Tested:** 4,961/4,963 MTSamples notes completed on larryspark
+**Tested:** 4,961/4,963 MTSamples notes completed on <spark-host>
 
 > **Recipe contract:** [`recipes/medgemma-27b.yaml`](../recipes/medgemma-27b.yaml)
 
@@ -104,10 +104,10 @@ docker run -d --name sparkDash --network host --privileged --restart unless-stop
 ## Verify
 
 ```bash
-curl -s http://larryspark.local:8000/v1/models | jq '.data[].id'
+curl -s http://<spark-host>:8000/v1/models | jq '.data[].id'
 # expect: medgemma
 
-curl -s http://larryspark.local:8000/v1/chat/completions \
+curl -s http://<spark-host>:8000/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"medgemma","messages":[{"role":"user","content":"List three differential diagnoses for fatigue."}],"max_tokens":200}' \
   | jq '.choices[0].message.content'

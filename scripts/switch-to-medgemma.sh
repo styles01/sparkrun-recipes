@@ -2,7 +2,7 @@
 # switch-to-medgemma.sh — MedGemma 27B FP8 on 1× DGX Spark (GB10) + SparkDash
 #
 # Recipe source: AI-Scribe corpus formatter (docs/CORPUS.md, ADRs 0004/0005/0008)
-# Tested on larryspark — 4,961/4,963 MTSamples notes completed
+# Tested on <spark-host> — 4,961/4,963 MTSamples notes completed
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail
@@ -171,7 +171,7 @@ if [ -d "$HOME/sparkDash" ]; then
     node --watch server/index.js
 
   echo "[medgemma] ✅ SparkDash launched on :5555"
-  echo "[medgemma]   dashboard: http://larryspark.local:5555"
+  echo "[medgemma]   dashboard: http://<spark-host>:5555"
 else
   echo "[medgemma] ⚠️ ~/sparkDash not found — skipping dashboard launch"
 fi
@@ -180,4 +180,4 @@ echo ""
 echo "[medgemma] ✅ Done. Served as: ${SERVED_NAME}"
 echo "[medgemma] Expected: ~336+ tok/s aggregate (256 seqs), ~7 tok/s per request"
 echo "[medgemma] Memory-bandwidth-bound at 27GB FP8 weights — batch size is the throughput lever"
-echo "[medgemma] SparkDash: http://larryspark.local:5555"
+echo "[medgemma] SparkDash: http://<spark-host>:5555"

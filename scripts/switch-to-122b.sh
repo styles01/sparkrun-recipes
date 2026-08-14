@@ -2,7 +2,7 @@
 # switch-to-122b.sh — Qwen 3.5 122B DFlash (Production)
 # Config: n=4, GMU 0.83, 150K ctx, 3 lanes, ~16GB free for one media workload
 # Per DFlash paper (arXiv:2602.06036): smaller n is more efficient under concurrent load
-# Or from Mac: ssh jaita@larryspark.local 'bash ~/switch-to-122b.sh'
+# Or from Mac: ssh user@<spark-host> 'bash ~/switch-to-122b.sh'
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail

@@ -1,7 +1,7 @@
 #!/bin/bash
 # switch-to-35b-production.sh — Switch Spark to Qwen 3.6 35B NVFP4 (Production)
 # Max speed, max KV cache, no co-located workloads. For when Larry is the primary agent backend.
-# Or from Mac: ssh jaita@larryspark.local 'bash ~/switch-to-35b-production.sh'
+# Or from Mac: ssh user@<spark-host> 'bash ~/switch-to-35b-production.sh'
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail

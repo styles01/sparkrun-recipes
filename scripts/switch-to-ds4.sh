@@ -1,7 +1,7 @@
 #!/bin/bash
 # switch-to-ds4.sh — Switch Spark to DeepSeek-V4-Flash
 # Run ON the Spark: bash ~/switch-to-ds4.sh
-# Or from Mac: ssh jaita@larryspark.local 'bash ~/switch-to-ds4.sh'
+# Or from Mac: ssh user@<spark-host> 'bash ~/switch-to-ds4.sh'
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 # NOTE: DS4 serve script must be patched with tool calling flags first.

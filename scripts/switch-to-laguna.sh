@@ -156,4 +156,4 @@ echo "[laguna] Config: ${MAX_LEN} ctx ($(($MAX_LEN/1024))K) × ${MAX_SEQS} lanes
 echo "[laguna] Expected: ~8B active params/token, 256 experts (top-10), 1M native context"
 echo "[laguna] Free RAM: ~18GB (room for TTS or image gen co-location)"
 echo "[laguna] Terminal-Bench 2.1: 70.2% (vs Qwen 122B: 49.4%)"
-echo "[laguna] sparkDash: http://larryspark.local:5555"
+echo "[laguna] sparkDash: http://<spark-host>:5555"

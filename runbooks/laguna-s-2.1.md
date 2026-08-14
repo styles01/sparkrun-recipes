@@ -128,10 +128,10 @@ Deployed to Spark at `~/switch-to-laguna.sh`.
 
 ```bash
 # Default (260K, 3 lanes, k=7, GMU 0.85):
-ssh jaita@larryspark.local 'bash ~/switch-to-laguna.sh'
+ssh user@<spark-host> 'bash ~/switch-to-laguna.sh'
 
 # Custom config:
-ssh jaita@larryspark.local 'MAX_MODEL_LEN=196608 MAX_NUM_SEQS=2 NSPEC=7 bash ~/switch-to-laguna.sh'
+ssh user@<spark-host> 'MAX_MODEL_LEN=196608 MAX_NUM_SEQS=2 NSPEC=7 bash ~/switch-to-laguna.sh'
 ```
 
 ## OOM Fallbacks
@@ -154,10 +154,10 @@ hf download poolside/Laguna-S-2.1-DFlash --local-dir ~/models/Laguna-S-2.1-DFlas
 ## Verify
 
 ```bash
-curl -s http://larryspark.local:8000/v1/models | jq '.data[].id'
+curl -s http://<spark-host>:8000/v1/models | jq '.data[].id'
 # expect: laguna
 
-curl -s http://larryspark.local:8000/v1/chat/completions \
+curl -s http://<spark-host>:8000/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"laguna","messages":[{"role":"user","content":"Write a Python function to check if a string is a palindrome."}],"max_tokens":500}' \
   | jq '.choices[0].message.content'

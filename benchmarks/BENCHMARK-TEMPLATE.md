@@ -64,7 +64,7 @@ Max tokens: 1024
 
 ### Test 4: Tool Call (if applicable)
 ```bash
-curl -X POST http://larryspark.local:8000/v1/chat/completions \
+curl -X POST http://<spark-host>:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "<served-name>",

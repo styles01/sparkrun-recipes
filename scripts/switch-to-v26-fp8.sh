@@ -13,7 +13,7 @@
 #
 # Rollback: bash switch-to-v26-fp8.sh --rollback
 
-SPARK="jaita@larryspark.local"
+SPARK="user@<spark-host>"
 IMAGE="vllm-v26-patched:latest"
 MODEL="bleysg/Qwen3.5-122B-A10B-int4-fp8-hybrid"
 DRAFTER="z-lab/Qwen3.5-122B-A10B-DFlash"

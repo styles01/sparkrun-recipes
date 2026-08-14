@@ -162,19 +162,19 @@ sparkrun recipe validate recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml
 sparkrun registry push <recipe.yaml>
 
 # Or use local recipe directly
-sparkrun run ./recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml --hosts larryspark.local
+sparkrun run ./recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml --hosts <spark-host>
 ```
 
 ### 3. Run Model
 
 ```bash
-sparkrun run @styles01/recipe --hosts larryspark.local
+sparkrun run @styles01/recipe --hosts <spark-host>
 ```
 
 ### 4. Benchmark & Submit
 
 ```bash
-sparkrun arena benchmark @styles01/recipe --hosts larryspark.local
+sparkrun arena benchmark @styles01/recipe --hosts <spark-host>
 ```
 
 ### 5. Monitor & Manage
@@ -207,7 +207,7 @@ sparkrun stop <workload-id>
 
 | Old Method | New SparkRun Method |
 |---|---|
-| `bash switch-to-122b.sh` | `sparkrun run @styles01/recipe --hosts larryspark.local` |
+| `bash switch-to-122b.sh` | `sparkrun run @styles01/recipe --hosts <spark-host>` |
 | Manual Docker run | `sparkrun run <recipe> --hosts <host>` |
 | Manual benchmark | `sparkrun arena benchmark <recipe> --hosts <host>` |
 | Manual container stop | `sparkrun stop <workload-id>` |

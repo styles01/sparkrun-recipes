@@ -64,6 +64,6 @@ echo "[step37] === MEMORY ==="
 free -h
 echo ""
 echo "[step37] ✅ Done. Served as: step3.7"
-echo "[step37] Server: http://larryspark.local:8080/v1"
+echo "[step37] Server: http://<spark-host>:8080/v1"
 echo "[step37] Stop: kill $PID"
 echo "[step37] Logs: tail -f /tmp/step37_server.log"

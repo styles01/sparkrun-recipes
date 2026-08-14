@@ -42,13 +42,13 @@ ARGS=(
 
 ### Variant A: Max Context (default)
 ```bash
-ssh jaita@larryspark.local 'bash ~/switch-to-ds4.sh'
+ssh user@<spark-host> 'bash ~/switch-to-ds4.sh'
 ```
 - Context: 256K | Concurrency: 1 | GMU: 0.78
 
 ### Variant B: 2 Concurrent (enables subagents)
 ```bash
-ssh jaita@larryspark.local 'bash ~/switch-to-ds4.sh --max-model-len 131072 --max-num-seqs 2'
+ssh user@<spark-host> 'bash ~/switch-to-ds4.sh --max-model-len 131072 --max-num-seqs 2'
 ```
 - Context: 128K per stream | Concurrency: 2 | GMU: 0.78
 - Both streams get 128K context — within the 100K-256K success criteria
@@ -59,7 +59,7 @@ ssh jaita@larryspark.local 'bash ~/switch-to-ds4.sh --max-model-len 131072 --max
 ## Start Command
 
 ```bash
-ssh jaita@larryspark.local '/usr/bin/bash ~/vllm-moet-spark/spark/serve-ds4-flash-1node.sh \
+ssh user@<spark-host> '/usr/bin/bash ~/vllm-moet-spark/spark/serve-ds4-flash-1node.sh \
   --max-model-len 262144 --max-num-seqs 1 \
   > /tmp/ds4-256k.log 2>&1 &'
 ```
@@ -67,7 +67,7 @@ ssh jaita@larryspark.local '/usr/bin/bash ~/vllm-moet-spark/spark/serve-ds4-flas
 ## Stop Command
 
 ```bash
-ssh jaita@larryspark.local 'ps aux | grep "vllm serve" | grep -v grep | awk "{print \$2}" | xargs kill -9'
+ssh user@<spark-host> 'ps aux | grep "vllm serve" | grep -v grep | awk "{print \$2}" | xargs kill -9'
 ```
 
 ## Performance (July 11, 2026 benchmarks — pre-0731 weights)

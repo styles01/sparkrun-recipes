@@ -25,13 +25,13 @@ vLLM built from the **main branch** (unreleased, commit 318b527, 608 commits ahe
 ### 1. Clone vLLM main on the Spark
 
 ```bash
-ssh jaita@larryspark.local 'mkdir -p ~/repos && git clone --depth 1 https://github.com/vllm-project/vllm ~/repos/vllm'
+ssh user@<spark-host> 'mkdir -p ~/repos && git clone --depth 1 https://github.com/vllm-project/vllm ~/repos/vllm'
 ```
 
 ### 2. Build the Docker image for SM121
 
 ```bash
-ssh jaita@larryspark.local 'cd ~/repos/vllm && docker build --build-arg torch_cuda_arch_list="12.1" -f docker/Dockerfile -t vllm-v26-sm121:latest .'
+ssh user@<spark-host> 'cd ~/repos/vllm && docker build --build-arg torch_cuda_arch_list="12.1" -f docker/Dockerfile -t vllm-v26-sm121:latest .'
 ```
 
 This takes **3-5 hours** on GB10 (arm64). The FA2/FA3 CUDA kernels are the slow part (~85s each, 400 total).
@@ -64,9 +64,9 @@ RUN chmod +x /tmp/patches/*.py; \
 Build:
 ```bash
 cd ~/.hermes/profiles/oracle/workspace/spark-llm-optimization/docker/
-scp Dockerfile.v26 jaita@larryspark.local:/tmp/vllm-patches/Dockerfile
-scp patch_*.py jaita@larryspark.local:/tmp/vllm-patches/
-ssh jaita@larryspark.local 'cd /tmp/vllm-patches && docker build --no-cache -t vllm-v26-patched:latest .'
+scp Dockerfile.v26 user@<spark-host>:/tmp/vllm-patches/Dockerfile
+scp patch_*.py user@<spark-host>:/tmp/vllm-patches/
+ssh user@<spark-host> 'cd /tmp/vllm-patches && docker build --no-cache -t vllm-v26-patched:latest .'
 ```
 
 ### Patch Status on v26
@@ -82,7 +82,7 @@ ssh jaita@larryspark.local 'cd /tmp/vllm-patches && docker build --no-cache -t v
 ## Deploy Command
 
 ```bash
-ssh jaita@larryspark.local 'docker run -d \
+ssh user@<spark-host> 'docker run -d \
   --name qwen-spark --gpus all -p 8000:8000 --user root \
   -v $HOME/.cache/huggingface:/root/.cache/huggingface \
   -e HF_HOME=/root/.cache/huggingface \
@@ -101,7 +101,7 @@ ssh jaita@larryspark.local 'docker run -d \
 ## Rollback (to aeon 0.23)
 
 ```bash
-ssh jaita@larryspark.local 'docker rm -f qwen-spark; cd ~/qwen3.5-122B-A10B-on-spark && CTX=262144 GPU_MEM=0.85 MAX_NUM_SEQS=3 MAX_BATCHED_TOKENS=8192 SERVED_NAME=qwen bash install.sh --start --profile dense --nspec 7 --no-smoke'
+ssh user@<spark-host> 'docker rm -f qwen-spark; cd ~/qwen3.5-122B-A10B-on-spark && CTX=262144 GPU_MEM=0.85 MAX_NUM_SEQS=3 MAX_BATCHED_TOKENS=8192 SERVED_NAME=qwen bash install.sh --start --profile dense --nspec 7 --no-smoke'
 ```
 
 ## Key Learnings

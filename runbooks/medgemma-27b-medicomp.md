@@ -1,6 +1,6 @@
 # MedGemma 27B FP8 — Medicomp Spark (VPN) vLLM Recipe
 
-**Target:** `dgxspark-a` on Medicomp VPN (`192.168.11.210`)
+**Target:** `<spark-host>` on Medicomp VPN (`<spark-ip>`)
 **Model:** `SaitBurak/medgemma-27b-text-it-FP8-dynamic` (27GB, FP8 compressed-tensors)
 **Served name:** `medgemma-27b`
 **No SparkDash — inference only**
@@ -23,19 +23,19 @@
 ### 1. Pull model (if not already present)
 
 ```bash
-ssh jaita@192.168.11.210 'huggingface-cli download SaitBurak/medgemma-27b-text-it-FP8-dynamic --local-dir ~/models/medgemma-27b-fp8'
+ssh user@<spark-ip> 'huggingface-cli download SaitBurak/medgemma-27b-text-it-FP8-dynamic --local-dir ~/models/medgemma-27b-fp8'
 ```
 
 ### 2. Kill any existing inference
 
 ```bash
-ssh jaita@192.168.11.210 'docker rm -f medgemma-spark 2>/dev/null; ps aux | grep "vllm serve" | grep -v grep | awk "{print \$2}" | xargs kill -9 2>/dev/null; echo "cleared"'
+ssh user@<spark-ip> 'docker rm -f medgemma-spark 2>/dev/null; ps aux | grep "vllm serve" | grep -v grep | awk "{print \$2}" | xargs kill -9 2>/dev/null; echo "cleared"'
 ```
 
 ### 3. Launch vLLM
 
 ```bash
-ssh jaita@192.168.11.210 'docker run -d \
+ssh user@<spark-ip> 'docker run -d \
   --name medgemma-spark \
   --gpus all \
   --restart unless-stopped \
@@ -61,7 +61,7 @@ ssh jaita@192.168.11.210 'docker run -d \
 ### 4. Wait for health check
 
 ```bash
-ssh jaita@192.168.11.210 'for i in $(seq 1 120); do
+ssh user@<spark-ip> 'for i in $(seq 1 120); do
   if curl -sf http://127.0.0.1:8000/health >/dev/null 2>&1; then
     echo "READY"
     docker logs medgemma-spark 2>&1 | grep -E "Model loading took|Available KV cache|GPU KV cache size|Maximum concurrency"
@@ -81,7 +81,7 @@ echo "TIMEOUT"'
 ### 5. Verify
 
 ```bash
-ssh jaita@192.168.11.210 'curl -s http://127.0.0.1:8000/v1/chat/completions \
+ssh user@<spark-ip> 'curl -s http://127.0.0.1:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d "{\"model\":\"medgemma-27b\",\"messages\":[{\"role\":\"user\",\"content\":\"List three differential diagnoses for fatigue.\"}],\"max_tokens\":200}" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)[\"choices\"][0][\"message\"][\"content\"])"'
@@ -90,7 +90,7 @@ ssh jaita@192.168.11.210 'curl -s http://127.0.0.1:8000/v1/chat/completions \
 ### 6. Stop
 
 ```bash
-ssh jaita@192.168.11.210 'docker rm -f medgemma-spark'
+ssh user@<spark-ip> 'docker rm -f medgemma-spark'
 ```
 
 ## Expected Performance

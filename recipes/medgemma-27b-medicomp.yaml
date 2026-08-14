@@ -1,6 +1,6 @@
 recipe_version: "2"
 name: medgemma-27b-medicomp
-description: "MedGemma 27B FP8 — Medicomp VPN deployment (dgxspark-a), 75 seqs, GMU 0.83, 3.8K context, inference only"
+description: "MedGemma 27B FP8 — Medicomp VPN deployment (<spark-host>), 75 seqs, GMU 0.83, 3.8K context, inference only"
 model: SaitBurak/medgemma-27b-text-it-FP8-dynamic
 runtime: vllm
 container: vllm/vllm-openai:latest
@@ -25,7 +25,7 @@ cluster_only: false
 min_nodes: 1
 max_nodes: 1
 
-target_host: "192.168.11.210"
+target_host: "<spark-ip>"
 
 defaults:
   port: 8000

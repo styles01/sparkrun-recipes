@@ -107,26 +107,26 @@ Each runbook links to its corresponding recipe contract and vice versa.
 sparkrun recipe list
 
 # Run a recipe on a specific host
-sparkrun run deepseek-v4-flash-0731 --hosts larryspark.local
+sparkrun run deepseek-v4-flash-0731 --hosts <spark-host>
 
 # Benchmark and submit to Spark Arena
-sparkrun arena benchmark qwen-122b --hosts larryspark.local
+sparkrun arena benchmark qwen-122b --hosts <spark-host>
 ```
 
 ### Using Switch Scripts (legacy)
 
 ```bash
 # DS4 Flash (0731 weights)
-ssh jaita@larryspark.local 'bash ~/switch-to-ds4.sh'
+ssh user@<spark-host> 'bash ~/switch-to-ds4.sh'
 
 # Qwen 122B
-ssh jaita@larryspark.local 'bash ~/switch-to-122b.sh'
+ssh user@<spark-host> 'bash ~/switch-to-122b.sh'
 
 # Qwen 35B
-ssh jaita@larryspark.local 'bash ~/switch-to-35b.sh'
+ssh user@<spark-host> 'bash ~/switch-to-35b.sh'
 
 # Qwen 3.8 27B
-ssh jaita@larryspark.local 'bash ~/switch-to-qwen27b.sh'
+ssh user@<spark-host> 'bash ~/switch-to-qwen27b.sh'
 ```
 
 See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for the full SparkRun CLI guide.

@@ -1,7 +1,7 @@
 #!/bin/bash
 # switch-to-35b.sh — Switch Spark to Qwen 3.6 35B NVFP4
 # Run ON the Spark: bash ~/switch-to-35b.sh
-# Or from Mac: ssh jaita@larryspark.local 'bash ~/switch-to-35b.sh'
+# Or from Mac: ssh user@<spark-host> 'bash ~/switch-to-35b.sh'
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail

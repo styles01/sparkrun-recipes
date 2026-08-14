@@ -58,7 +58,7 @@ Table shows **generation tok/s** (tg). Prefill peaked at **7,665 tok/s** (depth 
 ## Launch
 
 ```bash
-sparkrun run @styles01/nemotron-3.5-lightning-30b-a3b-nvfp4 --hosts larryspark.local
+sparkrun run @styles01/nemotron-3.5-lightning-30b-a3b-nvfp4 --hosts <spark-host>
 ```
 
 Or run the recipe file directly:
