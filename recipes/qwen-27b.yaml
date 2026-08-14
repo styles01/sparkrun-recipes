@@ -1,24 +1,24 @@
-recipe_version: "2"
-name: qwen3.6-27b-fp8-mtp
-description: "Qwen3.6 27B FP8 — MTP k=7 (48.7% accept), fp8 KV, async scheduling, 5 lanes, 256K context, GMU 0.79"
-model: Qwen/Qwen3.6-27B-FP8
+recipe_version: "3"
+name: qwen3.8-27b-fp8
+description: "Qwen3.8 27B FP8 — MTP, fp8 KV, async scheduling, 256K context, vision support. Updated from Qwen 3.6."
+model: Qwen/Qwen3.8-27B-FP8
 runtime: vllm
-container: ghcr.io/styles01/vllm-v26-patched:latest
+container: vllm/vllm-openai:v0.27.1
 maintainer: styles01
 
 metadata:
   author: styles01
   created: "2026-07-27"
-  updated: "2026-07-27"
+  updated: "2026-08-13"
   tags:
     - qwen
-    - qwen3.6
+    - qwen3.8
     - 27b
     - fp8
     - mtp
-    - vllm-26
     - fp8-kv
     - async-scheduling
+    - vision
   runbook: runbooks/qwen-27b.md
 
 solo_only: false
@@ -38,10 +38,10 @@ defaults:
   max_num_batched_tokens: 32768
   kv_cache_dtype: fp8
   attention_backend: flashinfer
-  load_format: safetensors
+  load_format: fastsafetensors
   tool_call_parser: qwen3_coder
   reasoning_parser: qwen3
-  served_model_name: Qwen/Qwen3.6-27B-FP8
+  served_model_name: "qwen3.8-27b Qwen/Qwen3.8-27B-FP8"
   speculative_config: '{"method":"mtp","num_speculative_tokens":7}'
   async_scheduling: true
   enable_prefix_caching: true
@@ -51,6 +51,20 @@ defaults:
 
 env:
   VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  TORCH_MATMUL_PRECISION: high
+
+patches:
+  - patch_mamba_drop_eagle_v0271.sh
+
+variants:
+  recipe_production:
+    description: "Production — MTP k=7, 5 seqs, GMU 0.79 (same as Qwen 3.6)"
+    gpu_memory_utilization: 0.79
+    max_num_seqs: 5
+  recipe_concurrent:
+    description: "Concurrent stack — GMU 0.50, 8 seqs, leaves ~80GB for ComfyUI+GNOME"
+    gpu_memory_utilization: 0.50
+    max_num_seqs: 8
 
 benchmark:
   framework: llama-benchy
@@ -65,6 +79,7 @@ command: |
   vllm serve {model} \
     --host {host} \
     --port {port} \
+    --served-model-name {served_model_name} \
     --max-model-len {max_model_len} \
     --max-num-seqs {max_num_seqs} \
     --max-num-batched-tokens {max_num_batched_tokens} \
