@@ -1,4 +1,4 @@
-# Recipe: Qwen 3.8 27B FP8
+# Recipe: Qwen 3.8 27B NVFP4
 
 **Status:** ✅ Production (triton_attn + MTP k=2, stable with concurrency)
 **Served name:** `qwen3.8-27b`
@@ -13,9 +13,11 @@
 ## Model Location on Spark
 
 ```
-~/models/hf/hub/models--Qwen--Qwen3.8-27B-FP8/snapshots/017b9c7af6b5689d5dd426a76e0bc077eb5ca20a/
+~/models/hf/hub/models--unsloth--Qwen3.8-27B-NVFP4/snapshots/b0d9f9de93a9e98df9b1dd41ba444ab1139b1ab3/
 ```
-~29 GB, 3 safetensors shards. MTP draft head built into checkpoint (no separate repo).
+~22 GB, NVFP4 (compressed-tensors). MTP draft head built into checkpoint (no separate repo).
+
+> ⚠️ **Do NOT use `Qwen/Qwen3.8-27B-FP8` (54 GB)** — it has no calibrated FP8 KV scheme → bf16 KV → OOM during MTP. This was our root crash cause. Use the NVFP4 checkpoint.
 
 ## Model Specs
 
@@ -27,10 +29,10 @@
 | Heads | 24, KV heads 4, head_dim 256 |
 | Context | 262,144 (256K), extendable to 1M via YaRN |
 | Vocab | 248,320 |
-| Quant | FP8 (compressed-tensors) |
-| Size | ~29 GB safetensors |
+| Quant | NVFP4 (compressed-tensors) |
+| Size | ~22 GB safetensors |
 | MTP | Built-in (mtp_num_hidden_layers=1, mtp_use_dedicated_embeddings=false) |
-| Acceptance | ~45-85% (varies by load, FP8 checkpoint) |
+| Acceptance | ~45-85% (varies by load) |
 
 ## CRITICAL: triton_attn Required (NOT flashinfer)
 
@@ -69,18 +71,21 @@ Use `vllm/vllm-openai:nightly-aarch64` (not `v0.27.1` or `latest`).
 ```bash
 docker run -d --name qwen38-spark \
   --gpus all --network host --ipc host --shm-size 32gb \
-  --entrypoint "" \
-  -v ~/models/hf:/cache/huggingface \
+  --privileged \
+  -e CUTE_DSL_ARCH=sm_121a \
+  -e VLLM_FLOAT32_MATMUL_PRECISION=high \
+  -v ~/models/hf:/root/.cache/huggingface \
+  --entrypoint vllm \
   vllm/vllm-openai:nightly-aarch64 \
-  vllm serve /cache/huggingface/hub/models--Qwen--Qwen3.8-27B-FP8/snapshots/017b9c7af6b5689d5dd426a76e0bc077eb5ca20a \
+  serve unsloth/Qwen3.8-27B-NVFP4 \
     --served-model-name qwen3.8-27b \
     --host 0.0.0.0 --port 8000 \
     --trust-remote-code \
     --max-model-len 262144 \
-    --max-num-seqs 5 \
-    --max-num-batched-tokens 32768 \
-    --gpu-memory-utilization 0.79 \
-    --kv-cache-dtype fp8 \
+    --max-num-seqs 4 \
+    --max-num-batched-tokens 8192 \
+    --gpu-memory-utilization 0.84 \
+    --quantization compressed-tensors \
     --attention-backend triton_attn \
     --load-format fastsafetensors \
     --reasoning-parser qwen3 \
@@ -93,6 +98,8 @@ docker run -d --name qwen38-spark \
     -tp 1
 ```
 
+> ⚠️ **`--max-num-batched-tokens 8192` is REQUIRED** — 32768 crashes under concurrency (GDN/Mamba cache alignment). This is the single most important flag.
+
 ## What Was Tried and Failed
 
 | Config | Result | Root Cause |
@@ -103,12 +110,17 @@ docker run -d --name qwen38-spark \
 | flashinfer + MTP k=3 + no prefix caching | Still crashes | Prefix caching not the only issue |
 | **triton_attn + MTP k=2 + nightly** | **✅ Stable with concurrency** | **triton_attn avoids GDN crash** |
 
-## Variants
+## Variants (alternative configs — NOT sparkrun contract, reference only)
+
+These are alternative serving configs documented for reference. The recipe itself uses the single locked config above (GMU 0.84, 4 seqs, 8192 batch tokens).
 
 | Variant | GMU | Seqs | Description |
 |---|---|---|---|
-| `recipe_production` | 0.79 | 5 | Default — max throughput |
-| `recipe_concurrent` | 0.50 | 8 | Leaves ~80 GB free for ComfyUI + GNOME |
+| **Production (recipe default)** | 0.84 | 4 | Mia Lab config — max throughput, MTP k=2 |
+| **Concurrent stack** | 0.50 | 8 | Leaves ~80 GB free for ComfyUI + GNOME |
+| **erdaltoprak** | 0.50 | 4 | Pinned image SHA `c96082d3...`, `--kv-cache-dtype fp8`, MTP k=2 — GMU 0.50 is a deliberate CUDA-graph headroom choice (his OOM workaround). See `ERDALTOPRAK-QWEN38-CONFIG.md`. |
+| **SGLang FP8** | 0.85 | — | `lmsysorg/sglang:latest` + `Qwen/Qwen3.8-27B-FP8`, flashinfer backend. UNVERIFIED on SM121 (cookbook recipe is x86-only). |
+| **Radix DSpark** | — | — | Radix + SGLang + DSpark beat NVFP4 MTP single-stream (171 tok/s on 2× PRO 6000). Not yet tested on Spark. |
 
 ## Key Differences from Qwen 3.6
 

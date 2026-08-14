@@ -61,16 +61,8 @@ executor_config:
 # NO enforce-eager — CUDA graphs work with triton_attn + NVFP4 checkpoint.
 # The NVFP4 checkpoint auto-applies FP8 KV cache scheme (calibrated), doubling KV capacity.
 # Using FP8 checkpoint (Qwen/Qwen3.8-27B-FP8) instead of NVFP4 causes OOM during MTP — that was our root crash cause.
-
-variants:
-  recipe_production:
-    description: "Production — MTP k=2, 4 seqs, GMU 0.84 (Mia Lab config)"
-    gpu_memory_utilization: 0.84
-    max_num_seqs: 4
-  recipe_concurrent:
-    description: "Concurrent stack — GMU 0.50, 8 seqs, leaves ~80GB for ComfyUI+GNOME"
-    gpu_memory_utilization: 0.50
-    max_num_seqs: 8
+# NOTE: max_num_batched_tokens=8192 is REQUIRED for GDN/Mamba cache alignment (32768 crashes under concurrency).
+# See runbooks/qwen-27b.md for alternative configs (erdaltoprak GMU 0.50, SGLang FP8, Radix DSpark).
 
 benchmark:
   framework: llama-benchy
