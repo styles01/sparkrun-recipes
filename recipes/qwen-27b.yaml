@@ -1,6 +1,6 @@
 recipe_version: "3"
 name: qwen3.8-27b-fp8
-description: "Qwen3.8 27B FP8 — MTP, fp8 KV, async scheduling, 256K context, vision support. Updated from Qwen 3.6."
+description: "Qwen3.8 27B FP8 — MTP k=3, fp8 KV, enforce-eager, 256K context, vision support. Updated from Qwen 3.6."
 model: Qwen/Qwen3.8-27B-FP8
 runtime: vllm
 container: vllm/vllm-openai:v0.27.1
@@ -9,7 +9,7 @@ maintainer: styles01
 metadata:
   author: styles01
   created: "2026-07-27"
-  updated: "2026-08-13"
+  updated: "2026-08-14"
   tags:
     - qwen
     - qwen3.8
@@ -17,7 +17,7 @@ metadata:
     - fp8
     - mtp
     - fp8-kv
-    - async-scheduling
+    - enforce-eager
     - vision
   runbook: runbooks/qwen-27b.md
 
@@ -62,10 +62,15 @@ executor_config:
 # NO Mamba patch needed for Qwen 3.8 — vLLM v0.27.1 has native MTP support.
 # The PR #48375 patch was designed for Qwen 3.6 and CORRUPTS Qwen 3.8's built-in MTP.
 # vLLM logs: "Detected MTP model. Sharing target model embedding/lm_head weights with the draft model."
+#
+# CRITICAL: --enforce-eager is REQUIRED. CUDA graph capture crashes MTP on Qwen 3.8's
+# hybrid Mamba (Gated DeltaNet + full attention) architecture with cudaErrorIllegalAddress.
+# GitHub issue #38643 documents the FLA linear attention tensor format mismatch.
+# PR #34571 addresses CUDA graph capture on hybrid models but is not yet merged.
 
 variants:
   recipe_production:
-    description: "Production — MTP k=7, 5 seqs, GMU 0.79 (same as Qwen 3.6)"
+    description: "Production — MTP k=3, 5 seqs, GMU 0.79, enforce-eager (CUDA graphs crash MTP on hybrid Mamba)"
     gpu_memory_utilization: 0.79
     max_num_seqs: 5
   recipe_concurrent:
@@ -101,6 +106,7 @@ command: |
     --async-scheduling \
     --enable-prefix-caching \
     --enable-chunked-prefill \
+    --enforce-eager \
     --speculative-config '{speculative_config}' \
     -tp {tensor_parallel} \
     -pp {pipeline_parallel}

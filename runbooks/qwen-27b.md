@@ -1,57 +1,67 @@
-# Runbook: Qwen 3.6 27B FP8 — MTP k=7
+# Recipe: Qwen 3.8 27B FP8
 
-**Status:** ✅ Production — vLLM v26 patched, MTP k=7 (48.7% accept), fp8 KV, async scheduling
-**Served name:** `Qwen/Qwen3.6-27B-FP8`
-**Stack:** Docker — `ghcr.io/styles01/vllm-v26-patched:latest`
-**Tool parser:** `qwen3_coder`
+**Status:** ✅ Production (enforce-eager + MTP k=3, stable)
+**Served name:** `qwen3.8-27b`
+**Docker image:** `vllm/vllm-openai:v0.27.1` (stock — also tagged `latest`)
+**Tool calling:** ✅ `--enable-auto-tool-choice --tool-call-parser qwen3_coder`
 **Reasoning parser:** `qwen3`
+**Vision:** ✅ Multimodal (image_token_id present, vision_config)
 
 > **Recipe contract:** [`recipes/qwen-27b.yaml`](../recipes/qwen-27b.yaml)
 
 ## Model Location on Spark
 
 ```
-~/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B-FP8/
+~/models/hf/hub/models--Qwen--Qwen3.8-27B-FP8/snapshots/017b9c7af6b5689d5dd426a76e0bc077eb5ca20a/
 ```
-FP8 quantized, ~27GB on disk.
+~29 GB, 3 safetensors shards. MTP draft head built into checkpoint (no separate repo).
 
-## Config
+## Model Specs
 
-| Parameter | Value |
+| Spec | Value |
 |---|---|
-| GPU mem util | 0.79 |
-| KV cache dtype | fp8 |
-| MTP speculative | k=7, 48.7% acceptance |
-| Attention backend | flashinfer |
-| Max model len | 262,144 (256K) |
-| Max seqs | 5 |
-| Max batched tokens | 32,768 |
-| Load format | safetensors |
-| Served name | Qwen/Qwen3.6-27B-FP8 |
-| Port | 8000 |
-| Tool parser | qwen3_coder |
-| Reasoning parser | qwen3 |
-| Async scheduling | ON |
-| Prefix caching | ON |
-| Chunked prefill | ON |
+| Architecture | `Qwen3_5ForConditionalGeneration` (hybrid Mamba/Gated DeltaNet + full attention) |
+| Layers | 64 (48 linear attention + 16 full attention, interval 4) |
+| Hidden | 5120 |
+| Heads | 24, KV heads 4, head_dim 256 |
+| Context | 262,144 (256K), extendable to 1M via YaRN |
+| Vocab | 248,320 |
+| Quant | FP8 (compressed-tensors) |
+| Size | ~29 GB safetensors |
+| MTP | Built-in (mtp_num_hidden_layers=1, mtp_use_dedicated_embeddings=false) |
+| Acceptance | ~84.8% (FP8, per vLLM announcement) |
 
-## Start Command
+## CRITICAL: enforce-eager Required
+
+**CUDA graph capture crashes MTP on Qwen 3.8's hybrid Mamba architecture.**
+
+The `cudaErrorIllegalAddress` error occurs when CUDA graphs replay MTP draft tokens through the Gated DeltaNet (linear attention) layers. The recurrent state cache layout doesn't match the graph's captured memory addresses.
+
+- **GitHub issue #38643:** FLA linear attention tensor format mismatch
+- **PR #34571:** CUDA graph capture on hybrid models (not yet merged)
+- **Fix:** `--enforce-eager` disables CUDA graphs entirely. MTP works perfectly without graphs.
+- **Tradeoff:** ~10-20% throughput cost vs CUDA graphs, but MTP gives 3x+ speedup. Net positive.
+
+## CRITICAL: NO Mamba Patch
+
+**Do NOT apply the PR #48375 Mamba patch (`patch_mamba_drop_eagle.sh`) to Qwen 3.8.**
+
+- The patch was designed for Qwen 3.6's code layout (~48 layers)
+- Qwen 3.8 has 64 layers with a different MTP implementation
+- vLLM v0.27.1 has **native MTP support** for Qwen 3.8 — it auto-detects the MTP model in the checkpoint
+- vLLM logs: *"Detected MTP model. Sharing target model embedding/lm_head weights with the draft model."*
+- Applying the patch corrupts the native MTP support and causes `EngineDeadError`
+
+## Locked Config (Production)
 
 ```bash
-ssh jaita@larryspark.local 'bash ~/switch-to-qwen27b.sh'
-```
-
-### Full Docker launch
-
-```bash
-docker run -d \
-  --name qwen27b-spark --gpus all -p 8000:8000 --user root \
-  -v $HOME/.cache/huggingface:/root/.cache/huggingface \
-  -e HF_HOME=/root/.cache/huggingface \
-  -e VLLM_MARLIN_USE_ATOMIC_ADD=1 \
-  ghcr.io/styles01/vllm-v26-patched:latest \
-  Qwen/Qwen3.6-27B-FP8 \
-    --served-model-name Qwen/Qwen3.6-27B-FP8 \
+docker run -d --name qwen38-spark \
+  --gpus all --network host --ipc host --shm-size 32gb \
+  --entrypoint "" \
+  -v ~/models/hf:/cache/huggingface \
+  vllm/vllm-openai:v0.27.1 \
+  vllm serve /cache/huggingface/hub/models--Qwen--Qwen3.8-27B-FP8/snapshots/017b9c7af6b5689d5dd426a76e0bc077eb5ca20a \
+    --served-model-name qwen3.8-27b \
     --host 0.0.0.0 --port 8000 \
     --trust-remote-code \
     --max-model-len 262144 \
@@ -60,64 +70,61 @@ docker run -d \
     --gpu-memory-utilization 0.79 \
     --kv-cache-dtype fp8 \
     --attention-backend flashinfer \
-    --load-format safetensors \
+    --moe-backend marlin \
+    --load-format fastsafetensors \
+    --reasoning-parser qwen3 \
+    --tool-call-parser qwen3_coder \
+    --enable-auto-tool-choice \
     --async-scheduling \
     --enable-prefix-caching \
     --enable-chunked-prefill \
-    --enable-auto-tool-choice \
-    --tool-call-parser qwen3_coder \
-    --reasoning-parser qwen3 \
-    --speculative-config '{"method":"mtp","num_speculative_tokens":7}'
+    --enforce-eager \
+    --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+    -tp 1
 ```
 
-## Stop Command
+## Variants
 
-```bash
-ssh jaita@larryspark.local 'docker rm -f qwen27b-spark'
-```
+| Variant | GMU | Seqs | Description |
+|---|---|---|---|
+| `recipe_production` | 0.79 | 5 | Default — max throughput, headless |
+| `recipe_concurrent` | 0.50 | 8 | Leaves ~80 GB free for ComfyUI + GNOME |
 
-## Performance
+## Troubleshooting
 
-| Metric | Value |
-|---|---|
-| MTP acceptance | 48.7% at k=7 |
-| Context | 256K |
-| Concurrency | 5 lanes |
-| Decode speed | TBD (benchmarks pending) |
+### EngineDeadError with MTP
+- **Cause:** CUDA graph capture corrupts MTP on hybrid Mamba architecture
+- **Fix:** Add `--enforce-eager` (already in recipe)
+- **DO NOT apply Mamba patch** — it makes the crash worse
 
-## Why k=7
+### cudaErrorIllegalAddress
+- **Cause:** CUDA graph replay hits invalid memory in linear attention layers
+- **Fix:** `--enforce-eager` (disables all CUDA graphs)
 
-- 27B model has sufficient MTP head capacity for k=7
-- 48.7% acceptance rate — good balance of speedup vs. draft overhead
-- Higher k (8+) shows diminishing returns on 27B class models
-- Async scheduling + prefix caching maximize throughput at 5 concurrent
+### Engine dies under sustained load (no MTP)
+- **Cause:** Same CUDA graph issue, triggered by heavy concurrent load
+- **Fix:** `--enforce-eager` (MTP + eager mode is stable)
 
-## vLLM v26 Patches
+### Slow generation (~20 tok/s without MTP)
+- **Cause:** No speculative decoding
+- **Fix:** Enable MTP k=3 with `--enforce-eager`. Expected ~60-80 tok/s with MTP.
 
-Uses the same patched vLLM v26 container as the 122B recipe:
-- `patch_inc_hybrid.py` — hybrid quantization support
-- `patch_int8_lmhead_v3.py` — int8 lm-head optimization
-- `patch_prefix_align.py` — prefix caching alignment fix
+## Key Differences from Qwen 3.6
 
-## Verify
+| | Qwen 3.6 27B | Qwen 3.8 27B |
+|---|---|---|
+| Layers | ~48 | 64 |
+| MTP | Requires PR #48375 patch | Native (no patch needed) |
+| CUDA graphs | ✅ Works with MTP | ❌ Crashes with MTP |
+| enforce-eager | Not needed | **Required** |
+| vLLM version | v0.24.0+ | v0.27.1 (latest) |
+| Container | ghcr.io/styles01/vllm-v26-patched | vllm/vllm-openai:v0.27.1 (stock) |
+| Image | Custom patched | Stock — no patching needed |
 
-```bash
-curl -s http://larryspark.local:8000/v1/models | jq '.data[].id'
-# expect: Qwen/Qwen3.6-27B-FP8
+## vLLM Announcement Reference
 
-curl -s http://larryspark.local:8000/v1/chat/completions \
-  -H 'Content-Type: application/json' \
-  -d '{"model":"Qwen/Qwen3.6-27B-FP8","messages":[{"role":"user","content":"Write a Python function to reverse a linked list."}],"max_tokens":500}' \
-  | jq '.choices[0].message.content'
-```
-
-## Trade-Offs
-
-- 27B is the sweet spot for single-user speed + quality on DGX Spark
-- k=7 MTP gives ~2x throughput vs no-spec, but 48.7% acceptance means ~5 of 7 drafts accepted
-- 5 concurrent at 256K — enough for agent + subagent workflows
-- fp8 KV doubles KV capacity vs bf16
-
-## Switch Script
-
-`scripts/switch-to-qwen27b.sh` — one-command deploy.
+vLLM announced Day-0 support for Qwen 3.8-27B ([post](https://x.com/vllm_project/status/2088287539979559068)):
+- MTP draft head included in checkpoint (no separate model)
+- ~84.8% acceptance rate (FP8)
+- Requires vLLM nightly + transformers 5.8.0+
+- Verified on GB300 (BF16/FP8 at TP=4, NVFP4 at TP=1)
