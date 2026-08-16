@@ -7,7 +7,7 @@
 **Reasoning parser:** `qwen3`
 **Spec decode:** MTP n=3 (built-in draft head)
 
-> **Recipe contract:** [`recipes/qwen-38-27b-nvfp4-gb10.yaml`](../recipes/qwen-38-27b-nvfp4-gb10.yaml)
+> **Recipe contract:** [`recipes/qwen-38-27b.yaml`](../recipes/qwen-38-27b.yaml)
 > **Source:** [drowzeys/keys-vLLm.0.27-Qwen3.8-NVFP4-MTP3-Single-DGX-Spark](https://github.com/drowzeys/keys-vLLm.0.27-Qwen3.8-NVFP4-MTP3-Single-DGX-Spark)
 
 ## CRITICAL: GB10-specific image (NOT stock vLLM)
