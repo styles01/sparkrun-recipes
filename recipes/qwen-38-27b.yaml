@@ -36,7 +36,7 @@ defaults:
   host: 0.0.0.0
   tensor_parallel: 1
   pipeline_parallel: 1
-  gpu_memory_utilization: 0.90
+  gpu_memory_utilization: 0.55
   max_model_len: 262144
   max_num_seqs: 10
   kv_cache_dtype: fp8

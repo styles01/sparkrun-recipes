@@ -52,7 +52,7 @@ docker run -d --name qwen38 --gpus all --ipc=host --network host \
   ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813 \
   vllm serve /models/Qwen3.8-27B-NVFP4 --served-model-name qwen38-27b \
     --host 0.0.0.0 --port 8000 \
-    --max-model-len 262144 --kv-cache-dtype fp8 --gpu-memory-utilization 0.90 \
+    --max-model-len 262144 --kv-cache-dtype fp8 --gpu-memory-utilization 0.55 \
     --max-num-seqs 4 \
     --reasoning-parser qwen3 \
     --enable-flashinfer-autotune --enable-auto-tool-choice --tool-call-parser qwen3_coder \
