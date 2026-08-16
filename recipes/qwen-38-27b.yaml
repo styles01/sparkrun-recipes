@@ -1,9 +1,9 @@
 recipe_version: "4"
-name: qwen-38-27b
-description: "Qwen3.8 27B NVFP4 — triton_attn, MTP k=2, fp8 KV (auto from checkpoint), 256K context, vision. Mia Lab config."
+name: qwen3.8-27b-nvfp4-gb10
+description: "Qwen3.8 27B NVFP4 + MTP n=3 on GB10-specific vLLM (drowzeys/eugr spark-vllm-b12x). 256K ctx, fp8 KV, 8.4x concurrency. THE working config."
 model: unsloth/Qwen3.8-27B-NVFP4
 runtime: vllm
-container: vllm/vllm-openai:nightly-aarch64
+container: ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813
 maintainer: styles01
 
 metadata:
@@ -16,9 +16,10 @@ metadata:
     - 27b
     - nvfp4
     - mtp
-    - triton-attn
-    - vision
-  runbook: runbooks/qwen-38-27b.md
+    - gb10
+    - drowzeys
+  runbook: runbooks/qwen-38-27b-gb10.md
+  source: https://github.com/drowzeys/keys-vLLm.0.27-Qwen3.8-NVFP4-MTP3-Single-DGX-Spark
 
 solo_only: false
 cluster_only: false
@@ -26,43 +27,32 @@ cluster_only: false
 min_nodes: 1
 max_nodes: 1
 
+# CRITICAL: This image (eugr spark-vllm-b12x, mirrored by drowzeys) is GB10-specific.
+# Stock vllm/vllm-openai has NO NVFP4 kernels for Blackwell sm_121a — that's why
+# every stock-vLLM attempt crashed. This build provides FlashInferCutlassNvFp4LinearKernel.
+
 defaults:
-  port: 8000
+  port: 8078
   host: 0.0.0.0
   tensor_parallel: 1
   pipeline_parallel: 1
-  gpu_memory_utilization: 0.84
+  gpu_memory_utilization: 0.90
   max_model_len: 262144
-  max_num_seqs: 4
-  max_num_batched_tokens: 8192
+  max_num_seqs: 10
   kv_cache_dtype: fp8
-  attention_backend: triton_attn
-  load_format: fastsafetensors
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
   tool_call_parser: qwen3_coder
-  reasoning_parser: qwen3
-  served_model_name: "qwen3.8-27b unsloth/Qwen3.8-27B-NVFP4"
-  speculative_config: '{"method":"mtp","num_speculative_tokens":2}'
-  async_scheduling: true
-  enable_prefix_caching: true
-  enable_chunked_prefill: true
-  trust_remote_code: true
   enable_auto_tool_choice: true
-  quantization: compressed-tensors
+  enable_flashinfer_autotune: true
+  served_model_name: "qwen38-27b unsloth/Qwen3.8-27B-NVFP4"
 
 env:
-  CUTE_DSL_ARCH: sm_121a
+  FLASHINFER_CUDA_ARCH_LIST: 12.1a
+  FLASHINFER_DISABLE_VERSION_CHECK: "1"
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
 
-executor_config:
-  entrypoint: ""
-  auto_remove: false
-  user: root
-
-# NO Mamba patch needed — vLLM nightly-aarch64 has native MTP support for Qwen 3.8.
-# NO enforce-eager — CUDA graphs work with triton_attn + NVFP4 checkpoint.
-# The NVFP4 checkpoint auto-applies FP8 KV cache scheme (calibrated), doubling KV capacity.
-# Using FP8 checkpoint (Qwen/Qwen3.8-27B-FP8) instead of NVFP4 causes OOM during MTP — that was our root crash cause.
-# NOTE: max_num_batched_tokens=8192 is REQUIRED for GDN/Mamba cache alignment (32768 crashes under concurrency).
-# See runbooks/qwen-38-27b.md for alternative configs (erdaltoprak GMU 0.50, SGLang FP8, Radix DSpark).
+# NOTE: MTP n is capped at 3 (model has exactly 1 MTP layer). Depth >=4 crashes.
+# KV cache pool is ~2.2M tokens = 8.4x concurrency at 256K (2.2x at 1M YaRN).
 
 benchmark:
   framework: llama-benchy
@@ -79,19 +69,12 @@ command: |
     --port {port} \
     --served-model-name {served_model_name} \
     --max-model-len {max_model_len} \
-    --max-num-seqs {max_num_seqs} \
-    --max-num-batched-tokens {max_num_batched_tokens} \
-    --trust-remote-code \
+    --kv-cache-dtype {kv_cache_dtype} \
     --gpu-memory-utilization {gpu_memory_utilization} \
+    --enable-flashinfer-autotune \
     --enable-auto-tool-choice \
     --tool-call-parser {tool_call_parser} \
-    --reasoning-parser {reasoning_parser} \
-    --quantization {quantization} \
-    --load-format {load_format} \
-    --attention-backend {attention_backend} \
-    --async-scheduling \
-    --enable-prefix-caching \
-    --enable-chunked-prefill \
+    --reasoning-parser qwen3 \
     --speculative-config '{speculative_config}' \
     -tp {tensor_parallel} \
     -pp {pipeline_parallel}
