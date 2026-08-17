@@ -1,0 +1,83 @@
+recipe_version: "4"
+name: qwen3.8-27b-nvfp4-eagle-sglang
+description: "Qwen3.8 27B NVFP4 + MTP EAGLE 3/1/4 on SGLang. RadixArk ModelOpt NVFP4 (mixed-precision + fp8 KV), EAGLE spec-decode. Matches drowzeys (256K, 4 seqs, prefix cache)."
+model: RadixArk/Qwen3.8-27B-NVFP4
+runtime: sglang
+container: lmsysorg/sglang:qwen38-27b
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-17"
+  updated: "2026-08-17"
+  tags:
+    - qwen
+    - qwen3.8
+    - 27b
+    - nvfp4
+    - eagle
+    - sglang
+    - gb10
+    - speculative-decoding
+  runbook: runbooks/qwen-38-27b-nvfp4-eagle-sglang.md
+  source: https://x.com/calneymgp/status/2088822975550071292
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# MTP EAGLE on SGLang (Calney recipe) adapted to our drowzeys settings.
+# KEY: EAGLE aligns with the model (accept 2.45-3.88) unlike DSpark (collapses to ~1-2 on thinking-on).
+# EAGLE 3/1/4 = --speculative-num-steps 3 --speculative-eagle-topk 1 --speculative-num-draft-tokens 4.
+# Model: RadixArk/Qwen3.8-27B-NVFP4 (ModelOpt MIXED_PRECISION, fp8 KV scheme, lm_head quantized).
+# vLLM is a dead end for MTP on this model (GDN fused kernel needs num_v_heads==8*num_k_heads; 48/16 fails -> Triton). Use SGLang.
+
+defaults:
+  port: 30000
+  host: 0.0.0.0
+  served_model_name: "qwen38-27b RadixArk/Qwen3.8-27B-NVFP4"
+  context_length: 262144
+  max_running_requests: 4
+  mem_fraction_static: 0.80
+  kv_cache_dtype: fp8_e4m3
+  mamba_ssm_dtype: bfloat16
+  chunked_prefill_size: 2048
+  attention_backend: triton
+  speculative_algorithm: EAGLE
+  speculative_num_steps: 3
+  speculative_eagle_topk: 1
+  speculative_num_draft_tokens: 4
+  reasoning_parser: qwen3
+  tool_call_parser: qwen3_coder
+  trust_remote_code: true
+  radix_cache: true  # prefix caching ON (was disabled in source; our drowseys measured 53% hit)
+
+env:
+  HF_HUB_DISABLE_XET: "1"
+
+# NOTE: This is the Calney MTP EAGLE recipe adapted to drowzeys settings:
+# - served-model-name qwen38-27b (match Loca)
+# - context 262144 (256K), max-running-requests 4 (4 seqs)
+# - mem-fraction 0.80, prefix cache ON
+# Model must be downloaded + lm_head quantized (see runbook).
+# RadixArk NVFP4 already ships quantized lm_head (quantize step is a no-op).
+
+command: |
+  python3 -m sglang.launch_server \
+    --model-path {model} --served-model-name {served_model_name} \
+    --speculative-algorithm {speculative_algorithm} \
+    --speculative-num-steps {speculative_num_steps} \
+    --speculative-eagle-topk {speculative_eagle_topk} \
+    --speculative-num-draft-tokens {speculative_num_draft_tokens} \
+    --attention-backend {attention_backend} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --mem-fraction-static {mem_fraction_static} \
+    --context-length {context_length} \
+    --max-running-requests {max_running_requests} \
+    --mamba-ssm-dtype {mamba_ssm_dtype} \
+    --chunked-prefill-size {chunked_prefill_size} \
+    --reasoning-parser {reasoning_parser} \
+    --tool-call-parser {tool_call_parser} \
+    --trust-remote-code --host {host} --port {port}
