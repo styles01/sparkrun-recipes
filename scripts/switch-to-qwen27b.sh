@@ -4,21 +4,23 @@ set -euo pipefail
 # Switch to Qwen 3.8 27B NVFP4 on the GB10 drowzeys build
 # MTP n=3, fp8 KV, flashinfer autotune, 4 seqs, 256K context
 # Recipe: @styles01/qwen-38-27b (GB10 canonical)
-# NOTE: GMU 0.55 default — sized for 4x256K KV cache, frees ~46 GiB for other Spark work.
-#       (0.90 was the arena/benchmark value; 0.55 is the production serve value.)
+# Tuned with arena leader values: GMU 0.72, chunked-prefill 8192, max-num-batched-tokens 8192
 # NOTE: DSpark drafter (Doopeworld) forces FLASH_ATTN which rejects fp8 KV on this GB10
 #       build — DSpark does NOT work here. MTP n=3 is the validated spec-decode path.
+# NOTE: EAGLE 3/1/4 on SGLang tested (~27 avg, 29.4 tool) — slower than drowzeys 96 aggregate.
+#       SGLang recipe saved as qwen-38-27b-nvfp4-eagle-sglang.yaml for reference.
 
 IMAGE="ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813"
 MODEL_DIR="${MODEL_DIR:-$HOME/models/hf/hub/models--unsloth--Qwen3.8-27B-NVFP4}"
 MODEL="/models/snapshots/b0d9f9de93a9e98df9b1dd41ba444ab1139b1ab3"
 CONTAINER="qwen38"
 PORT="${PORT:-8000}"
-GMU="${GMU:-0.55}"
+GMU="${GMU:-0.72}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-262144}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-4}"
 NSPEC="${NSPEC:-3}"
 CACHE_DIR="${CACHE_DIR:-$HOME/vllm-cache}"
+BATCH_TOKENS="${BATCH_TOKENS:-8192}"
 
 echo "[qwen38] Stopping existing containers..."
 docker rm -f "$CONTAINER" 2>/dev/null || true
@@ -26,7 +28,7 @@ for c in $(docker ps --format "{{.Names}}" | grep -i sparkrun 2>/dev/null || tru
   docker rm -f "$c" 2>/dev/null || true
 done
 
-echo "[qwen38] Launching GB10 vLLM container (DSpark k=$NSPEC + prefix caching)..."
+echo "[qwen38] Launching GB10 vLLM container (MTP n=$NSPEC + prefix caching + arena tuning)..."
 docker run -d \
   --name "$CONTAINER" \
   --restart unless-stopped \
@@ -47,6 +49,8 @@ docker run -d \
     --kv-cache-dtype fp8 \
     --gpu-memory-utilization "$GMU" \
     --max-num-seqs "$MAX_NUM_SEQS" \
+    --max-num-batched-tokens "$BATCH_TOKENS" \
+    --enable-chunked-prefill \
     --reasoning-parser qwen3 \
     --enable-flashinfer-autotune \
     --enable-auto-tool-choice \
