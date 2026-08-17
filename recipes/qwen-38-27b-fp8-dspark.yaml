@@ -1,0 +1,80 @@
+recipe_version: "4"
+name: qwen3.8-27b-fp8-dspark
+description: "Qwen3.8 27B FP8 + DSpark drafter (k=7) on vanilla vLLM v0.27.1-aarch64. Author's 75 tok/s recipe (0xBakeer) with our known-good changes applied. FP8 weights (drafter trained on FP8)."
+model: Qwen/Qwen3.8-27B-FP8
+runtime: vllm
+container: vllm/vllm-openai:v0.27.1-aarch64
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-16"
+  updated: "2026-08-16"
+  tags:
+    - qwen
+    - qwen3.8
+    - 27b
+    - fp8
+    - dspark
+    - gb10
+    - vllm
+  runbook: runbooks/qwen-38-27b-fp8-dspark.md
+  source: https://x.com/0xBakeer/status/2089090318905774558
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# CRITICAL: DSpark drafter (Doopeworld/Qwen3.8-27B-DSpark-vLLM) was TRAINED on FP8 weights.
+# Use FP8 (Qwen/Qwen3.8-27B-FP8), NOT NVFP4 — NVFP4 perturbs the hidden states the drafter reads
+# (gives chance-level ~1/k acceptance). FP8 gives proper alignment (author: 98.7% at k=7).
+# Vanilla vLLM v0.27.1-aarch64 supports FP8 on GB10 (author-proven 75 tok/s).
+# GB10 NVFP4 issues were NVFP4-specific; FP8 is a standard path.
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.55
+  max_model_len: 262144
+  max_num_seqs: 4
+  max_num_batched_tokens: 16384
+  speculative_config: '{"method":"dspark","model":"Doopeworld/Qwen3.8-27B-DSpark-vLLM","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}'
+  tool_call_parser: qwen3_coder
+  enable_auto_tool_choice: true
+  enable_prefix_caching: true
+  served_model_name: "qwen38-27b Qwen/Qwen3.8-27B-FP8"
+
+env:
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
+  VLLM_USE_FLASHINFER_MOE_FP4: "0"
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+# NOTE: Author's recipe (0xBakeer) with our known-good changes:
+# - served-model-name: qwen38-27b (ours, not qwen3.8-27b)
+# - port: 8000 (ours, not 8002)
+# - max-num-seqs: 4 (ours)
+# - GMU: 0.55 (ours, not 0.85 — frees headroom)
+# - tool-call-parser: qwen3_coder (ours, not qwen3_xml)
+# - thinking ON (we keep thinking on — native thinking model)
+# Author's DSpark-specific settings kept: k=7, batch 16384, prefix caching, FP8 weights, Doopeworld drafter.
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --max-model-len {max_model_len} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --enable-prefix-caching \
+    --reasoning-parser qwen3 \
+    --tool-call-parser {tool_call_parser} \
+    --enable-auto-tool-choice \
+    --speculative-config '{speculative_config}' \
+    -tp {tensor_parallel} \
+    -pp {pipeline_parallel}

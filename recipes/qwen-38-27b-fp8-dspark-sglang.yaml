@@ -1,0 +1,74 @@
+recipe_version: "4"
+name: qwen3.8-27b-fp8-dspark-sglang
+description: "Qwen3.8 27B FP8 + DSpark drafter on SGLang (author's 75 tok/s path). SGLang-native DSpark (vLLM DSpark gives chance-level acceptance). FP8 weights (drafter trained on FP8)."
+model: Qwen/Qwen3.8-27B-FP8
+runtime: sglang
+container: lmsysorg/sglang:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-16"
+  updated: "2026-08-16"
+  tags:
+    - qwen
+    - qwen3.8
+    - 27b
+    - fp8
+    - dspark
+    - sglang
+    - gb10
+  runbook: runbooks/qwen-38-27b-fp8-dspark-sglang.md
+  source: https://x.com/0xBakeer/status/2089090318905774558
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# CRITICAL: DSpark drafter is SGLang-native (trained with SpecForge, served with SGLang).
+# vLLM DSpark path gives chance-level acceptance (~1/k) — does NOT work.
+# Use SGLang + FP8 weights (drafter trained on FP8, NOT NVFP4).
+# Drafter: RadixArk/Qwen3.8-27B-DSpark (original) or Doopeworld/Qwen3.8-27B-DSpark-vLLM (byte-identical).
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.55
+  max_model_len: 262144
+  max_num_seqs: 4
+  speculative_algorithm: DSPARK
+  speculative_draft_model: RadixArk/Qwen3.8-27B-DSpark
+  speculative_dspark_block_size: 7
+  speculative_draft_model_quantization: unquant
+  mamba_scheduler_strategy: extra_buffer
+  attention_backend: fa3
+  tool_call_parser: qwen3_coder
+  enable_auto_tool_choice: true
+  served_model_name: "qwen38-27b Qwen/Qwen3.8-27B-FP8"
+
+env:
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+# NOTE: SGLang DSpark command from the model card.
+# FP8 weights (Qwen/Qwen3.8-27B-FP8) — drafter trained on FP8.
+# Drafter: RadixArk/Qwen3.8-27B-DSpark (SGLang-native).
+
+command: |
+  sglang serve \
+    --trust-remote-code \
+    --model-path {model} \
+    --tp-size {tensor_parallel} \
+    --speculative-algorithm {speculative_algorithm} \
+    --speculative-draft-model-path {speculative_draft_model} \
+    --speculative-dspark-block-size {speculative_dspark_block_size} \
+    --speculative-draft-model-quantization {speculative_draft_model_quantization} \
+    --mamba-scheduler-strategy {mamba_scheduler_strategy} \
+    --attention-backend {attention_backend} \
+    --host {host} \
+    --port {port} \
+    --max-model-len {max_model_len} \
+    --mem-fraction-static {gpu_memory_utilization} \
+    --max-running-requests {max_num_seqs}
