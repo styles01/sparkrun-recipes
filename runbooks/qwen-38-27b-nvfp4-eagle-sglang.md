@@ -42,7 +42,7 @@ docker run -d --name sglang-qwen38 --restart unless-stopped --gpus all --ipc hos
     --speculative-algorithm EAGLE \
     --speculative-num-steps 3 --speculative-eagle-topk 1 --speculative-num-draft-tokens 4 \
     --attention-backend triton --kv-cache-dtype fp8_e4m3 \
-    --mem-fraction-static 0.80 --context-length 262144 --max-running-requests 4 \
+    --mem-fraction-static 0.65 --context-length 262144 --max-running-requests 4 \
     --mamba-ssm-dtype bfloat16 --chunked-prefill-size 2048 \
     --reasoning-parser qwen3 --tool-call-parser qwen3_coder \
     --trust-remote-code --host 0.0.0.0 --port 30000
@@ -64,7 +64,7 @@ Expected (measured Aug 17, thinking ON, RadixArk NVFP4): prose 22.7, code 32.0, 
 | served-model-name | qwen38-27b | match Loca |
 | context | 262144 | 256K, what we ran |
 | max-running-requests | 4 | 4 seqs |
-| mem-fraction-static | 0.80 | fp8 KV keeps pool big, safe headroom |
+| mem-fraction-static | 0.65 | computed: ~0.65 gives 4.06× 256K capacity (4 concurrent full-256K fit) |
 | radix cache | ON (flag removed) | prefix caching; drowseys measured 53% hit |
 | kv-cache-dtype | fp8_e4m3 | fp8 KV |
 

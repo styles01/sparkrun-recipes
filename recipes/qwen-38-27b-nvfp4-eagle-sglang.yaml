@@ -40,7 +40,7 @@ defaults:
   served_model_name: "qwen38-27b RadixArk/Qwen3.8-27B-NVFP4"
   context_length: 262144
   max_running_requests: 4
-  mem_fraction_static: 0.80
+  mem_fraction_static: 0.65
   kv_cache_dtype: fp8_e4m3
   mamba_ssm_dtype: bfloat16
   chunked_prefill_size: 2048
