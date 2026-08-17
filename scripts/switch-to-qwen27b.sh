@@ -6,10 +6,12 @@ set -euo pipefail
 # Recipe: @styles01/qwen-38-27b (GB10 canonical)
 # NOTE: GMU 0.55 default — sized for 4x256K KV cache, frees ~46 GiB for other Spark work.
 #       (0.90 was the arena/benchmark value; 0.55 is the production serve value.)
+# NOTE: DSpark drafter (Doopeworld) forces FLASH_ATTN which rejects fp8 KV on this GB10
+#       build — DSpark does NOT work here. MTP n=3 is the validated spec-decode path.
 
 IMAGE="ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813"
-MODEL_DIR="${MODEL_DIR:-$HOME/models-local-qwen38}"   # TODO: reconcile to ~/models/hf/ (consolidation pending)
-MODEL="/models/Qwen3.8-27B-NVFP4"
+MODEL_DIR="${MODEL_DIR:-$HOME/models/hf/hub/models--unsloth--Qwen3.8-27B-NVFP4}"
+MODEL="/models/snapshots/b0d9f9de93a9e98df9b1dd41ba444ab1139b1ab3"
 CONTAINER="qwen38"
 PORT="${PORT:-8000}"
 GMU="${GMU:-0.55}"
@@ -24,7 +26,7 @@ for c in $(docker ps --format "{{.Names}}" | grep -i sparkrun 2>/dev/null || tru
   docker rm -f "$c" 2>/dev/null || true
 done
 
-echo "[qwen38] Launching GB10 vLLM container..."
+echo "[qwen38] Launching GB10 vLLM container (DSpark k=$NSPEC + prefix caching)..."
 docker run -d \
   --name "$CONTAINER" \
   --restart unless-stopped \
