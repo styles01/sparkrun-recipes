@@ -51,6 +51,7 @@ docker run -d \
     --max-num-seqs "$MAX_NUM_SEQS" \
     --max-num-batched-tokens "$BATCH_TOKENS" \
     --enable-chunked-prefill \
+    --enable-prefix-caching \
     --reasoning-parser qwen3 \
     --enable-flashinfer-autotune \
     --enable-auto-tool-choice \
