@@ -100,14 +100,25 @@ The smartest model available, now serving on a single DGX Spark via [Bleysg's ds
 | Metric | Value |
 |---|---|
 | **Model** | DeepSeek-V4-Flash 0731 (284B params, 12B active MoE) |
-| **Engine** | ds4 CUDA (Entrpi/ds4 fork v0.5.5) |
+| **Engine** | ds4 CUDA (Entrpi/ds4 fork **v0.6.2**) |
 | **Quant** | IQ2XXS 2-bit with imatrix (~87 GB GGUF) |
 | **Spec Decode** | DSpark k=2, ~60-75% acceptance |
-| **Context** | 196K per lane, 20 banks (auto-scaled) |
+| **Context** | Up to 1M per bank (975K tested, needle-in-haystack verified) |
 | **Decode** | ~20 tok/s single-stream, ~65 tok/s peak (8 concurrent) |
 | **Prefill** | ~1,127 tok/s |
-| **TTFT** | ~200ms |
+| **TTFT** | ~200ms (2s warm on 975K context) |
+| **Memory** | Precise accounting — demand-mapped context, idle reclaim, graceful refusal (no OOM) |
+| **Stress Test** | 3M active tokens, 24h continuous load, dozens of parallel agents |
 | **Author** | [@bleysg](https://x.com/bleysg) (Bleys Goodson) / [@antirez](https://x.com/antirez) (Salvatore Sanfilippo) |
+
+### What's new in v0.6.2
+
+- **3M active tokens across many parallel agents** on one Spark — runs smoothly under stress
+- **Precise memory accounting** — measures actual usage per request, demand-mapped context (nearly free until filled), reclaims idle state, refuses gracefully instead of OOM
+- **Memory floor model** — set a memory floor; the engine manages the rest (run STT or other apps alongside without OOM risk)
+- **Full 1M context in one bank** — 975K-token conversation ingested in ~25 min at 633 tok/s; needle found; next turn answers in 2s with everything warm
+- **Stress-tested** — dozens of small convos, huge ones, deep ingestions mid-flight, 24h continuous load. Held perfectly.
+- **Docs overhauled** — READMEs explain memory model + knobs; capacity claims include setup/measurements
 
 ### Three Flavor Configs
 
@@ -122,9 +133,11 @@ Switch flavors by changing env vars and `-c` value — no rebuild needed.
 ### Build & Upgrade
 
 ```bash
-# Build (on Spark): make cuda-spark
-# Upgrade: cd ~/code/ds4 && git fetch --all --tags && git checkout v0.5.5 && make cuda-spark
-# v0.5.5 fixes: stream512 race (Xid 13 root cause), admission governance, budget double-booking
+# Upgrade (from any version — v0.5.5 → v0.6.2)
+curl -sSL https://raw.githubusercontent.com/entrpi/ds4-on-spark/main/install.sh | bash -s -- --start
+
+# Or build from source (on Spark)
+cd ~/code/ds4 && git fetch --all --tags && git checkout v0.6.2 && make cuda-spark
 ```
 
 ```bash
@@ -225,9 +238,9 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for the full SparkRun CLI gui
 | Model | Decode tok/s | Prefill tok/s | Context | Banks | Engine | Notes |
 |---|---|---|---|---|---|---|
 | ⭐ **Qwen 3.8 27B (drowzeys MTP)** | 31.7 single / **96 aggregate** | — | 256K | 4 | vLLM 0.27 (drowzeys) | MTP n=3, fp8 KV, prefix caching, GMU 0.55 |
-| ⭐ **DS4-Flash 0731 (balanced)** | 20 single / 65 peak | 1127 | 196K | 20 | ds4 CUDA v0.5.5 | DSpark k=2, 75% accept, IQ2XXS |
-| **DS4-Flash 0731 (speed)** | 20 single / 40 peak | 1000 | 131K | 14 | ds4 CUDA v0.5.5 | Max concurrency |
-| **DS4-Flash 0731 (deep)** | 20 single / 25 peak | 1000 | 1M | 8 | ds4 CUDA v0.5.5 | Disk KV overflow |
+| ⭐ **DS4-Flash 0731 (balanced)** | 20 single / 65 peak | 1127 | 196K-1M | 20 | ds4 CUDA v0.6.2 | DSpark k=2, 75% accept, IQ2XXS, precise memory accounting |
+| **DS4-Flash 0731 (speed)** | 20 single / 40 peak | 1000 | 131K | 14 | ds4 CUDA v0.6.2 | Max concurrency |
+| **DS4-Flash 0731 (deep)** | 20 single / 25 peak | 1000 | 1M | 8 | ds4 CUDA v0.6.2 | Disk KV overflow, 975K verified |
 | Qwen 122B (aeon) | 50.2 | — | 256K | 3 | vLLM | Stable across workloads |
 | Qwen 122B (v26 fp8) | 45.98 | — | 256K | 3 | vLLM v26 | 2.6× KV, int8 lm-head |
 | Qwen 35B | 109.3 | — | 256K | 4 | vLLM | Fastest, best concurrency |
