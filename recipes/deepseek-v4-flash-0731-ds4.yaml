@@ -1,9 +1,9 @@
-recipe_version: "3"
+recipe_version: "4"
 name: deepseek-v4-flash-0731-ds4
-description: "DeepSeek-V4-Flash (0731 weights) on the ds4 CUDA engine v0.5.5 — IQ2XXS quant, DSpark MTP k=2, 196K context, native (no Docker)"
+description: "DeepSeek-V4-Flash (0731 weights) on the ds4 CUDA engine v0.6.2 — IQ2XXS quant, DSpark MTP k=2, up to 1M context, native (no Docker)"
 model: ~/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf
 runtime: ds4-cuda
-engine_version: v0.5.5
+engine_version: v0.6.2
 build: make cuda-spark
 context: 196608
 
@@ -21,9 +21,20 @@ env:
   DS4_DSPARK_MODEL: ~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf
   FORK_PARTIAL: "0"
 
+metadata:
+  author: styles01
+  tags: [deepseek, ds4, cuda, iq2xxs, dspark, spark, gb10]
+  runbook: runbooks/deepseek-v4-flash-ds4.md
+  switch_script: scripts/switch-to-ds4.sh
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  context: 196608
+
 launch: |
   DS4_BATCH_FIT_HEADROOM_MB=8192 \
-  DS4_SERVER_SERIAL_MAX_TOKENS=*** \
+  DS4_SERVER_SERIAL_MAX_TOKENS=196608 \
   DS4_CONT_DSPARK=1 \
   DS4_CONT_MTP_MODE=2 \
   DS4_DSPARK_MODEL=~/gguf/DSpark-drafter-Q2K-Q8-0731.gguf \
@@ -61,18 +72,20 @@ benchmark:
   prefill_tok_s: "1,127"
   banks: "20"
   dspark_acceptance: "~60-75%"
-  context: "196K"
+  context: "196K-1M"
   concurrency: "1-8"
 
 specs:
   model_params: "284B (12B active MoE)"
   quant: "IQ2XXS 2-bit with imatrix"
-  model_size_gb: 87
-  engine: "ds4 CUDA v0.5.5"
+  model_size_gb: 81
+  engine: "ds4 CUDA v0.6.2"
   build_target: "make cuda-spark (HBM cache enabled)"
   speculative: "DSpark k=2, lossless"
   vram: "121GB unified memory"
   hardware: "NVIDIA DGX Spark (GB10, SM121, aarch64)"
+  memory_model: "Precise accounting — demand-mapped context, idle reclaim, graceful refusal"
+  stress_test: "3M active tokens, 24h continuous load, dozens of parallel agents"
 
 notes:
   - "Build with 'make cuda-spark' for HBM weight cache (~8% decode speedup)"
@@ -80,3 +93,5 @@ notes:
   - "No COALESCE_MAX cap lets engine auto-scale to 20 banks at 196K"
   - "Three flavor configs: speed (131K), balanced (196K default), deep (1M + disk KV)"
   - "Switch flavors by changing env vars and -c value, no rebuild needed"
+  - "v0.6.2: precise memory accounting, 1M context verified, 3M active tokens stress-tested"
+  - "DS4_DSPARK_MAX_NLIVE must stay 1 (default) — setting to 2 causes CUDA fragmentation crashes"
