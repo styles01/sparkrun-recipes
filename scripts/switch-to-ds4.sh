@@ -80,14 +80,14 @@ export FORK_PARTIAL="${FORK_PARTIAL:-0}"
 
 echo "[ds4] Server starting in background. Waiting for health check..."
 for i in $(seq 1 120); do
-  if curl -sf "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
+  if curl -sf "http://127.0.0.1:$PORT/v1/models" >/dev/null 2>&1; then
     echo "[ds4] ✅ Server READY on port $PORT"
     break
   fi
   sleep 5
 done
 
-curl -sf "http://127.0.0.1:$PORT/health" >/dev/null 2>&1 || {
+curl -sf "http://127.0.0.1:$PORT/v1/models" >/dev/null 2>&1 || {
   echo "[ds4] ❌ Server not ready within 10 min. Check: tail -50 /tmp/ds4-${CONTEXT}.log"
   exit 1
 }
