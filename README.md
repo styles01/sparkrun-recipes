@@ -81,9 +81,8 @@ sparkrun run @styles01/qwen-38-27b --hosts <spark-ip> --trust
 
 | Recipe | Method | Framework | Best for | Status |
 |---|---|---|---|---|
-| [`qwen-38-27b-nvfp4-eagle-sglang`](recipes/qwen-38-27b-nvfp4-eagle-sglang.yaml) | EAGLE 3/1/4 | SGLang | Correct spec alignment, SGLang-native path | 🧪 Reference |
-| [`qwen-38-27b-nvfp4-dspark`](recipes/qwen-38-27b-nvfp4-dspark.yaml) | DSpark k=14 | vLLM | Experimental — requires bf16 KV | 🧪 Experimental |
-| [`qwen-38-27b-fp8-eugr-leader`](recipes/qwen-38-27b-fp8-eugr-leader.yaml) | MTP n=3 + instanttensor | vLLM (eugr) | Arena benchmark | 🧪 Reference |
+| [`qwen-38-27b-nvfp4-sglang`](recipes/qwen-38-27b-nvfp4-sglang.yaml) | EAGLE/MTP + DSpark + DFlash2 | SGLang | Three engines, measured on-device | ✅ Production |
+| [`qwen-38-27b-nvfp4-eagle-sglang`](recipes/qwen-38-27b-nvfp4-eagle-sglang.yaml) | EAGLE 3/1/4 | SGLang | Legacy single-engine reference | 🧪 Deprecated |
 
 ### Benchmarking Traps (all hit for real)
 
