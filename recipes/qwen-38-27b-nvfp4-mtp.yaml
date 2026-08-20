@@ -1,5 +1,5 @@
 recipe_version: "4"
-name: qwen3.8-27b-nvfp4-gb10
+name: qwen3.8-27b-nvfp4-mtp
 description: "Qwen3.8 27B NVFP4 + MTP n=3 + fp8 KV + prefix caching on drowzeys GB10 build. Targets ~96 tok/s aggregate, ~31 tok/s single-stream. Validated, stable."
 model: unsloth/Qwen3.8-27B-NVFP4
 runtime: vllm
@@ -8,7 +8,7 @@ maintainer: styles01
 
 metadata:
   author: styles01
-  created: "2026-08-14"
+  created: "2026-08-16"
   updated: "2026-08-20"
   tags:
     - qwen
@@ -17,9 +17,9 @@ metadata:
     - nvfp4
     - mtp
     - gb10
-    - drowzeys
-  runbook: runbooks/qwen-38-27b.md
-  source: "Derived from drowzeys GB10 build (repo deleted; image preserved as ghcr.io/styles01/qwen38-mtp3:latest)"
+    - validated
+  runbook: runbooks/qwen-38-27b-mtp.md
+  source: https://x.com/0xBakeer/status/2089090318905774558
 
 solo_only: false
 cluster_only: false
@@ -27,10 +27,9 @@ cluster_only: false
 min_nodes: 1
 max_nodes: 1
 
-# CRITICAL: This image (eugr spark-vllm-b12x, mirrored by drowzeys) is GB10-specific.
-# Stock vllm/vllm-openai has NO NVFP4 kernels for Blackwell sm_121a — that's why
-# every stock-vLLM attempt crashed. This build provides FlashInferCutlassNvFp4LinearKernel.
-# The drowzeys repo was deleted; image preserved as ghcr.io/styles01/qwen38-mtp3:latest.
+# VALIDATED CONFIG — running on Spark since 2026-08-20
+# MTP n=3, fp8 KV, prefix caching ON, chunked prefill 8192
+# GMU 0.55, 262K context, 4 lanes
 
 defaults:
   port: 8000
@@ -55,18 +54,11 @@ env:
   FLASHINFER_DISABLE_VERSION_CHECK: "1"
   VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
 
-# NOTE: MTP n is capped at 3 (model has exactly 1 MTP layer). Depth >=4 crashes.
-# Validated: 96 aggregate tok/s, 31.7 single-stream, 6.45× KV concurrency at GMU 0.55.
-# Prefix caching ON is essential: 14-22× speedup on shared prefixes.
-
-benchmark:
-  framework: llama-benchy
-  pp: [2048]
-  tg: [128]
-  depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
-  concurrency: [1, 2, 5, 10]
-  prefix_caching: true
-  runs: 3
+# NOTES:
+# - MTP n=3 validated: 96 aggregate tok/s, 31.7 single-stream, 6.45× KV concurrency
+# - Prefix caching CRITICAL for long context: 14-22× speedup on shared prefixes
+# - fp8 KV works with this image (unlike DSpark which forces FLASH_ATTN → bf16)
+# - --enable-chunked-prefill 8192 for long context prefill
 
 command: |
   vllm serve {model} \

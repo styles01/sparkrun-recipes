@@ -6,23 +6,26 @@
 
 ---
 
-## ⭐ Featured: Qwen 3.8 27B NVFP4 on Drowzeys GB10 vLLM
+## ⭐ Featured: Qwen 3.8 27B NVFP4 + MTP n=3 (GB10)
 
 The best daily-driver model for agentic workloads on a single DGX Spark. Qwen 3.8 is a hybrid-architecture model (48 Gated DeltaNet + 16 attention layers) with native Multi-Token Prediction (MTP) — its in-checkpoint draft head aligns natively, delivering stable speculative decode acceptance across all workload types without an external drafter.
 
-| Metric | Value |
-|---|---|
-| **Model** | unsloth/Qwen3.8-27B-NVFP4 (22 GB NVFP4, NOT the 54GB FP8) |
-| **Engine** | vLLM v0.27.1 (drowzeys GB10 build — `ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813`) |
-| **Quant** | NVFP4 (compressed-tensors), fp8 KV cache |
-| **Spec Decode** | MTP n=3 (native in-checkpoint head, no external drafter) |
-| **Context** | 262,144 tokens (256K) |
-| **Concurrency** | 4 seqs, 6.45× KV cache concurrency |
-| **GMU** | 0.55 (safe ceiling on GB10 — 0.72+ hard-freezes the Spark) |
-| **Decode** | 31.7 tok/s single-stream, **96 tok/s aggregate** (c=4) |
-| **Prefix Cache** | `--enable-prefix-caching` (essential — cuts TTFT from 47s to single-digit on repeated context) |
-| **Parser** | `--tool-call-parser qwen3_coder --enable-auto-tool-choice` |
-| **Served name** | `qwen38-27b` (matches Loca's provider config — do NOT change) |
+> **Container preserved:** The original drowzeys image (`ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813`) is now republished as `ghcr.io/styles01/qwen38-mtp3:latest` after the drowzeys repo was deleted.
+
+|| Metric | Value |
+|---|---|---|
+|| **Model** | unsloth/Qwen3.8-27B-NVFP4 (22 GB NVFP4, NOT the 54GB FP8) |
+|| **Engine** | vLLM v0.27.1 (drowzeys GB10 build, republished) |
+|| **Container** | `ghcr.io/styles01/qwen38-mtp3:latest` |
+|| **Quant** | NVFP4 (compressed-tensors), fp8 KV cache |
+|| **Spec Decode** | MTP n=3 (native in-checkpoint head, no external drafter) |
+|| **Context** | 262,144 tokens (256K) |
+|| **Concurrency** | 4 seqs, 6.45× KV cache concurrency |
+|| **GMU** | 0.55 (safe ceiling on GB10 — 0.72+ hard-freezes the Spark) |
+|| **Decode** | 31.7 tok/s single-stream, **96 tok/s aggregate** (c=4) |
+|| **Prefix Cache** | `--enable-prefix-caching` (essential — cuts TTFT from 47s to single-digit on repeated context) |
+|| **Parser** | `--tool-call-parser qwen3_coder --enable-auto-tool-choice` |
+|| **Served name** | `qwen38-27b` (matches Loca's provider config — do NOT change) |
 
 ### What speed to expect
 
@@ -72,14 +75,14 @@ ssh jaita@192.168.2.185 'GMU=0.55 bash ~/switch-to-qwen27b.sh'
 sparkrun run @styles01/qwen-38-27b --hosts <spark-ip> --trust
 ```
 
-> **Recipe:** [`recipes/qwen-38-27b.yaml`](recipes/qwen-38-27b.yaml) · **Runbook:** [`runbooks/qwen-38-27b.md`](runbooks/qwen-38-27b.md) · **Switch script:** [`scripts/switch-to-qwen27b.sh`](scripts/switch-to-qwen27b.sh)
+> **Recipe:** [`recipes/qwen-38-27b-nvfp4-mtp.yaml`](recipes/qwen-38-27b-nvfp4-mtp.yaml) · **Runbook:** [`runbooks/qwen-38-27b-mtp.md`](runbooks/qwen-38-27b-mtp.md) · **Switch script:** [`scripts/switch-to-qwen27b.sh`](scripts/switch-to-qwen27b.sh)
 
 ### Alternative Recipes (tested, not daily drivers)
 
 | Recipe | Method | Framework | Best for | Status |
 |---|---|---|---|---|
 | [`qwen-38-27b-nvfp4-eagle-sglang`](recipes/qwen-38-27b-nvfp4-eagle-sglang.yaml) | EAGLE 3/1/4 | SGLang | Correct spec alignment, SGLang-native path | 🧪 Reference |
-| [`qwen-38-27b-fp8-dspark`](recipes/qwen-38-27b-fp8-dspark.yaml) | DSpark k=7 | vLLM | Code-only with thinking off | 🧪 Reference |
+| [`qwen-38-27b-nvfp4-dspark`](recipes/qwen-38-27b-nvfp4-dspark.yaml) | DSpark k=14 | vLLM | Experimental — requires bf16 KV | 🧪 Experimental |
 | [`qwen-38-27b-fp8-eugr-leader`](recipes/qwen-38-27b-fp8-eugr-leader.yaml) | MTP n=3 + instanttensor | vLLM (eugr) | Arena benchmark | 🧪 Reference |
 
 ### Benchmarking Traps (all hit for real)
@@ -294,8 +297,8 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for full format specification
 
 ## Credits
 
-- **Drowzeys** — GB10 NVFP4 vLLM build ([`ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38`](https://github.com/drowzeys))
-- **@0xBakeer** — DSpark 75 tok/s recipe (thinking-off benchmark, edit-heavy workload)
+- **Drowzeys** — GB10 NVFP4 vLLM build (original `ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38`, repo now deleted; image preserved as `ghcr.io/styles01/qwen38-mtp3:latest`)
+- **@0xBakeer** — MTP and DSpark recipe research (thinking-on vs thinking-off benchmarks)
 - **@calneymgp** — MTP EAGLE 3/1/4 recipe on SGLang ([repo](https://huggingface.co/calneymgp/Qwen3.8-27B-NVFP4-lmhead4-recipe))
 - **@hasso5703** — DSpark-block SGLang config and README structure ([repo](https://github.com/hasso5703/dgx-spark-qwen38))
 - **@huchkw** — DGX Spark power/thermal tweak (`nvidia-smi -lgc 0,2200`)

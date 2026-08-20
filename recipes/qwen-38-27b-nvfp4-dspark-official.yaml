@@ -1,9 +1,9 @@
 recipe_version: "4"
-name: qwen3.8-27b-nvfp4-dspark
-description: "Qwen3.8 27B NVFP4 + DSpark drafter (k=14) + prefix caching on GB10 drowzeys build. Targets ~75 tok/s single-stream. NOTE: must use --kv-cache-dtype bf16 (DSpark forces FLASH_ATTN which rejects fp8 KV)."
+name: qwen3.8-27b-nvfp4-dspark-official
+description: "Qwen3.8 27B NVFP4 + DSpark drafter (k=14) + prefix caching on OFFICIAL vllm/vllm-openai:v0.27.1-aarch64. Targets ~75 tok/s single-stream (0xBakeer config). bfloat16 KV (DSpark forces FLASH_ATTN which rejects fp8)."
 model: unsloth/Qwen3.8-27B-NVFP4
 runtime: vllm
-container: ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813
+container: vllm/vllm-openai:v0.27.1-aarch64
 maintainer: styles01
 
 metadata:
@@ -17,8 +17,8 @@ metadata:
     - nvfp4
     - dspark
     - gb10
-    - drowzeys
-  runbook: runbooks/qwen-38-27b-dspark.md
+    - official
+  runbook: runbooks/qwen-38-27b-dspark-official.md
   source: https://x.com/0xBakeer/status/2089090318905774558
 
 solo_only: false
@@ -27,10 +27,9 @@ cluster_only: false
 min_nodes: 1
 max_nodes: 1
 
-# CRITICAL: DSpark drafter forces FLASH_ATTN attention backend, which REJECTS fp8 KV cache.
-# The drowzeys image forces fp8 KV by default → crash "Selected backend FLASH_ATTN is not valid... kv_cache_dtype not supported".
-# FIX: explicitly set --kv-cache-dtype bf16 to override the forced fp8.
-# Drafter: Doopeworld/Qwen3.8-27B-DSpark-vLLM (2.7GB, 1.36B params, 5-layer DFlash + Markov head).
+# CRITICAL: DSpark drafter forces FLASH_ATTN which REJECTS fp8 KV cache.
+# Use bfloat16 KV cache (the author's config). Official vllm image (not drowzeys).
+# Drafter: Doopeworld/Qwen3.8-27B-DSpark-vLLM (2.7GB, 1.36B params).
 
 defaults:
   port: 8000
@@ -45,18 +44,15 @@ defaults:
   speculative_config: '{"method":"dspark","model":"Doopeworld/Qwen3.8-27B-DSpark-vLLM","num_speculative_tokens":14,"draft_sample_method":"probabilistic"}'
   tool_call_parser: qwen3_coder
   enable_auto_tool_choice: true
-  enable_flashinfer_autotune: true
   enable_prefix_caching: true
   served_model_name: "qwen38-27b unsloth/Qwen3.8-27B-NVFP4"
 
 env:
-  FLASHINFER_CUDA_ARCH_LIST: 12.1a
-  FLASHINFER_DISABLE_VERSION_CHECK: "1"
   VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
 
 # NOTE: DSpark drafter (Doopeworld/Qwen3.8-27B-DSpark-vLLM) is a separate 2.7GB model.
 # k=14 for single-stream latency (75 tok/s); k=7 for aggregate throughput.
-# --kv-cache-dtype bf16 is REQUIRED (DSpark forces FLASH_ATTN which rejects fp8).
+# --kv-cache-dtype bfloat16 is REQUIRED (DSpark forces FLASH_ATTN which rejects fp8).
 
 command: |
   vllm serve {model} \
@@ -69,7 +65,6 @@ command: |
     --max-num-seqs {max_num_seqs} \
     --max-num-batched-tokens {max_num_batched_tokens} \
     --enable-prefix-caching \
-    --enable-flashinfer-autotune \
     --enable-auto-tool-choice \
     --tool-call-parser {tool_call_parser} \
     --reasoning-parser qwen3 \
