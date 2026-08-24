@@ -6,6 +6,16 @@
 
 ---
 
+## ⛔ HARD RULE — Submission `model:` field MUST be the HF org id
+
+**A Spark Arena submission is only valid if the recipe's `model:` field is the REAL HuggingFace org id** (e.g. `inclusionAI/Ling-3.0-flash-int4`, `bleysg/Qwen3.5-122B-A10B-int4-fp8-hybrid`). The arena validates the model against a real HF repo.
+
+**NEVER submit with a local path** (e.g. `model: /home/jaita/models/hf/...`). A local-path model silently fails to post — the arena can't map it to an HF org.
+
+**This has been violated TWICE** (Ling submissions `sub1787471399298` and `sub1787530216046`) — both wasted full runs. **CHECK the `model:` field in the recipe BEFORE every upload.** The `cluster_config.resolved_model_path` (for identity-mounting pre-placed weights) is SEPARATE from `model:` — keep `model:` as the HF id and put the local path only in `resolved_model_path`.
+
+---
+
 ## ⭐ Featured: Qwen 3.8 27B NVFP4 + MTP n=3 (GB10)
 
 The best daily-driver model for agentic workloads on a single DGX Spark. Qwen 3.8 is a hybrid-architecture model (48 Gated DeltaNet + 16 attention layers) with native Multi-Token Prediction (MTP) — its in-checkpoint draft head aligns natively, delivering stable speculative decode acceptance across all workload types without an external drafter.
