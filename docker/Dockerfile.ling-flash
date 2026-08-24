@@ -10,6 +10,17 @@ COPY ling-vllm/ /opt/ling-vllm/
 RUN cp -r /opt/ling-vllm/* /usr/local/lib/python3.12/dist-packages/vllm/ && \
     rm -rf /opt/ling-vllm
 
+# CRITICAL GB10 FIX: cap KDA kernel num_stages to 2. Ling's KDA kernels autotune
+# num_stages in [2,3,4]; stages 3/4 need 133-139KB shared memory > GB10's 101KB,
+# so autotune intermittently fails and the engine wedges at generation time
+# (D-state, GPU 0%, whole box hangs). Capping to [2] makes every candidate fit.
+# Same class of fix as patch_fla_shmem.py for lightning_attn.
+RUN sed -i 's/for num_stages in \[2, 3, 4\]/for num_stages in [2]/g' \
+    /usr/local/lib/python3.12/dist-packages/vllm/third_party/flash_linear_attention/ops/kda.py \
+    && grep -c 'for num_stages in \[2\]' \
+    /usr/local/lib/python3.12/dist-packages/vllm/third_party/flash_linear_attention/ops/kda.py \
+    && echo "KDA num_stages capped to 2 (3 configs patched)"
+
 ENV HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \
     CUTE_DSL_ARCH=sm_121a \
