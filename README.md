@@ -1,7 +1,7 @@
 # SparkRun Recipes
 
 **Status:** ✅ Production Ready  
-**Last Updated:** August 17, 2026  
+**Last Updated:** August 24, 2026  
 **Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
 
 ---
@@ -251,6 +251,7 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for the full SparkRun CLI gui
 | MedGemma 27B | 336 agg | — | 8K | 75 | vLLM | Corpus formatting |
 | **Nemotron 3.5 Lightning 30B-A3B** | 108.1 single / 224 agg | 7665 | 100K | 10 | vLLM 0.27.1 | DSpark n=4, marlin, fp8 KV — arena sub `sub1786523649341` |
 | **Nemotron Super 120B** | 30+ | — | 128K | 10 | vLLM v0.20 | MTP k=1, marlin, fp8 KV (community recipe) |
+| **Ling-3.0-flash INT4** | 21.5 single / 44.5 agg | 2765 | 256K | 2 | vLLM ling_3_0 fork | MTP k=1, fp8 KV, 5.1B-active MoE — arena sub `sub1787530216046` |
 | **MedGemma 27B Medicomp** | 336 agg | — | 3.8K | 75 | vLLM | FlashInfer, fp8 KV, VPN host |
 | Puzzle 75B | 35.9 | — | 256K | 4 | vLLM | MTP k=3, 74.7% accept |
 

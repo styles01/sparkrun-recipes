@@ -1,0 +1,94 @@
+recipe_version: "2"
+name: ling-3.0-flash-int4
+description: "Ling-3.0-flash INT4 (124B MoE, 5.1B active) on vLLM ling_3_0 fork — MTP k=1, fp8 KV, 256K context, native MTP, GB10"
+model: inclusionAI/Ling-3.0-flash-int4
+runtime: vllm
+container: ghcr.io/styles01/ling-3.0-flash-int4:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-24"
+  updated: "2026-08-24"
+  description: "Ling-3.0-flash INT4 — 124B MoE (5.1B active), hybrid KDA+MLA, native MTP (bailing_hybrid_v3_mtp k=1), 256K context, ling3 tool parser"
+  tags:
+    - ling
+    - ling-3.0-flash
+    - inclusionai
+    - ant-group
+    - bailing-moe-v3
+    - 124b
+    - int4
+    - mtp
+    - kda
+    - mla
+    - hybrid-linear
+    - agentic
+    - 256k-context
+    - gb10
+    - spark
+  runbook: runbooks/ling-3.0-flash-int4.md
+
+min_nodes: 1
+max_nodes: 1
+cluster_only: false
+solo_only: true
+
+# CRITICAL for native sparkrun launch: identity-mount pre-placed weights so
+# sparkrun does NOT re-download 72GB. Only honored for trusted (local-file) recipes.
+cluster_config:
+  resolved_model_path: /home/jaita/models/hf/Ling-3.0-flash-int4
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.80
+  max_model_len: 262144
+  max_num_seqs: 2
+  max_num_batched_tokens: 2048
+  kv_cache_dtype: fp8
+  tool_call_parser: ling3
+  reasoning_parser: ling3
+  served_model_name: inclusionAI/Ling-3.0-flash-int4
+  mamba_cache_mode: align
+  speculative_config: '{"method":"bailing_hybrid_v3_mtp","num_speculative_tokens":1}'
+  default_chat_template_kwargs: '{"enable_thinking":false}'
+  load_format: fastsafetensors
+
+env:
+  HF_HOME: /root/.cache/huggingface
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+  CUTE_DSL_ARCH: sm_121a
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+
+benchmark:
+  framework: llama-benchy
+  pp: [2048]
+  tg: [128]
+  depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
+  concurrency: [1, 2, 3]
+  prefix_caching: true
+  runs: 3
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --load-format {load_format} \
+    --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --enable-prefix-caching \
+    --mamba-cache-mode {mamba_cache_mode} \
+    --speculative-config '{speculative_config}' \
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser {reasoning_parser} \
+    --default-chat-template-kwargs '{default_chat_template_kwargs}'

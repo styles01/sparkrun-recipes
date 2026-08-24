@@ -1,0 +1,28 @@
+# Ling-3.0-flash INT4 serving image — reproducible artifact for the arena recipe.
+# Base: stock aarch64 vLLM v0.25.1 (has GB10 kernels). We overlay the verified
+# precompiled ling_3_0 fork (bailing_moe_v3 + ling3 parser + KDA kernels) from the
+# Spark venv. The INT4 model is bind-mounted at runtime (77GB — too big to bake).
+FROM vllm/vllm-openai:v0.25.1
+
+# Overlay the precompiled ling fork vllm package over the base image's vllm
+# (base installs to dist-packages, not site-packages)
+COPY ling-vllm/ /opt/ling-vllm/
+RUN cp -r /opt/ling-vllm/* /usr/local/lib/python3.12/dist-packages/vllm/ && \
+    rm -rf /opt/ling-vllm
+
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1 \
+    CUTE_DSL_ARCH=sm_121a \
+    TRITON_CACHE_DIR=/root/.cache/triton-ling-gb10
+
+# Model is bind-mounted by sparkrun. CRITICAL for native sparkrun launch:
+# 1) ENTRYPOINT [] (must override base image's baked ["vllm","serve"]) so the
+#    entrypoint-probe reports "absent" and passes.
+# 2) CMD ["sleep","infinity"] so the container starts INSTANTLY and sparkrun's
+#    liveness check passes BEFORE vLLM finishes loading the 72GB model (~5min).
+#    sparkrun then `docker exec`s the serve command into the running container.
+#    Mirrors v26-sparkrun (July 28 lesson: "built sleep-infinity entrypoint image
+#    for sparkrun compat"). Without it, the liveness check kills the container
+#    during cold load and the native launch aborts.
+ENTRYPOINT []
+CMD ["sleep", "infinity"]
