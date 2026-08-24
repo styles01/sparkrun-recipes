@@ -55,14 +55,15 @@ defaults:
   mamba_cache_mode: align
   speculative_config: '{"method":"bailing_hybrid_v3_mtp","num_speculative_tokens":1}'
   default_chat_template_kwargs: '{"enable_thinking":false}'
-  load_format: fastsafetensors
+  # PROVEN config: plain safetensors (default). Do NOT set load_format: fastsafetensors
+  # — it triggers the Ling cold-load race on GB10 (wedges at 33-38% shards).
 
 env:
   HF_HOME: /root/.cache/huggingface
   HF_HUB_OFFLINE: "1"
   TRANSFORMERS_OFFLINE: "1"
   CUTE_DSL_ARCH: sm_121a
-  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  # Do NOT add PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True — unproven on Ling, adds risk.
 
 benchmark:
   framework: llama-benchy
@@ -79,7 +80,6 @@ command: |
     --host {host} \
     --port {port} \
     --trust-remote-code \
-    --load-format {load_format} \
     --max-model-len {max_model_len} \
     --kv-cache-dtype {kv_cache_dtype} \
     --gpu-memory-utilization {gpu_memory_utilization} \

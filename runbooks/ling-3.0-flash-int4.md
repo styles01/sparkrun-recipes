@@ -1,6 +1,6 @@
 # Recipe: Ling-3.0-flash INT4
 
-**Status:** ✅ Production — serving locally + native Spark Arena submission `sub1787530216046`
+**Status:** ✅ Production — serving locally + native Spark Arena submission `sub1787588904618`
 **Served name:** `inclusionAI/Ling-3.0-flash-int4`
 **Stack:** Docker — `ghcr.io/styles01/ling-3.0-flash-int4:latest` (vLLM `ling_3_0` fork on base `vllm/vllm-openai:v0.25.1`)
 **Model:** `inclusionAI/Ling-3.0-flash-int4` (72GB, compressed-tensors W4A16 / Marlin)
@@ -37,9 +37,31 @@
 - The `ling_3_0` fast recipe uses 4, but **4-lane config crashes at arena c=10** (KDA attention kernel needs 133KB+ shared memory > GB10's 101,376 at high batch)
 - 2 lanes survives the full 28-task arena sweep including c=10
 
-## Post-run optimizations (applied Aug 24)
-- **`--load-format fastsafetensors`** — 11× faster cold start (removes the fragile 5-min window that caused repeated native-run failures)
-- **`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`** — fragment-free KV allocation, headroom for deeper concurrency
+## ⛔ CRITICAL — Do NOT add these "optimizations" (they break Ling on GB10)
+
+- **`--load-format fastsafetensors`** — triggers the Ling cold-load race on GB10 aarch64 unified memory. Every wedge we hit showed `Loading fastsafetensors checkpoint shards:` frozen at 33-38%. The qwen-122b lesson (11× faster) does NOT transfer to the Ling fork. **Use plain safetensors (default).**
+- **`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`** — unproven on Ling, adds risk. **Leave it out.**
+- **`--max-num-batched-tokens` override** — unproven. Leave defaulted.
+
+The PROVEN config (loaded clean 3×, completed the full native arena run) is plain safetensors, no extra env.
+
+## ⛔ CRITICAL — KDA kernel num_stages=2 patch (fixes whole-box hang)
+
+Ling's KDA attention kernels autotune `num_stages in [2,3,4]`. On GB10, stages 3/4 need **133-139KB** shared memory > GB10's **101KB**, so autotune intermittently fails and the engine wedges at generation time (**D-state, GPU 0%, WHOLE box hangs including SSH**, ~90s+ recovery). Intermittent — that's why it "runs fine" then hangs.
+
+**Fix:** cap `num_stages` to `[2]` in `kda.py` (3 config loops). Same class as `patch_fla_shmem.py` for lightning_attn.
+
+```bash
+# inside the container:
+sed -i 's/for num_stages in \[2, 3, 4\]/for num_stages in [2]/g' \
+  /usr/local/lib/python3.12/dist-packages/vllm/third_party/flash_linear_attention/ops/kda.py
+```
+
+Baked into `docker/Dockerfile.ling-flash`. **Must be re-applied after any container rebuild** (it's in the writable layer, not the base image, until the image is rebuilt).
+
+## Cold-JIT first-request penalty (NOT a hang)
+
+The **first** request after a restart takes ~30s because the engine JIT-compiles the MTP/mamba kernels on the fly (`postprocess_mamba_fused_kernel`, `eagle_prepare_*`, `_causal_conv1d_update_kernel`, `fused_recurrent_gated_delta_rule_fwd_kernel`). The log warns "consider extending warmup to cover this shape/config." **Subsequent requests are fast (~270ms).** Not a hang — just cold-JIT.
 
 ## Model Location on Spark
 
@@ -53,7 +75,7 @@
 ssh jaita@larryspark.local 'bash ~/switch-to-ling-container.sh'
 ```
 
-This serves `inclusionAI/Ling-3.0-flash-int4` on port 8000 with k=1, 256K, 2 lanes, fp8 KV, fastsafetensors, mamba align, ling3 parsers.
+This serves `inclusionAI/Ling-3.0-flash-int4` on port 8000 with k=1, 256K, 2 lanes, fp8 KV, mamba align, ling3 parsers. **Plain safetensors (proven).**
 
 ## Stop Command
 
@@ -65,7 +87,7 @@ ssh jaita@larryspark.local 'docker rm -f ling-flash'
 
 Full 28-task sweep (7 depths × 4 concurrency × 3 runs) via `sparkrun arena benchmark run` — a TRUE native launch (sparkrun launched the container itself, no `--skip-run`).
 
-**Submission:** `sub_2026-08-24 ling` (auto-posted)
+**Submission:** `sub1787588904618` (re-uploaded with correct HF model id — see HARD RULE below)
 
 | depth | c=1 | c=2 | c=5 | c=10 |
 |---|---|---|---|---|
@@ -77,7 +99,15 @@ Full 28-task sweep (7 depths × 4 concurrency × 3 runs) via `sparkrun arena ben
 | 65535 | 20.3 | 6.9 | 4.3 | 4.1 |
 | 100000 | 19.6 | 3.7 | 2.5 | 2.3 |
 
-(gg t/s)  — single-stream is remarkably flat (20-21 t/s at every depth), but deep-context + concurrency collapses (2.3 t/s at 100K/c=10) due to the documented Ling CUDA-graph fallback at long KV.
+(tg t/s) — single-stream is remarkably flat (20-21 t/s at every depth), but deep-context + concurrency collapses (2.3 t/s at 100K/c=10) due to the documented Ling CUDA-graph fallback at long KV.
+
+## ⛔ HARD RULE — Submission `model:` field MUST be the HF org id
+
+**A Spark Arena submission is only valid if the recipe's `model:` field is the REAL HuggingFace org id** (e.g. `inclusionAI/Ling-3.0-flash-int4`). The arena validates the model against a real HF repo.
+
+**NEVER submit with a local path** (e.g. `model: /home/jaita/models/hf/...`). A local-path model silently fails to post.
+
+**This was violated TWICE** (Ling submissions `sub1787471399298` and `sub1787530216046`) — both wasted full runs. **CHECK the `model:` field in the recipe BEFORE every upload.** The `cluster_config.resolved_model_path` (for identity-mounting pre-placed weights) is SEPARATE from `model:` — keep `model:` as the HF id and put the local path only in `resolved_model_path`.
 
 ## Native Launch Learnings (CRITICAL — applies to ALL custom containers)
 
@@ -102,6 +132,7 @@ The custom image overlays the `ling_3_0` fork onto the base. See [`docker/Docker
 ```dockerfile
 FROM vllm/vllm-openai:v0.25.1
 # overlay ling_3_0 fork python files
+# + KDA num_stages=2 patch (see above)
 ENTRYPOINT []    # native sparkrun launch compat
 CMD ["sleep", "infinity"]
 ```
@@ -112,6 +143,8 @@ CMD ["sleep", "infinity"]
 - **4-lane crashes at c=10** — KDA smem limit. Use 2 lanes.
 - **Shard loading can freeze ~50% of the time** around shard 7-8/24. Retry or watchdog.
 - **Stock vLLM silently produces garbage** — must use `ling_3_0` fork.
+- **First request after restart is slow (~30s)** — cold-JIT of MTP/mamba kernels. Not a hang.
+- **Container has no restart policy** — dies on reboot. Set `--restart always` or relaunch after reboot.
 
 ## Community References
 - https://github.com/sojufx/Ling-3.0-Flash-DGX-Spark-Recipe
