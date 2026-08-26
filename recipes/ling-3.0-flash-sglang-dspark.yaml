@@ -1,0 +1,66 @@
+model: inclusionAI/Ling-3.0-flash-int4
+runtime: sglang
+min_nodes: 1
+max_nodes: 1
+container: lmsysorg/sglang:dev-Ling-3.0-flash
+
+metadata:
+  description: "Ling-3.0-flash INT4 (124B MoE, 5.1B active) on SGLang + DSPARK (inclusionAI/Ling-3.0-flash-dspark external draft). 256K ctx, 6 concurrent, fp8_e4m3 KV, deep_gemm fp8 MoE, fp32 lm-head, expandable_segments. OUR config: port 8000, thinking-on default. ~55-83 tok/s."
+  maintainer: styles01
+  tags:
+    - ling
+    - ling-3.0-flash
+    - inclusionAI
+    - 124b
+    - int4
+    - sglang
+    - dspark
+    - 256k-context
+    - deepgemm
+  model_dtype: int4
+  kv_dtype: fp8
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.85
+  max_model_len: 262144
+  max_num_seqs: 6
+  kv_cache_dtype: fp8_e4m3
+  chunked_prefill: 8192
+  served_model_name: inclusionAI/Ling-3.0-flash-int4
+  attention_backend: triton
+  speculative_draft_model_path: inclusionAI/Ling-3.0-flash-dspark
+  fp8_gemm_backend: deep_gemm
+
+env:
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  SGLANG_ENABLE_SPEC_V2: "1"
+  SGLANG_JIT_DEEPGEMM_PRECOMPILE: "1"
+  FLASHINFER_DISABLE_VERSION_CHECK: "1"
+
+command: |
+  python3 -m sglang.launch_server \
+    --model-path {model} \
+    --served-model-name {served_model_name} \
+    --context-length {max_model_len} \
+    --mem-fraction-static {gpu_memory_utilization} \
+    --max-running-requests {max_num_seqs} \
+    --tp-size {tensor_parallel} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --chunked-prefill-size {chunked_prefill} \
+    --attention-backend {attention_backend} \
+    --fp8-gemm-backend {fp8_gemm_backend} \
+    --reasoning-parser ling3 \
+    --tool-call-parser ling3 \
+    --enable-fp32-lm-head \
+    --max-mamba-cache-size 32 \
+    --speculative-algorithm DSPARK \
+    --speculative-draft-model-path {speculative_draft_model_path} \
+    --enable-linear-replayssm-spec \
+    --linear-replayssm-cache-len 32 \
+    --allow-auto-truncate
