@@ -26,7 +26,7 @@ defaults:
   served_model_name: inclusionAI/Ling-3.0-flash-int4
   kv_cache_dtype: fp8
   mamba_cache_mode: align
-  speculative_config: k=1
+  speculative_config: '{"method":"bailing_hybrid_v3_mtp","num_speculative_tokens":1}'
 
 command: |
   vllm serve {model} \
