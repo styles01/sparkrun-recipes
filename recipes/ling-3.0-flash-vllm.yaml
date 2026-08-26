@@ -24,9 +24,10 @@ defaults:
   max_model_len: 262144
   max_num_seqs: 2
   served_model_name: inclusionAI/Ling-3.0-flash-int4
+  tool_call_parser: ling3
+  reasoning_parser: ling3
   kv_cache_dtype: fp8
   mamba_cache_mode: align
-  speculative_config: '{"method":"bailing_hybrid_v3_mtp","num_speculative_tokens":1}'
 
 command: |
   vllm serve {model} \
@@ -35,11 +36,13 @@ command: |
     --port {port} \
     --trust-remote-code \
     --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
     --gpu-memory-utilization {gpu_memory_utilization} \
     --max-num-seqs {max_num_seqs} \
-    --kv-cache-dtype {kv_cache_dtype} \
-    --mamba-cache-mode {mamba_cache_mode} \
-    --speculative-config {speculative_config} \
     --enable-prefix-caching \
-    --tool-call-parser ling3 \
-    --reasoning-parser ling3
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser {reasoning_parser} \
+    --mamba-cache-mode {mamba_cache_mode} \
+    --speculative-config '{"method":"bailing_hybrid_v3_mtp","num_speculative_tokens":1}' \
+    --default-chat-template-kwargs '{"enable_thinking":false}'
