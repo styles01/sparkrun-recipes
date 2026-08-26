@@ -1,0 +1,45 @@
+model: inclusionAI/Ling-3.0-flash-int4
+runtime: vllm
+min_nodes: 1
+max_nodes: 1
+container: ghcr.io/styles01/ling-3.0-flash-int4:latest
+
+metadata:
+  description: "Ling-3.0-flash INT4 (124B MoE, 5.1B active) on vLLM ling_3_0 fork. MTP k=1, 256K ctx, 2 lanes, fp8 KV, mamba align, ling3 parsers. PROVEN config that completed the full 28-task native arena run in 3.8h."
+  maintainer: styles01
+  tags:
+    - ling
+    - ling-3.0-flash
+    - inclusionAI
+    - 124b
+    - int4
+    - vllm
+    - 256k-context
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.80
+  max_model_len: 262144
+  max_num_seqs: 2
+  served_model_name: inclusionAI/Ling-3.0-flash-int4
+  kv_cache_dtype: fp8
+  mamba_cache_mode: align
+  speculative_config: k=1
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --max-model-len {max_model_len} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --mamba-cache-mode {mamba_cache_mode} \
+    --speculative-config {speculative_config} \
+    --enable-prefix-caching \
+    --tool-call-parser ling3 \
+    --reasoning-parser ling3
