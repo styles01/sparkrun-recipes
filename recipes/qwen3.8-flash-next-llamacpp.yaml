@@ -1,0 +1,58 @@
+recipe_version: "4"
+name: qwen3.8-flash-next-llamacpp
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q2_K_XL) on DGX Spark (GB10) via the llama.cpp qwen4exp fork running NATIVELY (no container) on 127.0.0.1:8000/v1. Thinking ON (reasoning_content), 200K context, ~31 tok/s. Submitted via --skip-run against the live server. First-to-post llama-cpp native run."
+model: unsloth/Qwen3.8-Flash-Next-GGUF
+runtime: llama-cpp
+container: ghcr.io/spark-arena/dgx-llama-cpp:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-26"
+  updated: "2026-08-26"
+  tags:
+    - qwen
+    - qwen3.8
+    - qwen4
+    - flash-next
+    - llama-cpp
+    - gguf
+    - gb10
+    - spark-arena
+    - first-post
+    - native
+  runbook: runbooks/qwen38-flash-next-llamacpp.md
+  source: "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF"
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# llama.cpp qwen4exp fork serving NATIVELY (not containerized) on port 8000:
+#   llama-server -m <UD-Q2_K_XL 0000{1,2,3}-of-00003.gguf> --host 0.0.0.0 --port 8000 \
+#     -c 200000 -ngl 99 --alias qwen3.8-flash-next
+# Benchmark submitted with `--skip-run` so sparkrun benchmarks THIS running
+# server rather than launching its own stock llama.cpp container (which lacks
+# qwen4exp support).
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  served_model_name: qwen3.8-flash-next
+  tensor_parallel: 1
+  n_gpu_layers: 99
+  max_model_len: 200000
+  flash_attn: "on"
+  jinja: true
+  cont_batching: true
+  webui: false
+
+benchmark:
+  framework: spark-arena
+  tokenizer: Qwen/Qwen3.8-Flash-Next
+  notes: "First-to-post Qwen3.8-Flash-Next-GGUF (UD-Q2_K_XL) on DGX Spark GB10 via native llama.cpp qwen4exp fork. Thinking ON (reasoning_content present), 200K context, ~31 tok/s. Run with --skip-run against the live natively-running server on 127.0.0.1:8000/v1."
+
+# No command block on purpose: with --skip-run sparkrun never launches a server,
+# so the launch template is not exercised. The structured defaults above keep the
+# recipe valid for the arena gate (model must be an HF id, container public).
