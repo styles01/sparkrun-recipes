@@ -78,3 +78,8 @@ command: |
     --reasoning-parser {reasoning_parser} \
     -tp {tensor_parallel} \
     -pp {pipeline_parallel}
+
+# Clear the image's baked-in ENTRYPOINT ["vllm","serve"] so sparkrun's command
+# injection runs (otherwise the image consumes sparkrun's args as its own flags).
+executor_config:
+  entrypoint: ""
