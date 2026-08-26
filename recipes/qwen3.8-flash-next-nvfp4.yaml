@@ -41,7 +41,7 @@ defaults:
   max_model_len: 196608
   max_num_seqs: 2
   max_num_batched_tokens: 16384
-  kv_cache_dtype: fp8_e4m3
+  kv_cache_dtype: bf16
   served_model_name: "Qwen3.8-Flash-Next"
   tool_call_parser: qwen3_coder
   reasoning_parser: qwen3
