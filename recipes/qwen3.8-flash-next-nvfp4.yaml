@@ -1,0 +1,80 @@
+recipe_version: "4"
+name: qwen3.8-flash-next-nvfp4
+description: "Qwen3.8-Flash-Next 125B-A6B NVFP4 on single DGX Spark (GB10) — PLE ngram CPU-offloaded (VLLM_PLE_CPU_OFFLOAD=1), thinking ON, fp8 KV, 2 lanes, 196608 ctx, GMU 0.85, vllm/vllm-openai:qwen38-flash-next. Targets ~200K context on 119GB usable."
+model: RadixArk/Qwen3.8-Flash-Next-NVFP4
+runtime: vllm
+container: vllm/vllm-openai:qwen38-flash-next
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-26"
+  updated: "2026-08-26"
+  tags:
+    - qwen
+    - qwen3.8
+    - qwen4
+    - flash-next
+    - nvfp4
+    - gb10
+    - spark-arena
+    - first-post
+  runbook: runbooks/qwen38-flash-next-nvfp4.md
+  source: "https://recipes.vllm.ai/Qwen/Qwen3.8-Flash-Next"
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# NVFP4 body (135GB total repo / 126 GiB) + 51B PLE ngram table (FP8, ~47.5 GiB)
+# which is OFFLOADED to host RAM via VLLM_PLE_CPU_OFFLOAD=1.
+# Device footprint: ~78.5 GiB weights + ~4.5 GiB fp8 KV (196608 ctx, 2 seqs) + overhead
+# ~= 89-93 GiB < 101.1 GiB budget (0.85 * 119). FITS.
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.85
+  max_model_len: 196608
+  max_num_seqs: 2
+  max_num_batched_tokens: 16384
+  kv_cache_dtype: fp8_e4m3
+  served_model_name: "Qwen3.8-Flash-Next"
+  tool_call_parser: qwen3_coder
+  reasoning_parser: qwen3
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
+
+env:
+  VLLM_PLE_CPU_OFFLOAD: "1"
+  HF_HOME: /root/.cache/huggingface
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+benchmark:
+  framework: spark-arena
+  notes: "First-to-post Qwen3.8-Flash-Next-NVFP4 on DGX Spark GB10. Thinking ON via qwen3 reasoning parser. NVFP4 requires Blackwell (sm_120a). PLE ngram offloaded to host RAM."
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --max-model-len {max_model_len} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --enable-prefix-caching \
+    --enable-chunked-prefill \
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser {reasoning_parser} \
+    -tp {tensor_parallel} \
+    -pp {pipeline_parallel}
