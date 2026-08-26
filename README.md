@@ -1,7 +1,7 @@
 # SparkRun Recipes
 
 **Status:** ✅ Production Ready  
-**Last Updated:** August 24, 2026  
+**Last Updated:** August 26, 2026  
 **Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
 
 ---
@@ -16,9 +16,64 @@
 
 ---
 
+## ⭐ Featured: Qwen3.8-Flash-Next Q4_K_XL (GB10) — 180B model on ONE Spark
+
+**The big one.** Qwen3.8-Flash-Next (the Qwen4 architecture preview) is a **180B-parameter
+model** — 125B MoE (6B active) + **51B n-gram/PLE table** + 4B MTP — running on a **single
+DGX Spark** at Q4 quality with **full 262K context**.
+
+> **The trick:** the 51B n-gram table is a *pure lookup* tensor (`per_layer_token_embd.weight`).
+> It is never multiplied — only gathered. So it lives **on NVMe**, not in RAM:
+> ```
+> -ot per_layer_token_embd=CPU   # pin the 51B tensor to CPU, never GPU
+> -lm mmap                        # serve it from NVMe via the page cache
+> ```
+> Result: the 104 GiB Q4 file needs only **~77 GiB resident**. A 180B model fits 119 GB.
+
+|| Metric | Value |
+|---|---|---|
+|| **Model** | unsloth/Qwen3.8-Flash-Next-GGUF `UD-Q4_K_XL` (104 GB, 4 shards) |
+|| **Arch** | Qwen4 (`Qwen4ExpForConditionalGeneration`), 125B MoE + 51B n-gram + 4B MTP |
+|| **Engine** | llama.cpp qwen4exp fork (PR #27742, commit 035e227) + canreuse patch |
+|| **Container** | `ghcr.io/styles01/qwen38-flash-next:q4` |
+|| **Quant** | Q4_K_XL (GGUF), f16 KV |
+|| **Context** | 262,144 tokens (262K) |
+|| **Concurrency** | 1 lane (`--parallel 1` — qwen4exp requires it) |
+|| **Spec Decode** | `--spec-type ngram-mod` (draft from the n-gram table, no external model) |
+|| **Decode** | ~17-22 tok/s free-form, **up to 45 tok/s** on copy-heavy work |
+|| **Prefill** | ~400-660 tok/s |
+|| **Serve** | `0.0.0.0:8000` (Loca reachable) |
+
+### What makes this possible
+The 51B n-gram embedding table is one tensor, `per_layer_token_embd.weight`, shape
+`[160, 320001536]`. It is **never part of a matrix multiply** — per generated token the model
+gathers ~16 of 320M rows via a 3-gram hash. Qwen's own tech report notes n-gram vocabularies
+scale better off-accelerator. We pin the tensor to the CPU backend and mmap it from NVMe.
+
+### Run it
+```bash
+# server (see runbook: runbooks/qwen38-flash-next-image.md)
+setsid nohup bash scripts/serve-qwen38-flash-next.sh > /tmp/qwen4-q4-server.log 2>&1 < /dev/null &
+# logs
+ssh jaita@192.168.2.185 'tail -f /tmp/qwen4-q4-server.log'
+```
+
+### Known constraints (verified @ commit 035e227)
+- `--parallel 1` required — 2nd in-flight request aborts (`qwen4exp.cpp:284`).
+- Quantized KV (`-ctk/-ctv`) aborts (`qwen4exp.cpp:544`) — keep **f16**.
+- No MTP on this GGUF (no `nextn` tensors) — and MTP wouldn't help this MoE anyway.
+- `--fit` crashes (`LLM_ARCH_QWEN4EXP` not in `graph_max_nodes`).
+- Bind `--host 0.0.0.0` (not 127.0.0.1) so Loca on the Mac reaches it.
+
+### Sources
+- [0xBeker/qwen38-flash-next-spark](https://github.com/0xBeker/qwen38-flash-next-spark)
+- [llama.cpp PR #27742 (qwen4exp support)](https://github.com/ggml-org/llama.cpp/pull/27742)
+
+---
+
 ## ⭐ Featured: Qwen 3.8 27B NVFP4 + MTP n=3 (GB10)
 
-The best daily-driver model for agentic workloads on a single DGX Spark. Qwen 3.8 is a hybrid-architecture model (48 Gated DeltaNet + 16 attention layers) with native Multi-Token Prediction (MTP) — its in-checkpoint draft head aligns natively, delivering stable speculative decode acceptance across all workload types without an external drafter.
+This is the best daily-driver model for agentic workloads on a single DGX Spark. Qwen 3.8 is a hybrid-architecture model (48 Gated DeltaNet + 16 attention layers) with native Multi-Token Prediction (MTP) — its in-checkpoint draft head aligns natively, delivering stable speculative decode acceptance across all workload types without an external drafter.
 
 > **Container preserved:** The original drowzeys image (`ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813`) is now republished as `ghcr.io/styles01/qwen38-mtp3:latest` after the drowzeys repo was deleted.
 
