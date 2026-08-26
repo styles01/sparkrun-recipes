@@ -33,14 +33,20 @@ min_nodes: 1
 max_nodes: 1
 
 # OUR container ghcr.io/styles01/qwen38-flash-next:q4 bundles the llama.cpp
-# qwen4exp fork (PR #27742, commit 035e227) + the 0xBaker launch trick:
+# qwen4exp fork (PR #27742, commit 035e227) + the 0xBaker launch trick + our
+# perf tweaks. The container entrypoint (docker/qwen38-flash-next/launch.sh)
+# launches the exact current Q4 config:
 #   llama-server -m <UD-Q4_K_XL 0000{1,2,3,4}-of-00004.gguf> \
 #     --alias qwen3.8-flash-next \
 #     -lm mmap -ot per_layer_token_embd=CPU \
 #     --n-gpu-layers 999 --ctx-size 262144 --parallel 1 \
-#     --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
-#     --host <host> --port 8000
-# The server is ALREADY LIVE on 127.0.0.1:8000. We benchmark with --skip-run so
+#     --spec-type ngram-mod \
+#     --flash-attn on -b 2048 -ub 2048 \
+#     --spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64 \
+#     --host 0.0.0.0 --port 8000
+# (0xBaker trick: -ot per_layer_token_embd=CPU pins the 51B n-gram token-embd
+# tensor to CPU so it never lands on GPU; -lm mmap serves it from NVMe.)
+# The server is ALREADY LIVE on 0.0.0.0:8000. We benchmark with --skip-run so
 # sparkrun targets the running server rather than launching a second instance
 # (which would collide on port 8000). The container entrypoint is the exact
 # launch script; it is what a native (non --skip-run) run would start.
@@ -60,7 +66,7 @@ defaults:
 benchmark:
   framework: spark-arena
   tokenizer: Qwen/Qwen3.8-Flash-Next
-  notes: "First-to-post Qwen3.8-Flash-Next GGUF UD-Q4_K_XL (104GB) on DGX Spark GB10 via llama.cpp qwen4exp fork in OUR OWN container (ghcr.io/styles01/qwen38-flash-next:q4). 0xBaker12 trick makes a 180B model fit 119GB: -ot per_layer_token_embd=CPU (51B n-gram tensor on CPU), -lm mmap (NVMe). Full 262K context, ~19-22 tok/s decode. Run with --skip-run against the live server on 127.0.0.1:8000/v1."
+  notes: "First-to-post Qwen3.8-Flash-Next GGUF UD-Q4_K_XL (104GB) on DGX Spark GB10 via llama.cpp qwen4exp fork in OUR OWN container (ghcr.io/styles01/qwen38-flash-next:q4). Current Q4 config: flash-attn ON, batch 2048, 262K ctx, spec-type ngram-mod (n-min 48 / n-max 64). 0xBaker trick makes a 180B model fit 119GB: -ot per_layer_token_embd=CPU (51B n-gram tensor on CPU), -lm mmap (NVMe). ~19-22 tok/s decode (up to 45 on copy-heavy). Run with --skip-run against the live server on 0.0.0.0:8000/v1."
 
 # No command block on purpose: with --skip-run sparkrun never launches a server,
 # so the launch template is not exercised. The container's entrypoint is the

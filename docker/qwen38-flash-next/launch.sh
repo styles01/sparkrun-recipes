@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Launch Qwen3.8-Flash-Next Q4_K_XL via the llama.cpp qwen4exp fork (PR #27742,
-# commit 035e227) with the 0xBakeer "180B-fits-in-119GB" trick:
+# commit 035e227) with the 0xBakeer "180B-fits-in-119GB" trick + our perf tweaks:
 #   -ot per_layer_token_embd=CPU   -> pin the 51B n-gram token-embd tensor to CPU (never GPU)
 #   -lm mmap                       -> serve it from NVMe via mmap
+#   --flash-attn on  -b/-ub 2048  -> flash attention + 2048 batch
+#   --spec-ngram-mod-n-min/max 48/64 -> tuned n-gram speculative token window
 # Model: unsloth/Qwen3.8-Flash-Next-GGUF UD-Q4_K_XL (104GB, 4 shards).
 #
 # ENV:
@@ -54,5 +56,7 @@ exec llama-server \
   --ctx-size "$CTX" \
   --parallel 1 \
   --spec-type ngram-mod \
-  --temp 1.0 --top-p 0.95 --top-k 20 \
+  --flash-attn on \
+  -b 2048 -ub 2048 \
+  --spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64 \
   --host "$HOST" --port "$PORT"

@@ -1,6 +1,6 @@
 recipe_version: "4"
 name: qwen3.8-flash-next-llamacpp
-description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q2_K_XL) on DGX Spark (GB10) via the llama.cpp qwen4exp fork running NATIVELY (no container) on 127.0.0.1:8000/v1. Thinking ON (reasoning_content), 200K context, ~31 tok/s. Submitted via --skip-run against the live server. First-to-post llama-cpp native run."
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q2_K_XL) on DGX Spark (GB10) via the llama.cpp qwen4exp fork running NATIVELY (no container) on 0.0.0.0:8000/v1. Thinking ON (reasoning_content), 200K context, ~31 tok/s. SUPERSEDED by the Q4 container recipe (recipes/qwen3.8-flash-next-image.yaml) — the server now runs the 104GB Q4_K_XL UD-Q4_K_XL shards with flash-attn/batch 2048/262K ctx. This Q2 native entry is retained for provenance (first-to-post llama-cpp native run)."
 model: unsloth/Qwen3.8-Flash-Next-GGUF
 runtime: llama-cpp
 container: ghcr.io/spark-arena/dgx-llama-cpp:latest
@@ -36,6 +36,11 @@ max_nodes: 1
 # Benchmark submitted with `--skip-run` so sparkrun benchmarks THIS running
 # server rather than launching its own stock llama.cpp container (which lacks
 # qwen4exp support).
+#
+# SUPERSEDED: use recipes/qwen3.8-flash-next-image.yaml instead — the live server
+# now serves the Q4_K_XL UD-Q4_K_XL (104GB) shards under OUR public container
+# ghcr.io/styles01/qwen38-flash-next:q4 (flash-attn on, batch 2048, 262K ctx,
+# spec-ngram-mod n-min/max 48/64).
 defaults:
   port: 8000
   host: 0.0.0.0
@@ -51,7 +56,7 @@ defaults:
 benchmark:
   framework: spark-arena
   tokenizer: Qwen/Qwen3.8-Flash-Next
-  notes: "First-to-post Qwen3.8-Flash-Next-GGUF (UD-Q2_K_XL) on DGX Spark GB10 via native llama.cpp qwen4exp fork. Thinking ON (reasoning_content present), 200K context, ~31 tok/s. Run with --skip-run against the live natively-running server on 127.0.0.1:8000/v1."
+  notes: "SUPERSEDED by recipes/qwen3.8-flash-next-image.yaml (Q4 container). First-to-post Qwen3.8-Flash-Next-GGUF (UD-Q2_K_XL) on DGX Spark GB10 via native llama.cpp qwen4exp fork. Thinking ON (reasoning_content present), 200K context, ~31 tok/s. Run with --skip-run against the live natively-running server on 0.0.0.0:8000/v1."
 
 # No command block on purpose: with --skip-run sparkrun never launches a server,
 # so the launch template is not exercised. The structured defaults above keep the
