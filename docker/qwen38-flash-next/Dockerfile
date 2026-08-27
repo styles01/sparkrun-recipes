@@ -3,7 +3,8 @@
 # Bundles the working build + the 0xBakeer "180B-fits-in-119GB" trick:
 #   -ot per_layer_token_embd=CPU  pin 51B n-gram tensor to CPU
 #   -lm mmap                      serve it from NVMe via mmap
-# Plus our perf tweaks: --flash-attn on, -b/-ub 2048, spec-ngram-mod n-min/max 48/64.
+# Plus the 0xBakeer NVMe trick: -ot per_layer_token_embd=CPU + -lm mmap.
+# Spec decode: stock ngram-mod (default n_max=3).
 #
 # Base: nvcr.io/nvidia/vllm:26.06-py3 (aarch64, CUDA 13.0 — has libcublas.so.13 /
 # libcudart.so.13 required by libggml-cuda built against CUDA 13).

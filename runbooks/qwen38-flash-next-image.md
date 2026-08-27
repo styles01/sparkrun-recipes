@@ -40,8 +40,7 @@ KV (~6 GiB at 262K ctx).
   -lm mmap -ot per_layer_token_embd=CPU \
   --n-gpu-layers 999 --ctx-size 262144 --parallel 1 \
   --spec-type ngram-mod \
-  --flash-attn on -b 2048 -ub 2048 \
-  --spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64 \
+  --temp 1.0 --top-p 0.95 --top-k 20 \
   --host 0.0.0.0 --port 8000
 ```
 
@@ -100,18 +99,15 @@ For spark-arena: benchmark with `--skip-run` against the live server at `0.0.0.0
 
 ## Perf tweaks we found
 
-- **`--flash-attn on`** — flash attention is a large decode/prefill win on GB10.
-- **`-b 2048 -ub 2048`** — 2048 token batch/ubatch (tuned; defaults can be too small/large for this MoE).
-- **`--spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64`** — tuned n-gram speculative window.
-  Copy-heavy / repeated-text work sees a big speedup (~17-18 → up to 45 tok/s).
 - **`-ot per_layer_token_embd=CPU` + `-lm mmap`** — the 0xBake trick (see above). Makes the whole 180B fit.
 - **`canreuse-qwen4exp.patch`** (+2.8% decode) from `0xBakeer/qwen38-flash-next-spark`.
+- **Keep the stock ngram-mod config** — do NOT set `--spec-ngram-mod-n-min/max` high. The default `n_max=3` is correct; drafting 48-64 tokens with ~17-39% acceptance burns compute on rejected drafts and drops decode to ~14-18 tok/s (measured). The proven baseline is just `--spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20`.
 
-## Perf measurements (GB10, Q4_K_XL, tweaks ON)
+## Perf measurements (GB10, Q4_K_XL, clean baseline)
 
 | Workload | tok/s |
 |---|---|
-| Free-form decode | 19-22 |
+| Free-form decode | ~22 |
 | Prefill @16K ctx | ~405 |
 | Copy-heavy (ngram-mod spec) | 22-45 |
 

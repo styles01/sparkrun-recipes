@@ -1,6 +1,6 @@
 recipe_version: "4"
 name: qwen3.8-flash-next-llamacpp
-description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q2_K_XL) on DGX Spark (GB10) via the llama.cpp qwen4exp fork running NATIVELY (no container) on 0.0.0.0:8000/v1. Thinking ON (reasoning_content), 200K context, ~31 tok/s. SUPERSEDED by the Q4 container recipe (recipes/qwen3.8-flash-next-image.yaml) — the server now runs the 104GB Q4_K_XL UD-Q4_K_XL shards with flash-attn/batch 2048/262K ctx. This Q2 native entry is retained for provenance (first-to-post llama-cpp native run)."
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q2_K_XL) on DGX Spark (GB10) via the llama.cpp qwen4exp fork running NATIVELY (no container) on 0.0.0.0:8000/v1. Thinking ON (reasoning_content), 200K context, ~31 tok/s. SUPERSEDED by the Q4 container recipe (recipes/qwen3.8-flash-next-image.yaml) — the server now runs the 104GB Q4_K_XL UD-Q4_K_XL shards with 262K ctx, spec-type ngram-mod (default n_max=3). This Q2 native entry is retained for provenance (first-to-post llama-cpp native run)."
 model: unsloth/Qwen3.8-Flash-Next-GGUF
 runtime: llama-cpp
 container: ghcr.io/spark-arena/dgx-llama-cpp:latest
@@ -39,8 +39,7 @@ max_nodes: 1
 #
 # SUPERSEDED: use recipes/qwen3.8-flash-next-image.yaml instead — the live server
 # now serves the Q4_K_XL UD-Q4_K_XL (104GB) shards under OUR public container
-# ghcr.io/styles01/qwen38-flash-next:q4 (flash-attn on, batch 2048, 262K ctx,
-# spec-ngram-mod n-min/max 48/64).
+# ghcr.io/styles01/qwen38-flash-next:q4 (262K ctx, spec-type ngram-mod default n_max=3).
 defaults:
   port: 8000
   host: 0.0.0.0
