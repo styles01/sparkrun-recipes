@@ -1,0 +1,69 @@
+recipe_version: "4"
+name: qwen3.8-flash-next-q3-2lane
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q3_K_XL, 90GB/3 shards) on DGX Spark (GB10) via the llama.cpp qwen4exp fork (PR #27742, latest commit ef6876693 + Daniel Han's slot fix 8b3ed0a40). TWO LANES at 200K context each, whole model in memory (no NVMe pin). ~43-50 tok/s aggregate under concurrent load. First llama.cpp build to lift the --parallel 1 constraint."
+model: unsloth/Qwen3.8-Flash-Next-GGUF
+runtime: llama-cpp
+container: ghcr.io/styles01/qwen38-flash-next:q4
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-27"
+  updated: "2026-08-27"
+  tags:
+    - qwen
+    - qwen3.8
+    - qwen4
+    - flash-next
+    - llama-cpp
+    - gguf
+    - q3_k_xl
+    - gb10
+    - spark-arena
+    - 2-lane
+    - parallel-2
+    - alternative
+  runbook: runbooks/qwen38-flash-next-q3-2lane.md
+  source: "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF"
+  container_source: "https://github.com/styles01/sparkrun-recipes/tree/main/docker/qwen38-flash-next"
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# ALTERNATIVE recipe — 2 LANES @ 200K context, whole model in memory.
+# This is the config that lifts the --parallel 1 constraint (Daniel Han's slot
+# fix 8b3ed0a40 in the qwen4exp fork). Peak ~50 tok/s aggregate under concurrent
+# load (2 lanes x ~22-25 tok/s each).
+#
+# Launch (whole model in memory, NO -ot/-lm mmap NVMe pin):
+#   llama-server -m <UD-Q3_K_XL 00001-of-00003.gguf> \
+#     --alias qwen3.8-flash-next \
+#     --n-gpu-layers 999 --ctx-size 400000 --parallel 2 \
+#     --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
+#     --host 0.0.0.0 --port 8000
+# NOTE: --ctx-size 400000 with --parallel 2 = 200K per slot (200192 each).
+# The 2nd lane engages ONLY under concurrent load (2+ simultaneous requests).
+# Sequential requests use 1 lane (~22 tok/s); concurrent uses both (~43-50 tok/s).
+#
+# Memory: Q3_K_XL 90GB whole-in-memory + 9.6GB KV (2x200K) + ~8GB buffers
+#   = ~106GB used, ~15GB headroom on 119GB usable. Comfortable fit.
+# IQ4_XS (93.7GB) also fits but tighter (~8GB headroom) — not used.
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  served_model_name: qwen3.8-flash-next
+  tensor_parallel: 1
+  n_gpu_layers: 999
+  max_model_len: 200000
+  parallel: 2
+  jinja: true
+  cont_batching: true
+  webui: false
+
+benchmark:
+  framework: spark-arena
+  tokenizer: Qwen/Qwen3.8-Flash-Next
+  notes: "ALTERNATIVE recipe: Qwen3.8-Flash-Next UD-Q3_K_XL (90GB) on DGX Spark GB10 via llama.cpp qwen4exp fork (latest + Daniel Han slot fix). TWO LANES at 200K context each, whole model in memory. Peak ~50 tok/s aggregate under concurrent load (2 lanes x ~22-25 tok/s). This is the first llama.cpp build to lift the --parallel 1 constraint. Run with --skip-run against the live server on 0.0.0.0:8000/v1."
