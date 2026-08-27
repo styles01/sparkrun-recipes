@@ -97,6 +97,49 @@ fork fixed the `qwen4exp.cpp:284` GGML_ASSERT that crashed on a 2nd concurrent r
 > Sequential requests use 1 lane (~22 tok/s); concurrent uses both (~43-50 tok/s).
 > Recipe: `recipes/qwen3.8-flash-next-q3-2lane.yaml` · Runbook: `runbooks/qwen38-flash-next-q3-2lane.md`
 
+### ⚡ Alternative: vLLM + NVFP4 (native MTP head) — NOT YET DEPLOYED
+
+**The even performer.** The 0xBakeer vLLM long-context recipe, documented as an
+alternative option. It runs at roughly the same speed whatever you ask it, reads
+long documents about **5× faster** than the llama.cpp recipe, and does **not slow
+down as the context fills up**. It is *not* the one to use if a coding agent is
+rewriting whole files — see the Q3_K_XL 2-lane recipe above for that.
+
+> **Status: ALTERNATIVE / NOT YET DEPLOYED.** We are waiting on deployment —
+> this is documentation only. It is **complementary** to the llama.cpp Q3 2-lane
+> primary recipe: vLLM wins on chat/prose/long-doc, llama.cpp wins on concurrent
+> coding-agent load.
+
+|| Metric | Value |
+|---|---|---|
+|| **Model** | RadixArk/Qwen3.8-Flash-Next-NVFP4 (126 GB, 206 shards: NVFP4 compute + FP8 PLE + BF16 MTP) |
+|| **Engine** | vLLM built from `blazux/qwen3.8-Flash-DGX` (Apache-2.0), no version pin (tracks upstream main) |
+|| **Container** | `blazux/qwen3.8-Flash-DGX` |
+|| **Quant** | NVFP4 (compute) + FP8 PLE table + BF16 MTP head |
+|| **Context** | 262,144 tokens (262K) |
+|| **Concurrency** | 2 seqs (`--max-num-seqs 2`) |
+|| **Spec Decode** | native MTP head, n=3 (`--speculative-config {"method":"mtp","num_speculative_tokens":3}`) |
+|| **GMU** | 0.85 (KV pool 18.13 GiB = 641,601 tokens, ~19 GiB headroom) |
+|| **Decode** | **32.2 tok/s** prose, flat at depth (31.7/33.5/31.7 at 1k/32k/128k) |
+|| **Prefill** | ~2,200-2,460 tok/s, flat to 195k |
+|| **TTFT** | ~0.3 s |
+|| **PLE table** | served from disk (`VLLM_PLE_MMAP=1`) |
+
+**Launch:**
+```bash
+./setup.sh      # clone+build blazux/qwen3.8-Flash-DGX, fetch ~126 GB checkpoint
+./serve.sh      # starts on http://localhost:8000/v1
+```
+First boot loads ~83 GiB of weights and takes **12-15 minutes**. Key flags:
+`--max-model-len 262144 --max-num-seqs 2 --gpu-memory-utilization 0.85`,
+`--no-enable-prefix-caching --enable-chunked-prefill`, PIECEWISE CUDA-graph
+capture with the PLE gather as a splitting op, `VLLM_PLE_MMAP=1`.
+
+> **Caveats:** no vLLM version pin · 12-15 min boot · prefix caching must stay
+> off (GB10 GDN bug) · 111/121 GiB footprint tight against 119 GB · the n-gram
+> gather must stay outside CUDA graphs (PIECEWISE only).
+> Recipe: `recipes/qwen3.8-flash-next-vllm-nvfp4.yaml` · Runbook: `runbooks/qwen38-flash-next-vllm-nvfp4.md`
+
 ---
 
 ## ⭐ Featured: Qwen 3.8 27B NVFP4 + MTP n=3 (GB10)
