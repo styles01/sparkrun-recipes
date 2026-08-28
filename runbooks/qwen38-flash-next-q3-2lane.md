@@ -28,14 +28,24 @@ across slots. Pull the latest fork (`ef6876693` + the slot fix) and rebuild.
   --alias qwen3.8-flash-next \
   --n-gpu-layers 999 --ctx-size 400000 --parallel 2 \
   --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
-  --host 0.0.0.0 --port 8000
+  --host 0.0.0.0 --port 8000 \
+  --mmproj /home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf
 ```
 - **`--ctx-size 400000 --parallel 2`** = 200K per slot (200192 each)
+- **`--mmproj`** = native vision (see [Vision](#vision) below)
 - **Whole model in memory** — NO `-ot per_layer_token_embd=CPU` / `-lm mmap` NVMe pin. At 2 lanes the n-gram table gets hammered, so keeping it resident is better.
 - Detached (survives SSH):
   ```bash
   setsid nohup bash scripts/serve-qwen38-flash-next-q3-2lane.sh > /tmp/qwen4-q3-p2.log 2>&1 < /dev/null &
   ```
+
+## Vision (native multimodal)
+Native vision is enabled on this config by the `--mmproj` flag:
+- **mmproj file:** `/home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf` (904 MB, SHA-256 `1f7b7f0b984cf065c604360c29c8098362ed61b290db0ff12c6f360bb1a8a980`)
+- **Source:** `unsloth/Qwen3.8-Flash-Next-GGUF`
+- **With it loaded**, the server reports capabilities `["completion","multimodal"]`.
+- **Verified** on the live Q3 server — accurate image description.
+- The only launch change vs. the text-only config is the added `--mmproj` flag; all other flags (2 lanes, 200K ctx, ngram-mod spec) are unchanged.
 
 ## IMPORTANT: how the 2nd lane engages
 `--parallel 2` = 2 slots available for **simultaneous** requests. The 2nd lane is

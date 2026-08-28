@@ -23,6 +23,8 @@ metadata:
     - 2-lane
     - parallel-2
     - alternative
+    - vision
+    - multimodal
   runbook: runbooks/qwen38-flash-next-q3-2lane.md
   source: "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF"
   container_source: "https://github.com/styles01/sparkrun-recipes/tree/main/docker/qwen38-flash-next"
@@ -43,7 +45,12 @@ max_nodes: 1
 #     --alias qwen3.8-flash-next \
 #     --n-gpu-layers 999 --ctx-size 400000 --parallel 2 \
 #     --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
-#     --host 0.0.0.0 --port 8000
+#     --host 0.0.0.0 --port 8000 \
+#     --mmproj /home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf
+# NATIVE VISION: the --mmproj flag (mmproj-F16.gguf, 904MB, from
+# unsloth/Qwen3.8-Flash-Next-GGUF) enables multimodal on this config. With it,
+# the server reports capabilities ["completion","multimodal"] — verified
+# working (accurate image description) on the live Q3 server.
 # NOTE: --ctx-size 400000 with --parallel 2 = 200K per slot (200192 each).
 # The 2nd lane engages ONLY under concurrent load (2+ simultaneous requests).
 # Sequential requests use 1 lane (~22 tok/s); concurrent uses both (~43-50 tok/s).

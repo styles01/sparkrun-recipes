@@ -91,8 +91,13 @@ fork fixed the `qwen4exp.cpp:284` GGML_ASSERT that crashed on a 2nd concurrent r
   --alias qwen3.8-flash-next \
   --n-gpu-layers 999 --ctx-size 400000 --parallel 2 \
   --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
-  --host 0.0.0.0 --port 8000
+  --host 0.0.0.0 --port 8000 \
+  --mmproj /home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf
 ```
+> **Native vision (new):** the `--mmproj` flag enables multimodal on this Q3 config
+> (mmproj-F16.gguf, 904 MB, from unsloth/Qwen3.8-Flash-Next-GGUF). The server now
+> reports capabilities `["completion","multimodal"]` — verified working (accurate
+> image description). The only launch change vs. text-only is the added `--mmproj`.
 > **Note:** the 2nd lane engages ONLY under concurrent load (2+ simultaneous requests).
 > Sequential requests use 1 lane (~22 tok/s); concurrent uses both (~43-50 tok/s).
 > Recipe: `recipes/qwen3.8-flash-next-q3-2lane.yaml` · Runbook: `runbooks/qwen38-flash-next-q3-2lane.md`
