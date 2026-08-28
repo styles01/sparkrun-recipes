@@ -69,38 +69,40 @@ ssh jaita@192.168.2.185 'tail -f /tmp/qwen4-q4-server.log'
 - [0xBeker/qwen38-flash-next-spark](https://github.com/0xBeker/qwen38-flash-next-spark)
 - [llama.cpp PR #27742 (qwen4exp support)](https://github.com/ggml-org/llama.cpp/pull/27742)
 
-### ⚡ Alternative: Q3_K_XL — 2 LANES @ 200K (peak ~50 tok/s)
+### ⚡ Deployed: Q3_K_XL — 3 LANES @ 220K (current, ~57 tok/s aggregate)
 
-**The 2-lane unlock.** This is the first llama.cpp build to lift the `--parallel 1`
-constraint on Qwen3.8-Flash-Next. Daniel Han's slot fix (`8b3ed0a40`) in the qwen4exp
-fork fixed the `qwen4exp.cpp:284` GGML_ASSERT that crashed on a 2nd concurrent request.
+**The 3-lane unlock.** Daniel Han's slot fix (`8b3ed0a40`) in the qwen4exp fork lifts
+the `--parallel 1` constraint. We validated **3 concurrent requests with no indexer
+crash** (`qwen4exp.cpp:284`). This is the current deployed config.
 
 || Metric | Value |
 |---|---|---|
 || **Model** | unsloth/Qwen3.8-Flash-Next-GGUF `UD-Q3_K_XL` (90 GB, 3 shards) |
-|| **Engine** | llama.cpp qwen4exp fork (latest `ef6876693` + Daniel Han slot fix `8b3ed0a40`) |
+|| **Engine** | llama.cpp qwen4exp fork (commit `ef6876693` + Daniel Han slot fix `8b3ed0a40` + canreuse + null-guard) |
 || **Quant** | Q3_K_XL (GGUF), f16 KV, **whole model in memory** (no NVMe pin) |
-|| **Context** | 2 lanes × 200K (400K total) |
-|| **Concurrency** | 2 lanes (`--parallel 2` — the slot fix lifts the old `--parallel 1` limit) |
-|| **Decode** | ~22 tok/s single lane, **~43-50 tok/s aggregate** under concurrent load (peak 50) |
-|| **Memory** | ~106 GB used, ~15 GB headroom on 119 GB |
+|| **Context** | 3 lanes × 220K (**660K total**) |
+|| **Concurrency** | 3 lanes (`--parallel 3` — validated, no crash) |
+|| **Decode** | ~22 tok/s single lane, **~57 tok/s aggregate** under 3-lane concurrent load |
+|| **Vision** | native `--mmproj` (multimodal, verified) |
+|| **Memory** | ~114 GB used, ~5 GB headroom on 119 GB |
 
 **Launch:**
 ```bash
 ./llama-server -m <UD-Q3_K_XL 00001-of-00003.gguf> \
   --alias qwen3.8-flash-next \
-  --n-gpu-layers 999 --ctx-size 400000 --parallel 2 \
+  --n-gpu-layers 999 --ctx-size 660000 --parallel 3 \
   --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
   --host 0.0.0.0 --port 8000 \
   --mmproj /home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf
 ```
-> **Native vision (new):** the `--mmproj` flag enables multimodal on this Q3 config
-> (mmproj-F16.gguf, 904 MB, from unsloth/Qwen3.8-Flash-Next-GGUF). The server now
-> reports capabilities `["completion","multimodal"]` — verified working (accurate
-> image description). The only launch change vs. text-only is the added `--mmproj`.
-> **Note:** the 2nd lane engages ONLY under concurrent load (2+ simultaneous requests).
-> Sequential requests use 1 lane (~22 tok/s); concurrent uses both (~43-50 tok/s).
-> Recipe: `recipes/qwen3.8-flash-next-q3-2lane.yaml` · Runbook: `runbooks/qwen38-flash-next-q3-2lane.md`
+> **Native vision:** the `--mmproj` flag enables multimodal (mmproj-F16.gguf, 904 MB).
+> Server reports `["completion","multimodal"]` — verified working.
+> **Lanes 2 & 3 engage ONLY under concurrent load.** Sequential = ~22 tok/s;
+> 2 concurrent = ~38-40; **3 concurrent = ~57 tok/s** (validated 19+19+19).
+> **Context advantage:** 3×220K = 660K aggregate, deeper per-lane than the vLLM
+> NVFP4 recipe's 10×75K, AND faster aggregate (57 vs 45.2).
+> Recipe: `recipes/qwen3.8-flash-next-q3-3lane.yaml` · Runbook: `runbooks/qwen38-flash-next-q3-3lane.md`
+> *(Supersedes the earlier 2-lane config, `qwen3.8-flash-next-q3-2lane`@200K/~43-50 tok/s.)*
 
 ### ⚡ Alternative: vLLM + NVFP4 (native MTP head) — NOT YET DEPLOYED
 

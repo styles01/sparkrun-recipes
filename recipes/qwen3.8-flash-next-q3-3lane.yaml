@@ -1,0 +1,80 @@
+recipe_version: "4"
+name: qwen3.8-flash-next-q3-3lane
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q3_K_XL, 90GB/3 shards) on DGX Spark (GB10) via the llama.cpp qwen4exp fork (PR #27742, commit ef6876693 + Daniel Han's slot fix 8b3ed0a40 + canreuse patch + our null-guard fix). THREE LANES at 220K context each, whole model in memory (no NVMe pin), native vision. ~57 tok/s aggregate under concurrent load. Validated 3 concurrent requests with no indexer crash."
+model: unsloth/Qwen3.8-Flash-Next-GGUF
+runtime: llama-cpp
+container: ghcr.io/styles01/qwen38-flash-next:q4
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-28"
+  updated: "2026-08-28"
+  tags:
+    - qwen
+    - qwen3.8
+    - qwen4
+    - flash-next
+    - llama-cpp
+    - gguf
+    - q3_k_xl
+    - gb10
+    - spark-arena
+    - 3-lane
+    - parallel-3
+    - vision
+    - multimodal
+    - current-deploy
+  runbook: runbooks/qwen38-flash-next-q3-3lane.md
+  source: "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF"
+  container_source: "https://github.com/styles01/sparkrun-recipes/tree/main/docker/qwen38-flash-next"
+
+solo_only: true
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# CURRENT DEPLOYED config — 3 LANES @ 220K context, whole model in memory.
+# Daniel Han's slot fix (8b3ed0a40 "keep the indexer cache in step across server
+# slots") lifts the --parallel 1 constraint, and we validated 3 concurrent
+# requests with NO indexer crash (qwen4exp.cpp:284). ~57 tok/s aggregate.
+#
+# Launch (whole model in memory, NO -ot/-lm mmap NVMe pin):
+#   llama-server -m <UD-Q3_K_XL 00001-of-00003.gguf> \
+#     --alias qwen3.8-flash-next \
+#     --n-gpu-layers 999 --ctx-size 660000 --parallel 3 \
+#     --spec-type ngram-mod --temp 1.0 --top-p 0.95 --top-k 20 \
+#     --host 0.0.0.0 --port 8000 \
+#     --mmproj /home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf
+# NATIVE VISION: --mmproj (mmproj-F16.gguf, 904MB, SHA-256
+# 1f7b7f0b984cf065c604360c29c8098362ed61b290db0ff12c6f360bb1a8a980) enables
+# multimodal. Server reports capabilities ["completion","multimodal"].
+# NOTE: --ctx-size 660000 with --parallel 3 = 220K per slot (220160 each).
+# Lanes 2 and 3 engage ONLY under concurrent load. 3 concurrent requests
+# validated stable: 19+19+19 = ~57 tok/s aggregate.
+#
+# Memory: Q3_K_XL 90GB whole-in-memory + 15.8GB KV (3x220K f16) + ~8GB buffers
+#   = ~114GB used, ~5GB headroom on 119GB usable. Tight but fits.
+# (3-lane total context = 660K aggregate, deeper per-lane than the 10x75K
+# vLLM NVFP4 recipe, and ~57 t/s beats its 45.2.)
+#
+# Supersedes recipes/qwen3.8-flash-next-q3-2lane.yaml (2 lanes @ 200K, ~43-50
+# tok/s) — 3-lane is the current deployed config.
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  served_model_name: qwen3.8-flash-next
+  tensor_parallel: 1
+  n_gpu_layers: 999
+  max_model_len: 220000
+  parallel: 3
+  jinja: true
+  cont_batching: true
+  webui: false
+  mmproj: /home/jaita/gguf/qwen3.8-flash-next/mmproj-F16.gguf
+
+benchmark:
+  framework: spark-arena
+  tokenizer: Qwen/Qwen3.8-Flash-Next
+  notes: "CURRENT DEPLOYED recipe: Qwen3.8-Flash-Next UD-Q3_K_XL (90GB) on DGX Spark GB10 via llama.cpp qwen4exp fork (latest + Daniel Han slot fix + canreuse + null-guard). THREE LANES at 220K context each, whole model in memory, native vision. ~57 tok/s aggregate under concurrent load (3 x ~19 tok/s), validated 3 concurrent requests with no indexer crash. Beats the vLLM NVFP4 recipe's 45.2 t/s and its 10x75K context (ours: 3x220K = 660K, deeper per lane). Run with --skip-run against the live server on 0.0.0.0:8000/v1."
