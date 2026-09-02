@@ -1,0 +1,98 @@
+recipe_version: "4"
+name: glm-5.3-flash-exl3-k2
+# Operational Spark candidate, NOT an Arena-submission recipe.
+description: "GLM-5.3-Flash EXL3 K2 on a single DGX Spark GB10 using Vic Cruz's pinned custom vLLM/ExLlamaV3/EXL3 runtime. 91.017-GiB pack; first lane is one 64K agent stream with native MTP k=2. 258K is a research-only single-request prefill probe, not demonstrated concurrent-agent capacity."
+model: vcruz305/GLM-5.3-Flash-EXL3-K2
+runtime: vllm-custom-exl3
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-02"
+  status: "candidate-not-running"
+  tags:
+    - glm
+    - glm-5.3-flash
+    - exl3
+    - exllamav3
+    - vllm-fork
+    - gb10
+    - dgx-spark
+    - long-context
+    - agentic
+    - single-lane
+    - custom-runtime
+  runbook: runbooks/glm-5.3-flash-exl3-k2.md
+  canonical_launcher: scripts/switch-to-glm53-exl3-k2.sh
+  upstream_recipe: "https://github.com/vcruz305/GLM-5.3-Flash-EXL3-K2-DGX-Spark-recipe"
+  upstream_recipe_revision: "841d864694056db202e3c75f6759400af6672293"
+  model_revision: "ca0bcdae265f7df1e346c57a2b53b8b8f632ee0b"
+  runtime_revision: "be8820a09bebabc99cfe6b633178f0f105633cd9"
+  runtime_wheels: "https://huggingface.co/vcruz305/GLM-5.3-Flash-EXL3-K2-spark-vllm"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+
+# This cannot be submitted to Spark Arena as-is. It uses a community custom
+# runtime rather than an Arena-recognized public container/registered recipe.
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  python: "3.12"
+  cuda: "13"
+  disk_free_gib_before_download: 120
+  exclusive_spark_lane: true
+  memory_cgroup_max: "110G"
+
+model_layout:
+  local_dir: "~/models/hf/GLM-5.3-Flash-EXL3-K2"
+  expected_safetensor_shards: 120
+  expected_safetensor_bytes: 97728721536
+  quantization: "EXL3 2-bit MCG routed experts; attention/shared/embed/head/vision BF16"
+
+runtime_details:
+  install: "prebuilt custom vLLM + ExLlamaV3 + EXL3 plugin wheels only; never stock pip vllm"
+  launch_port: 8000
+  served_model_name: "GLM-5.3-Flash-EXL3"
+  host: "0.0.0.0"
+  tool_call_parser: "glm47"
+  reasoning_parser: "glm45"
+  kv_cache_dtype: fp8
+  fused_moe_env: "EXL3_FUSED_MOE=1"
+  allocator_env: "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"
+
+lanes:
+  - name: "64k-mtp"
+    purpose: "First agentic evaluation lane"
+    max_model_len: 65536
+    max_num_seqs: 1
+    gpu_memory_utilization: 0.91
+    max_num_batched_tokens: 2048
+    prefix_caching: false
+    speculation:
+      method: mtp
+      num_speculative_tokens: 2
+    evidence: "Upstream self-reported 14.6-15.7 tok/s at 64K. Must be reproduced with thinking on, real tools, TTFT/ITL, and soak behavior."
+
+  - name: "258k-probe"
+    purpose: "Research-only long-prefill/retrieval validation"
+    max_model_len: 262144
+    max_num_seqs: 1
+    max_num_batched_tokens: 2048
+    kv_cache_memory_bytes: 3221225472
+    prefix_caching: false
+    speculation:
+      method: none
+    evidence: "Upstream reports HTTP 200 for 258,048-token cold prefill in 427.3s. It does not establish 258K needle recall, captured-text decode, or concurrent service."
+
+promotion_gates:
+  - "Custom runtime preflight passes and loaded logs show fused_moe=exl3_moe."
+  - "64K repeated agent/tool-loop battery passes with thinking on and correct tool-call parsing."
+  - "Repeated long-prefill cycles show no allocator drift, K-pool fault, silent health-without-progress, or tool corruption."
+  - "Record real-text TTFT, output tok/s, p95 ITL, MTP acceptance, and memory headroom."
+  - "Before a 256K claim: exact retrieval and captured-text decode pass at that depth."
+  - "Before concurrent service: demonstrate fairness and tail latency across actual simultaneous streams."
