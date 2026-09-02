@@ -1,7 +1,7 @@
 # SparkRun Recipes
 
 **Status:** ✅ Production Ready  
-**Last Updated:** August 26, 2026  
+**Last Updated:** September 2, 2026
 **Hardware:** NVIDIA DGX Spark (GB10, 121GB unified memory, SM121, aarch64)
 
 ---
@@ -300,6 +300,74 @@ sparkrun benchmark performance @styles01/deepseek-v4-flash-0731-ds4 --hosts <spa
 
 ---
 
+## 🧪 Staged Candidates — not current services, not Arena submissions
+
+These are published operational artifacts, not permission to replace a healthy
+production lane. They remain opt-in, separately named, and must pass their own
+runbook gates before any Hermes/Loca integration or Arena eligibility work.
+
+### DeepSeek-V4-Flash-Vision-Exp Q2 — experimental DS4 image lane
+
+This is **not** a `--vision` switch added to the production Flash-0731 service.
+It uses a separate model family and a separately pinned upstream engine:
+
+```text
+upstream: antirez/ds4@110afdd8886586f18fc9b28bc5533152dd10e728
+language: Vision-Exp Q2 (~81 GiB)
+encoder: DeepSeek-V4-Flash-Vision-Encoder.gguf (~0.9 GiB)
+endpoint: :8101 (isolated; Loca/Hermes untouched)
+initial lane: 4K context, one session, DSpark off
+media: inline PNG/JPEG only — no video, remote URL, or local-path API input
+```
+
+```bash
+# Preparation only: no workload switch.
+bash scripts/switch-to-ds4-vision-exp-experimental.sh --stage
+bash scripts/switch-to-ds4-vision-exp-experimental.sh --download
+bash scripts/switch-to-ds4-vision-exp-experimental.sh --check
+
+# Intentional future exclusive Spark switch only:
+bash scripts/switch-to-ds4-vision-exp-experimental.sh --start
+```
+
+The service has its own `110G` cgroup-contained process and never reuses the
+production 0731 `ds4-serve`, `DS4_CONT_*`, `DS4_BATCH_*`, or 0731 DSpark drafter
+contract. The matching Vision-Exp DSpark sidecar is optional and disabled by
+default. A boot is not a promotion: image semantics, client API/tool payloads,
+memory, long-context agent behavior, and 1/2/4-stream fairness must all pass.
+
+> **Recipe:** [`recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml`](recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml) · **Runbook:** [`runbooks/deepseek-v4-flash-vision-exp-ds4-experimental.md`](runbooks/deepseek-v4-flash-vision-exp-ds4-experimental.md) · **Script:** [`scripts/switch-to-ds4-vision-exp-experimental.sh`](scripts/switch-to-ds4-vision-exp-experimental.sh)
+
+### GLM-5.3-Flash EXL3 K2 — long-context candidate
+
+Vic Cruz's custom GB10 path has a **91.017 GiB** EXL3 K2 pack: routed experts
+at 2-bit while attention/shared components/embeddings/head/vision remain BF16.
+It requires the pinned patched vLLM + ExLlamaV3 + EXL3 plugin stack; **stock
+`pip install vllm` cannot load it**.
+
+The upstream 258,048-token result is a single-request prefill—not validation of
+258K retrieval, captured-text decode, or multi-agent capacity. The initial lane
+is therefore one 64K MTP-k=2 agent stream.
+
+```bash
+# Validate/stage/download only; active lane unchanged.
+bash scripts/switch-to-glm53-exl3-k2.sh --check
+bash scripts/switch-to-glm53-exl3-k2.sh --stage
+bash scripts/switch-to-glm53-exl3-k2.sh --download
+
+# Future intentional switch:
+bash scripts/switch-to-glm53-exl3-k2.sh --start --lane 64k-mtp
+```
+
+Weights belong only in `~/models/hf/GLM-5.3-Flash-EXL3-K2`. The research-only
+`258k-probe` lane is one sequence with speculation off, a fixed 3 GiB KV pool,
+prefix caching off, and `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`; it
+must never be represented as concurrent agent serving.
+
+> **Recipe:** [`recipes/glm-5.3-flash-exl3-k2.yaml`](recipes/glm-5.3-flash-exl3-k2.yaml) · **Runbook:** [`runbooks/glm-5.3-flash-exl3-k2.md`](runbooks/glm-5.3-flash-exl3-k2.md) · **Script:** [`scripts/switch-to-glm53-exl3-k2.sh`](scripts/switch-to-glm53-exl3-k2.sh)
+
+---
+
 ## Repository Structure
 
 ```
@@ -328,7 +396,9 @@ Each runbook links to its corresponding recipe contract and vice versa.
 | Flavor | Runbook | Recipe | Status |
 |---|---|---|---|
 | ⭐ **Qwen 3.8 27B NVFP4 (drowzeys MTP n=3)** | [runbook](runbooks/qwen-38-27b.md) | [recipe](recipes/qwen-38-27b.yaml) | ✅ Production (daily driver) |
-| ⭐ **DS4-Flash 0731 (ds4 CUDA v0.5.5)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
+| ⭐ **DS4-Flash 0731 (ds4 CUDA v0.6.2)** | [runbook](runbooks/deepseek-v4-flash-ds4.md) | [recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) | ✅ Production |
+| 🧪 **DS4 Vision-Exp Q2 (antirez/ds4)** | [runbook](runbooks/deepseek-v4-flash-vision-exp-ds4-experimental.md) | [recipe](recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml) | 🧪 Experimental, isolated image lane |
+| 🧪 **GLM-5.3-Flash EXL3 K2** | [runbook](runbooks/glm-5.3-flash-exl3-k2.md) | [recipe](recipes/glm-5.3-flash-exl3-k2.yaml) | 🧪 Candidate, not running |
 | **DS4-Flash 0731 (vLLM-Moet)** | [runbook](runbooks/deepseek-v4-flash.md) | [recipe](recipes/deepseek-v4-flash-0731.yaml) | ⚠️ OOM risk (167GB) |
 | **Qwen 3.5 122B DFlash** | [runbook](runbooks/qwen-122b.md) | [recipe](recipes/qwen-122b.yaml) | ✅ Production |
 | **Qwen 122B v26 fp8 KV** | [runbook](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md) | [recipe](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | ✅ Breakthrough |
