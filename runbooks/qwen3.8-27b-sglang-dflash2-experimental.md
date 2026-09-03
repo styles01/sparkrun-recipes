@@ -28,8 +28,9 @@ No other dependency version is asserted as pinned. In particular, do not substit
 
 - All source checkout and checkpoint artifacts live under `~/models/hf` (override only with a child of that path).
 - The container mounts the two selected snapshots read-only and sets `HF_HUB_OFFLINE=1`.
-- `--start` refuses a container with the candidate name or a listener on its port. It never kills or restarts another workload.
-- The launch runs in a dedicated user-systemd unit with `Delegate=yes`, Docker `--cgroup-parent`, a `flock` lane lock, and `--restart=no`.
+- `--start` fails closed unless it can inspect Docker plus user and system systemd service status. It refuses the candidate container, its listener, and every active/activating/reloading Docker or systemd workload whose name, image, command, description, or `ExecStart` identifies H3, vLLM, SGLang, DS4/DeepSeek, llama-server, or a relevant inference server. It prints every discovered conflict and never kills or restarts another workload.
+- Empty workload lists are allowed only after the status commands themselves succeed; an unavailable, incomplete, unparseable, or unknown Docker/systemd/listener status aborts before launch.
+- The launch runs in a dedicated user-systemd unit with `Delegate=yes`, Docker `--cgroup-parent`, a `flock` lane lock, `MemoryMax=110G`, `MemorySwapMax=0`, and `--restart=no`.
 - The baseline is loopback-only port `8003`, `BF16` KV, context `65,536`, and `--max-running-requests 1`. Do not widen it before passing the gates below.
 - No command edits Loca, Hermes, user service units, model service configuration, or an existing recipe/script.
 

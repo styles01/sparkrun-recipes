@@ -46,6 +46,8 @@ defaults:
   tool_call_parser: qwen3_coder
   restart_policy: "no"
   cgroup_unit: qwen38-dflash2-experimental.service
+  memory_max: 110G
+  memory_swap_max: 0
   model_root: ~/models/hf
 
 env:

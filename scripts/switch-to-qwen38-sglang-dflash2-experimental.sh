@@ -33,22 +33,94 @@ require_model_root() {
 }
 need() { command -v "$1" >/dev/null 2>&1 || fail "missing command: $1"; }
 
+# Matches known Spark inference runtimes and intentionally broad serving names.
+# A match is a stop condition; this script never stops or changes the workload.
+is_inference_workload() {
+  local value="$1"
+  shopt -s nocasematch
+  [[ "$value" =~ (^|[^[:alnum:]])(h3|vllm|sglang|ds4|deepseek|llama([_-]?server)?|inference|text-generation|tritonserver|tgi)([^[:alnum:]]|$) ]]
+}
+
+report_conflicts_or_fail() {
+  local scope="$1" rows line id name image command status unit load active sub description details
+  local -a conflicts=()
+
+  if [[ "$scope" == docker ]]; then
+    rows="$(docker ps --format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Command}}\t{{.Status}}')" \
+      || fail "cannot determine running Docker workloads; refusing --start"
+    while IFS=$'\t' read -r id name image command status; do
+      [[ -z "$id" ]] && continue
+      [[ -n "$name" && -n "$image" && -n "$status" ]] \
+        || fail "Docker returned an incomplete workload status; refusing --start"
+      if is_inference_workload "$name $image $command"; then
+        conflicts+=("docker: id=$id name=$name image=$image status=$status")
+      fi
+    done <<< "$rows"
+  else
+    rows="$(systemctl "$scope" list-units --type=service --all --no-legend --plain)" \
+      || fail "cannot query $scope systemd service status; refusing --start"
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      read -r unit load active sub description <<< "$line"
+      [[ "$unit" == *.service && -n "$load" && -n "$active" && -n "$sub" ]] \
+        || fail "$scope systemd returned an unparseable service status; refusing --start"
+      case "$active" in
+        active|activating|reloading) ;;
+        inactive|failed|deactivating|maintenance) continue ;;
+        *) fail "$scope systemd returned unknown state '$active' for $unit; refusing --start" ;;
+      esac
+      details="$(systemctl "$scope" show "$unit" --property=Id --property=Description --property=ExecStart --property=ActiveState --property=SubState)" \
+        || fail "cannot inspect $scope systemd service $unit; refusing --start"
+      [[ "$details" == *"ActiveState="* && "$details" == *"SubState="* ]] \
+        || fail "incomplete status for $scope systemd service $unit; refusing --start"
+      if is_inference_workload "$unit $description $details"; then
+        conflicts+=("$scope systemd: unit=$unit state=$active/$sub")
+      fi
+    done <<< "$rows"
+  fi
+
+  if ((${#conflicts[@]})); then
+    printf 'ERROR: exclusive lane occupied; discovered active inference workload(s):\n' >&2
+    printf '  - %s\n' "${conflicts[@]}" >&2
+    fail "refusing --start; stop workloads manually before retrying"
+  fi
+}
+
+check_exclusive_occupancy() {
+  local all_container_names
+  need systemctl
+  all_container_names="$(docker ps -a --format '{{.Names}}')" \
+    || fail "cannot determine Docker container status; refusing --start"
+  while IFS= read -r name; do
+    [[ -z "$name" ]] && continue
+    [[ "$name" == "$NAME" ]] \
+      && fail "exclusive lane occupied: container $NAME exists; inspect/remove it manually"
+  done <<< "$all_container_names"
+  report_conflicts_or_fail docker
+  report_conflicts_or_fail --user
+  report_conflicts_or_fail --system
+}
+
 check() {
   require_model_root
   need docker; need git; need python3; need flock
   docker info >/dev/null || fail "Docker daemon is unavailable"
   [[ "$(uname -m)" == "aarch64" ]] || fail "this candidate is DGX Spark/aarch64 only"
   [[ -d "$HF_ROOT" || ! -e "$HF_ROOT" ]] || fail "HF_ROOT is not a directory"
-  if docker ps -a --format '{{.Names}}' | grep -Fxq "$NAME"; then
-    fail "exclusive lane occupied: container $NAME exists; inspect/remove it manually"
-  fi
-  if command -v ss >/dev/null 2>&1 && ss -ltn "sport = :$PORT" | grep -q LISTEN; then
-    fail "exclusive lane occupied: port $PORT is listening"
+  check_exclusive_occupancy
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn "sport = :$PORT" >/dev/null \
+      || fail "cannot determine listener status for port $PORT; refusing --start"
+    if ss -ltn "sport = :$PORT" | grep -q LISTEN; then
+      fail "exclusive lane occupied: port $PORT is listening"
+    fi
+  else
+    fail "missing command: ss; cannot determine listener status; refusing --start"
   fi
   if [[ -d "$SOURCE_DIR/.git" ]]; then
     [[ "$(git -C "$SOURCE_DIR" rev-parse HEAD)" == "$SOURCE_COMMIT" ]] || fail "staged source is not the required commit"
   fi
-  printf 'check passed: inert candidate prerequisites only\n'
+  printf 'check passed: no active known inference Docker/systemd workload found\n'
 }
 
 stage() {
@@ -104,6 +176,7 @@ start() {
   flock -n 9 || fail "exclusive lane lock is held: $LOCK"
   # No tactic-cache mount/import: it is a separate cold/warm remeasurement experiment.
   systemd-run --user --unit="$UNIT" --collect --property=Delegate=yes --property=Restart=no \
+    --property=MemoryMax=110G --property=MemorySwapMax=0 \
     docker run --name "$NAME" --restart=no --cgroup-parent="$UNIT" \
       --gpus all --ipc=host --shm-size=32g -p "127.0.0.1:$PORT:$PORT" \
       -v "$TARGET_DIR:/models/target:ro" -v "$DRAFT_DIR:/models/draft:ro" \
