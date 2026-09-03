@@ -1,0 +1,72 @@
+recipe_version: "4"
+name: qwen3.8-27b-exl3-native-mtp-experimental
+description: "Inert, source-pinned experimental one-lane Qwen3.8-27B EXL3 3.5bpw candidate using MiaAI-Lab ExLlamaV3. Text only; baseline is 131072 tokens, batch/request=1, with native MTP disabled. MTP n=2 is a post-baseline gate and fails closed until its exact pinned-fork invocation is independently verified."
+model: Mia-AiLab/Qwen3.8-27B-EXL3-3.5bpw
+runtime: mia-exllamav3-source
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-02"
+  status: "experimental-inert-candidate"
+  tags: [qwen3.8, qwen, 27b, exl3, 3.5bpw, exllamav3, native-mtp, gb10, sm121, text-only, one-lane]
+  runbook: runbooks/qwen3.8-27b-exl3-native-mtp-experimental.md
+  canonical_launcher: scripts/switch-to-qwen38-exl3-native-mtp-experimental.sh
+  model_revision: "19441ac874c4018295da848e250f23511361cda4"
+  runtime_repository: "https://github.com/MiaAI-Lab/exllamav3"
+  runtime_revision: "63b32f001d7b2cfed3b3e3aaf25f534ba53cc7ed"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  cuda: "13"
+  exclusive_spark_lane: true
+  memory_cgroup_max: "110G"
+  native_mtp_requires_baseline_gates: true
+
+model_layout:
+  local_dir: "~/models/hf/Mia-AiLab--Qwen3.8-27B-EXL3-3.5bpw/19441ac874c4018295da848e250f23511361cda4"
+  quantization: "EXL3 3.5 bits per weight"
+  modality: text-only
+  vision_supported: false
+
+launch:
+  host: "127.0.0.1"
+  port: 8888
+  max_context_tokens: 131072
+  max_requests: 1
+  batch_size: 1
+  native_mtp: off
+  restart: "no"
+  queueing: "serialized; no concurrent-lane claim"
+  cgroup:
+    MemoryMax: "110G"
+    MemorySwapMax: "0"
+
+lanes:
+  - name: baseline-text-131k
+    purpose: "Initial real-chat and long-context baseline"
+    max_context_tokens: 131072
+    max_requests: 1
+    batch_size: 1
+    native_mtp: off
+  - name: native-mtp-2-gated
+    purpose: "Post-baseline native MTP experiment only"
+    max_context_tokens: 131072
+    max_requests: 1
+    batch_size: 1
+    native_mtp: 2
+    status: "blocked pending baseline gates and an independently verified pinned-fork invocation"
+
+promotion_gates:
+  - "Validate exact model and source revisions before any build or run."
+  - "Clean source build succeeds on aarch64 SM121."
+  - "Baseline real chat, 100K/200K/262K prefill and retrieval, tools, strict JSON, thinking, output budget, memory unload, and serialized queue fairness pass."
+  - "Only then independently verify and record an exact pinned-fork native-MTP n=2 launch command; n=3 and n=4 remain separate experimental gates."
+  - "No vision capability may be claimed or validated: the selected artifact is text-only."
