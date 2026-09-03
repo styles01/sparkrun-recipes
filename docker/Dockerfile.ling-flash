@@ -21,6 +21,12 @@ RUN sed -i 's/for num_stages in \[2, 3, 4\]/for num_stages in [2]/g' \
     /usr/local/lib/python3.12/dist-packages/vllm/third_party/flash_linear_attention/ops/kda.py \
     && echo "KDA num_stages capped to 2 (3 configs patched)"
 
+# GB10 decode-attention fix: grouped MLA decode with BLOCK_DMODEL=512 still used
+# two stages (102,400 B shared memory) — 1,024 B above GB10's 101,376 B limit.
+# This is distinct from the KDA autotune cap above. Force stage 1 for this path.
+RUN python3 -c "from pathlib import Path; p=Path('/usr/local/lib/python3.12/dist-packages/vllm/v1/attention/ops/triton_decode_attention.py'); s=p.read_text(); old='    num_stages = 2\\n    if is_hip_:'; new='    num_stages = 1\\n    if is_hip_:'; assert s.count(old) == 1, s.count(old); p.write_text(s.replace(old, new))" && \
+    grep -A12 'extra_kargs = {}' /usr/local/lib/python3.12/dist-packages/vllm/v1/attention/ops/triton_decode_attention.py | grep -q 'num_stages = 1'
+
 ENV HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \
     CUTE_DSL_ARCH=sm_121a \

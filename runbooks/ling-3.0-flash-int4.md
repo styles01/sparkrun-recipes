@@ -2,7 +2,7 @@
 
 **Status:** 🧪 Patched image under native qualification; historical native submission `sub1787588904618` is retained as dated evidence, not proof for this rebuilt artifact.
 **Served name:** `inclusionAI/Ling-3.0-flash-int4`
-**Stack:** Docker — immutable public image `ghcr.io/styles01/ling-3.0-flash-int4@sha256:7d5c3c7d28c4feb7b8e0033ecd1ca9d7f15e6bfdaec7930363adb3b7560ed472` (vLLM `ling_3_0` fork on base `vllm/vllm-openai:v0.25.1`; KDA stage cap baked in)
+**Stack:** Docker — immutable public image `ghcr.io/styles01/ling-3.0-flash-int4@sha256:bf93ec614feb53f70a6b0886b4c909dce7f376fc807acb2fb229c362e7ade465` (vLLM `ling_3_0` fork on base `vllm/vllm-openai:v0.25.1`; KDA and grouped-MLA decode stage caps baked in)
 **Model:** `inclusionAI/Ling-3.0-flash-int4` (72GB, compressed-tensors W4A16 / Marlin)
 **Tool parser:** `ling3` (custom XML `<tool_call>`)
 **Reasoning parser:** `ling3`
@@ -57,7 +57,13 @@ sed -i 's/for num_stages in \[2, 3, 4\]/for num_stages in [2]/g' \
   /usr/local/lib/python3.12/dist-packages/vllm/third_party/flash_linear_attention/ops/kda.py
 ```
 
-Baked into `docker/Dockerfile.ling-flash` and the immutable image above. The native SparkRun recipe must stay pinned to that digest (or to a later image that independently verifies the same three replacements); a post-start `docker exec` patch is not sufficient for Arena because the engine may compile KDA before it is applied.
+Baked into `docker/Dockerfile.ling-flash` and the immutable image above. The native SparkRun recipe must stay pinned to that digest (or to a later image that independently verifies the same replacements); a post-start `docker exec` patch is not sufficient for Arena because the engine may compile KDA before it is applied.
+
+## ⛔ CRITICAL — grouped MLA decode shared-memory cap
+
+The KDA patch alone is not enough for Ling’s long-context two-request lane. At the 65,535-token × 2 probe, vLLM’s grouped MLA decode kernel requested **102,400 B** shared memory—**1,024 B above GB10’s 101,376 B hardware limit**—and killed EngineCore.
+
+The pinned image therefore also changes the NVIDIA default in `vllm/v1/attention/ops/triton_decode_attention.py` from `num_stages = 2` to `num_stages = 1` for `_decode_grouped_att_m_fwd`. This is a targeted GB10 safety cap; HIP behavior and the existing `BLOCK_DMODEL >= 1024` guard remain intact. Qualify 65K×2 and 100K×2 before an Arena upload.
 
 ## Cold-JIT first-request penalty (NOT a hang)
 
