@@ -2,10 +2,11 @@ model: inclusionAI/Ling-3.0-flash-int4
 runtime: vllm
 min_nodes: 1
 max_nodes: 1
-container: ghcr.io/styles01/ling-3.0-flash-int4:latest
+# Immutable public image. The KDA num_stages=2 GB10 safety patch is baked in.
+container: ghcr.io/styles01/ling-3.0-flash-int4@sha256:7d5c3c7d28c4feb7b8e0033ecd1ca9d7f15e6bfdaec7930363adb3b7560ed472
 
 metadata:
-  description: "Ling-3.0-flash INT4 (124B MoE, 5.1B active) on vLLM ling_3_0 fork. MTP k=1, 256K ctx, 2 lanes, fp8 KV, mamba align, ling3 parsers. PROVEN config that completed the full 28-task native arena run in 3.8h."
+  description: "Ling-3.0-flash INT4 (124B MoE, 5.1B active) on vLLM ling_3_0 fork. MTP k=1, 256K ctx, 2 lanes, fp8 KV, mamba align, ling3 parsers. GB10 KDA num_stages=2 safety patch baked into the pinned image; qualify long-context multi-request stability before publishing Arena results."
   maintainer: styles01
   tags:
     - ling

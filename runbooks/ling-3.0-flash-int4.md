@@ -1,8 +1,8 @@
 # Recipe: Ling-3.0-flash INT4
 
-**Status:** ✅ Production — serving locally + native Spark Arena submission `sub1787588904618`
+**Status:** 🧪 Patched image under native qualification; historical native submission `sub1787588904618` is retained as dated evidence, not proof for this rebuilt artifact.
 **Served name:** `inclusionAI/Ling-3.0-flash-int4`
-**Stack:** Docker — `ghcr.io/styles01/ling-3.0-flash-int4:latest` (vLLM `ling_3_0` fork on base `vllm/vllm-openai:v0.25.1`)
+**Stack:** Docker — immutable public image `ghcr.io/styles01/ling-3.0-flash-int4@sha256:7d5c3c7d28c4feb7b8e0033ecd1ca9d7f15e6bfdaec7930363adb3b7560ed472` (vLLM `ling_3_0` fork on base `vllm/vllm-openai:v0.25.1`; KDA stage cap baked in)
 **Model:** `inclusionAI/Ling-3.0-flash-int4` (72GB, compressed-tensors W4A16 / Marlin)
 **Tool parser:** `ling3` (custom XML `<tool_call>`)
 **Reasoning parser:** `ling3`
@@ -57,7 +57,7 @@ sed -i 's/for num_stages in \[2, 3, 4\]/for num_stages in [2]/g' \
   /usr/local/lib/python3.12/dist-packages/vllm/third_party/flash_linear_attention/ops/kda.py
 ```
 
-Baked into `docker/Dockerfile.ling-flash`. **Must be re-applied after any container rebuild** (it's in the writable layer, not the base image, until the image is rebuilt).
+Baked into `docker/Dockerfile.ling-flash` and the immutable image above. The native SparkRun recipe must stay pinned to that digest (or to a later image that independently verifies the same three replacements); a post-start `docker exec` patch is not sufficient for Arena because the engine may compile KDA before it is applied.
 
 ## Cold-JIT first-request penalty (NOT a hang)
 
