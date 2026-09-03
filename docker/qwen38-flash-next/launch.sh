@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Launch Qwen3.8-Flash-Next Q4_K_XL via the llama.cpp qwen4exp fork (PR #27742,
-# commit 035e227) with the 0xBakeer "180B-fits-in-119GB" trick:
+# Launch Qwen3.8-Flash-Next Q4_K_XL via a llama.cpp qwen4exp source tree that
+# passes scripts/verify-qwen38-flash-next-build.sh (PR #27941 merge or auditable
+# descendant) with the 0xBakeer "180B-fits-in-119GB" trick:
 #   -ot per_layer_token_embd=CPU   -> pin the 51B n-gram token-embd tensor to CPU (never GPU)
 #   -lm mmap                       -> serve it from NVMe via mmap
 # Spec decode: stock ngram-mod (default n_max=3). Do NOT raise n-min/max — it

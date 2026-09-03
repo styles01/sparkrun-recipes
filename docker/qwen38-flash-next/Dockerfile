@@ -10,9 +10,10 @@
 # libcudart.so.13 required by libggml-cuda built against CUDA 13).
 FROM nvcr.io/nvidia/vllm:26.06-py3
 
-# The llama.cpp qwen4exp fork build (PR #27742, commit 035e227) — build/bin/*.
-# We overlay the whole build/bin so llama-server finds its sibling .so libs via
-# LD_LIBRARY_PATH set by the launch script.
+# Build input must come from PR #27941 merge 36b10154383b60eb15baac2c7a40d2a5f784faa7
+# or an auditable descendant. Verify the source checkout before copying build/:
+# scripts/verify-qwen38-flash-next-build.sh --source-dir <llama.cpp-checkout>
+# We overlay build/bin so llama-server finds sibling .so libs via LD_LIBRARY_PATH.
 COPY build/ /opt/qwen4exp/bin/
 COPY launch.sh /opt/qwen4exp/launch.sh
 RUN chmod +x /opt/qwen4exp/launch.sh \

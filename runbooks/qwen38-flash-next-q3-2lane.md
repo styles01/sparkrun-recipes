@@ -1,5 +1,15 @@
 # Runbook: Qwen3.8-Flash-Next Q3_K_XL — 2 LANES @ 200K (alternative recipe)
 
+> **Source and regression gate.** Before any two-lane or native-vision claim,
+> run `scripts/verify-qwen38-flash-next-build.sh --source-dir <llama.cpp-checkout>`
+> for the source used to build the server. It requires PR #27941 merge
+> `36b10154383b60eb15baac2c7a40d2a5f784faa7` or an auditable descendant. Then
+> complete two simultaneous, request-distinct completions with correct outputs and
+> no assert/error/restart; for vision, send an image through `--mmproj` and check
+> its expected semantic result with no cross-request contamination. Retain logs.
+> Existing throughput and vision results below are historical, not revalidated by
+> this runbook change.
+
 > **The 2-lane unlock.** This is the first llama.cpp build to lift the `--parallel 1`
 > constraint on Qwen3.8-Flash-Next. Daniel Han's slot fix (`8b3ed0a40`) in the qwen4exp
 > fork fixed the `qwen4exp.cpp:284` GGML_ASSERT that crashed on a 2nd concurrent request.

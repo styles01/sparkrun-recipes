@@ -1,6 +1,6 @@
 recipe_version: "4"
 name: qwen3.8-flash-next-q3-3lane
-description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q3_K_XL, 90GB/3 shards) on DGX Spark (GB10) via the llama.cpp qwen4exp fork (PR #27742, commit ef6876693 + Daniel Han's slot fix 8b3ed0a40 + canreuse patch + our null-guard fix). THREE LANES at 220K context each, whole model in memory (no NVMe pin), native vision. ~57 tok/s aggregate under concurrent load. Validated 3 concurrent requests with no indexer crash."
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q3_K_XL, 90GB/3 shards) on DGX Spark (GB10) via the llama.cpp qwen4exp fork. Three-lane, vision, and performance figures are historical only until reproduced from a source checkout verified post-PR-27941 and the runbook regression gates pass."
 model: unsloth/Qwen3.8-Flash-Next-GGUF
 runtime: llama-cpp
 container: ghcr.io/styles01/qwen38-flash-next:q4
@@ -35,6 +35,10 @@ cluster_only: false
 min_nodes: 1
 max_nodes: 1
 
+# SAFETY GATE: Before any multi-lane or native-vision claim, verify the exact
+# source checkout with scripts/verify-qwen38-flash-next-build.sh --source-dir
+# <llama.cpp-checkout> (PR #27941 merge 36b10154383b60eb15baac2c7a40d2a5f784faa7
+# or auditable descendant), then run the applicable runbook regression gate.
 # CURRENT DEPLOYED config — 3 LANES @ 220K context, whole model in memory.
 # Daniel Han's slot fix (8b3ed0a40 "keep the indexer cache in step across server
 # slots") lifts the --parallel 1 constraint, and we validated 3 concurrent

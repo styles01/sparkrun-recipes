@@ -1,5 +1,14 @@
 # Runbook: Qwen3.8-Flash-Next (Q4_K_XL) on a single DGX Spark — our own llama.cpp container
 
+> **Source and regression gate.** The `:q4` image tag does not establish the
+> revision of its embedded binary. Before calling this a native-262K deployment,
+> run `scripts/verify-qwen38-flash-next-build.sh --source-dir <llama.cpp-checkout>`
+> on the source used to build it. It requires llama.cpp PR #27941 merge
+> `36b10154383b60eb15baac2c7a40d2a5f784faa7` or an auditable descendant. Then run
+> a real 262144-token prompt plus completion, check the expected sentinel output,
+> and retain server logs showing no CUDA/server abort. The figures below are
+> historical observations, not a claim about an unverified image.
+
 > **The headline result:** a ~180B-parameter model runs on ONE 128GB DGX Spark (GB10),
 > at Q4 quality, full 262K context, **~19-22 tok/s decode** (up to ~45 tok/s on
 > copy-heavy n-gram-speculative work). The trick: the 51B n-gram (PLE) table is pinned
@@ -13,7 +22,7 @@
 
 - **Model:** `unsloth/Qwen3.8-Flash-Next-GGUF` quant `UD-Q4_K_XL` — 4 shards, ~104 GiB total, only ~77 GiB resident
 - **Arch:** Qwen4 (`Qwen4ExpForConditionalGeneration`), 125B MoE (6B active) + 51B n-gram + 4B MTP ≈ 180B
-- **Runtime:** llama.cpp `qwen4exp` fork (PR [ggml-org/llama.cpp#27742](https://github.com/ggml-org/llama.cpp/pull/27742), commit `035e227`) + `canreuse-qwen4exp.patch` (+2.8% decode)
+- **Runtime:** llama.cpp `qwen4exp` source verified by the gate above; the old `035e227` result is not sufficient for post-fix claims.
 - **Container:** **`ghcr.io/styles01/qwen38-flash-next:q4`** (public, ours)
 
 > Reference `recipes/qwen3.8-flash-next-image.yaml` for the recipe contract.

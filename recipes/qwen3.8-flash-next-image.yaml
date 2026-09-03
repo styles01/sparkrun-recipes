@@ -1,6 +1,6 @@
 recipe_version: "4"
 name: qwen3.8-flash-next-image
-description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q4_K_XL, 104GB/4 shards) on DGX Spark (GB10) via our OWN qwen4exp llama.cpp container (ghcr.io/styles01/qwen38-flash-next:q4). The 0xBakeer '180B-fits-in-119GB' trick: -ot per_layer_token_embd=CPU pins the 51B n-gram tensor to CPU (never GPU), -lm mmap serves it from NVMe. Full 262K context, ~19-22 tok/s decode. First-to-post llama-cpp native benchmark under OUR image."
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q4_K_XL, 104GB/4 shards) on DGX Spark (GB10) via our OWN qwen4exp llama.cpp container (ghcr.io/styles01/qwen38-flash-next:q4). The 0xBakeer '180B-fits-in-119GB' trick: -ot per_layer_token_embd=CPU pins the 51B n-gram tensor to CPU (never GPU), -lm mmap serves it from NVMe. 262K and performance figures are historical only until reproduced from a source checkout verified post-PR-27941; see runbook."
 model: unsloth/Qwen3.8-Flash-Next-GGUF
 runtime: llama-cpp
 container: ghcr.io/styles01/qwen38-flash-next:q4
@@ -32,8 +32,13 @@ cluster_only: false
 min_nodes: 1
 max_nodes: 1
 
+# SAFETY GATE: The image tag does not prove its embedded llama.cpp revision.
+# Before any native-262K claim, verify its build source with
+# scripts/verify-qwen38-flash-next-build.sh --source-dir <llama.cpp-checkout>
+# (requires PR #27941 merge 36b10154383b60eb15baac2c7a40d2a5f784faa7 or a
+# descendant), then complete the native-262K regression gate in the runbook.
 # OUR container ghcr.io/styles01/qwen38-flash-next:q4 bundles the llama.cpp
-# qwen4exp fork (PR #27742, commit 035e227) + the 0xBaker launch trick + our
+# qwen4exp fork + the 0xBaker launch trick + our
 # perf tweaks. The container entrypoint (docker/qwen38-flash-next/launch.sh)
 # launches the exact current Q4 config:
 #   llama-server -m <UD-Q4_K_XL 0000{1,2,3,4}-of-00004.gguf> \

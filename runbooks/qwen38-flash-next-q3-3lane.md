@@ -1,5 +1,15 @@
 # Runbook: Qwen3.8-Flash-Next Q3_K_XL — 3 LANES @ 220K (current deployed)
 
+> **Source and regression gate.** Before any multi-lane or native-vision claim,
+> run `scripts/verify-qwen38-flash-next-build.sh --source-dir <llama.cpp-checkout>`
+> for the source used to build the server. It requires PR #27941 merge
+> `36b10154383b60eb15baac2c7a40d2a5f784faa7` or an auditable descendant. Then
+> complete three simultaneous, request-distinct completions with correct outputs
+> and no assert/error/restart; for vision, send an image through `--mmproj` and
+> check its expected semantic result with no cross-request contamination. Retain
+> command output and server logs. Existing throughput and vision results below are
+> historical, not revalidated by this runbook change.
+
 > **The 3-lane config.** Daniel Han's slot fix (`8b3ed0a40`, "keep the indexer
 > cache in step across server slots") lifts the `--parallel 1` constraint on the
 > qwen4exp fork. We validated **3 concurrent requests with NO indexer crash**
@@ -14,7 +24,7 @@
 - **Vision:** `mmproj-F16.gguf` (904 MB, from the same HF repo) — native multimodal
 
 ## Runtime / build
-- **llama.cpp qwen4exp fork:** PR [ggml-org/llama.cpp#27742](https://github.com/ggml-org/llama.cpp/pull/27742), commit `ef6876693` + Daniel Han's slot fix `8b3ed0a40` + canreuse patch (+2.8%) + our MTP-dense-attention null-guard fix.
+- **llama.cpp qwen4exp fork:** post-PR-27941 source verified by the gate above; older named commits are historical and do not establish post-fix provenance.
 - Build for SM `121a` with CUDA 13.0 (GB10). `LD_LIBRARY_PATH` must include `build/bin`.
 
 ## Launch (whole model in memory, 3 lanes @ 220K, with vision)
