@@ -1,0 +1,65 @@
+recipe_version: "4"
+name: qwen3.8-27b-llamacpp-mtp-experimental
+description: "Isolated llama.cpp native-MTP candidate for Qwen3.8-27B on one DGX Spark GB10. Starts MTP-off at 131K and one stream; native MTP n=2 is an opt-in comparison only. No GB10 validation claim."
+model: unsloth/Qwen3.8-27B-GGUF
+runtime: llama.cpp
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-02"
+  status: "experimental-candidate-not-running"
+  tags: [qwen, qwen3.8, 27b, llama-cpp, gguf, native-mtp, gb10, dgx-spark, single-lane]
+  runbook: runbooks/qwen3.8-27b-llamacpp-mtp-experimental.md
+  canonical_launcher: scripts/switch-to-qwen38-llamacpp-mtp-experimental.sh
+  model_source: "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF"
+  model_revision: "4ca720788d1e01f1bff70c033e0d0028fd02e502"
+  llama_cpp_source: "https://github.com/ggml-org/llama.cpp.git"
+  llama_cpp_revision: "REQUIRED: set LLAMA_CPP_REVISION to a manually verified 40-hex post-fix commit; no revision was pinned because PR #28206 is closed but not merged into master."
+  source_evidence:
+    - "https://github.com/ggml-org/llama.cpp/pull/28206"
+    - "https://github.com/sudoingX/qwen38-mtp"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  cuda: "13"
+  exclusive_spark_lane: true
+  memory_cgroup_max: "110G"
+
+model_layout:
+  local_dir: "~/models/hf/unsloth-Qwen3.8-27B-GGUF"
+  target_gguf: "Qwen3.8-27B-UD-Q4_K_M.gguf"
+  mtp_gguf: "MTP/mtp-Qwen3.8-27B-Q4_0.gguf"
+  download_policy: "Direct hf download only; no model artifact may be written outside ~/models/hf."
+
+initial_lane:
+  port: 8102
+  host: "0.0.0.0"
+  served_model_name: "qwen3.8-27b-llamacpp-mtp-experimental"
+  context: 131072
+  parallel: 1
+  n_gpu_layers: 99
+  flash_attn: true
+  speculation:
+    type: none
+    draft_n: 0
+  notes: "The canonical --start baseline is MTP off. Set MTP_DRAFT_N=2 only after the MTP-off health and memory gates pass. Never begin from the 5090 n=6/7 observation."
+
+comparison_matrix:
+  contexts: [131072, 262144]
+  mtp_draft_n: [0, 2, 3, 4]
+  concurrent_requests: [1, 2, 4]
+  caveat: "N=2/4 is a measured capacity/fairness experiment, not an assumption that concurrency improves throughput."
+
+promotion_gates:
+  - "Prove real completion health, not only /v1/models, at each MTP/context cell."
+  - "Pass tools/strict JSON, image/document, and needle-retrieval tests before any capability claim."
+  - "Record RSS/GPU/cgroup memory high-water, errors, TTFT, decode rate, p95 inter-token latency, and MTP acceptance where available."
+  - "Demonstrate clean unload with recovered MemAvailable and no residual llama-server process before the next lane."
