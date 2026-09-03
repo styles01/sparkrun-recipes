@@ -1,0 +1,86 @@
+recipe_version: "1"
+name: qwen3.8-27b-sglang-dflash2-experimental
+description: "Qualification-only Qwen3.8-27B NVFP4 + SGLang DFlash2 candidate for one DGX Spark. Not a production switch."
+model: RadixArk/Qwen3.8-27B-NVFP4
+runtime: sglang
+maintainer: styles01
+
+metadata:
+  status: experimental
+  runbook: runbooks/qwen3.8-27b-sglang-dflash2-experimental.md
+  canonical_script: scripts/switch-to-qwen38-sglang-dflash2-experimental.sh
+  upstream:
+    repository: https://github.com/pangoleen/qwen3.8-27b-dgx-spark-dflash2.git
+    commit: bac473f81a9eff0d3c1ba7dbc56a0bfc311f36ce
+  verified_pins:
+    target_model:
+      id: RadixArk/Qwen3.8-27B-NVFP4
+      revision: 554ebba9b5f1b79dc11246341960360e6ef05ef4
+    draft_model:
+      id: maurienne-ai/Qwen3.8-27B-DFlash2-NVFP4-RTNcal
+      revision: bd7a934213c47a9e7ef69eef36bb3325f47fd1f1
+    base_image: lmsysorg/sglang:qwen38-27b@sha256:3c0abdf41ef22de9d7a859dc16ed71eae69452e36c91f071a25e60c85a6d1fc6
+    upstream_sglang_dflash2_commit: c14312a66420b75ca9a11bf1817c4db1fa26b097
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+
+# Deliberately narrow baseline: one lane, one stream, BF16 KV, and no restart.
+defaults:
+  host: 127.0.0.1
+  port: 8003
+  served_model_name: qwen3.8-27b-dflash2-experimental
+  context_length: 65536
+  max_running_requests: 1
+  mem_fraction_static: 0.65
+  kv_cache_dtype: bfloat16
+  mamba_ssm_dtype: bfloat16
+  chunked_prefill_size: 2048
+  attention_backend: flashinfer
+  speculative_algorithm: DFLASH
+  speculative_num_draft_tokens: 16
+  speculative_draft_quantization: modelopt_fp4
+  reasoning_parser: qwen3
+  tool_call_parser: qwen3_coder
+  restart_policy: "no"
+  cgroup_unit: qwen38-dflash2-experimental.service
+  model_root: ~/models/hf
+
+env:
+  HF_HUB_OFFLINE: "1"
+
+# The image is built locally by --stage from the source-pinned Pangoleen tree.
+# Do not import a FlashInfer tactic cache: it is an environment-specific experiment
+# to remeasure against cold and warm baselines.
+startup_command: |
+  sglang serve --model-path /models/target \
+    --served-model-name {served_model_name} \
+    --host {host} --port {port} \
+    --trust-remote-code \
+    --context-length {context_length} \
+    --mem-fraction-static {mem_fraction_static} \
+    --attention-backend {attention_backend} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --chunked-prefill-size {chunked_prefill_size} \
+    --mamba-ssm-dtype {mamba_ssm_dtype} \
+    --mamba-radix-cache-strategy extra_buffer \
+    --page-size 1 \
+    --speculative-algorithm {speculative_algorithm} \
+    --speculative-draft-model-path /models/draft \
+    --speculative-draft-model-quantization {speculative_draft_quantization} \
+    --speculative-num-draft-tokens {speculative_num_draft_tokens} \
+    --reasoning-parser {reasoning_parser} \
+    --tool-call-parser {tool_call_parser} \
+    --max-running-requests {max_running_requests}
+
+qualification_gates:
+  - true_NVFP4_checkpoint_format_before_start
+  - thinking_on_real_reasoning_trace
+  - tool_schema_and_multi_turn_tool_loop
+  - image_and_video_request_paths
+  - cold_and_warm_contexts_32K_65K_130K
+  - memory_high_water_recorded
+  - concurrency_1_4_8_fairness_and_p95
+  - explicit_stop_and_no_automatic_restart
