@@ -99,7 +99,7 @@ YARN_MAX_MODEL_LEN=524288
 MTP_NUM_SPECULATIVE_TOKENS=0
 KV_TARGET_GIB=20
 KV_CACHE_DTYPE=auto
-MAX_NUM_SEQS=1
+MAX_NUM_SEQS=2
 HOST_SLACK_GIB=10
 # Verified direct-Docker GB10 path after cold boot; without privileged access
 # ordinary --gpus all containers can see NVML but fail CUDA context creation.

@@ -43,7 +43,7 @@ defaults:
   served_model_name: qwen3.8-flash-next-mia-262k
   tensor_parallel: 1
   max_model_len: 262144
-  max_num_seqs: 1
+  max_num_seqs: 2
   max_num_batched_tokens: 16384
   yarn: false
   kv_cache_dtype: auto

@@ -26,7 +26,7 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Setting | Baseline |
 |---|---|
 | Context | **262,144** native; YaRN off |
-| Lanes | 1 |
+| Lanes | **2** |
 | KV | `auto` / BF16—not FP8 |
 | Native MTP | Off |
 | PLE | upstream memory-mapped CPU/offload path required |
