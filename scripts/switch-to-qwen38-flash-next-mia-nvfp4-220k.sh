@@ -113,8 +113,16 @@ EOF
 
 download() {
   verify_source
-  command -v hf >/dev/null || { echo "Refusing: hf CLI is required for a revision-pinned download." >&2; return 1; }
-  HF_HOME="$MODEL_HOME" hf download "$MODEL_REPO" --revision "$MODEL_REV" --cache-dir "$MODEL_HOME" >/dev/null
+  python3 - <<PY
+from huggingface_hub import model_info, snapshot_download
+repo = "$MODEL_REPO"
+revision = "$MODEL_REV"
+cache_dir = "$MODEL_HOME/hub"
+info = model_info(repo, revision=revision)
+if info.sha != revision:
+    raise SystemExit(f"resolved {info.sha}, expected {revision}")
+snapshot_download(repo_id=repo, revision=revision, cache_dir=cache_dir)
+PY
   local snapshot="$MODEL_HOME/hub/models--Mia-AiLab--Qwen3.8-Flash-Next-NVFP4/snapshots/$MODEL_REV"
   [[ -f "$snapshot/config.json" ]] || { echo "Expected exact snapshot was not created." >&2; return 1; }
   printf '%s\n' "$MODEL_REV" > "$snapshot/.oracle-model-revision"
