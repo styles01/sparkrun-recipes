@@ -123,8 +123,13 @@ if info.sha != revision:
     raise SystemExit(f"resolved {info.sha}, expected {revision}")
 snapshot_download(repo_id=repo, revision=revision, cache_dir=cache_dir)
 PY
-  local snapshot="$MODEL_HOME/hub/models--Mia-AiLab--Qwen3.8-Flash-Next-NVFP4/snapshots/$MODEL_REV"
+  local model_root="$MODEL_HOME/hub/models--Mia-AiLab--Qwen3.8-Flash-Next-NVFP4"
+  local snapshot="$model_root/snapshots/$MODEL_REV"
   [[ -f "$snapshot/config.json" ]] || { echo "Expected exact snapshot was not created." >&2; return 1; }
+  mkdir -p "$model_root/refs"
+  # The upstream server starts from a repo ID in offline mode. Map its default
+  # main revision to this exact audited snapshot; it must never resolve online.
+  printf '%s\n' "$MODEL_REV" > "$model_root/refs/main"
   printf '%s\n' "$MODEL_REV" > "$snapshot/.oracle-model-revision"
   verify_model
   echo "[mia-qwen38-220k] exact model revision staged under ~/models/hf."
