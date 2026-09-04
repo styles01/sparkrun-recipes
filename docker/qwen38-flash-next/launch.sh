@@ -58,8 +58,6 @@ exec llama-server \
   --parallel 1 \
   --spec-type ngram-mod \
   --flash-attn on \
-  -b 2048 -ub 2048 \
-  --spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64 \
   --jinja \
   --chat-template-kwargs '{"enable_thinking":true,"reasoning_effort":"low"}' \
   --temp 1.0 --top-p 0.95 --top-k 20 \

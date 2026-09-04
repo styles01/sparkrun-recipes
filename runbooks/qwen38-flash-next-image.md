@@ -5,8 +5,10 @@
 > copy-heavy n-gram-speculative work). The trick: the 51B n-gram (PLE) table is pinned
 > to CPU and served from NVMe, never GPU-resident.
 
-> **This runbook covers OUR OWN public container** `ghcr.io/styles01/qwen38-flash-next:q4`
-> (the "container" recipe: `recipes/qwen3.8-flash-next-image.yaml`). A separate
+> **This runbook covers OUR OWN public immutable container**
+> `ghcr.io/styles01/qwen38-flash-next@sha256:d04a430df93f3e9489439620c936e386af07d8134342b9291e4f372933f2d8a8`
+> (tag: `q4-low-reasoning-stock-ngram-20260904`; the "container" recipe:
+> `recipes/qwen3.8-flash-next-image.yaml`). A separate
 > Q2-native recipe (`recipes/qwen3.8-flash-next-llamacpp.yaml`) is now **superseded**.
 
 ## What you get
@@ -14,7 +16,7 @@
 - **Model:** `unsloth/Qwen3.8-Flash-Next-GGUF` quant `UD-Q4_K_XL` — 4 shards, ~104 GiB total, only ~77 GiB resident
 - **Arch:** Qwen4 (`Qwen4ExpForConditionalGeneration`), 125B MoE (6B active) + 51B n-gram + 4B MTP ≈ 180B
 - **Runtime:** llama.cpp `qwen4exp` fork (PR [ggml-org/llama.cpp#27742](https://github.com/ggml-org/llama.cpp/pull/27742), commit `035e227`) + `canreuse-qwen4exp.patch` (+2.8% decode)
-- **Container:** **`ghcr.io/styles01/qwen38-flash-next:q4`** (public, ours)
+- **Container:** **`ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904`** (public, ours)
 
 > Reference `recipes/qwen3.8-flash-next-image.yaml` for the recipe contract.
 
@@ -39,7 +41,9 @@ KV (~6 GiB at 262K ctx).
   --alias qwen3.8-flash-next \
   -lm mmap -ot per_layer_token_embd=CPU \
   --n-gpu-layers 999 --ctx-size 262144 --parallel 1 \
-  --spec-type ngram-mod \
+  --spec-type ngram-mod --flash-attn on \
+  --jinja \
+  --chat-template-kwargs '{"enable_thinking":true,"reasoning_effort":"low"}' \
   --temp 1.0 --top-p 0.95 --top-k 20 \
   --host 0.0.0.0 --port 8000
 ```
@@ -55,9 +59,9 @@ The container entrypoint (`docker/qwen38-flash-next/launch.sh`) runs exactly thi
 # 2. Write docker/qwen38-flash-next/{Dockerfile,launch.sh}
 # 3. Build (aarch64/CUDA 13 base) + push on the Spark (the Mac's Docker Desktop
 #    often hangs on the privileged socket; the Spark's docker works):
-#    ssh jaita@192.168.2.185 'cd /tmp/qwen4-docker && docker build -t ghcr.io/styles01/qwen38-flash-next:q4 .'
+#    ssh jaita@192.168.2.185 'cd /tmp/qwen4-docker && docker build -t ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904 .'
 #    docker login ghcr.io -u styles01 --password-stdin
-#    docker push ghcr.io/styles01/qwen38-flash-next:q4
+#    docker push ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904
 # 4. The Dockerfile's org.opencontainers.image.source label links the package to the
 #    PUBLIC styles01/sparkrun-recipes repo, which makes the GHCR package inherit
 #    public visibility. (No REST mutation endpoint exists — repo-linking via this
@@ -125,5 +129,5 @@ For spark-arena: benchmark with `--skip-run` against the live server at `0.0.0.0
 - [0xBakeer/qwen38-flash-next-spark](https://github.com/0xBakeer/qwen38-flash-next-spark)
 - llama.cpp PR [#27742](https://github.com/ggml-org/llama.cpp/pull/27742)
 - Model: [unsloth/Qwen3.8-Flash-Next-GGUF](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF)
-- Our image: `ghcr.io/styles01/qwen38-flash-next:q4`
+- Our image: `ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904`
 - Our Docker build: `docker/qwen38-flash-next/`
