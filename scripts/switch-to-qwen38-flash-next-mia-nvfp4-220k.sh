@@ -130,6 +130,10 @@ PY
   # The upstream server starts from a repo ID in offline mode. Map its default
   # main revision to this exact audited snapshot; it must never resolve online.
   printf '%s\n' "$MODEL_REV" > "$model_root/refs/main"
+  # This vLLM image's hub client resolves its cache directly beneath HF_HOME,
+  # while upstream start.sh validates beneath HF_HOME/hub. Keep one canonical
+  # cache under ~/models/hf/hub and expose a compatibility symlink, not a copy.
+  ln -sfn "hub/models--Mia-AiLab--Qwen3.8-Flash-Next-NVFP4" "$MODEL_HOME/models--Mia-AiLab--Qwen3.8-Flash-Next-NVFP4"
   printf '%s\n' "$MODEL_REV" > "$snapshot/.oracle-model-revision"
   verify_model
   echo "[mia-qwen38-220k] exact model revision staged under ~/models/hf."
