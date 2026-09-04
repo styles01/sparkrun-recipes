@@ -32,7 +32,7 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Modalities | **Vision and video on** — model config is multimodal; no `language_model_only`, `--limit-mm-per-prompt`, or vision-disable flag is set |
 | PLE | upstream memory-mapped CPU/offload path required |
 | Port | 8888, avoiding the current service port |
-| Memory safety | upstream cgroup plus watchdog; 10 GiB host slack |
+| Memory safety | upstream cgroup plus watchdog; 5 GiB host slack |
 | Docker GPU | `--privileged --gpus all`, after an actual CUDA allocation preflight |
 
 This deliberately does **not** reproduce the social post’s fastest configuration. MTP and FP8 KV are separate variables; turning them both on before checking basic model quality and memory behavior makes a failure impossible to interpret.
