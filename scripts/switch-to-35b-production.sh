@@ -7,7 +7,9 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Cold-boot GB10 Docker CUDA guard; see scripts/lib/spark-docker-cuda-preflight.sh.
-source "$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
+GPU_PREFLIGHT="$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
+[ -f "$GPU_PREFLIGHT" ] || GPU_PREFLIGHT="$HOME/sparkrun-recipes/scripts/lib/spark-docker-cuda-preflight.sh"
+source "$GPU_PREFLIGHT"
 
 PORT=8000
 NAME="qwen35b-spark"
