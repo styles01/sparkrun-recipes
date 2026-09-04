@@ -133,7 +133,7 @@ PY
 occupancy() {
   local found=0 line
   echo "[mia-qwen38-220k] exclusive-occupancy scan:"
-  while IFS= read -r line; do echo "  process: $line"; found=1; done < <(ps -axo pid=,command= | grep -Ei '[v]llm|[l]lama-server|[d]s4|[l]ing|qwen' || true)
+  while IFS= read -r line; do echo "  process: $line"; found=1; done < <(ps -axo pid=,command= | grep -Ei '[v]llm|[l]lama-server|[d]s4|[l]ing' || true)
   while IFS= read -r line; do echo "  container: $line"; found=1; done < <(docker ps --format '{{.ID}} {{.Names}} {{.Image}}' | grep -Ei '[v]llm|[l]lama|[d]s4|[l]ing|qwen' || true)
   (( found == 0 )) || { echo "Refusing: candidate requires exclusive Spark occupancy; nothing was stopped." >&2; return 1; }
 }
