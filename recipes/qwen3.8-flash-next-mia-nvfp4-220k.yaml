@@ -1,8 +1,8 @@
 recipe_version: "4"
-name: qwen3.8-flash-next-mia-nvfp4-262k
+name: qwen3.8-flash-next-mia-nvfp4-220k
 # Experimental: independently reviewed upstream variation. It is not deployed,
 # not Arena-qualified, and must not replace a healthy serving lane without a Go.
-description: "Qwen3.8-Flash-Next Mia NVFP4 on one DGX Spark through MiaAI-Lab's source-pinned TP=1 vLLM recipe. Conservative evaluation profile: native 262,144 context, YaRN off, BF16/auto KV, MTP off, one lane, cgroup/watchdog guarded. The author FP8-KV+MTP=3 profile is a separately gated experiment, not the default."
+description: "Qwen3.8-Flash-Next Mia NVFP4 on one DGX Spark through MiaAI-Lab's source-pinned TP=1 vLLM recipe. Evaluation profile: native 220,000 context, YaRN off, BF16/auto KV, MTP off, two lanes, vision/video retained by the multimodal checkpoint, cgroup/watchdog guarded. The author FP8-KV+MTP=3 profile is a separately gated experiment, not the default."
 model: Mia-AiLab/Qwen3.8-Flash-Next-NVFP4
 model_revision: "925d7be6c14c6c9442ef83e8f05b5a3c39304f69"
 runtime: vllm
@@ -40,9 +40,9 @@ max_nodes: 1
 defaults:
   port: 8888
   host: 0.0.0.0
-  served_model_name: qwen3.8-flash-next-mia-262k
+  served_model_name: qwen3.8-flash-next-mia-220k
   tensor_parallel: 1
-  max_model_len: 262144
+  max_model_len: 220000
   max_num_seqs: 2
   max_num_batched_tokens: 16384
   yarn: false

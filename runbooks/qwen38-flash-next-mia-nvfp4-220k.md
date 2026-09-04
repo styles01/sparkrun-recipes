@@ -1,4 +1,4 @@
-# Runbook: Qwen3.8-Flash-Next Mia NVFP4 — native 262K evaluation variation
+# Runbook: Qwen3.8-Flash-Next Mia NVFP4 — native 220K evaluation variation
 
 > **Experimental and inert by default.** This is an independently reviewed variation of MiaAI-Lab’s one-DGX-Spark recipe—not a production replacement, not an Arena recipe, and not running. It never changes Hermes/Loca configuration. Its launcher refuses co-residence; it will not kill a healthy workload to make room.
 
@@ -25,10 +25,11 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 
 | Setting | Baseline |
 |---|---|
-| Context | **262,144** native; YaRN off |
+| Context | **220,000** native; YaRN off |
 | Lanes | **2** |
 | KV | `auto` / BF16—not FP8 |
 | Native MTP | Off |
+| Modalities | **Vision and video on** — model config is multimodal; no `language_model_only`, `--limit-mm-per-prompt`, or vision-disable flag is set |
 | PLE | upstream memory-mapped CPU/offload path required |
 | Port | 8888, avoiding the current service port |
 | Memory safety | upstream cgroup plus watchdog; 10 GiB host slack |
@@ -58,7 +59,7 @@ Do not promote this lane because it returns HTTP 200, or because an X post gives
 
 1. **Identity gate** — source commit, image digest, model snapshot revision, and wrapper identity marker all match exactly.
 2. **Real-chat gate** — `/health`, `/v1/models`, multi-turn reasoning chat, tool call, strict JSON, and reasoning/content separation work.
-3. **Native-context retrieval** — independent 100K, 200K, and 262K passkey tests with early/middle/late placements; preserve raw prompts, replies, timings, and server logs.
+3. **Native-context retrieval** — independent 100K, 200K, and 220K passkey tests with early/middle/late placements; preserve raw prompts, replies, timings, and server logs.
 4. **Memory and recovery** — track `MemAvailable`, cgroup peak/current, container logs, and GPU telemetry during long prefill; stop cleanly and prove memory unload/restart works.
 5. **Multimodal** — image and short video tests with known answers. Do not infer long-video or concurrent multimodal capacity from a single demo.
 6. **Quality comparison** — compare exact same prompts with the existing Q4 llama.cpp lane. Include prose, tool use, coding, long-document retrieval, and multimodal tasks.
@@ -75,7 +76,7 @@ FP8 KV is a capacity trade-off. It must be evaluated independently from MTP. The
 
 ### YaRN 512K
 
-This is a distinct long-context experiment. It is not required to test the native 262K lane. A 1M setting remains excluded: the pinned upstream launch code says it does not fit and its README says it was never run on that host.
+This is a distinct long-context experiment. It is not required to test the native 220K lane. A 1M setting remains excluded: the pinned upstream launch code says it does not fit and its README says it was never run on that host.
 
 ## Source evidence and caveats
 
