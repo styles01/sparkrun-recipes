@@ -1,6 +1,6 @@
 recipe_version: "4"
 name: qwen3.8-flash-next-image
-description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q4_K_XL, 104GB/4 shards) on DGX Spark (GB10) via our OWN qwen4exp llama.cpp container (ghcr.io/styles01/qwen38-flash-next:q4). The 0xBakeer '180B-fits-in-119GB' trick: -ot per_layer_token_embd=CPU pins the 51B n-gram tensor to CPU (never GPU), -lm mmap serves it from NVMe. Full 262K context, ~19-22 tok/s decode. First-to-post llama-cpp native benchmark under OUR image."
+description: "Qwen3.8-Flash-Next (unsloth GGUF, UD-Q4_K_XL, 104GB/4 shards) on DGX Spark (GB10) via our OWN qwen4exp llama.cpp container (ghcr.io/styles01/qwen38-flash-next:q4). The 0xBakeer '180B-fits-in-119GB' trick: -ot per_layer_token_embd=CPU pins the 51B n-gram tensor to CPU (never GPU), -lm mmap serves it from NVMe. Full 262K context, ~19-22 tok/s decode. Thinking stays enabled with Qwen's supported low reasoning effort by default. First-to-post llama-cpp native benchmark under OUR image."
 model: unsloth/Qwen3.8-Flash-Next-GGUF
 runtime: llama-cpp
 container: ghcr.io/styles01/qwen38-flash-next:q4
@@ -40,9 +40,13 @@ max_nodes: 1
 #     --alias qwen3.8-flash-next \
 #     -lm mmap -ot per_layer_token_embd=CPU \
 #     --n-gpu-layers 999 --ctx-size 262144 --parallel 1 \
-#     --spec-type ngram-mod \
+#     --spec-type ngram-mod --jinja \
+#     --chat-template-kwargs '{"enable_thinking":true,"reasoning_effort":"low"}' \
 #     --temp 1.0 --top-p 0.95 --top-k 20 \
 #     --host 0.0.0.0 --port 8000
+# Reasoning stays ON but defaults to Qwen's supported `low` effort, rather
+# than its embedded-template default of `xhigh`. Per-request low/medium/xhigh
+# may still override this default.
 # (0xBaker trick: -ot per_layer_token_embd=CPU pins the 51B n-gram token-embd
 # tensor to CPU so it never lands on GPU; -lm mmap serves it from NVMe.)
 # The server is ALREADY LIVE on 0.0.0.0:8000. We benchmark with --skip-run so

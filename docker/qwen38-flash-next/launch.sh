@@ -20,7 +20,8 @@ SERVED_NAME="${SERVED_NAME:-qwen3.8-flash-next}"
 HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8000}"
 CTX="${CTX:-262144}"
-export LD_LIBRARY_PATH="$(dirname "$0"):${LD_LIBRARY_PATH:-}"
+# llama-server's sibling shared libraries live in the qwen4exp bin directory.
+export LD_LIBRARY_PATH="/opt/qwen4exp/bin:${LD_LIBRARY_PATH:-}"
 
 # --- model acquisition -------------------------------------------------------
 SHARD1="$MODEL_DIR/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf"
@@ -56,5 +57,10 @@ exec llama-server \
   --ctx-size "$CTX" \
   --parallel 1 \
   --spec-type ngram-mod \
+  --flash-attn on \
+  -b 2048 -ub 2048 \
+  --spec-ngram-mod-n-min 48 --spec-ngram-mod-n-max 64 \
+  --jinja \
+  --chat-template-kwargs '{"enable_thinking":true,"reasoning_effort":"low"}' \
   --temp 1.0 --top-p 0.95 --top-k 20 \
   --host "$HOST" --port "$PORT"
