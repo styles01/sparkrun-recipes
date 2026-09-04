@@ -5,6 +5,9 @@
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Cold-boot GB10 Docker CUDA guard; see scripts/lib/spark-docker-cuda-preflight.sh.
+source "$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
 
 PORT=8000
 NAME="nemotron-spark"
@@ -33,7 +36,8 @@ echo "[nemotron] === LAUNCHING (NVFP4, MTP k=3, 150K, 3 lanes) ==="
 echo "[nemotron] Config: GMU 0.83, 150K ctx, 3 lanes, MTP k=3"
 echo "[nemotron] Model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4 (67GB)"
 echo "[nemotron] Based on Spark Arena recipe + our 122B production tuning"
-docker run --gpus all -d --name "$NAME" \
+require_spark_docker_cuda "vllm/vllm-openai:v0.24.0"
+docker run --privileged --gpus all -d --name "$NAME" \
   --network host --ipc host \
   -e OMP_NUM_THREADS=4 \
   -e CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 \

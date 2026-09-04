@@ -6,6 +6,9 @@
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Cold-boot GB10 Docker CUDA guard; see scripts/lib/spark-docker-cuda-preflight.sh.
+source "$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
 
 PORT="${PORT:-8000}"
 IMAGE="${IMAGE:-vllm-node:latest}"
@@ -49,8 +52,10 @@ if [ ! -d "$MODEL_PATH" ]; then
   exit 1
 fi
 
+require_spark_docker_cuda "${IMAGE}"
 docker run -d \
   --name "${CONTAINER_NAME}" \
+  --privileged \
   --gpus all \
   --restart unless-stopped \
   -p "${PORT}:8000" \

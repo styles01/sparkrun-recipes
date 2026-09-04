@@ -5,6 +5,9 @@
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Cold-boot GB10 Docker CUDA guard; see scripts/lib/spark-docker-cuda-preflight.sh.
+source "$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
 
 PORT=8000
 NAME="qwen35b-spark"
@@ -36,7 +39,8 @@ echo "[35b] === LAUNCHING (Media-server config — MTP k=3 + PR #48375 Mamba bug
 echo "[35b] Config: 6 lanes × 256K ctx, GMU 0.40, MTP k=3, fp8 KV, prefix caching"
 echo "[35b] Memory budget: ~22GB weights + ~21GB CUDA graphs + KV from GMU 0.40"
 echo "[35b] Free for co-located workloads: ~59GB (video gen, TTS, image gen, GNOME)"
-docker run --gpus all -d --name "$NAME" \
+require_spark_docker_cuda "vllm/vllm-openai:v0.24.0"
+docker run --privileged --gpus all -d --name "$NAME" \
   --network host --ipc host \
   -e VLLM_MARLIN_USE_ATOMIC_ADD=1 \
   -v ~/.cache/huggingface:/root/.cache/huggingface \

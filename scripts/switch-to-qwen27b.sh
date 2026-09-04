@@ -1,5 +1,8 @@
 #!/bin/bash
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Cold-boot GB10 Docker CUDA guard; see scripts/lib/spark-docker-cuda-preflight.sh.
+source "$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
 
 # Switch to Qwen 3.8 27B NVFP4 on the GB10 drowzeys build
 # MTP n=3, fp8 KV, flashinfer autotune, 4 seqs, 256K context
@@ -29,9 +32,11 @@ for c in $(docker ps --format "{{.Names}}" | grep -i sparkrun 2>/dev/null || tru
 done
 
 echo "[qwen38] Launching GB10 vLLM container (MTP n=$NSPEC + prefix caching + arena tuning)..."
+require_spark_docker_cuda "$IMAGE"
 docker run -d \
   --name "$CONTAINER" \
   --restart unless-stopped \
+  --privileged \
   --gpus all \
   --ipc host \
   --network host \

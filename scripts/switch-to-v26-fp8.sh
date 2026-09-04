@@ -39,10 +39,14 @@ echo ""
 echo "Stopping existing Qwen container..."
 ssh $SPARK 'docker rm -f qwen-spark vllm-v26-test 2>/dev/null && echo "killed" || echo "none running"'
 
-# Start v26
+# Start v26. A real CUDA allocation catches the GB10 cold-boot Docker policy
+# before we attempt a large model load; nvidia-smi alone is not sufficient.
+echo "Checking CUDA context inside the v26 image..."
+ssh $SPARK "docker run --rm --privileged --gpus all --entrypoint python3 $IMAGE -c 'import torch; assert torch.cuda.is_available(); torch.zeros(1, device=\"cuda\")'"
+
 echo "Starting vLLM v26..."
 ssh $SPARK "docker run -d \
-  --name qwen-spark --gpus all -p 8000:8000 --user root \
+  --name qwen-spark --privileged --gpus all -p 8000:8000 --user root \
   -v \$HOME/.cache/huggingface:/root/.cache/huggingface \
   -e HF_HOME=/root/.cache/huggingface \
   -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \

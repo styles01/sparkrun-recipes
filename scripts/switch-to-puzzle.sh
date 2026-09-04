@@ -10,6 +10,9 @@
 #
 # Pre-flight checklist (ADR-006): kills all inference, clears caches, safe launch
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Cold-boot GB10 Docker CUDA guard; see scripts/lib/spark-docker-cuda-preflight.sh.
+source "$SCRIPT_DIR/lib/spark-docker-cuda-preflight.sh"
 
 PORT=8000
 IMAGE="nvcr.io/nvidia/vllm:26.06-py3"
@@ -61,8 +64,10 @@ if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then
   docker pull "${IMAGE}"
 fi
 
+require_spark_docker_cuda "${IMAGE}"
 docker run -d \
   --name "${CONTAINER_NAME}" \
+  --privileged \
   --gpus all \
   --restart unless-stopped \
   -p "${PORT}:8000" \
