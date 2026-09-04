@@ -15,7 +15,7 @@ Our current Qwen Flash Next GGUF service is already configured for **262,144 tok
 - **Upstream launcher source:** [`MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark`](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark), commit `554f295f0ac744cff8a5ffd4dd3bcc96aa82ab7f`, AGPL-3.0-or-later.
 - **Model:** [`Mia-AiLab/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/Mia-AiLab/Qwen3.8-Flash-Next-NVFP4), revision `925d7be6c14c6c9442ef83e8f05b5a3c39304f69`.
 - **Runtime image (arm64):** `vllm/vllm-openai@sha256:3b0e188ffceb3d07e09c3cb5215433a0020eacf02d7f882ed3a8bfd15454477e`.
-- **Our wrapper:** `scripts/switch-to-qwen38-flash-next-mia-nvfp4-262k.sh`.
+- **Our wrapper:** `scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh`.
 - **Upstream source staging:** `~/src/qwen38-flash-next-mia-262k`.
 - **Model cache:** `~/models/hf` only. No model directory may be created outside `~/models`.
 
@@ -29,6 +29,7 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Lanes | **2** |
 | KV | `auto` / BF16—not FP8 |
 | Native MTP | Off |
+| Reasoning | **Low by default**, via vLLM `--default-chat-template-kwargs {"enable_thinking":true,"reasoning_effort":"low"}`; request-level kwargs may explicitly override it |
 | Modalities | **Vision and video on** — model config is multimodal; no `language_model_only`, `--limit-mm-per-prompt`, or vision-disable flag is set |
 | PLE | upstream memory-mapped CPU/offload path required |
 | Port | 8888, avoiding the current service port |
@@ -42,10 +43,10 @@ This deliberately does **not** reproduce the social post’s fastest configurati
 All commands are inert until their named action:
 
 ```bash
-bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-262k.sh --check
-bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-262k.sh --stage
-bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-262k.sh --download
-bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-262k.sh --start
+bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh --check
+bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh --stage
+bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh --download
+bash scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh --start
 ```
 
 - `--check`: verifies aarch64, GB10 identity, and any staged source/model identities. It does not alter state.
