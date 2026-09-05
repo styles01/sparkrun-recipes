@@ -104,7 +104,9 @@ MAX_NUM_SEQS=2
 # let a mutable default branch name select a different model revision. vLLM's
 # server-side defaults merge with per-request chat_template_kwargs; low is the
 # service default while callers may explicitly override it when warranted.
-EXTRA_VLLM_ARGS="--revision $MODEL_REV --default-chat-template-kwargs {\"enable_thinking\":true,\"reasoning_effort\":\"low\"}"
+# Keep the JSON in literal single quotes through upstream start.sh's generated
+# shell launch script; otherwise shell brace expansion splits its comma.
+EXTRA_VLLM_ARGS="--revision $MODEL_REV --default-chat-template-kwargs '{\"enable_thinking\":true,\"reasoning_effort\":\"low\"}'"
 HOST_SLACK_GIB=5
 # Verified direct-Docker GB10 path after cold boot; without privileged access
 # ordinary --gpus all containers can see NVML but fail CUDA context creation.
