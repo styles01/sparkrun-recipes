@@ -33,7 +33,7 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Reasoning | **Low by default**, via vLLM `--default-chat-template-kwargs {"enable_thinking":true,"reasoning_effort":"low"}`; request-level kwargs may explicitly override it |
 | Modalities | **Vision and video on** — model config is multimodal; no `language_model_only`, `--limit-mm-per-prompt`, or vision-disable flag is set |
 | PLE | upstream memory-mapped CPU/offload path required |
-| Port | 8888, avoiding the current service port |
+| Port | 8000 — the established Spark/Hermes Qwen service contract |
 | Memory safety | upstream cgroup plus watchdog; 5 GiB host slack |
 | Docker GPU | `--privileged --gpus all`, after an actual CUDA allocation preflight |
 

@@ -12,7 +12,9 @@ MODEL_REV="925d7be6c14c6c9442ef83e8f05b5a3c39304f69"
 IMAGE="vllm/vllm-openai@sha256:3b0e188ffceb3d07e09c3cb5215433a0020eacf02d7f882ed3a8bfd15454477e"
 RUNTIME_DIR="${MIA_QWEN38_RUNTIME_DIR:-$HOME/src/qwen38-flash-next-mia-262k}"
 MODEL_HOME="${MIA_QWEN38_MODEL_HOME:-$HOME/models/hf}"
-PORT="${MIA_QWEN38_PORT:-8888}"
+# Preserve the established Spark/Hermes service contract. The experimental
+# variant keeps its identity in the recipe, not by moving the canonical port.
+PORT="${MIA_QWEN38_PORT:-8000}"
 DO_CHECK=0
 DO_STAGE=0
 DO_DOWNLOAD=0

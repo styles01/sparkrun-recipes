@@ -38,7 +38,7 @@ max_nodes: 1
 # extra physical memory; the upstream PLE mmap/offload is viable only because
 # file-backed pages are evictable. Its cgroup and watchdog are mandatory.
 defaults:
-  port: 8888
+  port: 8000
   host: 0.0.0.0
   served_model_name: qwen3.8-flash-next
   tensor_parallel: 1
