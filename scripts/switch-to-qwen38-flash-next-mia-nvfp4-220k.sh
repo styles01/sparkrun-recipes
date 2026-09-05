@@ -152,13 +152,13 @@ PY
 occupancy() {
   local found=0 line
   echo "[mia-qwen38-220k] exclusive-occupancy scan:"
-  # A stale watchdog is not a serving workload. It is left behind when a
-  # container is deliberately removed before its next launcher invocation;
-  # start.sh replaces it with a fresh watchdog after a successful launch.
+  # Docker is the authority for containerized vLLM. Do not scan arbitrary shell
+  # command lines for the word “vllm”: an SSH monitor command or a stale
+  # memwatcher can contain a container name and create a false busy result.
+  # Native engines are identified by their actual executable names.
   while IFS= read -r line; do
-    [[ "$line" == *"/files/memwatch.sh"* ]] && continue
     echo "  process: $line"; found=1
-  done < <(ps -axo pid=,command= | grep -Ei '[v]llm|[l]lama-server|[d]s4|[l]ing' || true)
+  done < <(ps -axo pid=,comm= | grep -Ei '[l]lama-server|[d]s4|[l]ing' || true)
   while IFS= read -r line; do echo "  container: $line"; found=1; done < <(docker ps --format '{{.ID}} {{.Names}} {{.Image}}' | grep -Ei '[v]llm|[l]lama|[d]s4|[l]ing|qwen' || true)
   (( found == 0 )) || { echo "Refusing: candidate requires exclusive Spark occupancy; nothing was stopped." >&2; return 1; }
 }
