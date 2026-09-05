@@ -31,7 +31,7 @@ No action is performed without a flag.
   --start     refuse co-residence, then delegate launch to the pinned upstream script
 
 The staged default is deliberately conservative: native 220,000 context,
-YaRN off, BF16/auto KV, MTP disabled, and two concurrent lanes. The author FP8-KV + MTP=3 profile is
+YaRN off, BF16/auto KV, MTP disabled, and three concurrent lanes. The author FP8-KV + MTP=3 profile is
 recorded in the runbook as a later, separately measured experiment.
 USAGE
 }
@@ -104,7 +104,7 @@ YARN_MAX_MODEL_LEN=524288
 MTP_NUM_SPECULATIVE_TOKENS=0
 KV_TARGET_GIB=20
 KV_CACHE_DTYPE=auto
-MAX_NUM_SEQS=2
+MAX_NUM_SEQS=3
 # Force vLLM's offline hub lookup to the exact downloaded snapshot; do not
 # let a mutable default branch name select a different model revision. vLLM's
 # server-side defaults merge with per-request chat_template_kwargs; low is the

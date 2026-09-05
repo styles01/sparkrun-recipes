@@ -26,7 +26,7 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Setting | Baseline |
 |---|---|
 | Context | **220,000** native; YaRN off |
-| Lanes | **2** |
+| Lanes | **3** — parent plus two subagent-capable lanes |
 | API model name | `qwen3.8-flash-next` — the established Qwen Flash endpoint name across serving variants |
 | KV | `auto` / BF16—not FP8 |
 | Native MTP | Off |
