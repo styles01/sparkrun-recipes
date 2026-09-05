@@ -146,6 +146,7 @@ Candidates are intentionally separate from healthy production lanes. A recipe ex
 | GLM-5.3 Flash EXL3 K2 | credible one-Spark 258K prefill evidence | one 64K MTP lane first; 258K is research-only | [Runbook](runbooks/glm-5.3-flash-exl3-k2.md) · [Recipe](recipes/glm-5.3-flash-exl3-k2.yaml) |
 | GLM-5.3 Flash Q2 MTP text | lower-headroom-risk local llama.cpp variant | one 32K q8-KV text lane first; 128K/256K are gated single-request probes | [Runbook](runbooks/glm-5.3-flash-q2-mtp-text-experimental.md) · [Recipe](recipes/glm-5.3-flash-q2-mtp-text-experimental.yaml) |
 | DeepSeek V4 Flash Vision-Exp Q2 | separate experimental image route | 4K / one session; do not mutate production DS4 | [Runbook](runbooks/deepseek-v4-flash-vision-exp-ds4-experimental.md) · [Recipe](recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml) |
+| Qwen 3.8 27B NVFP4 3D Workbench | 3D-modelling lane: vision ON, 2 lanes, 450K total ctx, TRELLIS.2 headroom; cad-khana parametric loop verified on agent side | staged only — must not replace the live `qwen3.8-flash-next` lane without an explicit Go | [Runbook](runbooks/qwen3.8-27b-nvfp4-3d-workbench.md) · [Recipe](recipes/qwen3.8-27b-nvfp4-3d-workbench.yaml) |
 
 ---
 
