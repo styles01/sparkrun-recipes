@@ -39,13 +39,31 @@ Qwen 27B (this lane, vision ON) writes build123d script
 cad-khana (`uv tool install cad-khana`, Apache-2.0) is installed and **verified working** on the Mac (2026-09-05: L-bracket test part → STL + STEP + mechanism.json + printability.json, min wall 4.0mm, printability ok). Verified script contract: scripts must call `check(assembly, out=...)` and/or `inspect(part, method=FDM(...), out=...)` — a bare `result =` does nothing (silent no-op).
 
 ### Route 2 — organic/artistic meshes (TRELLIS.2's job)
+
+**VERIFIED END-TO-END on the Spark, 2026-09-05** — the full pipeline produced a real textured GLB (`ComfyUI_00001.glb`, 73.6 MB, 502K vertices, 618K faces, PBR + UVs) from a single input image in ~4 min, on a Spark also running the 122B-class live lane. Details below.
+
 ```
-reference image → TRELLIS.2-4B (ComfyUI on this Spark, int8 5.25GB)
-  → textured PBR GLB
-  → scale + watertight repair (Blender 3D-Print Toolbox / trimesh)
-  → print
+reference image → TRELLIS.2-4B int8 (ComfyUI :8189)
+  → textured PBR GLB → scale + watertight repair (Blender/trimesh) → print
 ```
-ComfyUI on the Spark is at v0.33.0 — TRELLIS.2 native nodes need **v0.34.0+**, so ComfyUI must be updated (pull) before use. TRELLIS.2 checkpoints to download (Comfy-Org pack, 18.85GB total): `diffusion_models/trellis_2_int8_convrot.safetensors` (5.25GB), `vae/trellis_2_shape_vae_bf16.safetensors` (1.10GB), `vae/trellis_2_texture_vae_bf16.safetensors` (0.95GB), `clip_vision/dino_v3_vit_l.safetensors` (1.21GB).
+
+**Stack as staged (all pinned):**
+- ComfyUI v0.34.0 (commit `8a43c6bd`, master) at `~/ComfyUI`, venv torch 2.12.1+cu130 (sm_120 in arch list), native `nodes_trellis2.py` in core
+- Checkpoints (all in `~/ComfyUI/models/`): `diffusion_models/trellis_2_int8_convrot.safetensors` (5.25 GB), `vae/trellis_2_shape_vae_bf16.safetensors` (1.10 GB), `vae/trellis_2_texture_vae_bf16.safetensors` (0.95 GB), `clip_vision/dino_v3_L_naf_fp32.safetensors` (1.21 GB), `geometry_estimation/moge_2_vitl_normal_fp16.safetensors`, `background_removal/birefnet.safetensors`
+- venv pins upgraded for v0.34.0: `comfy-aimdo==0.5.2`, `comfyui-frontend-package==1.52.6`, `comfyui-workflow-templates==0.11.55`, `comfyui-workflow-templates-json==0.1.68`, `comfyui-embedded-docs==0.5.11`
+- Proven workflow file: `docker/qwen38-flash-next/trellis2-image-to-3d-api-workflow.json` — validated against live `object_info`, fixed for the API's integer output indices, PreviewImage pass-through rewiring, `RemeshMesh` DynamicCombo flat-key format (`sign_mode` + `sign_mode.qef` etc.), and `UnwrapMesh weld_distance=0.001` (unwelded remesh output otherwise produces empty UV chunks)
+
+**Launch (on the Spark):**
+```bash
+cd ~/ComfyUI && setsid nohup ./venv/bin/python main.py --port 8189 --listen 0.0.0.0 > /tmp/comfy-8189.log 2>&1 < /dev/null &
+# queue via POST /prompt with the workflow JSON (client_id oracle-3d-workbench)
+```
+
+**⚠️ COEXISTENCE LIMIT — measured:** the TRELLIS.2 texture/UV/bake stage (4K atlas, 8M-vertex remesh) peaks high enough to OOM-kill the vLLM container (observed exit 137 while the 122B-class lane was up). The Mia lane's own watchdog + cgroup did NOT protect it — the GPU/host memory pressure came from ComfyUI outside the container's scope. **Two safe profiles:**
+1. **Sequential (default, proven):** run TRELLIS.2 with the LLM lane stopped (stop the LLM via its own launcher `./stop.sh`, run the 3D batch, restart the lane). Recovery cost ~8-10 min weight reload.
+2. **Co-resident (experimental):** LLM up + TRELLIS.2 at reduced settings (texture 2048, remesh resolution 512, decimate 300K). Must be memory-tested before trusting. NOT yet validated.
+
+The 27B workbench lane (GMU 0.55) is the intended co-resident partner for profile 2 — that's the headroom it was designed with.
 
 **Division of labor:** the LLM never writes triangle soup; TRELLIS.2 never does dimensions. The LLM can also drive ComfyUI via its HTTP workflow API when the agent layer wants image-to-3D in a pipeline.
 
