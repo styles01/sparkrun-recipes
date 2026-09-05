@@ -1,0 +1,86 @@
+recipe_version: "4"
+name: qwen3.8-27b-nvfp4-3d-workbench
+description: "3D-modelling workbench lane: Qwen3.8-27B NVFP4 (vision ON) at 2 lanes / 450K total context, serving as the CAD-coder brain for the 3D pipeline (cad-khana parametric loop + TRELLIS.2 organic meshes in ComfyUI). Big-headroom posture: GMU 0.55 leaves ~50GiB for TRELLIS.2 int8 (5.25GB) + ComfyUI runtime. Vision ON for image-to-CAD iteration (render feedback)."
+model: unsloth/Qwen3.8-27B-NVFP4
+model_revision: "57926baca9a82b4d6906b43f2750d55315f5b10f"
+runtime: vllm
+container: ghcr.io/drowzeys/keys-vllm-027-gb10-qwen38:mtp3-20260813
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-05"
+  updated: "2026-09-05"
+  tags:
+    - qwen
+    - qwen3.8
+    - 27b
+    - nvfp4
+    - vision
+    - 3d-modelling
+    - cad
+    - trellis
+    - workbench
+  runbook: runbooks/qwen3.8-27b-nvfp4-3d-workbench.md
+  source: https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# Memory posture: 121.7GiB unified pool.
+#   model weights (NVFP4)        ~22.6 GB
+#   KV @ bf16, 2 lanes x 225K     ~14-16 GB
+#   vLLM overhead + activations   ~6-8 GB
+#   ------------------------------
+#   vLLM total @ GMU 0.55         ~66-70 GB
+#   TRELLIS.2 int8 + ComfyUI      ~10-12 GB
+#   host/SSH reserve              ~5 GB
+#   Free headroom                 ~40+ GB
+# Vision: ON via the Qwen3.5 native vision tower in the checkpoint
+# (config vision_config present). No separate mmproj needed.
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.55
+  max_model_len: 225280        # 220K + margin, per-lane
+  max_num_seqs: 2              # 2 lanes x 225K = 450K total context
+  max_num_batched_tokens: 16384
+  kv_cache_dtype: bfloat16
+  tool_call_parser: qwen3_coder
+  enable_auto_tool_choice: true
+  enable_prefix_caching: true
+  enable_flashinfer_autotune: true
+  served_model_name: qwen3.8-27b
+
+env:
+  FLASHINFER_CUDA_ARCH_LIST: 12.1a
+  FLASHINFER_DISABLE_VERSION_CHECK: "1"
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+# Reasoning: Qwen3.5-arch thinking handled via chat-template kwargs at request
+# level; server default kept neutral here (workbench tasks are code-heavy, and
+# the proven drowzeys image launches with its own template handling).
+
+command: |
+  vllm serve {model} \
+    --host {host} \
+    --port {port} \
+    --served-model-name {served_model_name} \
+    --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --enable-prefix-caching \
+    --enable-flashinfer-autotune \
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser qwen3 \
+    -tp {tensor_parallel} \
+    -pp {pipeline_parallel}
