@@ -40,7 +40,7 @@ max_nodes: 1
 defaults:
   port: 8888
   host: 0.0.0.0
-  served_model_name: qwen3.8-flash-next-mia-220k
+  served_model_name: qwen3.8-flash-next
   tensor_parallel: 1
   max_model_len: 220000
   max_num_seqs: 2
