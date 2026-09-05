@@ -144,6 +144,7 @@ Candidates are intentionally separate from healthy production lanes. A recipe ex
 |---|---|---|---|
 | Qwen 3.8 27B EXL3 3.5bpw | compact text-only EXL3 target with native-MTP potential | 131K / batch 1 baseline; MTP depth must be independently verified | [Runbook](runbooks/qwen3.8-27b-exl3-native-mtp-experimental.md) · [Recipe](recipes/qwen3.8-27b-exl3-native-mtp-experimental.yaml) |
 | GLM-5.3 Flash EXL3 K2 | credible one-Spark 258K prefill evidence | one 64K MTP lane first; 258K is research-only | [Runbook](runbooks/glm-5.3-flash-exl3-k2.md) · [Recipe](recipes/glm-5.3-flash-exl3-k2.yaml) |
+| GLM-5.3 Flash Q2 MTP text | lower-headroom-risk local llama.cpp variant | one 32K q8-KV text lane first; 128K/256K are gated single-request probes | [Runbook](runbooks/glm-5.3-flash-q2-mtp-text-experimental.md) · [Recipe](recipes/glm-5.3-flash-q2-mtp-text-experimental.yaml) |
 | DeepSeek V4 Flash Vision-Exp Q2 | separate experimental image route | 4K / one session; do not mutate production DS4 | [Runbook](runbooks/deepseek-v4-flash-vision-exp-ds4-experimental.md) · [Recipe](recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml) |
 
 ---
