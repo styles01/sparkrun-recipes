@@ -12,7 +12,7 @@ Our current Qwen Flash Next GGUF service is already configured for **262,144 tok
 
 ## Pinned identities
 
-- **Upstream launcher source:** [`MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark`](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark), commit `554f295f0ac744cff8a5ffd4dd3bcc96aa82ab7f`, AGPL-3.0-or-later.
+- **Upstream launcher source:** [`MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark`](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark), commit `09d4424` (pinned forward 2026-09-05 from `554f295`; MiaAI 18-commit update: +26% decode via MTP draft-vocab slicing + PLE page-fault batching, host-side GPU budget `HOST_RESERVE_GIB=26` — the fix for their 2026-09-04 three-server `NV_ERR_NO_MEMORY` incident, same failure class as our TRELLIS bake OOM — memwatch gating hotfix, graceful `stop.sh`, log archiving), AGPL-3.0-or-later.
 - **Model:** [`Mia-AiLab/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/Mia-AiLab/Qwen3.8-Flash-Next-NVFP4), revision `925d7be6c14c6c9442ef83e8f05b5a3c39304f69`.
 - **Runtime image (arm64):** `vllm/vllm-openai@sha256:3b0e188ffceb3d07e09c3cb5215433a0020eacf02d7f882ed3a8bfd15454477e`.
 - **Our wrapper:** `scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh`.
@@ -28,7 +28,8 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Context | **220,000** native; YaRN off |
 | Lanes | **3** — parent plus two subagent-capable lanes |
 | API model name | `qwen3.8-flash-next` — the established Qwen Flash endpoint name across serving variants |
-| KV | `auto` / BF16—not FP8 |
+| KV | `auto` / BF16—not FP8. Pool `KV_TARGET_GIB=11` ≈ 656K tokens (~59.6K tok/GiB) — 2.98× a full 220K request; 3 lanes × 220K = 660K is the ceiling, so a bigger pool buys nothing |
+| Host reserve | `HOST_RESERVE_GIB=26` — GPU budget capped at MemTotal−26; the anti-OOM posture (their 3-server incident + our TRELLIS bake OOM were both this failure class) |
 | Native MTP | Off |
 | Reasoning | **Low by default**, via vLLM `--default-chat-template-kwargs {"enable_thinking":true,"reasoning_effort":"low"}`; request-level kwargs may explicitly override it |
 | Modalities | **Vision and video on** — model config is multimodal; no `language_model_only`, `--limit-mm-per-prompt`, or vision-disable flag is set |
@@ -83,7 +84,7 @@ This is a distinct long-context experiment. It is not required to test the nativ
 ## Source evidence and caveats
 
 - [Mia upstream README](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark/blob/main/README.md)
-- [Pinned upstream `start.sh`](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark/blob/554f295f0ac744cff8a5ffd4dd3bcc96aa82ab7f/start.sh)
+- [Pinned upstream `start.sh`](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark/blob/09d4424/start.sh)
 - [Official Qwen Flash-Next model](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
 
 Reported single-stream decode (~37 tok/s) and four-stream aggregate (~86 tok/s) are author measurements, not independently reproduced here. The upstream repository does not ship the benchmark harness/traces supporting those numbers.

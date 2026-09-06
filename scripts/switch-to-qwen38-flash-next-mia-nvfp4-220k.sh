@@ -5,7 +5,17 @@
 set -euo pipefail
 
 SOURCE_REPO="https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark.git"
-SOURCE_REV="554f295f0ac744cff8a5ffd4dd3bcc96aa82ab7f"
+# Pin: 2026-09-05 — MiaAI 18-commit update (554f295 → 09d4424):
+#   +26% decode (MTP draft-vocab 65536 slicing + PLE page-fault batching),
+#   host-side GPU budget (HOST_RESERVE_GIB — the fix for their 3-server
+#   NV_ERR_NO_MEMORY incident; same failure class as our 2026-09-05
+#   TRELLIS bake OOM), memwatch gating hotfix, graceful stop.sh, log
+#   archiving. KV posture per James 2026-09-05: 3 lanes × 220K = 660K
+#   tokens is the real ceiling; a 600K-class KV pool is enough. BF16 kept
+#   (author-measured FP8 costs: −2.7% prefill, −4% decode); KV_TARGET_GIB=11
+#   ≈ 656K tokens at ~59.6K/GiB — 2.98× a full 220K request. The freed
+#   memory goes to the host reserve, which is what prevents the OOM class.
+SOURCE_REV="09d4424"
 MODEL_REPO="Mia-AiLab/Qwen3.8-Flash-Next-NVFP4"
 MODEL_REV="925d7be6c14c6c9442ef83e8f05b5a3c39304f69"
 # Arm64 manifest resolved 2026-09-04; never silently follow the mutable tag.
@@ -102,7 +112,8 @@ YARN=0
 MAX_MODEL_LEN=220000
 YARN_MAX_MODEL_LEN=524288
 MTP_NUM_SPECULATIVE_TOKENS=0
-KV_TARGET_GIB=20
+KV_TARGET_GIB=11
+HOST_RESERVE_GIB=26
 KV_CACHE_DTYPE=auto
 MAX_NUM_SEQS=3
 # Force vLLM's offline hub lookup to the exact downloaded snapshot; do not
@@ -111,11 +122,11 @@ MAX_NUM_SEQS=3
 # service default while callers may explicitly override it when warranted.
 # Keep the JSON in literal single quotes through upstream start.sh's generated
 # shell launch script; otherwise shell brace expansion splits its comma.
+# Upstream (09d4424) budgets host-side itself: HOST_RESERVE_GIB caps the GPU
+# budget at MemTotal-26, HOST_SLACK_GIB (10) sizes the container cgroup beyond
+# it. Our old HOST_SLACK_GIB=5 belonged to the pre-budget era and undervalues
+# the host-side footprint; drop it and inherit the upstream defaults.
 EXTRA_VLLM_ARGS="--revision $MODEL_REV --default-chat-template-kwargs '{\"enable_thinking\":true,\"reasoning_effort\":\"low\"}'"
-HOST_SLACK_GIB=5
-# Verified direct-Docker GB10 path after cold boot; without privileged access
-# ordinary --gpus all containers can see NVML but fail CUDA context creation.
-EXTRA_DOCKER_ARGS="--privileged"
 PORT=$PORT
 EOF
   printf 'source=%s\nmodel=%s\nimage=%s\n' "$SOURCE_REV" "$MODEL_REV" "$IMAGE" > "$RUNTIME_DIR/.oracle-220k-identity"
