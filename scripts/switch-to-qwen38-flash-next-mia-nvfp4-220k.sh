@@ -15,7 +15,7 @@ SOURCE_REPO="https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark.gi
 #   (author-measured FP8 costs: −2.7% prefill, −4% decode); KV_TARGET_GIB=11
 #   ≈ 656K tokens at ~59.6K/GiB — 2.98× a full 220K request. The freed
 #   memory goes to the host reserve, which is what prevents the OOM class.
-SOURCE_REV="09d4424"
+SOURCE_REV="09d4424be2b777818471b9bba8c7775ddd538833"
 MODEL_REPO="Mia-AiLab/Qwen3.8-Flash-Next-NVFP4"
 MODEL_REV="925d7be6c14c6c9442ef83e8f05b5a3c39304f69"
 # Arm64 manifest resolved 2026-09-04; never silently follow the mutable tag.
