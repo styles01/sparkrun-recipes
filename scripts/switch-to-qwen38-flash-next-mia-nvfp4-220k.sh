@@ -127,6 +127,9 @@ MAX_NUM_SEQS=3
 # it. Our old HOST_SLACK_GIB=5 belonged to the pre-budget era and undervalues
 # the host-side footprint; drop it and inherit the upstream defaults.
 EXTRA_VLLM_ARGS="--revision $MODEL_REV --default-chat-template-kwargs '{\"enable_thinking\":true,\"reasoning_effort\":\"low\"}'"
+# GB10 direct-Docker requires privileged for CUDA context creation after cold
+# boot (cuInit=999 without it; verified 2026-09-04). Upstream consumes this var.
+EXTRA_DOCKER_ARGS="--privileged"
 PORT=$PORT
 EOF
   printf 'source=%s\nmodel=%s\nimage=%s\n' "$SOURCE_REV" "$MODEL_REV" "$IMAGE" > "$RUNTIME_DIR/.oracle-220k-identity"
