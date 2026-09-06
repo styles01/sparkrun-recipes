@@ -28,7 +28,7 @@ The wrapper does not copy or relicense the upstream AGPL launch implementation. 
 | Context | **220,000** native; YaRN off |
 | Lanes | **3** — parent plus two subagent-capable lanes |
 | API model name | `qwen3.8-flash-next` — the established Qwen Flash endpoint name across serving variants |
-| KV | `auto` / BF16—not FP8. Pool `KV_TARGET_GIB=11` ≈ 656K tokens (~59.6K tok/GiB) — 2.98× a full 220K request; 3 lanes × 220K = 660K is the ceiling, so a bigger pool buys nothing |
+| KV | `auto` / BF16—not FP8. Pool `KV_TARGET_GIB=16` ≈ 632K tokens (BF16 KV density ~39.5K tok/GiB, measured 11.13 GiB = 440K) — 600K-class per James's spec; 3 lanes × 220K = 660K is the ceiling |
 | Host reserve | `HOST_RESERVE_GIB=26` — GPU budget capped at MemTotal−26; the anti-OOM posture (their 3-server incident + our TRELLIS bake OOM were both this failure class) |
 | Native MTP | Off |
 | Reasoning | **Low by default**, via vLLM `--default-chat-template-kwargs {"enable_thinking":true,"reasoning_effort":"low"}`; request-level kwargs may explicitly override it |

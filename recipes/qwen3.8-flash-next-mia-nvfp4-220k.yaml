@@ -47,7 +47,7 @@ defaults:
   max_num_batched_tokens: 16384
   yarn: false
   kv_cache_dtype: auto
-  kv_target_gib: 11
+  kv_target_gib: 16
   host_reserve_gib: 26
   speculative_method: none
   default_chat_template_kwargs:

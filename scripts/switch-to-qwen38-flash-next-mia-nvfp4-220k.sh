@@ -12,9 +12,11 @@ SOURCE_REPO="https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark.gi
 #   TRELLIS bake OOM), memwatch gating hotfix, graceful stop.sh, log
 #   archiving. KV posture per James 2026-09-05: 3 lanes × 220K = 660K
 #   tokens is the real ceiling; a 600K-class KV pool is enough. BF16 kept
-#   (author-measured FP8 costs: −2.7% prefill, −4% decode); KV_TARGET_GIB=11
-#   ≈ 656K tokens at ~59.6K/GiB — 2.98× a full 220K request. The freed
-#   memory goes to the host reserve, which is what prevents the OOM class.
+#   ... FP8 costs: −2.7% prefill, −4% decode); BF16 KV density is ~39.5K tok/GiB
+#   (measured: 11.13 GiB = 440K tokens), so KV_TARGET_GIB=16 ≈ 632K tokens —
+#   the 600K-class pool James specced (3×220K=660K ceiling; 2.87× a full
+#   220K request). Budget: fixed 77.44 + 16 = 93.4 GiB < 95.7 GiB host cap ✓,
+#   and the full 26 GiB host reserve stays intact.
 SOURCE_REV="09d4424be2b777818471b9bba8c7775ddd538833"
 MODEL_REPO="Mia-AiLab/Qwen3.8-Flash-Next-NVFP4"
 MODEL_REV="925d7be6c14c6c9442ef83e8f05b5a3c39304f69"
@@ -112,7 +114,7 @@ YARN=0
 MAX_MODEL_LEN=220000
 YARN_MAX_MODEL_LEN=524288
 MTP_NUM_SPECULATIVE_TOKENS=0
-KV_TARGET_GIB=11
+KV_TARGET_GIB=16
 HOST_RESERVE_GIB=26
 KV_CACHE_DTYPE=auto
 MAX_NUM_SEQS=3
