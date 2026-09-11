@@ -19,7 +19,7 @@ defaults:
   host: 0.0.0.0
   tensor_parallel: 1
   pipeline_parallel: 1
-  gpu_memory_utilization: 0.85
+  gpu_memory_utilization: 0.75
   max_model_len: 262144
   max_num_batched_tokens: 2048
   max_num_seqs: 8
@@ -37,6 +37,7 @@ env:
   MAX_NUM_SEQS: "8"
   MAX_NUM_BATCHED_TOKENS: "2048"
   CUDAGRAPH_CAPTURE_SIZES: auto
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
 
 command: |
   vllm serve {model} \
