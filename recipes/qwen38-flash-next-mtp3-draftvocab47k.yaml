@@ -19,7 +19,7 @@ defaults:
   host: 0.0.0.0
   tensor_parallel: 1
   pipeline_parallel: 1
-  gpu_memory_utilization: 0.75
+  gpu_memory_utilization: 0.72
   max_model_len: 262144
   max_num_batched_tokens: 2048
   max_num_seqs: 8
@@ -33,11 +33,14 @@ env:
   VLLM_MTP_DRAFT_VOCAB: /usr/local/share/draft_vocab_en_code_47k.txt
   MTP_NUM_SPECULATIVE_TOKENS: "3"
   KV_CACHE_DTYPE: bfloat16
+  KV_TARGET_GIB: "16"
+  HOST_RESERVE_GIB: "26"
+  HOST_SLACK_GIB: "10"
   MAMBA_SSM_CACHE_DTYPE: bfloat16
   MAX_NUM_SEQS: "8"
   MAX_NUM_BATCHED_TOKENS: "2048"
   CUDAGRAPH_CAPTURE_SIZES: auto
-  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  PYTORCH_CUDA_ALLOC_CONF: ""
 
 command: |
   vllm serve {model} \
