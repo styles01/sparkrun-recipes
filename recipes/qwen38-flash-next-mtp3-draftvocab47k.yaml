@@ -28,6 +28,9 @@ defaults:
   speculative_config: '{"method": "mtp", "num_speculative_tokens": 3, "use_local_argmax_reduction": true}'
   mtp_draft_vocab: /usr/local/share/draft_vocab_en_code_47k.txt
 
+executor_config:
+  entrypoint: ""
+
 env:
   VLLM_MTP_DRAFT_VOCAB: /usr/local/share/draft_vocab_en_code_47k.txt
   MTP_NUM_SPECULATIVE_TOKENS: "3"
