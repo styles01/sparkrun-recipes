@@ -34,7 +34,7 @@ env:
   MTP_NUM_SPECULATIVE_TOKENS: "3"
   KV_CACHE_DTYPE: bfloat16
   VLLM_PLE_CPU_OFFLOAD: "1"
-  VLLM_PLE_PACKED_TABLE_DIR: /root/.cache/vllm/ple_cache/Mia-AiLab--Qwen3.8-Flash-Next-NVFP4  # baked in image v7
+  VLLM_PLE_PACKED_TABLE_DIR: /root/.cache/vllm/ple_cache/Mia-AiLab--Qwen3.8-Flash-Next-NVFP4
   VLLM_PLE_OFFLOAD_STEP_TIMEOUT: "300"
   HF_HOME: /cache/huggingface
   KV_TARGET_GIB: "16"
