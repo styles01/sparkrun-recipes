@@ -1,0 +1,52 @@
+recipe_version: "2"
+model: Mia-AiLab/Qwen3.8-Flash-Next-NVFP4
+model_revision: 925d7be6c14c6c9442ef83e8f05b5a3c39304f69
+runtime: vllm
+container: ghcr.io/styles01/qwen38-flash-next-mtp3-draftvocab47k:v1
+
+metadata:
+  description: >-
+    Qwen3.8-Flash-Next-NVFP4 @ 925d7be6 — MTP3 with a custom 47,149-token
+    code-oriented draft vocabulary (FR-Spec style reduced draft head,
+    built from wikitext-103 + code corpus via files/build_draft_vocab.py;
+    vocab file baked at /root/draft_vocab_en_code_47k.txt in the image).
+    Speculative decoding stays exact: target model performs rejection sampling.
+    Profile: FP8 KV cache, BF16 recurrent state, 8 concurrent seqs,
+    2048-token batched prefill, CUDA graphs auto.
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.85
+  max_model_len: 262144
+  max_num_batched_tokens: 2048
+  max_num_seqs: 8
+  kv_cache_dtype: fp8
+  mamba_ssm_cache_dtype: bfloat16
+  speculative_config: '{"method": "mtp", "num_speculative_tokens": 3, "use_local_argmax_reduction": true}'
+  mtp_draft_vocab: /root/draft_vocab_en_code_47k.txt
+
+env:
+  VLLM_MTP_DRAFT_VOCAB: /root/draft_vocab_en_code_47k.txt
+  MTP_NUM_SPECULATIVE_TOKENS: "3"
+  KV_CACHE_DTYPE: fp8
+  MAMBA_SSM_CACHE_DTYPE: bfloat16
+  MAX_NUM_SEQS: "8"
+  MAX_NUM_BATCHED_TOKENS: "2048"
+  CUDAGRAPH_CAPTURE_SIZES: auto
+
+command: |
+  vllm serve {model} \
+    --host {host} \
+    --port {port} \
+    --max-model-len {max_model_len} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --max-num-seqs {max_num_seqs} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --speculative-config '{speculative_config}' \
+    --enable-prefix-caching \
+    -tp {tensor_parallel} \
+    -pp {pipeline_parallel}
