@@ -30,7 +30,6 @@ defaults:
 
 executor_config:
   entrypoint: ""
-  user: root
 
 env:
   VLLM_MTP_DRAFT_VOCAB: /usr/local/share/draft_vocab_en_code_47k.txt
