@@ -2,7 +2,7 @@ recipe_version: "2"
 model: Mia-AiLab/Qwen3.8-Flash-Next-NVFP4
 model_revision: 925d7be6c14c6c9442ef83e8f05b5a3c39304f69
 runtime: vllm
-container: ghcr.io/styles01/qwen38-flash-next-mtp3-draftvocab47k:v4
+container: ghcr.io/styles01/qwen38-flash-next-mtp3-draftvocab47k:v7
 
 metadata:
   description: >-
