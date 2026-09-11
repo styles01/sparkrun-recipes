@@ -62,6 +62,9 @@ command: |
     --gpu-memory-utilization {gpu_memory_utilization} \
     --kv-cache-dtype {kv_cache_dtype} \
     --speculative-config '{speculative_config}' \
-    --enable-prefix-caching \
+    --load-format safetensors \
+    --safetensors-load-strategy lazy \
+    --enable-chunked-prefill \
+    --compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[4,8,12,16,20,24,28,32]}' \
     -tp {tensor_parallel} \
     -pp {pipeline_parallel}
