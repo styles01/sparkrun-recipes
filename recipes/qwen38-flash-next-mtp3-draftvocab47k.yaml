@@ -2,7 +2,7 @@ recipe_version: "2"
 model: Mia-AiLab/Qwen3.8-Flash-Next-NVFP4
 model_revision: 925d7be6c14c6c9442ef83e8f05b5a3c39304f69
 runtime: vllm
-container: ghcr.io/styles01/qwen38-flash-next-mtp3-draftvocab47k:v3
+container: ghcr.io/styles01/qwen38-flash-next-mtp3-draftvocab47k:v4
 
 metadata:
   description: >-
@@ -23,19 +23,16 @@ defaults:
   max_model_len: 262144
   max_num_batched_tokens: 2048
   max_num_seqs: 8
-  kv_cache_dtype: fp8
+  kv_cache_dtype: bfloat16
   mamba_ssm_cache_dtype: bfloat16
   speculative_config: '{"method": "mtp", "num_speculative_tokens": 3, "use_local_argmax_reduction": true}'
   mtp_draft_vocab: /usr/local/share/draft_vocab_en_code_47k.txt
 
-executor_config:
-  entrypoint: ""
-  user: root
 
 env:
   VLLM_MTP_DRAFT_VOCAB: /usr/local/share/draft_vocab_en_code_47k.txt
   MTP_NUM_SPECULATIVE_TOKENS: "3"
-  KV_CACHE_DTYPE: fp8
+  KV_CACHE_DTYPE: bfloat16
   MAMBA_SSM_CACHE_DTYPE: bfloat16
   MAX_NUM_SEQS: "8"
   MAX_NUM_BATCHED_TOKENS: "2048"
