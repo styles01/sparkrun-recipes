@@ -65,6 +65,7 @@ command: |
     --load-format safetensors \
     --safetensors-load-strategy lazy \
     --enable-chunked-prefill \
+    --distributed-executor-backend mp \
     --compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[4,8,12,16,20,24,28,32]}' \
     -tp {tensor_parallel} \
     -pp {pipeline_parallel}
