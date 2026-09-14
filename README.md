@@ -27,6 +27,8 @@ This is the decision surface—not a wall of YAML. Pick the lane that matches th
 
 | Flavor | Best for | Shape | Evidence boundary | Start here |
 |---|---|---|---|---|
+| **⭐ Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K** | **CURRENT DAILY DRIVER — production agent traffic on this box** | 125B-A6B NVFP4 · 262K · MTP k=3 + 47k draft vocab · FP8 KV · qwen3_coder tools | Bench v27: 28/28 cells passed (Arena `sub1789171536939`); serving real agent traffic | [Runbook](runbooks/qwen38-flash-next-mtp3-draftvocab47k.md) · [Recipe](recipes/qwen38-flash-next-mtp3-draftvocab47k.yaml) |
+| **Qwen 3.8 Flash-Next — DwarfStar (ds4 engine)** | Short-context single-stream speed | ~36.7 tok/s decode @ ≤32K · single lane | Measured locally; alternate lane, not the default | [Runbook](runbooks/qwen38-flash-next-ds4.md) · [Recipe](recipes/qwen38-flash-next-ds4.yaml) |
 | **Ling 3.0 Flash INT4** | Balanced long-context agent work | 124B MoE / 5.1B active · 256K · 2 lanes | Native Arena route; source-pinned Ling fork, FP8 KV, MTP k=1 | [Runbook](runbooks/ling-3.0-flash-int4.md) · [Arena recipe](recipes/ling-3.0-flash-vllm.yaml) |
 | **Qwen 3.8 Flash-Next Q3** | Deep concurrent coding agents + vision | 3 × 220K lanes · ~57 aggregate tok/s observed | Requires the documented qwen4exp build and regression gates | [Runbook](runbooks/qwen38-flash-next-q3-3lane.md) · [Recipe](recipes/qwen3.8-flash-next-q3-3lane.yaml) |
 | **DeepSeek-V4-Flash 0731 / DS4** | Hardest reasoning and very deep context | 20 tok/s single stream · 196K–1M configurations | Production DS4 CUDA route; DSpark k=2 | [Runbook](runbooks/deepseek-v4-flash-ds4.md) · [Recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) |
@@ -37,6 +39,8 @@ This is the decision surface—not a wall of YAML. Pick the lane that matches th
 ### How to choose
 
 ```text
+Need the production daily driver (agent traffic on this box)?        → Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K
+Need short-context single-stream speed (alternate engine)?           → DwarfStar (ds4) Flash-Next
 Need the most dependable deep reasoning?             → DS4 Flash 0731
 Need the best all-around agentic balance?             → Ling 3.0 Flash INT4
 Need concurrent coding agents plus native vision?     → Qwen Flash-Next Q3
