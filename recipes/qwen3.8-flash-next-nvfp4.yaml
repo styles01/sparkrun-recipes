@@ -83,3 +83,4 @@ command: |
 # injection runs (otherwise the image consumes sparkrun's args as its own flags).
 executor_config:
   entrypoint: ""
+# 2026-09-19 (P2): decode benchmarks MUST use exact_tg + tg>=400 — profile: @styles01/spark-arena-v2-p400. Short-completion (tg=128, no-exact) measurements under-report 25-275% by depth x concurrency (A/B: bench_f7b70ca6e6bf vs bench_bc90208d7d77).

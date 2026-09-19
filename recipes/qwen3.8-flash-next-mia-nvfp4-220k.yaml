@@ -67,3 +67,4 @@ safety:
 benchmark:
   framework: manual-evaluation-only
   notes: "Do not report 1M context. The pinned upstream code defaults to native 262K and caps its YaRN path at 512K; its own launcher states 1M does not fit. First gates: real chat, 100K/200K/262K retrieval, memory low-water, restart/unload, multimodal, and task-quality comparison against the live Q4 lane."
+# 2026-09-19 (P2): decode benchmarks MUST use exact_tg + tg>=400 — profile: @styles01/spark-arena-v2-p400. Short-completion (tg=128, no-exact) measurements under-report 25-275% by depth x concurrency (A/B: bench_f7b70ca6e6bf vs bench_bc90208d7d77).
