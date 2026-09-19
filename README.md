@@ -176,6 +176,7 @@ A benchmark row without its setup is a story, not evidence. Each published numbe
 | Calling a 262K HTTP response “long-context correctness” | Run retrieval/needle tests and retain the actual completion. |
 | Calling queued batch-1 requests “concurrency” | Record queue delay and fairness; do not advertise independent lanes. |
 | Clearing compile caches during ordinary model switches | Preserve compiled assets unless the same model’s speculative configuration or runtime has changed. |
+| Measuring decode with short, EOS-terminated completions (e.g. tg=128 without exact_tg) | Force full-length output: min_tokens=tg + ignore_eos (llama-benchy --exact-tg), report steady-state at tg>=400. Measured A/B on qwen3.8-flash-next NVFP4: short-completion numbers under-report the same lane by 25-275% depending on depth and concurrency (worst at deep x high-conc). See runbooks/qwen38-flash-next-mtp3-draftvocab47k.md. |
 
 ---
 

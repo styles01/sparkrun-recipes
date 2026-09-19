@@ -63,3 +63,28 @@ Metrics emitter + Qwen-native tool-call parsing were added server-side on 2026-0
 
 - Draft vocab: 47,149-token id list + gathered Q8_0 output blob — [`recipes/qwen38-flash-next-draft-vocab-list.txt`](../recipes/qwen38-flash-next-draft-vocab-list.txt), [`recipes/qwen38-flash-next-draft-vocab-output-q8_0_47149.bin`](../recipes/qwen38-flash-next-draft-vocab-output-q8_0_47149.bin) (LFS)
 - Dated bench evidence: `benchmarks/` (bench v27 = this lane, submission `sub1789171536939`)
+
+## Measurement-method A/B (2026-09-19): tg=128 vs tg=400 + exact_tg
+
+Same live lane, same 28-cell arena grid, only the measurement changed:
+
+| depth | conc | tg128 | tg400+exact | delta |
+|---:|---:|---:|---:|---:|
+| 0 | 1 | 35.0 | 34.3 | -1.9% |
+| 0 | 10 | 55.3 | 71.1 | +28.6% |
+| 4096 | 5 | 31.7 | 51.0 | +61.1% |
+| 8192 | 5 | 25.6 | 46.7 | +82.2% |
+| 8192 | 10 | 20.6 | 42.6 | +106.5% |
+| 16384 | 5 | 14.8 | 37.9 | +156.1% |
+| 32768 | 5 | 6.8 | 17.6 | +160.4% |
+| 65535 | 2 | 6.9 | 16.8 | +142.7% |
+| 100000 | 5 | 2.2 | 8.2 | +275.2% |
+
+**Learnings:** short EOS-terminated completions under-report steady-state decode by
+25-275% (worst deep x high-conc); conc-1 cells are noise-band neutral. Real lane
+profile (tg=400): conc-1 27-34 tok/s flat across depths; 71 aggregate @ depth-0 c10;
+deep-concurrent collapse is real (100K c10 = 7.5 aggregate). `tg_throughput` is
+AGGREGATE; per-stream = `tg_req_throughput` (71.1 @ c10 = ~13.9/stream mean).
+**All future benchmarks use `@styles01/spark-arena-v2-p400`.** Upstream:
+spark-arena/recipe-registry#24. Raw: bench_f7b70ca6e6bf (p400) +
+bench_bc90208d7d77 (tg128) in ~/.cache/sparkrun/benchmarks/.
