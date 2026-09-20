@@ -88,3 +88,29 @@ AGGREGATE; per-stream = `tg_req_throughput` (71.1 @ c10 = ~13.9/stream mean).
 **All future benchmarks use `@styles01/spark-arena-v2-p400`.** Upstream:
 spark-arena/recipe-registry#24. Raw: bench_f7b70ca6e6bf (p400) +
 bench_bc90208d7d77 (tg128) in ~/.cache/sparkrun/benchmarks/.
+
+## Third-party validation + agent-prompt datum (2026-09-20)
+
+Jason McNab (@jasonmcnab, 4x DGX Sparks) independently re-ran the SAME MiaAI recipe
+and matched MIA's published tables within a few percent (11/12 cells inside ±3.5%):
+prose 600-token aggregates 50.3/75.8/117.5/162.0 tok/s at 1/2/4/8 streams. Our lane
+sits in this band — third-party healthy confirmation.
+
+**Agent-prompt decode datum:** ~57.6k-token Hermes-style prompt = **42.6 tok/s**
+(≈15% below short-prompt decode, consistent with long-context KV pressure). Use this
+when sizing concurrent subagent counts: our longest-context streams run ~15% slower
+than the conc-1 short-prompt figure.
+
+**MAMBA_SSM_CACHE_DTYPE=bfloat16:** +8.5% aggregate @ 8 streams, retrieval unchanged
+(GDN state 0.23 GB/seq/step pure traffic; halving halves the mamba page, attention
+block 3200→1664 tokens). The recipe ships this env since commit 620a1e0 — VERIFY the
+running container actually has it (docker inspect env), because a `docker start`
+after a reboot reuses creation-time env. TODO: A/B bf16 vs fp32 on our lane.
+
+**sparkDash counter-snapshot pattern:** MIA/McNab measure via /metrics counter
+snapshots (tokens-generated delta) — same spirit as our exact_tg fix; adopt for
+spark-arena runs alongside exact_tg.
+
+Source: @jasonmcnab post 2101367210404966460 (independent repro), MIA README §Measured
+profile + CHANGELOG 2026-09-09/09-14. Raw archived: ~/mia_qwen38fn_spark_readme.md.
+
