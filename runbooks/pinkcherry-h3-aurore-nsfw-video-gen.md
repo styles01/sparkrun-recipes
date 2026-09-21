@@ -110,3 +110,45 @@ ssh jaita@192.168.2.185 'nohup bash /tmp/switch-to-qwen38-flash-next-mia-nvfp4-2
 
 PinkCherry H3 v0.5-alpha is a community fine-tune; license terms NOT verified.
 Local personal use only until terms are checked. Alpha quality — expect drift vs base H3.
+
+---
+
+## EXTENSION: Multi-take Motion-Context chaining (planned, NOT yet verified)
+
+**Source:** smfworks/h3-longform-capture (MIT, Gannotti's team) — docs archived in
+`runbooks/gannotti-h3-chaining/` (IMAGE-STILLS, FRAMEWORK, HOW-TO, SOURCES, REVIEW).
+Their results: 262.846 s / 6285 f / 1344×768 music video from chained H3 takes (2026-09-16).
+
+### Core concepts (from their verified docs)
+
+- **Sheet ≠ plate.** Sheet = character/prop bible (hero view + locked keywords + forbidden
+  list). Plate = the ACTUAL first frame of a hop-1/cut/fadeblack (same identity, this
+  location, this grade, this camera size). Never use a stretched sheet as a plate.
+- **Three joins:** `continue` (Motion-Context hop, trim 22, concat `-c copy`) /
+  `cut` (new plate, hard cut, no hold) / `fadeblack` (new take + 8-frame dip).
+- **Hop-1 = 243 f (10.125 s) @ 24 fps, 1344×768; hop 2+ after trim = 221 f / 9.209 s.**
+- **Never re-feed stills on hop 2+** — that fights the Motion-Context latent. Hop-1 must
+  `MiniMaxH3MotionContextSaveLatent` with a unique filename; hop 2+ loads that exact latent.
+- **Camera = one English verb** (H3 wants type+amplitude+speed as one action). Long chains
+  accumulate texture; cap extend-takes.
+- **One heavy engine per GB10:** never co-locate Qwen-Image-2.1 stills and H3 clips on one
+  box. We have ONE Spark → stills first (lane down or on the other lane), then clips.
+
+### Adaptation for our single-Spark setup
+
+Gannotti runs 2 Sparks (stills on one, clips on the other). We have 1:
+1. Stop LLM lane → run ComfyUI → generate ALL sheets + plates first (Qwen-Image-2.1 INT8
+   ConvRot: euler/simple, cfg 1, AuraFlow shift 3.1, 25 steps, 1344×768 = 24 s each)
+2. Generate all hop-1 clips (I2VA with plates) + SaveLatent per take
+3. Watch identity at each planned cut BEFORE hopping
+4. Generate hop 2+ from saved latents, trim 22 frames, concat `-c copy` within takes
+5. Stop ComfyUI → restore LLM lane
+- Their abort threshold: ≥85-86°C die temp. Our Qwen-Image-2.1 smoke test comes first
+  (single image) before any chaining attempt.
+
+### Our gap vs their setup
+
+- We use PinkCherry H3 (fine-tune, drop-in) — chaining should work identically (same graph)
+- Qwen-Image-2.1 NOT yet tested on our Spark (smoke test queued — Gannotti's INT8 ConvRot
+  pins: ComfyUI 0.36.0, DiT 7.26GB + TE 9.35GB, euler/simple cfg1 shift 3.1)
+- Motion-Context custom nodes NOT yet installed (ComfyUI-H3-Motion-Context by NikoDemon80)
