@@ -128,6 +128,20 @@ def parse_qwen_xml(text: str) -> list[dict[str, Any]]:
     return calls
 
 
+def split_prose_and_calls(text: str) -> tuple[str, list[dict[str, Any]]]:
+    """Return (prose, calls): prose = text with <function=...> blocks stripped.
+    vLLM keeps the model's prose alongside tool_calls in one turn; the shim
+    previously dropped it (content=None), hiding narration from clients."""
+    calls = parse_qwen_xml(text)
+    if not calls:
+        return text, []
+    stripped = text
+    for m in FN_RE.finditer(text):
+        stripped = stripped.replace(m.group(0), "")
+    prose = stripped.strip()
+    return prose, calls
+
+
 def messages_to_context(messages: list[dict[str, Any]]) -> tuple[str, list[tuple[str, str | None]]]:
     system = ""
     context: list[tuple[str, str | None]] = []
@@ -481,13 +495,11 @@ class Handler(BaseHTTPRequestHandler):
             stop_conditions=stops,
         )
         text = rec["text"]
-        calls = parse_qwen_xml(text) if tools else []
+        prose, calls = split_prose_and_calls(text) if tools else (text, [])
         finish = "tool_calls" if calls else ("length" if rec["eos_reason"] == "max_new_tokens" else "stop")
-        msg: dict[str, Any] = {"role": "assistant", "content": None if calls else text}
+        msg: dict[str, Any] = {"role": "assistant", "content": prose if calls else text}
         if calls:
             msg["tool_calls"] = calls
-        else:
-            msg["content"] = text
         prompt_tokens = rec["prompt_tokens"] or int(ids.shape[-1])
         completion = rec["new_tokens"]
         print(
@@ -555,6 +567,16 @@ class Handler(BaseHTTPRequestHandler):
                 "draft_accept": rec["draft_accept"],
             }
             if calls:
+                prose, _ = split_prose_and_calls(acc)
+                if prose:
+                    pre = {
+                        "id": cid,
+                        "object": "chat.completion.chunk",
+                        "created": int(t0),
+                        "model": SERVED,
+                        "choices": [{"index": 0, "delta": {"content": prose}, "finish_reason": None}],
+                    }
+                    self.wfile.write(f"data: {json.dumps(pre)}\n\n".encode())
                 obj = {
                     "id": cid,
                     "object": "chat.completion.chunk",
