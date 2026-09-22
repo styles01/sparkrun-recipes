@@ -172,3 +172,29 @@ internally consistent; ±1.5% agreement). MEDIUM on our ability to reproduce exa
 in the README tables; treat our Phase 1 as the first measurement of that head).
 Unverified: safety 72.5 / long-context 26.7 sub-scores (single-source, our Phase 2
 relicates them before any adoption decision).
+
+
+## SparkDash integration (verified in dashboard code, 2026-09-21)
+
+SparkDash's LlmProbe natively supports backendType `exl3` — the detector is
+data-presence-keyed, not name-keyed (memory rule honored):
+
+- Detection: `/v1/models` owned_by containing `exl3`, OR `/health` returning
+  `{ok:true, busy:<bool>}` or `{backend:"exl3"}` → `_healthLooksLikeExl3`
+- Live metrics: `_applyExl3Health` reads cumulative `prompt_tokens_total` +
+  `completion_tokens_total` diffs (idle→0), `busy` → slotsActive=1, plus
+  `context_length`
+- Probe port = `llmPorts[0]` from sparks.json = **8000** (single port, resolveLlmPort
+  uses only the first entry). The EXL3 shim must therefore serve on **:8000** during
+  the EXL3 session (vLLM lane stopped) — SparkDash then auto-detects with zero
+  dashboard changes. Multiple ports are NOT watched simultaneously.
+
+**Gap found + fixed (server-side first):** the recipe's `serve_openai.py` /health
+returned `{status, engine}` which does NOT match the detector → would have been
+misclassified as vLLM with no live tok/s. Patched shim (committed to our repo at
+`scripts/exl3_serve_openai.py`) now emits the full contract:
+`{status:"ok", engine:"exllamav3-native", backend:"exl3", busy:<bool>,
+context_length:<int>, prompt_tokens_total:<int>, completion_tokens_total:<int>}`
++ busy clears in a finally block (no stuck-active if generation throws).
+
+Upstream shim (unpatched): scripts/beta_testing/serve_openai.py in the recipe repo.
