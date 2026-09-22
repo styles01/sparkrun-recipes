@@ -32,7 +32,55 @@ import threading as _threading
 # Cumulative counters for the SparkDash /health contract (server-side fix first:
 # expose backend/busy/token totals so the dashboard's exl3 probe engages).
 _HL_LOCK = _threading.Lock()
-_HL = {"busy": False, "prompt_tokens_total": 0, "completion_tokens_total": 0}
+_HL = {
+    # reference-count of in-flight run_generate calls (entered, incl. those
+    # still queued on GEN_LOCK) — busy = inflight > 0 (red-team C2 fix)
+    "inflight": 0,
+    "prompt_tokens_total": 0,
+    "completion_tokens_total": 0,
+    # SparkDash vLLM-parity telemetry (audit 2026-09-21):
+    "requests_completed_total": 0,
+    "requests_failed_total": 0,
+    "mtp_accepted_tokens_total": 0,
+    "mtp_drafted_tokens_total": 0,  # accepted + rejected (tokens proposed)
+    "ttft_seconds_sum": 0.0,        # engine time_prefill = time to first token
+    "ttft_seconds_count": 0,
+    "e2e_seconds_sum": 0.0,         # time_prefill + time_generate
+    "e2e_seconds_count": 0,
+    "itl_seconds_sum": 0.0,         # time_generate over new_tokens-1 gaps
+    "itl_seconds_count": 0,
+    "context_last": 0,              # prompt tokens of the most recent request
+}
+
+def _hl_job_done(rec: dict[str, Any], failed: bool = False) -> None:
+    """Fold one finished request's engine stats into the /health counters."""
+    new_tokens = int(rec.get("new_tokens") or 0)
+    tpre = float(rec.get("time_prefill") or 0.0)
+    tgen = float(rec.get("time_generate") or 0.0)
+    n_prompt = int(rec.get("prompt_tokens") or 0)
+    dacc = int(rec.get("accepted_draft_tokens") or 0)
+    drej = int(rec.get("rejected_draft_tokens") or 0)
+    with _HL_LOCK:
+        # inflight is decremented by run_generate's finally; never here.
+        _HL["requests_failed_total" if failed else "requests_completed_total"] += 1
+        _HL["context_last"] = n_prompt
+        # MTP/speculative: drafted = every token the draft head proposed
+        _HL["mtp_accepted_tokens_total"] += dacc
+        _HL["mtp_drafted_tokens_total"] += dacc + drej
+        # TTFT = engine time_prefill (time to first token)
+        if tpre > 0:
+            _HL["ttft_seconds_sum"] += tpre
+            _HL["ttft_seconds_count"] += 1
+        # E2E = prefill + decode
+        e2e = tpre + tgen
+        if e2e > 0:
+            _HL["e2e_seconds_sum"] += e2e
+            _HL["e2e_seconds_count"] += 1
+        # ITL mean over the new_tokens-1 inter-token gaps of pure decode time
+        if tgen > 0 and new_tokens > 1:
+            _HL["itl_seconds_sum"] += tgen / (new_tokens - 1)
+            _HL["itl_seconds_count"] += 1
+
 
 def _ctx_len() -> int:
     """Best-effort context length for the /health contract."""
@@ -149,7 +197,8 @@ def run_generate(
     """Same thread + inference_mode as Cruz chat.py. One job at a time."""
     assert GEN is not None
     with _HL_LOCK:
-        _HL["busy"] = True
+        _HL["inflight"] += 1
+    client_gone = False
     try:
         ident = uuid.uuid4().hex
         job = Job(
@@ -161,36 +210,80 @@ def run_generate(
         )
         text = ""
         last: dict[str, Any] = {}
-        with GEN_LOCK:
-            GEN.enqueue(job)
-            # prefill runs immediately after enqueue (engine thread): report prompt
-            # tokens NOW so SparkDash's poll-diff shows the prefill spike at the
-            # START of generation (not the end) — same fix vLLM's Prometheus path got.
-            with _HL_LOCK:
-                try:
-                    _n_prompt = int(input_ids.shape[-1])
-                except Exception:
-                    _n_prompt = int(getattr(input_ids, "size", lambda d=-1: 0)(-1)) or len(input_ids)
-                _HL["prompt_tokens_total"] += _n_prompt
-            while GEN.num_remaining_jobs():
-                for r in GEN.iterate():
-                    if r.get("identifier") != ident:
-                        continue
-                    chunk = r.get("text") or ""
-                    if chunk:
-                        text += chunk
-                        if on_chunk is not None:
-                            on_chunk(chunk)
-                    if r.get("eos"):
-                        last = r
+        first_tok_wall = None
+        req_t0 = time.perf_counter()
+        _nt_prev = 0
+        try:
+            with GEN_LOCK:
+                GEN.enqueue(job)
+                # prefill runs immediately after enqueue (engine thread): report prompt
+                # tokens NOW so SparkDash's poll-diff shows the prefill spike at the
+                # START of generation (not the end) — same fix vLLM's Prometheus path got.
+                with _HL_LOCK:
+                    try:
+                        _n_prompt = int(input_ids.shape[-1])
+                    except Exception:
+                        _n_prompt = int(getattr(input_ids, "size", lambda d=-1: 0)(-1)) or len(input_ids)
+                    _HL["prompt_tokens_total"] += _n_prompt
+                while GEN.num_remaining_jobs():
+                    for r in GEN.iterate():
+                        if r.get("identifier") != ident:
+                            continue
+                        chunk = r.get("text") or ""
+                        if chunk:
+                            if first_tok_wall is None:
+                                # TTFT wall-clock fallback (incl. queue wait); engine
+                                # time_prefill stays primary for ttft_seconds_sum.
+                                first_tok_wall = time.perf_counter() - req_t0
+                            text += chunk
+                            if on_chunk is not None:
+                                try:
+                                    on_chunk(chunk)
+                                except Exception:
+                                    # client hung up mid-stream (red-team M4):
+                                    # stop pushing chunks but keep draining the
+                                    # job so the engine stays clean and stats fold.
+                                    client_gone = True
+                                    on_chunk = None
+                        # vLLM parity: completion counter climbs DURING decode so the
+                        # dashboard's poll-diff shows the real-time decode rate (not a
+                        # bulk spike when the job finishes). Each request adds only
+                        # ITS OWN delta so concurrent/queued jobs cannot clobber
+                        # each other's contribution (red-team C1).
+                        try:
+                            _nt_live = int(getattr(job, "new_tokens", -1))
+                        except Exception:
+                            _nt_live = -1
+                        if _nt_live > _nt_prev:
+                            with _HL_LOCK:
+                                _HL["completion_tokens_total"] += _nt_live - _nt_prev
+                            _nt_prev = _nt_live
+                        if r.get("eos"):
+                            last = r
+        except Exception:
+            # Engine-side failure: contain, count as failed, re-raise to the caller.
+            _hl_job_done({
+                "new_tokens": int(getattr(job, "new_tokens", 0) or 0) if client_gone is False else 0,
+                "time_prefill": 0.0,
+                "time_generate": 0.0,
+                "prompt_tokens": 0,
+                "accepted_draft_tokens": 0,
+                "rejected_draft_tokens": 0,
+            }, failed=True)
+            raise
         dacc = int(last.get("accepted_draft_tokens") or 0)
         drej = int(last.get("rejected_draft_tokens") or 0)
-        tgen = float(last.get("time_generate") or 0.0)
+        # Engine "time_prefill" = time to first token (TTFT); "time_generate" =
+        # time to last token. Prefer engine numbers; fall back to wall clock.
         tpre = float(last.get("time_prefill") or 0.0)
+        if tpre <= 0 and first_tok_wall is not None:
+            tpre = first_tok_wall
+        tgen = float(last.get("time_generate") or 0.0)
         new_tokens = int(last.get("new_tokens") or 0)
+        n_prompt = int(last.get("prompt_tokens") or 0) or int(input_ids.shape[-1])
         _res = {
             "text": text,
-            "prompt_tokens": int(last.get("prompt_tokens") or 0),
+            "prompt_tokens": n_prompt,
             "new_tokens": new_tokens,
             "eos_reason": last.get("eos_reason") or "stop",
             "accepted_draft_tokens": dacc,
@@ -200,13 +293,16 @@ def run_generate(
             "decode_tok_s": (new_tokens / tgen) if tgen > 0 and new_tokens else 0.0,
             "draft_accept": (dacc / (dacc + drej)) if (dacc + drej) else None,
         }
-        with _HL_LOCK:
-            _HL["busy"] = False
-            _HL["completion_tokens_total"] += new_tokens
+        _hl_job_done(_res, failed=client_gone)
+        # Fold any tail tokens the last iterate() loop missed (covers the gap
+        # between the final poll and EOS; incremental so it composes).
+        if new_tokens > _nt_prev:
+            with _HL_LOCK:
+                _HL["completion_tokens_total"] += new_tokens - _nt_prev
         return _res
     finally:
         with _HL_LOCK:
-            _HL["busy"] = False
+            _HL["inflight"] -= 1
 
 
 def build_ids(system: str, context: list[tuple[str, str | None]], think: bool):
@@ -253,15 +349,75 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/health", "/v1/health"):
             with _HL_LOCK:
                 hl = dict(_HL)
+            # Live cache stats: KV residency + prefix hit rate (fail-open to null).
+            # KV gauge = (used + cached) / max — pages holding reusable prefixes
+            # are real cache occupancy even with no active job (red-team M3).
+            cs = None
+            try:
+                cs = GEN.get_cache_stats()
+            except Exception:
+                cs = None
+            if cs:
+                max_tok = int(cs.get("max_tokens") or 0)
+                used_tok = int(cs.get("used_tokens") or 0)
+                cached_tok = int(cs.get("cached_tokens") or 0)
+                hl["kv_cache_usage"] = (
+                    round(min(1.0, (used_tok + cached_tok) / max_tok), 4) if max_tok > 0 else None
+                )
+                hr = cs.get("hit_rate")
+                hl["prefix_cache_hit_rate"] = (
+                    round(float(hr), 4) if isinstance(hr, (int, float)) else None
+                )
+                # Waiting = requests inside run_generate but not yet taken by the
+                # engine (queued on GEN_LOCK) — engine pending_jobs alone misses
+                # them (red-team m3).
+                engine_jobs = int(cs.get("active_jobs") or 0) + int(cs.get("pending_jobs") or 0)
+                hl["requests_waiting"] = max(0, int(hl["inflight"]) - engine_jobs)
+            else:
+                hl["kv_cache_usage"] = None
+                hl["prefix_cache_hit_rate"] = None
+                hl["requests_waiting"] = max(0, int(hl["inflight"]))
+            # GPU memory utilization: real device census (weights + cache + ctx),
+            # same semantics as vLLM's gauge / DS4's unified_device census.
+            try:
+                _free, _total = torch.cuda.mem_get_info(0)
+                hl["gpu_memory_utilization"] = round(1.0 - (_free / _total), 4) if _total > 0 else None
+            except Exception:
+                try:
+                    _mi = open("/proc/meminfo").read()
+                    _mt = re.search(r"MemTotal:\s+(\d+) kB", _mi)
+                    _ma = re.search(r"MemAvailable:\s+(\d+) kB", _mi)
+                    hl["gpu_memory_utilization"] = (
+                        round(1.0 - int(_ma.group(1)) / int(_mt.group(1)), 4)
+                        if _mt and _ma and int(_mt.group(1)) > 0 else None
+                    )
+                except Exception:
+                    hl["gpu_memory_utilization"] = None
             self._send(200, {
                 "status": "ok",
                 "engine": "exllamav3-native",
                 # SparkDash exl3 contract (LlmProbe._healthLooksLikeExl3 + _applyExl3Health):
                 "backend": "exl3",
-                "busy": hl["busy"],
+                "busy": hl["inflight"] > 0,
                 "context_length": _ctx_len(),
                 "prompt_tokens_total": hl["prompt_tokens_total"],
                 "completion_tokens_total": hl["completion_tokens_total"],
+                # vLLM-parity telemetry (see runbook audit table):
+                "requests_completed_total": hl["requests_completed_total"],
+                "requests_failed_total": hl["requests_failed_total"],
+                "requests_waiting": hl["requests_waiting"],
+                "mtp_accepted_tokens_total": hl["mtp_accepted_tokens_total"],
+                "mtp_drafted_tokens_total": hl["mtp_drafted_tokens_total"],
+                "ttft_seconds_sum": hl["ttft_seconds_sum"],
+                "ttft_seconds_count": hl["ttft_seconds_count"],
+                "e2e_seconds_sum": hl["e2e_seconds_sum"],
+                "e2e_seconds_count": hl["e2e_seconds_count"],
+                "itl_seconds_sum": hl["itl_seconds_sum"],
+                "itl_seconds_count": hl["itl_seconds_count"],
+                "context_last": hl["context_last"],
+                "kv_cache_usage": hl["kv_cache_usage"],
+                "prefix_cache_hit_rate": hl["prefix_cache_hit_rate"],
+                "gpu_memory_utilization": hl["gpu_memory_utilization"],
             })
             return
         self._send(404, {"error": {"message": "not found", "type": "not_found"}})
@@ -280,7 +436,13 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self._chat(body)
         except Exception as exc:  # noqa: BLE001
-            self._send(500, {"error": {"message": str(exc), "type": "server_error"}})
+            # Red-team M5: count handler failures so requests_failed_total moves.
+            with _HL_LOCK:
+                _HL["requests_failed_total"] += 1
+            try:
+                self._send(500, {"error": {"message": str(exc), "type": "server_error"}})
+            except Exception:
+                pass
 
     def _chat(self, body: dict[str, Any]) -> None:
         messages = body.get("messages") or []
@@ -381,47 +543,52 @@ class Handler(BaseHTTPRequestHandler):
             stop_conditions=stops,
             on_chunk=on_chunk,
         )
-        acc = rec["text"]
-        calls = parse_qwen_xml(acc) if tools else []
-        finish = "tool_calls" if calls else ("length" if rec["eos_reason"] == "max_new_tokens" else "stop")
-        usage = {
-            "prompt_tokens": rec["prompt_tokens"],
-            "completion_tokens": rec["new_tokens"],
-            "total_tokens": rec["prompt_tokens"] + rec["new_tokens"],
-            "decode_tok_s": round(rec["decode_tok_s"], 2),
-            "draft_accept": rec["draft_accept"],
-        }
-        if calls:
-            obj = {
-                "id": cid,
-                "object": "chat.completion.chunk",
-                "created": int(t0),
-                "model": SERVED,
-                "choices": [{"index": 0, "delta": {"tool_calls": calls, "content": None}, "finish_reason": finish}],
-                "usage": usage,
+        try:
+            acc = rec["text"]
+            calls = parse_qwen_xml(acc) if tools else []
+            finish = "tool_calls" if calls else ("length" if rec["eos_reason"] == "max_new_tokens" else "stop")
+            usage = {
+                "prompt_tokens": rec["prompt_tokens"],
+                "completion_tokens": rec["new_tokens"],
+                "total_tokens": rec["prompt_tokens"] + rec["new_tokens"],
+                "decode_tok_s": round(rec["decode_tok_s"], 2),
+                "draft_accept": rec["draft_accept"],
             }
-            self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
-        else:
-            if tools and acc:
+            if calls:
                 obj = {
                     "id": cid,
                     "object": "chat.completion.chunk",
                     "created": int(t0),
                     "model": SERVED,
-                    "choices": [{"index": 0, "delta": {"content": acc}, "finish_reason": None}],
+                    "choices": [{"index": 0, "delta": {"tool_calls": calls, "content": None}, "finish_reason": finish}],
+                    "usage": usage,
                 }
                 self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
-            obj = {
-                "id": cid,
-                "object": "chat.completion.chunk",
-                "created": int(t0),
-                "model": SERVED,
-                "choices": [{"index": 0, "delta": {}, "finish_reason": finish}],
-                "usage": usage,
-            }
-            self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
-        self.wfile.write(b"data: [DONE]\n\n")
-        self.wfile.flush()
+            else:
+                if tools and acc:
+                    obj = {
+                        "id": cid,
+                        "object": "chat.completion.chunk",
+                        "created": int(t0),
+                        "model": SERVED,
+                        "choices": [{"index": 0, "delta": {"content": acc}, "finish_reason": None}],
+                    }
+                    self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
+                obj = {
+                    "id": cid,
+                    "object": "chat.completion.chunk",
+                    "created": int(t0),
+                    "model": SERVED,
+                    "choices": [{"index": 0, "delta": {}, "finish_reason": finish}],
+                    "usage": usage,
+                }
+                self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
+            self.wfile.write(b"data: [DONE]\n\n")
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            # client left mid-stream: run_generate already folded the stats as
+            # failed — nothing to count here.
+            pass
         print(
             f"stream decode={rec['decode_tok_s']:.1f} tok/s draft_accept={rec['draft_accept']} "
             f"new={rec['new_tokens']}",
