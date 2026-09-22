@@ -37,7 +37,7 @@ _HL = {"busy": False, "prompt_tokens_total": 0, "completion_tokens_total": 0}
 def _ctx_len() -> int:
     """Best-effort context length for the /health contract."""
     try:
-        for attr in ("max_sequence_length", "max_seq_len", "context_length"):
+        for attr in ("max_sequence_length", "max_seq_len", "context_length", "max_position_embeddings"):
             v = getattr(CONFIG, attr, None)
             if isinstance(v, int) and v > 0:
                 return v
@@ -179,18 +179,6 @@ def run_generate(
         tgen = float(last.get("time_generate") or 0.0)
         tpre = float(last.get("time_prefill") or 0.0)
         new_tokens = int(last.get("new_tokens") or 0)
-        return {
-            "text": text,
-            "prompt_tokens": int(last.get("prompt_tokens") or 0),
-            "new_tokens": new_tokens,
-            "eos_reason": last.get("eos_reason") or "stop",
-            "accepted_draft_tokens": dacc,
-            "rejected_draft_tokens": drej,
-            "time_generate": tgen,
-            "time_prefill": tpre,
-            "decode_tok_s": (new_tokens / tgen) if tgen > 0 and new_tokens else 0.0,
-            "draft_accept": (dacc / (dacc + drej)) if (dacc + drej) else None,
-        }
         _res = {
             "text": text,
             "prompt_tokens": int(last.get("prompt_tokens") or 0),

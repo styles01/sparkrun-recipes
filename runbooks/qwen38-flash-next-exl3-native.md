@@ -198,3 +198,22 @@ context_length:<int>, prompt_tokens_total:<int>, completion_tokens_total:<int>}`
 + busy clears in a finally block (no stuck-active if generation throws).
 
 Upstream shim (unpatched): scripts/beta_testing/serve_openai.py in the recipe repo.
+
+### VERIFIED WORKING (2026-09-21 22:15, live E2E)
+
+- **Detection + live metrics confirmed working**: `/api/sparks/spark-001/metrics`
+  returns `metrics.llm[0]: {available: true, backend: "exl3", modelId:
+  "Qwen3.8-Flash-Next-EXL3", contextLength: 262144, slotsActive: 1 during gen,
+  generationTps: 250-300 caught live mid-gen, idle→0}`. The probe classifies via
+  `/health {backend:"exl3"}` and computes tok/s from cumulative-counter diffs.
+- **Root cause of the original dead telemetry** (fixed): my first shim patch left
+  the ORIGINAL `return {` in `run_generate()` — an early return BEFORE the
+  counter-bump block, so `/health` counters never moved. Removed the dead block;
+  counters now accumulate on the executed path (bump → return `_res`, `busy=False`
+  in `finally`).
+- **context_length now real**: `_ctx_len()` includes `max_position_embeddings`
+  (exllamav3 1.5.0's field, resolved via `read_cfg(...text_config->...)`) →
+  `/health` reports 262144.
+- **Probe-poll timing note**: SparkDash polls ~2-5 s; generations shorter than ~3 s
+  may complete between polls (card shows idle). Longer gens light the card solidly.
+- Shim committed to `scripts/exl3_serve_openai.py` in styles01/sparkrun-recipes.
