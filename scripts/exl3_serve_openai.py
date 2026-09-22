@@ -43,6 +43,7 @@ _HL = {
     "requests_failed_total": 0,
     "mtp_accepted_tokens_total": 0,
     "mtp_drafted_tokens_total": 0,  # accepted + rejected (tokens proposed)
+    "is_prefilling": False,         # engine is prefilling RIGHT NOW (no first token yet)
     "ttft_seconds_sum": 0.0,        # engine time_prefill = time to first token
     "ttft_seconds_count": 0,
     "e2e_seconds_sum": 0.0,         # time_prefill + time_generate
@@ -63,6 +64,7 @@ def _hl_job_done(rec: dict[str, Any], failed: bool = False) -> None:
     with _HL_LOCK:
         # inflight is decremented by run_generate's finally; never here.
         _HL["requests_failed_total" if failed else "requests_completed_total"] += 1
+        _HL["is_prefilling"] = False
         _HL["context_last"] = n_prompt
         # MTP/speculative: drafted = every token the draft head proposed
         _HL["mtp_accepted_tokens_total"] += dacc
@@ -239,6 +241,7 @@ def run_generate(
                     except Exception:
                         _n_prompt = int(getattr(input_ids, "size", lambda d=-1: 0)(-1)) or len(input_ids)
                     _HL["prompt_tokens_total"] += _n_prompt
+                    _HL["is_prefilling"] = True
                 while GEN.num_remaining_jobs():
                     for r in GEN.iterate():
                         if r.get("identifier") != ident:
@@ -249,6 +252,8 @@ def run_generate(
                                 # TTFT wall-clock fallback (incl. queue wait); engine
                                 # time_prefill stays primary for ttft_seconds_sum.
                                 first_tok_wall = time.perf_counter() - req_t0
+                                with _HL_LOCK:
+                                    _HL["is_prefilling"] = False
                             text += chunk
                             if on_chunk is not None:
                                 try:
@@ -413,6 +418,7 @@ class Handler(BaseHTTPRequestHandler):
                 # SparkDash exl3 contract (LlmProbe._healthLooksLikeExl3 + _applyExl3Health):
                 "backend": "exl3",
                 "busy": hl["inflight"] > 0,
+                "is_prefilling": bool(hl.get("is_prefilling")),
                 "context_length": _ctx_len(),
                 "prompt_tokens_total": hl["prompt_tokens_total"],
                 "completion_tokens_total": hl["completion_tokens_total"],
