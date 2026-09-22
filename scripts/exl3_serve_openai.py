@@ -163,6 +163,15 @@ def run_generate(
         last: dict[str, Any] = {}
         with GEN_LOCK:
             GEN.enqueue(job)
+            # prefill runs immediately after enqueue (engine thread): report prompt
+            # tokens NOW so SparkDash's poll-diff shows the prefill spike at the
+            # START of generation (not the end) — same fix vLLM's Prometheus path got.
+            with _HL_LOCK:
+                try:
+                    _n_prompt = int(input_ids.shape[-1])
+                except Exception:
+                    _n_prompt = int(getattr(input_ids, "size", lambda d=-1: 0)(-1)) or len(input_ids)
+                _HL["prompt_tokens_total"] += _n_prompt
             while GEN.num_remaining_jobs():
                 for r in GEN.iterate():
                     if r.get("identifier") != ident:
@@ -193,7 +202,6 @@ def run_generate(
         }
         with _HL_LOCK:
             _HL["busy"] = False
-            _HL["prompt_tokens_total"] += int(last.get("prompt_tokens") or 0)
             _HL["completion_tokens_total"] += new_tokens
         return _res
     finally:
