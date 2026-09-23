@@ -43,6 +43,8 @@ _HL = {
     "requests_failed_total": 0,
     "mtp_accepted_tokens_total": 0,
     "mtp_drafted_tokens_total": 0,  # accepted + rejected (tokens proposed)
+    "_mtp_pos_tested": {},   # draft depth (1..k) -> times a draft token was proposed at that depth
+    "_mtp_pos_accepted": {}, # draft depth (1..k) -> times the draft at that depth was accepted
     "is_prefilling": False,         # engine is prefilling RIGHT NOW (no first token yet)
     "prefill_tokens_processed_total": 0,  # climbs DURING prefill (vLLM chunked-prefill parity)
     "prefill_tps_live": 0.0,        # engine-measured prefill rate RIGHT NOW (EWMA over progress events)
@@ -393,6 +395,25 @@ def run_generate(
             "decode_tok_s": (new_tokens / tgen) if tgen > 0 and new_tokens else 0.0,
             "draft_accept": (dacc / (dacc + drej)) if (dacc + drej) else None,
         }
+        # Per-position MTP acceptance: fold this job's per-round draft stats
+        # ((tokens_so_far, window, accepted_drafts) per verification round) into
+        # cumulative per-depth counters for SparkDash's per-position bars.
+        try:
+            _dstats = list(getattr(job, "draft_stats", None) or [])
+        except Exception:
+            _dstats = []
+        if _dstats:
+            with _HL_LOCK:
+                for _round in _dstats:
+                    try:
+                        _win = int(_round[1])
+                        _acc = int(_round[2])
+                    except Exception:
+                        continue
+                    for depth in range(1, _win + 1):
+                        _HL["_mtp_pos_tested"][depth] = _HL["_mtp_pos_tested"].get(depth, 0) + 1
+                        if _acc >= depth:
+                            _HL["_mtp_pos_accepted"][depth] = _HL["_mtp_pos_accepted"].get(depth, 0) + 1
         _hl_job_done(_res, failed=client_gone)
         # Fold any tail tokens the last iterate() loop missed (covers the gap
         # between the final poll and EOS; incremental so it composes).
@@ -493,6 +514,19 @@ class Handler(BaseHTTPRequestHandler):
                     )
                 except Exception:
                     hl["gpu_memory_utilization"] = None
+            # Per-position MTP acceptance bars (depth 1..k) — explicit loop,
+            # tested-count guard keeps rate null until each depth has data.
+            with _HL_LOCK:
+                _mtp_by_position = []
+                for _depth in sorted(_HL["_mtp_pos_tested"]):
+                    _tested = _HL["_mtp_pos_tested"].get(_depth, 0)
+                    _acc = _HL["_mtp_pos_accepted"].get(_depth, 0)
+                    _mtp_by_position.append({
+                        "position": _depth - 1,
+                        "tested": _tested,
+                        "accepted": _acc,
+                        "rate": (round(_acc / _tested, 4) if _tested > 0 else None),
+                    })
             self._send(200, {
                 "status": "ok",
                 "engine": "exllamav3-native",
@@ -520,6 +554,8 @@ class Handler(BaseHTTPRequestHandler):
                 "requests_waiting": hl["requests_waiting"],
                 "mtp_accepted_tokens_total": hl["mtp_accepted_tokens_total"],
                 "mtp_drafted_tokens_total": hl["mtp_drafted_tokens_total"],
+                # Per-position MTP acceptance (depth 1..k): real bars for SparkDash.
+                "mtp_accept_by_position": _mtp_by_position,
                 "ttft_seconds_sum": hl["ttft_seconds_sum"],
                 "ttft_seconds_count": hl["ttft_seconds_count"],
                 "e2e_seconds_sum": hl["e2e_seconds_sum"],
@@ -767,6 +803,7 @@ def load_engine(ns: argparse.Namespace) -> None:
         cpu_cache_size=int(ns.cpu_cache_size * 1024**3),
         recurrent_cache_size=int(ns.recurrent_cache_size * 1024**3),
         max_chunk_size=2048,
+        record_draft_stats=True,  # per-round (window, accepted) tuples → per-position MTP telemetry
     )
     stops = [sc for sc in PROMPT_FORMAT.stop_conditions(tokenizer) if sc]
     if config.eos_token_id_list and all(config.eos_token_id_list):
