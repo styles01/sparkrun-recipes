@@ -1,5 +1,11 @@
 # Qwen3.8-Flash-Next EXL3 Native — SparkDash Telemetry Audit (control-by-control)
 
+> **This is the telemetry appendix of the [daily-driver runbook](qwen38-flash-next-exl3-daily-driver.md).**
+> For launch/ops (launcher, env, restart rules) use that runbook; this document covers the
+> SparkDash telemetry contract only. Note two post-audit upgrades: `perPositionAcceptance`
+> is now a real per-position array (`mtp_accept_by_position`, via `record_draft_stats`),
+> and prefill tok/s now comes from the engine-weighted live `prefill_rate` field.
+
 **Date:** 2026-09-21 · **Scope:** every telemetry control the SparkDash UI renders for the EXL3
 card, audited adversarially against the vLLM/DS4 parity standard ("make it work like vLLM" = full
 parity, null only where the backend genuinely cannot provide the value).

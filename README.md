@@ -27,7 +27,8 @@ This is the decision surface—not a wall of YAML. Pick the lane that matches th
 
 | Flavor | Best for | Shape | Evidence boundary | Start here |
 |---|---|---|---|---|
-| **⭐ Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K** | **CURRENT DAILY DRIVER — production agent traffic on this box** | 125B-A6B NVFP4 · 262K · MTP k=3 + 47k draft vocab · FP8 KV · qwen3_coder tools | Bench v27: 28/28 cells passed (Arena `sub1789171536939`); serving real agent traffic | [Runbook](runbooks/qwen38-flash-next-mtp3-draftvocab47k.md) · [Recipe](recipes/qwen38-flash-next-mtp3-draftvocab47k.yaml) |
+| **⭐ Qwen 3.8 Flash-Next — EXL3 Native MTP** | **CURRENT DAILY DRIVER — production agent traffic on this box** | 125B-A6B EXL3 · 262K · native MTP (dynamic draft, 5 deep) · single-stream · exllamav3 fork + OpenAI shim | Live serving agent traffic: 54.3 tok/s decode, 0.70 cumulative draft acceptance (2026-09-23); full telemetry parity | [Runbook](runbooks/qwen38-flash-next-exl3-daily-driver.md) · [Launcher](scripts/switch-to-qwen38-exl3.sh) |
+| Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K | Alternate agent lane (vLLM) | 125B-A6B NVFP4 · 262K · MTP k=3 + 47k draft vocab · FP8 KV · qwen3_coder tools | Bench v27: 28/28 cells passed (Arena `sub1789171536939`); previous daily driver | [Runbook](runbooks/qwen38-flash-next-mtp3-draftvocab47k.md) · [Recipe](recipes/qwen38-flash-next-mtp3-draftvocab47k.yaml) |
 | **Qwen 3.8 Flash-Next — DwarfStar (ds4 engine)** | Short-context single-stream speed | ~36.7 tok/s decode @ ≤32K · single lane | Measured locally; alternate lane, not the default | [Runbook](runbooks/qwen38-flash-next-ds4.md) · [Recipe](recipes/qwen38-flash-next-ds4.yaml) |
 | **Ling 3.0 Flash INT4** | Balanced long-context agent work | 124B MoE / 5.1B active · 256K · 2 lanes | Native Arena route; source-pinned Ling fork, FP8 KV, MTP k=1 | [Runbook](runbooks/ling-3.0-flash-int4.md) · [Arena recipe](recipes/ling-3.0-flash-vllm.yaml) |
 | **Qwen 3.8 Flash-Next Q3** | Deep concurrent coding agents + vision | 3 × 220K lanes · ~57 aggregate tok/s observed | Requires the documented qwen4exp build and regression gates | [Runbook](runbooks/qwen38-flash-next-q3-3lane.md) · [Recipe](recipes/qwen3.8-flash-next-q3-3lane.yaml) |
@@ -39,7 +40,8 @@ This is the decision surface—not a wall of YAML. Pick the lane that matches th
 ### How to choose
 
 ```text
-Need the production daily driver (agent traffic on this box)?        → Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K
+Need the production daily driver (agent traffic on this box)?        → Qwen 3.8 Flash-Next EXL3 Native MTP
+Need an alternate vLLM agent lane with multi-cell bench evidence?     → Flash-Next MTP3 + Draft Vocab 47K
 Need short-context single-stream speed (alternate engine)?           → DwarfStar (ds4) Flash-Next
 Need the most dependable deep reasoning?             → DS4 Flash 0731
 Need the best all-around agentic balance?             → Ling 3.0 Flash INT4
@@ -129,6 +131,7 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for the CLI reference and [be
 
 | Model / lane | Runtime | Context posture | Runbook | Recipe |
 |---|---|---|---|---|
+| **Qwen 3.8 Flash-Next EXL3 Native MTP (daily driver)** | exllamav3 fork + OpenAI shim | 262K / single stream / native MTP | [Open](runbooks/qwen38-flash-next-exl3-daily-driver.md) | [Launcher](scripts/switch-to-qwen38-exl3.sh) |
 | Ling 3.0 Flash INT4 | Ling vLLM fork | 256K / 2 lanes | [Open](runbooks/ling-3.0-flash-int4.md) | [Open](recipes/ling-3.0-flash-vllm.yaml) |
 | Qwen 3.8 Flash-Next Q3 3-lane | llama.cpp qwen4exp | 3 × 220K | [Open](runbooks/qwen38-flash-next-q3-3lane.md) | [Open](recipes/qwen3.8-flash-next-q3-3lane.yaml) |
 | Qwen 3.8 Flash-Next Q4 | llama.cpp qwen4exp | 262K / one lane | [Open](runbooks/qwen38-flash-next-image.md) | [Open](recipes/qwen3.8-flash-next-image.yaml) |

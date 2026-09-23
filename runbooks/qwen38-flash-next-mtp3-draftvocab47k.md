@@ -1,9 +1,11 @@
-# Qwen 3.8 Flash-Next — MTP3 + Draft Vocab 47K (vLLM) — CURRENT PRODUCTION DAILY DRIVER
+# Qwen 3.8 Flash-Next — MTP3 + Draft Vocab 47K (vLLM) — Alternate Agent Lane
 
-> **Status: the lane we run.** If you are reading this repo and want the lane that
-> handles real agent traffic on one GB10 today, this is it. Bench v27 passed all
-> 28 cells (Arena submission `sub1789171536939`); this exact config serves Hermes/Loca/Lara
-> in production.
+> **Status: previous daily driver, now an alternate lane.** The current production
+> daily driver is the EXL3 native MTP lane —
+> [runbook](qwen38-flash-next-exl3-daily-driver.md). This vLLM lane remains fully
+> validated (bench v27 passed all 28 cells, Arena submission `sub1789171536939`)
+> and is the right choice when you want a container-isolated vLLM runtime with
+> multi-cell bench evidence behind it.
 
 - **Model:** [Mia-AiLab/Qwen3.8-Flash-Next-NVFP4](https://huggingface.co/Mia-AiLab/Qwen3.8-Flash-Next-NVFP4) @ `925d7be6`
 - **Runtime:** vLLM (fork `v0.1.dev20073+g8e685d198`), **MTP k=3** speculative decoding with `use_local_argmax_reduction`
