@@ -88,11 +88,25 @@ if (( DO_CHECK )); then
 fi
 
 if (( DO_START )); then
-  echo "[exl3] Stopping exclusive inference/video workloads..."
-  docker rm -f qwen-spark qwen35b-spark qwen38 puzzle-spark glm53-exl3 2>/dev/null || true
+  echo "[exl3] Stopping exclusive inference/video workloads (incl. ComfyUI)..."
+  docker rm -f qwen-spark qwen35b-spark qwen38 puzzle-spark glm53-exl3 comfyui-spark 2>/dev/null || true
   pkill -f 'vllm serve' 2>/dev/null || true
   pkill -f 'ds4-server' 2>/dev/null || true
   pkill -f 'exl3_serve_openai\.py' 2>/dev/null || true
+  # ComfyUI: kill by cmdline AND listening port — the server often runs with a
+  # relative cmdline (./venv/bin/python main.py --port 8189) that name patterns miss.
+  pkill -f 'ComfyUI.*main.py' 2>/dev/null || true
+  pkill -f 'main\.py --port 818[89]' 2>/dev/null || true
+  for _port in 8188 8189; do
+    _pids=$(ss -tlnp 2>/dev/null | awk -v p=":${_port}$" '$4 ~ p' | grep -oP 'pid=\K[0-9]+' | sort -u || true)
+    [ -n "${_pids:-}" ] && kill $_pids 2>/dev/null || true
+  done
+  systemctl stop comfyui.service 2>/dev/null || true
+  # Laya sidecar runs via ComfyUI's venv python (exact cmdline 'ComfyUI/venv/bin/python -',
+  # listens :8299) — masquerades as Comfy in ps, ~3.3GB. Kill by exact cmdline + port owner.
+  pkill -f 'ComfyUI/venv/bin/python -$' 2>/dev/null || true
+  _lp=$(ss -tlnp 2>/dev/null | awk -v p=":8299$" '$4 ~ p' | grep -oP 'pid=\K[0-9]+' | sort -u || true)
+  [ -n "${_lp:-}" ] && kill $_lp 2>/dev/null || true
   for scope in $(systemctl --user list-units --type=scope --no-legend 2>/dev/null | awk '/run-r/ {print $1}'); do
     systemctl --user stop "$scope" 2>/dev/null || true
   done
