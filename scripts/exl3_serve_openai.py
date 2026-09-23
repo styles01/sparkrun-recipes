@@ -131,20 +131,30 @@ def parse_qwen_xml(text: str) -> list[dict[str, Any]]:
 
 
 def split_prose_and_calls(text: str) -> tuple[str, list[dict[str, Any]]]:
-    """Return (prose, calls): prose = text with <function=...> blocks stripped.
+    """Return (prose, calls): prose = text with tool-call XML stripped.
     vLLM keeps the model's prose alongside tool_calls in one turn; the shim
-    previously dropped it (content=None), hiding narration from clients."""
+    previously dropped it (content=None), hiding narration from clients.
+    Accepts both bare <function=...> blocks and canonical <tool_call>-wrapped calls;
+    wrapper residue is stripped so clients never see tool syntax."""
     calls = parse_qwen_xml(text)
     if not calls:
         return text, []
     stripped = text
     for m in FN_RE.finditer(text):
         stripped = stripped.replace(m.group(0), "")
+    # Wrapper residue (opener/closer fragments from multi-call turns) never
+    # belongs in client-visible prose.
+    import re as _re
+    stripped = _re.sub(r"</?tool_(?:call|response)>", "", stripped)
     prose = stripped.strip()
     return prose, calls
 
 
 def messages_to_context(messages: list[dict[str, Any]]) -> tuple[str, list[tuple[str, str | None]]]:
+    """Canonical Qwen tool-format history rendering (matches tokenizer chat_template):
+    assistant calls: content + "\n\n<tool_call>\n<function=NAME>\n<parameter=K>\nV\n</parameter>\n</function>\n<tool_call>"
+    tool results:    <tool_call>\nresult\n<tool_call>  inside a user turn, consecutive results merged.
+    """
     system = ""
     context: list[tuple[str, str | None]] = []
     pending_user: str | None = None
@@ -162,16 +172,52 @@ def messages_to_context(messages: list[dict[str, Any]]) -> tuple[str, list[tuple
                 context.append((pending_user, None))
             pending_user = content
         elif role == "assistant":
+            # Re-render the model's own tool_calls in its canonical <tool_call>-wrapped XML.
+            # Dropping them made the model amnesiac about its own calls: empty
+            # assistant turns, identical re-calls, narrate-then-stop stalls.
+            text = "<tool_call>\n\n<tool_call>\n\n" + (content or "")
+            first = True
+            for c in msg.get("tool_calls") or []:
+                if not isinstance(c, dict):
+                    continue
+                fn = c.get("function") or {}
+                name = fn.get("name") or "tool"
+                raw = fn.get("arguments")
+                if isinstance(raw, str):
+                    try:
+                        args = json.loads(raw)
+                    except Exception:
+                        args = {"args": raw} if raw else {}
+                elif isinstance(raw, dict):
+                    args = raw
+                else:
+                    args = {}
+                opener = "<tool_call>\n<function=%s>\n" % name if first else "\n<tool_call>\n<function=%s>\n" % name
+                if (content or "").strip():
+                    opener = ("\n\n" + opener) if first else opener
+                params = "".join(
+                    "<parameter=%s>\n%s\n</parameter>\n"
+                    % (k, v if isinstance(v, str) else json.dumps(v, ensure_ascii=False))
+                    for k, v in args.items()
+                )
+                text += opener + params + "</function>\n<tool_call>"
+                first = False
             if pending_user is None:
                 pending_user = ""
-            context.append((pending_user, content))
+            context.append((pending_user, text))
             pending_user = None
         elif role == "tool":
-            tool_txt = f"[tool result]\n{content}"
+            # Canonical result block: generic <tool_call> wrapper, NO function name,
+            # consecutive results merged into one user turn.
+            tool_txt = "<tool_call>\n%s\n<tool_call>" % content
             if context and context[-1][1] is not None:
                 context.append((tool_txt, None))
+            elif pending_user is not None:
+                pending_user += "\n" + tool_txt
+            elif context:
+                context[-1] = (context[-1][0] + tool_txt, None)
             else:
-                pending_user = (pending_user or "") + "\n" + tool_txt
+                pending_user = tool_txt
     if pending_user is not None:
         context.append((pending_user, None))
     if not context:
@@ -468,19 +514,44 @@ class Handler(BaseHTTPRequestHandler):
         messages = body.get("messages") or []
         tools = body.get("tools") or []
         think_kw = (body.get("chat_template_kwargs") or {}).get("enable_thinking")
-        think = bool(think_kw) if think_kw is not None else False
+        effort = body.get("reasoning_effort")
+        if effort is None:
+            effort = (body.get("chat_template_kwargs") or {}).get("reasoning_effort")
+        if think_kw is not None:
+            think = bool(think_kw)
+        elif effort is not None:
+            # Hermes sends reasoning_effort, not enable_thinking. Honor it: only an
+            # explicit low-effort request runs this thinking model non-thinking.
+            think = str(effort).lower() not in ("none", "minimal", "off", "disabled")
+        else:
+            think = False
         system, context = messages_to_context(messages)
         if tools:
-            names = []
-            for t in tools:
-                fn = (t.get("function") or {}) if isinstance(t, dict) else {}
-                names.append(fn.get("name") or "tool")
+            # Canonical Qwen tool system block (matches the model chat_template):
+            # schemas as JSON inside <tools>, calls wrapped in <tool_call>...<tool_call>.
+            tool_json = "\n".join(
+                json.dumps(t, ensure_ascii=False) for t in tools if isinstance(t, dict)
+            )
             system = (
-                (system + "\n") if system else ""
+                (system + "\n\n") if system else ""
             ) + (
-                "You may call tools using Qwen XML only, no prose: "
-                "<function=NAME><parameter=KEY>VALUE</parameter></function>. "
-                f"Available: {', '.join(names)}."
+                "# Tools\n\nYou have access to the following functions:\n\n<tools>\n"
+                + tool_json
+                + "\n</tools>\n\n"
+                "If you choose to call a function ONLY reply in the following format with NO suffix:\n\n"
+                + "<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n"
+                + "<parameter=example_parameter_2>\nThis is the value for the second parameter\n"
+                + "that can span\nmultiple lines\n</parameter>\n</function>\n<tool_call>\n\n"
+                + "<IMPORTANT>\n"
+                + "Reminder:\n"
+                + "- Function calls MUST follow the specified format: an inner <function=...></function> block "
+                + "must be nested within <tool_call><tool_call> XML tags\n"
+                + "- Required parameters MUST be specified\n"
+                + "- You may provide optional reasoning for your function call in natural language BEFORE "
+                + "the function call, but NOT after\n"
+                + "If there is no function call available, answer the question like normal with your "
+                + "current knowledge and do not tell the user about function calls\n"
+                + "</IMPORTANT>"
             )
         ids = build_ids(system or PROMPT_FORMAT.default_system_prompt(think), context, think)
         max_new = int(body.get("max_tokens") or body.get("max_completion_tokens") or 2048)
