@@ -44,6 +44,8 @@ _HL = {
     "mtp_accepted_tokens_total": 0,
     "mtp_drafted_tokens_total": 0,  # accepted + rejected (tokens proposed)
     "is_prefilling": False,         # engine is prefilling RIGHT NOW (no first token yet)
+    "prefill_tokens_processed_total": 0,  # climbs DURING prefill (vLLM chunked-prefill parity)
+    "prefill_tps_live": 0.0,        # engine-measured prefill rate RIGHT NOW (EWMA over progress events)
     "ttft_seconds_sum": 0.0,        # engine time_prefill = time to first token
     "ttft_seconds_count": 0,
     "e2e_seconds_sum": 0.0,         # time_prefill + time_generate
@@ -65,6 +67,13 @@ def _hl_job_done(rec: dict[str, Any], failed: bool = False) -> None:
         # inflight is decremented by run_generate's finally; never here.
         _HL["requests_failed_total" if failed else "requests_completed_total"] += 1
         _HL["is_prefilling"] = False
+        _pf_pending = int(_HL.get("_pf_job_pending") or 0)
+        if _pf_pending > 0:
+            _HL["prefill_tokens_processed_total"] += _pf_pending
+            _HL["_pf_job_pending"] = 0
+        _HL["_pf_job_last"] = 0
+        _HL["prefill_tps_live"] = 0.0
+        _HL["_pf_last_ts"] = None
         _HL["context_last"] = n_prompt
         # MTP/speculative: drafted = every token the draft head proposed
         _HL["mtp_accepted_tokens_total"] += dacc
@@ -288,6 +297,10 @@ def run_generate(
                         _n_prompt = int(getattr(input_ids, "size", lambda d=-1: 0)(-1)) or len(input_ids)
                     _HL["prompt_tokens_total"] += _n_prompt
                     _HL["is_prefilling"] = True
+                    _HL["_pf_job_last"] = 0   # last curr_progress seen for this job
+                    _HL["_pf_job_pending"] = _n_prompt  # tokens not yet counted as processed
+                    _HL["_pf_job_prompt"] = _n_prompt
+                    _HL["_pf_job_t0"] = time.perf_counter()
                 while GEN.num_remaining_jobs():
                     for r in GEN.iterate():
                         if r.get("identifier") != ident:
@@ -323,6 +336,28 @@ def run_generate(
                             with _HL_LOCK:
                                 _HL["completion_tokens_total"] += _nt_live - _nt_prev
                             _nt_prev = _nt_live
+                        # Prefill progress events: fold curr_progress deltas into a
+                        # cumulative counter so SparkDash's poll-diff charts a RISING
+                        # line during prefill (vLLM chunked-prefill parity) instead of
+                        # one enqueue-time spike followed by flat zeros.
+                        if r.get("stage") == "prefill":
+                            try:
+                                _pf_curr = int(r.get("curr_progress") or 0)
+                            except Exception:
+                                _pf_curr = 0
+                            _now = time.perf_counter()
+                            with _HL_LOCK:
+                                _pf_prev = int(_HL.get("_pf_job_last", 0))
+                                if _pf_curr > _pf_prev:
+                                    _d = _pf_curr - _pf_prev
+                                    _dt = _now - float(_HL.get("_pf_last_ts") or (_now - 0.001))
+                                    _rate = _d / max(_dt, 0.001)
+                                    _prev_rate = float(_HL.get("prefill_tps_live") or 0.0)
+                                    _HL["prefill_tps_live"] = round(_prev_rate * 0.4 + _rate * 0.6, 1)
+                                    _HL["_pf_last_ts"] = _now
+                                    _HL["prefill_tokens_processed_total"] += _d
+                                    _HL["_pf_job_pending"] = max(0, int(_HL.get("_pf_job_pending", 0)) - _d)
+                                    _HL["_pf_job_last"] = _pf_curr
                         if r.get("eos"):
                             last = r
         except Exception:
@@ -465,6 +500,17 @@ class Handler(BaseHTTPRequestHandler):
                 "backend": "exl3",
                 "busy": hl["inflight"] > 0,
                 "is_prefilling": bool(hl.get("is_prefilling")),
+                "prefill_tokens_processed_total": hl["prefill_tokens_processed_total"],
+                "prefill_tps_live": hl["prefill_tps_live"],
+                # Live prefill rate while prefilling: prompt tokens / elapsed wall
+                # time (engine ingests the prompt in one round — progress events
+                # fire too coarsely to chart).
+                "prefill_rate": (
+                    round(hl["_pf_job_prompt"] / max(time.perf_counter() - hl["_pf_job_t0"], 0.001), 1)
+                    if hl.get("is_prefilling") and hl.get("_pf_job_t0") and hl.get("_pf_job_prompt")
+                    else 0.0
+                ),
+                "prefill_tps_live": hl["prefill_tps_live"],
                 "context_length": _ctx_len(),
                 "prompt_tokens_total": hl["prompt_tokens_total"],
                 "completion_tokens_total": hl["completion_tokens_total"],
