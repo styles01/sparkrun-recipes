@@ -645,7 +645,7 @@ class Handler(BaseHTTPRequestHandler):
         # Explicit per-request caps are still honored.
         ctx = int(getattr(CONFIG, "max_sequence_length", 0) or getattr(CONFIG, "max_position_embeddings", 0) or 262144)
         _req_max = int(body.get("max_tokens") or body.get("max_completion_tokens") or 0)
-        max_new = (_req_max if _req_max > 0 else max(1024, ctx - int(ids.shape[-1])))
+        max_new = (_req_max if _req_max > 0 else max(1024, ctx - int(ids.shape[-1]) - 256))  # -256: one cache-page headroom
         sampler = sampler_from_body(body)
         stops = list(STOP_IDS)
         if body.get("ignore_eos"):
