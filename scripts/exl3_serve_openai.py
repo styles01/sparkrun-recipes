@@ -606,7 +606,10 @@ class Handler(BaseHTTPRequestHandler):
             # explicit low-effort request runs this thinking model non-thinking.
             think = str(effort).lower() not in ("none", "minimal", "off", "disabled")
         else:
-            think = False
+            # Default: reasoning ON (equivalent of "low" on this binary knob - the
+            # model thinks at its natural depth; only explicit none/minimal/off
+            # disables). James, 2026-09-23: "defaulted to reasoning: low".
+            think = True
         system, context = messages_to_context(messages)
         if tools:
             # Canonical Qwen tool system block (matches the model chat_template):
