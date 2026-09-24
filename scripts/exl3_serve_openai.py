@@ -600,15 +600,37 @@ class Handler(BaseHTTPRequestHandler):
     def _chat(self, body: dict[str, Any]) -> None:
         messages = body.get("messages") or []
         tools = body.get("tools") or []
-        think_kw = (body.get("chat_template_kwargs") or {}).get("enable_thinking")
-        effort = body.get("reasoning_effort")
+        # Reasoning precedence (Loca fix, 2026-09-24): SESSION channels first,
+        # then STATIC config channels, then default.
+        #  1. extra_body.reasoning {enabled, effort} - Hermes profile path
+        #     (session /reasoning state rides here; static Loca config never sets it)
+        #  2. top-level reasoning_effort - direct OpenAI-style clients
+        #  3. chat_template_kwargs.reasoning_effort - static provider config
+        #     (Loca config.yaml extra_body)
+        #  4. chat_template_kwargs.enable_thinking - vLLM-style bool
+        #  5. default think=True (reasoning ON; only explicit off wins)
+        _eb = body.get("extra_body") or {}
+        _ctk = body.get("chat_template_kwargs") or {}
+        _eb_reasoning = _eb.get("reasoning") if isinstance(_eb, dict) else None
+        effort = None
+        enabled = None
+        if isinstance(_eb_reasoning, dict):
+            effort = _eb_reasoning.get("effort")
+            if "enabled" in _eb_reasoning:
+                enabled = bool(_eb_reasoning.get("enabled"))
+        elif isinstance(_eb_reasoning, bool):
+            enabled = _eb_reasoning
         if effort is None:
-            effort = (body.get("chat_template_kwargs") or {}).get("reasoning_effort")
-        if think_kw is not None:
+            effort = body.get("reasoning_effort")
+        if effort is None:
+            effort = _ctk.get("reasoning_effort")
+        think_kw = _ctk.get("enable_thinking")
+        if enabled is not None and not enabled:
+            think = False
+        elif think_kw is not None:
             think = bool(think_kw)
         elif effort is not None:
-            # Hermes sends reasoning_effort, not enable_thinking. Honor it: only an
-            # explicit low-effort request runs this thinking model non-thinking.
+            # Honor explicit effort: only none/minimal/off disables thinking.
             think = str(effort).lower() not in ("none", "minimal", "off", "disabled")
         else:
             # Default: reasoning ON (equivalent of "low" on this binary knob - the
