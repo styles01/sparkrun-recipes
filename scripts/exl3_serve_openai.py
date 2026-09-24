@@ -639,8 +639,13 @@ class Handler(BaseHTTPRequestHandler):
                 + "</IMPORTANT>"
             )
         ids = build_ids(system or PROMPT_FORMAT.default_system_prompt(think), context, think)
-        max_new = int(body.get("max_tokens") or body.get("max_completion_tokens") or 2048)
-        max_new = max(1, min(max_new, 65536))
+        # Thinking budget is UNCAPPED (James, 2026-09-23 - local engine, no need
+        # to cap): when the request omits max_tokens, use the full remaining
+        # context so a long think is never truncated at a small default (was 2048).
+        # Explicit per-request caps are still honored.
+        ctx = int(getattr(CONFIG, "max_sequence_length", 0) or getattr(CONFIG, "max_position_embeddings", 0) or 262144)
+        _req_max = int(body.get("max_tokens") or body.get("max_completion_tokens") or 0)
+        max_new = (_req_max if _req_max > 0 else max(1024, ctx - int(ids.shape[-1])))
         sampler = sampler_from_body(body)
         stops = list(STOP_IDS)
         if body.get("ignore_eos"):
