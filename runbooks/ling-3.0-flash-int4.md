@@ -78,7 +78,7 @@ The **first** request after a restart takes ~30s because the engine JIT-compiles
 ## Start Command
 
 ```bash
-ssh jaita@larryspark.local 'bash ~/switch-to-ling-container.sh'
+ssh {spark-user}@<spark-host> 'bash ~/switch-to-ling-container.sh'
 ```
 
 This serves `inclusionAI/Ling-3.0-flash-int4` on port 8000 with k=1, 256K, 2 lanes, fp8 KV, mamba align, ling3 parsers. **Plain safetensors (proven).**
@@ -86,7 +86,7 @@ This serves `inclusionAI/Ling-3.0-flash-int4` on port 8000 with k=1, 256K, 2 lan
 ## Stop Command
 
 ```bash
-ssh jaita@larryspark.local 'docker rm -f ling-flash'
+ssh {spark-user}@<spark-host> 'docker rm -f ling-flash'
 ```
 
 ## Arena Benchmark (native, submitted Aug 24)

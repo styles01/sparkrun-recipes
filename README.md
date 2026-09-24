@@ -83,13 +83,13 @@ Before a switch, stop the current inference or video workload, stop lingering us
 
 ```bash
 # Inspect first. Do not use this as a blind switch command.
-ssh jaita@larryspark.local 'free -h; systemctl --user --no-pager list-units --type=service --state=running'
+ssh {spark-user}@<spark-host> 'free -h; systemctl --user --no-pager list-units --type=service --state=running'
 ```
 
 ### 4. Validate before an Arena submission
 
 ```bash
-ssh jaita@larryspark.local \
+ssh {spark-user}@<spark-host> \
   'python3 ~/verify_arena_recipe.py @styles01/<recipe-name>'
 ```
 
@@ -103,11 +103,11 @@ A `llama-benchy` run is not a Spark Arena submission. A native `sparkrun arena b
 
 ```bash
 # REQUIRED: validate first. It fails closed on malformed submission metadata.
-ssh jaita@larryspark.local \
+ssh {spark-user}@<spark-host> \
   'python3 ~/verify_arena_recipe.py @styles01/<recipe-name>'
 
 # REQUIRED: launch detached on the Spark. Do not attach a multi-hour benchmark to SSH.
-ssh jaita@larryspark.local \
+ssh {spark-user}@<spark-host> \
   'setsid nohup python3 -m sparkrun arena benchmark run @styles01/<recipe-name> --cluster spark \
     > /tmp/<recipe-name>-arena.log 2>&1 < /dev/null &'
 ```

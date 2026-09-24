@@ -55,11 +55,11 @@ The container entrypoint (`docker/qwen38-flash-next/launch.sh`) runs exactly thi
 
 ```bash
 # 1. Pull the llama.cpp qwen4exp build dir from the Spark (build/bin/*):
-#    scp -r jaita@192.168.2.185:/home/jaita/code/llama.cpp-qwen4exp/build/bin ./build
+#    scp -r {spark-user}@<spark-ip>:/home/jaita/code/llama.cpp-qwen4exp/build/bin ./build
 # 2. Write docker/qwen38-flash-next/{Dockerfile,launch.sh}
 # 3. Build (aarch64/CUDA 13 base) + push on the Spark (the Mac's Docker Desktop
 #    often hangs on the privileged socket; the Spark's docker works):
-#    ssh jaita@192.168.2.185 'cd /tmp/qwen4-docker && docker build -t ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904 .'
+#    ssh {spark-user}@<spark-ip> 'cd /tmp/qwen4-docker && docker build -t ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904 .'
 #    docker login ghcr.io -u styles01 --password-stdin
 #    docker push ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904
 # 4. The Dockerfile's org.opencontainers.image.source label links the package to the
@@ -80,8 +80,8 @@ setsid nohup bash scripts/serve-qwen38-flash-next.sh > /tmp/qwen4-q4-server.log 
 ## How to check logs
 
 ```bash
-ssh jaita@192.168.2.185 'tail -f /tmp/qwen4-q4-server.log'   # live throughput
-ssh jaita@192.168.2.185 'tail -50 /tmp/qwen4-q4-server.log'
+ssh {spark-user}@<spark-ip> 'tail -f /tmp/qwen4-q4-server.log'   # live throughput
+ssh {spark-user}@<spark-ip> 'tail -50 /tmp/qwen4-q4-server.log'
 ```
 Key lines:
 - `listening on http://0.0.0.0:8000` → ready
