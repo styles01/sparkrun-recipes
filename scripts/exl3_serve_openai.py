@@ -157,6 +157,11 @@ def split_prose_and_calls(text: str) -> tuple[str, list[dict[str, Any]]]:
     # belongs in client-visible prose.
     import re as _re
     stripped = _re.sub(r"</?tool_(?:call|response)>", "", stripped)
+    # Think wrapper residue (tools path): think text must never reach clients
+    # as content (Loca leak fix). Think in the buffered tools path is dropped -
+    # streamed reasoning_content is the reasoning channel, not tool-turn prose.
+    stripped = _re.sub("\x3cthink\x3e[^\x3c]*\x3c/think\x3e", "", stripped)
+    stripped = stripped.replace("\x3cthink\x3e", "").replace("\x3c/think\x3e", "")
     prose = stripped.strip()
     return prose, calls
 
