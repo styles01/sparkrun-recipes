@@ -126,6 +126,7 @@ if (( DO_START )); then
   setsid systemd-run --user --scope --collect \
     -p "MemoryMax=$MEMORY_MAX" -p MemorySwapMax=0 \
     env PATH="$VENV/bin:/usr/local/cuda-13.0/bin:$PATH" \
+      PYTHONPATH="$FORK_DIR/examples:${PYTHONPATH:-}" \
       TORCH_CUDA_ARCH_LIST="$TORCH_CUDA_ARCH_LIST" \
       EXL3_INT8_GEMV="$EXL3_INT8_GEMV" EXL3_MOE_COOP_WIDE="$EXL3_MOE_COOP_WIDE" \
       EXL3_GR_INT8="$EXL3_GR_INT8" EXL3_MTP_HEAD_N="$EXL3_MTP_HEAD_N" \
