@@ -665,6 +665,19 @@ class Handler(BaseHTTPRequestHandler):
         prose, calls = split_prose_and_calls(text) if tools else (text, [])
         finish = "tool_calls" if calls else ("length" if rec["eos_reason"] == "max_new_tokens" else "stop")
         msg: dict[str, Any] = {"role": "assistant", "content": prose if calls else text}
+        # Non-stream think separation (Loca fix): move think text to
+        # reasoning_content so clients never render it as the reply.
+        if not calls and isinstance(msg["content"], str) and "</think>" in msg["content"]:
+            _th_open = "\x3cthink\x3e"
+            _th_close = "\x3c/think\x3e"
+            if _th_open in msg["content"]:
+                _before, _rest = msg["content"].split(_th_open, 1)
+                _think, _after = _rest.split(_th_close, 1)
+                msg["reasoning_content"] = _think.strip()
+                msg["content"] = _after.lstrip("\n")
+            else:  # think block started but never closed: all reasoning
+                msg["reasoning_content"] = msg["content"]
+                msg["content"] = ""
         if calls:
             msg["tool_calls"] = calls
         prompt_tokens = rec["prompt_tokens"] or int(ids.shape[-1])
@@ -693,6 +706,9 @@ class Handler(BaseHTTPRequestHandler):
         )
 
     def _stream_sse(self, ids, max_new, sampler, stops, tools: bool, t0: float, body: dict[str, Any]) -> None:
+        """SSE stream with think-channel separation (Loca fix, 2026-09-23):
+        think text streams as delta.reasoning_content, prose as delta.content.
+        Thinking stays ON - it is routed to the field Hermes renders as reasoning."""
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
@@ -700,20 +716,77 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         cid = f"chatcmpl-{uuid.uuid4().hex[:12]}"
         held: list[str] = []
+        THINK_OPEN = "\x3cthink\x3e"
+        THINK_CLOSE = "\x3c/think\x3e"
+
+        def _emit(delta: dict) -> None:
+            obj = {"id": cid, "object": "chat.completion.chunk",
+                   "created": int(t0), "model": SERVED,
+                   "choices": [{"index": 0, "delta": delta, "finish_reason": None}]}
+            self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
+            self.wfile.flush()
+
+        state = {"mode": "start", "pending": ""}
+
+        def _pump(buf: str):
+            out = []
+            while buf:
+                if state["mode"] == "start":
+                    idx = buf.find(THINK_OPEN)
+                    if idx >= 0:
+                        pre = buf[:idx]
+                        if pre.strip():
+                            out.append(("content", pre))
+                        state["mode"] = "thinking"
+                        buf = buf[idx + len(THINK_OPEN):]
+                        if buf.startswith("\n"):
+                            buf = buf[1:]
+                        continue
+                    if len(buf) < len(THINK_OPEN) and THINK_OPEN.startswith(buf):
+                        return out, buf
+                    state["mode"] = "prose"
+                    continue
+                if state["mode"] == "thinking":
+                    idx = buf.find(THINK_CLOSE)
+                    if idx >= 0:
+                        think = buf[:idx]
+                        if think:
+                            out.append(("reasoning_content", think))
+                        state["mode"] = "prose"
+                        buf = buf[idx + len(THINK_CLOSE):]
+                        if buf.startswith("\n\n"):
+                            buf = buf[2:]
+                        elif buf.startswith("\n"):
+                            buf = buf[1:]
+                        continue
+                    hold = 0
+                    for k in range(min(len(buf), len(THINK_CLOSE) - 1), 0, -1):
+                        if THINK_CLOSE.startswith(buf[-k:]):
+                            hold = k
+                            break
+                    if len(buf) > hold:
+                        out.append(("reasoning_content", buf[:len(buf) - hold]))
+                        buf = buf[len(buf) - hold:]
+                    return out, buf
+                out.append(("content", buf))
+                return out, ""
+            return out, ""
 
         def on_chunk(chunk: str) -> None:
             if tools:
                 held.append(chunk)
                 return
-            obj = {
-                "id": cid,
-                "object": "chat.completion.chunk",
-                "created": int(t0),
-                "model": SERVED,
-                "choices": [{"index": 0, "delta": {"content": chunk}, "finish_reason": None}],
-            }
-            self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
-            self.wfile.flush()
+            state["pending"] += chunk
+            if state["mode"] == "prose":
+                text, state["pending"] = state["pending"], ""
+                if text:
+                    _emit({"content": text})
+                return
+            emits, leftover = _pump(state["pending"])
+            state["pending"] = leftover
+            for field, text in emits:
+                if text:
+                    _emit({field: text})
 
         rec = run_generate(
             input_ids=ids,
@@ -722,6 +795,11 @@ class Handler(BaseHTTPRequestHandler):
             stop_conditions=stops,
             on_chunk=on_chunk,
         )
+        if not tools:
+            tail = state["pending"]
+            if tail:
+                field = "reasoning_content" if state["mode"] == "thinking" else "content"
+                _emit({field: tail})
         try:
             acc = rec["text"]
             calls = parse_qwen_xml(acc) if tools else []
@@ -776,14 +854,13 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError, OSError):
             # client left mid-stream: run_generate already folded the stats as
-            # failed — nothing to count here.
+            # failed - nothing to count here.
             pass
         print(
             f"stream decode={rec['decode_tok_s']:.1f} tok/s draft_accept={rec['draft_accept']} "
             f"new={rec['new_tokens']}",
             flush=True,
         )
-
 
 def load_engine(ns: argparse.Namespace) -> None:
     global GEN, TOKENIZER, CONFIG, PROMPT_FORMAT, STOP_IDS
