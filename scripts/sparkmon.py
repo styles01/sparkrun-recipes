@@ -7,7 +7,10 @@ Single-file, pure-stdlib curses TUI. Project:
 Shows the SparkDash lane telemetry plus a LANES panel:
   * LLM lane: decode + prefill tok/s as rolling sparkline GRAPHS + stats,
     session avg, MTP acceptance overall + per-position bars, KV cache,
-    prefix hit, context info, latency avgs (ttft/itl/e2e).
+    prefix hit, context info; RIGHT COLUMN (btop label-left/value-right):
+    ttft/itl/e2e avgs (6s window else lifetime 'avg'), reqs running/
+    waiting + completed/failed, prefill/decode tok totals, prefix hit
+    % + raw queries/hits, KV usage % + fp8 badge, MTP accepted/drafted.
   * LANES: which models are actually serving — LLM (model + docker image +
     running/waiting) and decision lanes (gate checkpoint, decider version,
     router shadow), each with liveness.
@@ -59,6 +62,7 @@ DEFAULT_CTX = int(os.environ.get("SPARKMON_CTX", "262144"))
 BAR_WIDTH = 14
 HIST_N = 48          # sparkline window (samples)
 MTP_WINDOW = 6.0     # seconds for per-position acceptance window
+AVG_WINDOW = 6.0     # seconds for ttft/itl/e2e window averages
 
 # ---------------------------------------------------------------- utilities
 
@@ -174,7 +178,8 @@ def parse_vllm_metrics(text):
     h = {
         "engine": "vLLM", "backend": "vllm", "context_length": DEFAULT_CTX,
         "busy": False, "is_prefilling": False,
-        "requests_waiting": 0.0, "requests_completed_total": 0.0,
+        "requests_running": 0.0, "requests_waiting": 0.0,
+        "requests_completed_total": 0.0,
         "requests_failed_total": 0.0,
         "mtp_accepted_tokens_total": None, "mtp_drafted_tokens_total": None,
         "mtp_draft_rounds_total": None,
@@ -193,6 +198,7 @@ def parse_vllm_metrics(text):
         val = float(m.group(3))
         if name == "num_requests_running":
             h["busy"] = h["busy"] or val > 0
+            h["requests_running"] += val
         elif name == "num_requests_waiting":
             h["requests_waiting"] += val
         elif name == "generation_tokens_total":
@@ -211,8 +217,11 @@ def parse_vllm_metrics(text):
                 mtp_pos.setdefault(int(pos), 0.0)
                 mtp_pos[int(pos)] += val
         elif name == "request_success_total":
-            if val > 0 and labels.get("finished_reason") == "stop":
+            reason = labels.get("finished_reason")
+            if val > 0 and reason == "stop":
                 h["requests_completed_total"] += val
+            if val > 0 and reason in ("abort", "error"):
+                h["requests_failed_total"] += val
         elif name == "kv_cache_usage_perc":
             h["kv_cache_usage"] = val
         elif name == "prefix_cache_queries_total":
@@ -227,12 +236,15 @@ def parse_vllm_metrics(text):
                 if labels.get("gpu_memory_utilization"):
                     h["gpu_memory_utilization"] = float(
                         labels["gpu_memory_utilization"])
+                if labels.get("cache_dtype"):
+                    h["kv_cache_dtype"] = labels["cache_dtype"]
             except ValueError:
                 pass
         elif name.endswith(("_created", "_count", "_sum")):
             pair = {
                 "time_to_first_token_seconds": "ttft",
                 "time_per_output_token_seconds": "itl",
+                "inter_token_latency_seconds": "itl",
                 "request_time_per_output_token_seconds": "itl",
                 "e2e_request_latency_seconds": "e2e",
             }
@@ -260,8 +272,41 @@ def parse_vllm_metrics(text):
 COUNTERS = (
     "completion_tokens_total", "prompt_tokens_total",
     "mtp_accepted_tokens_total", "mtp_drafted_tokens_total",
+    "mtp_draft_rounds_total",
     "requests_completed_total", "requests_failed_total",
+    "prefix_queries", "prefix_hits",
+    "ttft_seconds_sum", "ttft_seconds_count",
+    "itl_seconds_sum", "itl_seconds_count",
+    "e2e_seconds_sum", "e2e_seconds_count",
 )
+
+# histogram sum/count keys -> (label, fmt) for the right column
+_HIST_KEYS = (
+    ("ttft", "TTFT", "s"), ("itl", "ITL", "ms"), ("e2e", "e2e", "s"),
+)
+
+
+def compute_window_avgs(cur, prev, prev_t, now):
+    """Delta-over-window avgs for ttft/itl/e2e; None when no prior sample."""
+    out = {}
+    if prev is None or prev_t is None or now is None:
+        return out
+    dt = now - prev_t
+    if dt <= 0:
+        return out
+    for key, _, _ in _HIST_KEYS:
+        s0, c0 = prev.get(f"{key}_seconds_sum"), prev.get(f"{key}_seconds_count")
+        s1, c1 = cur.get(f"{key}_seconds_sum"), cur.get(f"{key}_seconds_count")
+        try:
+            ds = float(s1) - float(s0)
+            dc = float(c1) - float(c0)
+        except (TypeError, ValueError):
+            continue
+        if ds < 0 or dc < 0:          # engine restart / counter reset
+            continue
+        if dc > 0:
+            out[key] = {"avg": ds / dc, "kind": f"{dt:.0f}s window"}
+    return out
 
 
 def compute_rates(cur, prev, prev_t, now):
@@ -450,6 +495,84 @@ def box_bottom(width, ascii_mode):
                 else "\u2514" + "\u2500" * max(3, width - 2) + "\u2518", "dim")]
 
 
+def _rcol_row(label, value, style="plain"):
+    """Right-column row: fixed label pad + value, btop label-left/value-right."""
+    return [seg(f"  {label:<10}"), seg(value, style)]
+
+
+def build_llm_right_col(st, h):
+    """Right column rows: label left, value right, btop-style. '—' = missing."""
+    w_avgs = st.get("win_avgs") or {}
+    rows = []
+
+    def lat_avg(key):
+        wv = w_avgs.get(key)
+        if wv:
+            return wv["avg"], wv["kind"]
+        c = h.get(f"{key}_seconds_count")
+        s = h.get(f"{key}_seconds_sum")
+        if c and s is not None:
+            return s / c, "avg"
+        return None, "avg"
+
+    # ttft/itl/e2e (window avg when deltas exist, else lifetime 'avg'),
+    # kind tag inline — one row per metric
+    for key, label, unit in _HIST_KEYS:
+        v, kind = lat_avg(key)
+        if v is None:
+            rows.append(_rcol_row(label, "—", "dim"))
+            continue
+        val = f"{v * 1000:.1f}ms" if unit == "ms" else f"{v:.2f}s"
+        row = _rcol_row(label, val, "plain")
+        row.append(seg(f"  ({kind})", "dim"))
+        rows.append(row)
+
+    # requests: live + lifetime on one row
+    rows.append(_rcol_row(
+        "reqs",
+        f"{h.get('requests_running') or 0:.0f} run / "
+        f"{h.get('requests_waiting') or 0:.0f} wait", "plain"))
+    rows[-1].append(seg(
+        f"   {fmt_num(h.get('requests_completed_total'))} done / "
+        f"{fmt_num(h.get('requests_failed_total'))} fail", "dim"))
+
+    # engine lifetime token totals on one row (session tots live on the left)
+    rows.append(_rcol_row(
+        "eng tok",
+        f"{fmt_num(h.get('prompt_tokens_total'))} pre / "
+        f"{fmt_num(h.get('completion_tokens_total'))} gen", "plain"))
+
+    # prefix cache: rate + raw queries/hits on one row
+    pfx = h.get("prefix_cache_hit_rate")
+    pq, ph = h.get("prefix_queries"), h.get("prefix_hits")
+    if pfx is not None and pq is not None:
+        rows.append(_rcol_row("prefix", f"{pfx * 100:.1f}%", "plain"))
+        rows[-1].append(seg(f"   {fmt_num(pq)}q / {fmt_num(ph)} hits", "dim"))
+    else:
+        rows.append(_rcol_row("prefix", "—", "dim"))
+
+    # kv cache usage + dtype badge on one row
+    kv = h.get("kv_cache_usage")
+    if kv is not None:
+        rows.append(_rcol_row("kv cache", f"{kv * 100:.1f}%", "plain"))
+        dtype = h.get("kv_cache_dtype")
+        if dtype and dtype != "auto":
+            rows[-1].append(seg(f"   [kv {dtype}]", "accent" if dtype == "fp8"
+                                else "dim"))
+    else:
+        rows.append(_rcol_row("kv cache", "—", "dim"))
+
+    # MTP accepted/drafted totals
+    acc = h.get("mtp_accepted_tokens_total")
+    drf = h.get("mtp_drafted_tokens_total")
+    if acc is not None or drf is not None:
+        rows.append(_rcol_row(
+            "MTP", f"{fmt_num(acc)} acc / {fmt_num(drf)} draft", "plain"))
+    else:
+        rows.append(_rcol_row("MTP", "—", "dim"))
+    return rows
+
+
 def build_lines(st, width):
     """v2 frame: header, LLM lane box, LANES box, memory box, footer."""
     L = []
@@ -491,21 +614,19 @@ def build_lines(st, width):
     dec_h = st["hist"].get("decode")
     pre_h = st["hist"].get("prefill")
     avg = st["avg"].get("decode")
-    L.append([seg("  decode   "), seg(spark(dec_h, ascii_mode=ascii_mode), "accent"),
-              seg("  "), seg(fmt_rate(dec), "good" if dec else "dim"),
-              seg(f"   avg {avg:,.1f} tok/s" if avg else "   avg --", "dim"),
-              seg(f"   tot {fmt_num(st['avg'].get('dec_tot'))} tok", "dim")])
-    L.append([seg("  prefill  "), seg(spark(pre_h, ascii_mode=ascii_mode), "accent"),
-              seg("  "), seg(fmt_rate(pre), "accent" if pre else "dim"),
-              seg(f"  [{src}]" if src else "", "dim"),
-              seg(f"   tot {fmt_num(st['avg'].get('pre_tot'))} tok", "dim")])
+    lane = []
+    lane.append([seg("  decode   "), seg(spark(dec_h, ascii_mode=ascii_mode), "accent"),
+                 seg("  "), seg(fmt_rate(dec), "good" if dec else "dim")])
+    lane.append([seg("  prefill  "), seg(spark(pre_h, ascii_mode=ascii_mode), "accent"),
+                 seg("  "), seg(fmt_rate(pre), "accent" if pre else "dim"),
+                 seg(f"  [{src}]" if src else "", "dim")])
 
     # MTP overall (token-accepted / token-drafted)
     acc, drf = h.get("mtp_accepted_tokens_total"), h.get("mtp_drafted_tokens_total")
     overall = (acc / drf) if (acc is not None and drf) else None
     win = st.get("mtp_win") or {}
     w_over = win.get("overall")
-    L.append([seg("  MTP      "),
+    lane.append([seg("  MTP      "),
               seg(bar_solid(overall, ascii_mode=ascii_mode) if overall is not None
                   else "[" + " " * BAR_WIDTH + "]",
                   "good" if (w_over or overall or 0) >= 0.5
@@ -523,41 +644,56 @@ def build_lines(st, width):
             v = pp[p]
             cells.append(f"p{p} {fmt_pct(v)}"
                          f" {bar_solid(v, width=6, ascii_mode=ascii_mode)}")
-        L.append([seg("  MTP pos  "), seg("  ".join(cells), "plain"),
+        lane.append([seg("  MTP pos  "), seg("  ".join(cells), "plain"),
                   seg(f"   ({len(pp)} positions, k=3)", "dim")])
     else:
         pos_h = h.get("mtp_accept_by_position") or []
         if pos_h:
             cells = [f"p{p.get('position')} {fmt_num(p.get('tested'))} tok"
                      for p in pos_h[:6]]
-            L.append([seg("  MTP pos  "), seg("  ".join(cells), "dim"),
-                      seg("   (lifetime counts — window warming up)", "dim")])
+            lane.append([seg("  MTP pos  "), seg("  ".join(cells), "dim"),
+                         seg("  (lifetime — window warming up)", "dim")])
 
     kv = h.get("kv_cache_usage")
     kvc = h.get("kv_capacity_tok")
     pfx = h.get("prefix_cache_hit_rate")
-    L.append([seg("  kv cache  "),
-              seg(bar_solid(kv, ascii_mode=ascii_mode) if kv is not None
-                  else "[" + " " * BAR_WIDTH + "]",
-                  "good" if (kv or 0) < 0.6
-                  else ("warn" if (kv or 0) < 0.85 else "bad")),
-              seg(" "), seg(fmt_pct(kv), "plain"),
-              seg(f"   capacity {fmt_num(kvc)} tok" if kvc else "", "dim")])
-    L.append([seg("  prefix    "),
-              seg(bar_solid(pfx, ascii_mode=ascii_mode) if pfx is not None
-                  else "[" + " " * BAR_WIDTH + "]", "accent"),
-              seg(" "), seg(fmt_pct(pfx), "plain")])
-    ttft_c = h.get("ttft_seconds_count") or 0
-    itl_c = h.get("itl_seconds_count") or 0
-    e2e_c = h.get("e2e_seconds_count") or 0
-    ttft = h.get("ttft_seconds_sum") / ttft_c if ttft_c else None
-    itl = h.get("itl_seconds_sum") / itl_c if itl_c else None
-    e2e = h.get("e2e_seconds_sum") / e2e_c if e2e_c else None
-    L.append([seg(f"  ttft {ttft:.2f}s   itl {itl * 1000:.1f}ms   e2e {e2e:.1f}s"
-                  if itl is not None else "  ttft/itl/e2e --", "dim"),
-              seg(f"   req done {fmt_num(h.get('requests_completed_total'))}"
-                  f"  failed {fmt_num(h.get('requests_failed_total'))}", "dim")])
+    lane.append([seg("  kv cache  "),
+                 seg(bar_solid(kv, ascii_mode=ascii_mode) if kv is not None
+                     else "[" + " " * BAR_WIDTH + "]",
+                     "good" if (kv or 0) < 0.6
+                     else ("warn" if (kv or 0) < 0.85 else "bad")),
+                 seg(" "), seg(fmt_pct(kv), "plain"),
+                 seg(f"   cap {fmt_num(kvc)} tok" if kvc else "", "dim")])
+    lane.append([seg("  prefix    "),
+                 seg(bar_solid(pfx, ascii_mode=ascii_mode) if pfx is not None
+                     else "[" + " " * BAR_WIDTH + "]", "accent"),
+                 seg(" "), seg(fmt_pct(pfx), "plain")])
+    if not h:
+        lane.append([seg("  (vLLM telemetry offline)", "dim")])
     ctx_len = h.get("context_length") or DEFAULT_CTX
+
+    # right column: merge lane rows and metric rows side by side.
+    # Wide terminal: right column hugs the box's right edge (btop-style).
+    # Narrow terminal (<100 cols): fixed offset at col 62, drop rows that
+    # would overflow.
+    rrows = build_llm_right_col(st, h) if h else []
+    if width >= 100:
+        rcol_w = max(len("".join(t for t, _ in rr)) for rr in rrows) if rrows else 0
+        rcol_x = max(66, width - 2 - rcol_w)   # 2 = right border + margin
+        narrow = False
+    else:
+        rcol_x, narrow = 62, True
+    merged = []
+    for i in range(max(len(lane), len(rrows))):
+        left = list(lane[i]) if i < len(lane) else [seg(" " * 12)]
+        ltxt = sum(len(t) for t, _ in left)
+        pad = rcol_x - ltxt if not narrow else max(1, rcol_x - ltxt)
+        rrow = rrows[i] if i < len(rrows) else []
+        if narrow and ltxt + len("".join(t for t, _ in rrow)) > width - 2:
+            rrow = []                          # would overflow: drop
+        merged.append(left + [seg(" " * max(1, pad))] + rrow)
+    for row in merged:
+        L.append(row)
     L.append(box_bottom(width, ascii_mode))
 
     # ---- LANES box
@@ -641,6 +777,7 @@ def run_once(args, cfg):
         print(f"sparkmon: telemetry unreachable ({exc})", file=sys.stderr)
     rates = compute_rates(health, prev, prev_t, now) if health else {
         "decode_tps": None, "prefill_tps": None, "prefill_src": None}
+    w_avgs = compute_window_avgs(health, prev, prev_t, now) if health else {}
     total, avail = read_meminfo()
     st = {"health": health, "rates": rates, "offline": health is None,
           "last_ok_age": None, "errors": 0, "interval": args.interval,
@@ -650,6 +787,7 @@ def run_once(args, cfg):
           "hist": {"decode": deque(maxlen=HIST_N),
                    "prefill": deque(maxlen=HIST_N)},
           "avg": {"decode": None, "dec_tot": None, "pre_tot": None},
+          "win_avgs": w_avgs,
           "mtp_win": {}, "lanes": probe_lanes(cfg) if cfg["lanes"] else {}}
     lines = build_lines(st, 110)
     print("\n".join("".join(t for t, _ in line).rstrip() for line in lines))
@@ -699,8 +837,11 @@ def _poll_once(args, cfg, state):
             ValueError):
         state["errors"] += 1
     rates = {"decode_tps": None, "prefill_tps": None, "prefill_src": None}
+    w_avgs = {}
     if health is not None:
         rates = compute_rates(health, state["prev"], state["prev_t"], now)
+        w_avgs = compute_window_avgs(health, state["prev"], state["prev_t"],
+                                     now)
         state["prev"] = {c: health.get(c) for c in COUNTERS}
         state["prev_t"] = now
         state["hist"]["decode"].append(rates.get("decode_tps"))
@@ -724,7 +865,7 @@ def _poll_once(args, cfg, state):
             "now": datetime.now(), "ascii": state["ascii"],
             "mem_total": total, "mem_avail": avail,
             "host_uptime": state.get("host_uptime"),
-            "hist": state["hist"], "avg": avg_d,
+            "hist": state["hist"], "avg": avg_d, "win_avgs": w_avgs,
             "mtp_win": mtp_win, "lanes": state["lanes"] or {}}
 
 
