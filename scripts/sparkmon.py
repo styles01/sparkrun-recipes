@@ -233,6 +233,7 @@ def parse_vllm_metrics(text):
             pair = {
                 "time_to_first_token_seconds": "ttft",
                 "time_per_output_token_seconds": "itl",
+                "request_time_per_output_token_seconds": "itl",
                 "e2e_request_latency_seconds": "e2e",
             }
             stem = name.rsplit("_", 1)[0]
