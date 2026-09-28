@@ -469,6 +469,12 @@ def probe_lanes(cfg):
         "up": _tcp_up(ROUTER_PORT), "port": ROUTER_PORT,
         "model": "intent-router (shadow)", "detail": "CPU-only",
     }
+    # sparkDash web dashboard (viewer, not a lane) — shown for provenance
+    dash = _http_json("http://127.0.0.1:5555/api/health")
+    lanes["dash"] = {
+        "up": dash is not None or _tcp_up(5555), "port": 5555,
+        "model": "sparkDash (web UI)", "detail": "docker · host-net",
+    }
     return lanes
 
 
@@ -702,7 +708,8 @@ def build_lines(st, width):
     for key, label, lcol in [("llm", "LLM  ", "good"),
                              ("gate", "gate ", "good"),
                              ("deci", "deci ", "good"),
-                             ("router", "route", "dim")]:
+                             ("router", "route", "dim"),
+                             ("dash", "dash ", "dim")]:
         ln = lanes.get(key) or {}
         up = ln.get("up")
         dot, dstyle = (("\u25cf", "good") if up else ("\u25cb", "bad")) \
