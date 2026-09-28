@@ -59,6 +59,7 @@ DEFAULT_GATE = os.environ.get("SPARKMON_GATE", "http://localhost:8710")
 DEFAULT_DECI = os.environ.get("SPARKMON_DECI", "http://localhost:8712")
 ROUTER_PORT = 8711
 DEFAULT_CTX = int(os.environ.get("SPARKMON_CTX", "262144"))
+MAX_SEQS = int(os.environ.get("SPARKMON_MAX_SEQS", "8"))  # --max-num-seqs
 BAR_WIDTH = 14
 HIST_N = 48          # sparkline window (samples)
 MTP_WINDOW = 6.0     # seconds for per-position acceptance window
@@ -541,6 +542,18 @@ def build_llm_right_col(st, h):
     rows[-1].append(seg(
         f"   {fmt_num(h.get('requests_completed_total'))} done / "
         f"{fmt_num(h.get('requests_failed_total'))} fail", "dim"))
+
+    # sequences: running / max-num-seqs (config constant)
+    run = h.get("requests_running") or 0
+    rows.append(_rcol_row(
+        "seqs", f"{run:.0f}/{MAX_SEQS}", "plain"))
+    rows[-1].append(seg("   --max-num-seqs (launch cfg)", "dim"))
+
+    # context window: total available (+ KV-token view lives on kv row)
+    cl = h.get("context_length") or DEFAULT_CTX
+    rows.append(_rcol_row(
+        "ctx win", f"{cl / 1000:.1f}K tok", "plain"))
+    rows[-1].append(seg("   max-model-len (launch cfg)", "dim"))
 
     # engine lifetime token totals on one row (session tots live on the left)
     rows.append(_rcol_row(
