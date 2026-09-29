@@ -990,12 +990,15 @@ def build_vitals_rows(st, width, ascii_mode):
     row_rate = _at(cells)
 
     cells2 = []
-    total, avail = st.get("mem_total"), st.get("mem_avail")
-    if total and avail:
-        frac = (total - avail) / total
-        stl = _thr_pct_style(frac)
-        cells2.append([seg(f"RAM {frac * 100:.0f}%{insep if compact else ' '}", stl),
-                       seg(bar_solid(frac, width=bar_w, ascii_mode=ascii_mode), stl)])
+    # RAM% already renders one band down (MEMORY box 'system' bar) —
+    # duplicating it in VITALS wastes the cell. Use it for session
+    # throughput totals instead.
+    dec_avg_d = st.get("avg") or {}
+    dtot = dec_avg_d.get("dec_tot")
+    dts = f"{dtot:,.0f} tok" if dtot is not None else ""
+    cells2.append([seg("out ", "dim"),
+                   seg(dts, "accent" if dtot else "dim") if dtot
+                   else seg("waiting for counters", "dim")])
     cpu = st.get("cpu_pct")
     if cpu is not None:
         stl2 = _thr_pct_style(cpu / 100.0)
