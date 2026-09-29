@@ -1343,7 +1343,7 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
         rows.append(row)
         if key == "llm" and posture:
             # right-align the posture badge inside the box (P1-4)
-            pad = width - 4 - len(_row_text(row)) - len(badge) - 2
+            pad = width - 3 - len(_row_text(row)) - len(badge) - 2
             if pad >= 1:
                 row.append(seg(" " * pad))
             row.append(seg(badge, "rev_acc" if not ascii_mode else "plain"))
