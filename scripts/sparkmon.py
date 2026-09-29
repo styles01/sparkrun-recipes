@@ -33,8 +33,10 @@ Usage:
   sparkmon --remote jaita@larryspark.local   probe a remote Spark from a Mac
 
 Env overrides: SPARKMON_URL (default http://localhost:8000),
-SPARKMON_CTX (262144), SPARKMON_GATE (http://localhost:8710),
-SPARKMON_DECI (http://localhost:8712), SPARKMON_ROUTER (:8711 TCP only).
+SPARKMON_CTX (262144), SPARKMON_MAX_SEQS (8), SPARKMON_GATE
+(http://localhost:8710), SPARKMON_DECI (http://localhost:8712),
+SPARKMON_ROUTER (:8711 TCP only). Launch-args precedence (v2.2): env
+SPARKMON_MAX_SEQS/SPARKMON_CTX > docker-inspect captured values > defaults.
 """
 
 from __future__ import annotations
@@ -59,7 +61,17 @@ DEFAULT_GATE = os.environ.get("SPARKMON_GATE", "http://localhost:8710")
 DEFAULT_DECI = os.environ.get("SPARKMON_DECI", "http://localhost:8712")
 ROUTER_PORT = 8711
 DEFAULT_CTX = int(os.environ.get("SPARKMON_CTX", "262144"))
-MAX_SEQS = int(os.environ.get("SPARKMON_MAX_SEQS", "8"))  # --max-num-seqs
+DEFAULT_SEQS = int(os.environ.get("SPARKMON_MAX_SEQS", "8"))  # --max-num-seqs
+# Provenance/metadata parity with sparkDash recipeInfo (v2.2): the launch args
+# from `docker inspect <vllm container>` ARE the authoritative values. Fetched
+# ONCE at startup (probe_lanes), stored in cfg["vllm"]; env overrides win:
+#   SPARKMON_MAX_SEQS / SPARKMON_CTX, then captured, then these defaults.
+VLLM_DEFAULTS = {
+    "max_model_len": 262144, "max_num_seqs": 8,
+    "max_num_batched_tokens": None, "kv_cache_dtype": None,
+    "gpu_memory_utilization": None, "spec_tokens": None,
+    "reasoning_parser": None, "tool_call_parser": None,
+}
 BAR_WIDTH = 14
 HIST_N = 48          # sparkline window (samples)
 MTP_WINDOW = 6.0     # seconds for per-position acceptance window
@@ -141,6 +153,108 @@ def read_meminfo():
         return None, None
 
 
+def _num(s):
+    """float or None ('[N/A]' and friends on GB10's driver)."""
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return None
+
+
+_THROTTLE_BITS = (
+    (0x02, "idle"), (0x04, "appClks"), (0x08, "swPwrCap"),
+    (0x10, "hwSlowdn"), (0x40, "swTherm"), (0x80, "hwTherm"),
+    (0x20, "syncBoost"), (0x100, "hwPwrBrake"),
+)
+
+
+def read_hardware():
+    """Local GB10 hardware snapshot: nvidia-smi only — no network, no docker.
+
+    Missing fields stay None (render '—'); on this driver power.limit and
+    memory.total report [N/A], so limit/total bars fall back to UMA total.
+    """
+    out = {"temp_c": None, "power_w": None, "power_limit_w": None,
+           "sm_mhz": None, "sm_max_mhz": None, "throttle": None,
+           "util_pct": None, "vram_used_mib": None, "vram_procs": []}
+    try:
+        r = subprocess.run(
+            ["nvidia-smi", "--query-gpu=temperature.gpu,power.draw,utilization.gpu,"
+             "clocks.sm,clocks.max.sm,memory.used,"
+             "clocks_throttle_reasons.active", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=4)
+        if r.returncode == 0 and r.stdout.strip():
+            v = [x.strip() for x in r.stdout.strip().split(",")]
+            if len(v) >= 7:
+                out["temp_c"] = _num(v[0])
+                out["power_w"] = _num(v[1])
+                out["util_pct"] = _num(v[2])
+                out["sm_mhz"] = _num(v[3])
+                out["sm_max_mhz"] = _num(v[4])
+                out["vram_used_mib"] = _num(v[5])
+                out["throttle"] = v[6]
+    except (OSError, subprocess.SubprocessError):
+        pass
+    try:
+        r = subprocess.run(
+            ["nvidia-smi", "--query-compute-apps=pid,used_memory",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=4)
+        if r.returncode == 0:
+            for line in r.stdout.splitlines():
+                parts = [p.strip() for p in line.split(",")]
+                if len(parts) >= 2 and parts[0] and parts[1]:
+                    out["vram_procs"].append(
+                        {"pid": parts[0], "mib": _num(parts[1])})
+            # memory.used flakes to [N/A] on this driver — procs sum is the
+            # same reservation and matches NVML exactly when it reports.
+            if out["vram_used_mib"] is None and out["vram_procs"]:
+                s_mib = sum(p["mib"] or 0 for p in out["vram_procs"])
+                if s_mib > 0:
+                    out["vram_used_mib"] = s_mib
+                    out["vram_from"] = "procs"
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return out
+
+
+def _thr_text(throttle):
+    """Compact throttle tag: bitmask names or '—' when none/unknown."""
+    thr = (throttle or "").strip().lower()
+    try:
+        val = int(thr, 0)              # accepts '0x...' hex and decimal
+    except ValueError:
+        return thr[:16] if thr else "—"   # driver gave text, not a bitmask
+    bits = [name for bit, name in _THROTTLE_BITS if val & bit]
+    if bits:
+        return "ACTIVE:" + "+".join(bits)
+    return "—"
+
+
+def _dash_um():
+    """(gpuGB, cpuGB, oomRisk) from the local sparkDash API, None when down.
+
+    One short curl per frame (~3KB JSON) — acceptable; NOT the full API.
+    """
+    try:
+        r = subprocess.run(
+            ["curl", "-sf", "-m", "2",
+             "http://127.0.0.1:5555/api/sparks/spark-001/metrics"],
+            capture_output=True, text=True, timeout=4)
+        if r.returncode != 0 or not r.stdout.strip():
+            return None, None, None
+        um = (json.loads(r.stdout).get("metrics") or {}).get(
+            "unifiedMemory") or {}
+        gpu = um.get("gpuUsed")
+        cpu = um.get("cpuUsed")
+        return (float(gpu) if gpu is not None else None,
+                float(cpu) if cpu is not None else None,
+                um.get("oomRisk"))
+    except (OSError, subprocess.SubprocessError, ValueError, AttributeError,
+            TypeError):
+        return None, None, None
+
+
 def read_host_uptime():
     try:
         with open("/proc/uptime", "r") as fh:
@@ -171,6 +285,51 @@ def fetch_any(url, timeout=2.0):
 
 
 _METRIC_RE = re.compile(r"^(vllm:[a-zA-Z0-9_:]+)(\{[^}]*\})?\s+([-+eE0-9.]+)\s*$")
+
+# Prometheus histogram families sparkmon derives P95 quantiles from
+# (matches sparkDash ttftP95/e2eP95/itlP95 semantics; vLLM /metrics):
+_BUCKET_FAMS = {
+    "time_to_first_token_seconds": "ttft",
+    "e2e_request_latency_seconds": "e2e",
+    "inter_token_latency_seconds": "itl",
+    # deprecated alias family: fallback only — merging its rows into the
+    # same list would rewind the quantile walk (kept under a separate key)
+    "request_time_per_output_token_seconds": "itl_f",
+}
+
+
+def _hist_p95(rows):
+    """P95 quantile from Prometheus _bucket rows [(cum, le)], as sparkDash
+    computes it: histogram_quantile(0.95) — le edge where cumulative count
+    reaches 0.95·N, linearly interpolated inside the bucket (le itself, not
+    a midpoint, is the bucket's implicit upper bound). None when empty."""
+    if not rows:
+        return None
+    pairs, n = [], 0.0
+    for c, le in rows:
+        try:
+            c = float(c)
+        except (TypeError, ValueError):
+            return None
+        n = max(n, c)
+        try:
+            le_f = float(le)
+        except (TypeError, ValueError):
+            continue                       # "+Inf": total-N row only
+        if 0.0 <= le_f < float("inf"):
+            pairs.append((le_f, c))        # sort by bucket edge, not count
+    if n <= 0 or not pairs:
+        return None
+    pairs.sort()
+    thr = 0.95 * n
+    prev_le, prev_c = 0.0, 0.0
+    for le_f, c in pairs:
+        if c >= thr:
+            span = c - prev_c
+            return le_f if span <= 0 else \
+                prev_le + (le_f - prev_le) * (thr - prev_c) / span
+        prev_le, prev_c = le_f, c
+    return None
 
 
 def parse_vllm_metrics(text):
@@ -223,12 +382,21 @@ def parse_vllm_metrics(text):
                 h["requests_completed_total"] += val
             if val > 0 and reason in ("abort", "error"):
                 h["requests_failed_total"] += val
+        elif name == "num_preemptions_total":
+            h["preemptions_total"] = h.get("preemptions_total", 0.0) + val
         elif name == "kv_cache_usage_perc":
             h["kv_cache_usage"] = val
         elif name == "prefix_cache_queries_total":
             h["prefix_queries"] = val
         elif name == "prefix_cache_hits_total":
             h["prefix_hits"] = val
+        elif name.endswith("_bucket"):
+            stem = name[:-len("_bucket")]
+            key = _BUCKET_FAMS.get(stem)
+            if key and val >= 0.0:
+                le = labels.get("le")
+                if le is not None:
+                    h.setdefault(key, []).append((val, le))
         elif name == "cache_config_info":
             try:
                 if int(float(labels.get("kv_cache_size_tokens", "0"))):
@@ -265,6 +433,12 @@ def parse_vllm_metrics(text):
         if h.get(f"_{key}_count"):
             h[f"{key}_seconds_count"] = h[f"_{key}_count"]
             h[f"{key}_seconds_sum"] = h[f"_{key}_sum"]
+        rows = h.get(key) or []
+        if not rows and key == "itl":     # legacy engines: deprecated alias
+            rows = h.get("itl_f") or []
+        p95 = _hist_p95(rows)
+        if p95 is not None:
+            h[f"{key}_p95_seconds"] = p95
     return h
 
 
@@ -279,12 +453,20 @@ COUNTERS = (
     "ttft_seconds_sum", "ttft_seconds_count",
     "itl_seconds_sum", "itl_seconds_count",
     "e2e_seconds_sum", "e2e_seconds_count",
+    "preemptions_total",
 )
 
 # histogram sum/count keys -> (label, fmt) for the right column
 _HIST_KEYS = (
     ("ttft", "TTFT", "s"), ("itl", "ITL", "ms"), ("e2e", "e2e", "s"),
 )
+
+
+def _fmt_lat(v, unit):
+    """Latency value for the right column: ms for itl, s for ttft/e2e."""
+    if v is None:
+        return "—"
+    return f"{v * 1000:.1f}ms" if unit == "ms" else f"{v:.2f}s"
 
 
 def compute_window_avgs(cur, prev, prev_t, now):
@@ -433,6 +615,89 @@ def _docker_serving_image():
     return val
 
 
+def _docker_launch_args(container):
+    """Parsed vLLM launch args from docker inspect — the authoritative
+    provenance (ADR-0004). One call at startup/lanes-refresh; never per-frame."""
+    try:
+        out = subprocess.run(
+            ["docker", "inspect", container, "--format", "{{json .Args}}"],
+            capture_output=True, text=True, timeout=5).stdout
+        argv = json.loads(out)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return {}
+    flags, cfg2 = {}, {}
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if not a.startswith("--") or "=" in a:
+            i += 1
+            continue
+        nxt = argv[i + 1] if i + 1 < len(argv) else None
+        if nxt is not None and not nxt.startswith("--"):
+            flags[a[2:]] = nxt
+            i += 2
+        else:                      # boolean flag (e.g. --enable-chunked-prefill)
+            flags[a[2:]] = True
+            i += 1
+    if "max-model-len" in flags:
+        try:
+            cfg2["max_model_len"] = int(flags["max-model-len"])
+        except ValueError:
+            pass
+    if "max-num-seqs" in flags:
+        try:
+            cfg2["max_num_seqs"] = int(flags["max-num-seqs"])
+        except ValueError:
+            pass
+    if "max-num-batched-tokens" in flags:
+        try:
+            cfg2["max_num_batched_tokens"] = int(
+                flags["max-num-batched-tokens"])
+        except ValueError:
+            pass
+    if "gpu-memory-utilization" in flags:
+        try:
+            cfg2["gpu_memory_utilization"] = float(
+                flags["gpu-memory-utilization"])
+        except ValueError:
+            pass
+    if "kv-cache-dtype" in flags:
+        cfg2["kv_cache_dtype"] = flags["kv-cache-dtype"]
+    if "tensor-parallel-size" in flags:      # sparkDash recipeInfo.maxLanes
+        try:
+            cfg2["max_lanes"] = int(flags["tensor-parallel-size"])
+        except ValueError:
+            pass
+    if "reasoning-parser" in flags:
+        cfg2["reasoning_parser"] = flags["reasoning-parser"]
+    if "tool-call-parser" in flags:
+        cfg2["tool_call_parser"] = flags["tool-call-parser"]
+    sc = flags.get("speculative-config")
+    if isinstance(sc, str) and sc.startswith("{"):
+        try:
+            scj = json.loads(sc)
+            st = scj.get("num_speculative_tokens")
+            if st is not None:
+                cfg2["spec_tokens"] = int(st)
+            m = scj.get("method")
+            if m:
+                cfg2["spec_method"] = str(m).upper()
+        except ValueError:
+            pass
+    return cfg2
+
+
+def _posture_open():
+    """sparkDash posture parity (posture.auth/scope/label): 'Open · Local'
+    when the sparkDash probe is unauthenticated (authMode required-missing);
+    sparkmon probes the loopback target, matching dash scope=local. None
+    when dash is unreachable or auth is enforced — badge omitted, not faked."""
+    h = _http_json("http://127.0.0.1:5555/api/health", t=1.0)
+    if isinstance(h, dict) and h.get("authMode") == "required-missing":
+        return {"auth": "open", "scope": "local", "label": "Open · Local"}
+    return None
+
+
 def probe_lanes(cfg):
     """Lanes panel data: liveness for all, rich health where cheap."""
     lanes = {}
@@ -445,8 +710,38 @@ def probe_lanes(cfg):
     docker = _docker_serving_image() if llm_up else None
     if docker:
         lanes["llm"]["image"] = f"{docker['container']} \u00b7 {docker['image']}"
+        if not cfg["vllm"].get("captured"):        # capture once at startup
+            cap = _docker_launch_args(docker["container"])
+            if cap:
+                merged = dict(cfg["vllm"])         # keep defaults/quantization
+                merged.update(cap)
+                merged["captured"] = True
+                # precedence: env SPARKMON_MAX_SEQS/SPARKMON_CTX WIN over
+                # docker-inspect captured values (docstring + ADR-0004)
+                cfg["vllm_src"] = {}
+                for k2, env_var in (("max_num_seqs", "SPARKMON_MAX_SEQS"),
+                                    ("max_model_len", "SPARKMON_CTX")):
+                    if env_var in os.environ:
+                        merged.pop(k2, None)       # keep env/default value
+                        cfg["vllm_src"][k2] = "env"
+                    elif merged.get(k2) is not None:
+                        cfg["vllm_src"][k2] = "docker"
+                for k2 in ("max_num_batched_tokens", "kv_cache_dtype",
+                           "gpu_memory_utilization", "spec_tokens",
+                           "reasoning_parser", "tool_call_parser",
+                           "max_lanes"):
+                    if merged.get(k2) is not None:
+                        cfg["vllm_src"][k2] = "docker"
+                cfg["vllm"] = merged
+                if "NVFP4" in (lanes["llm"].get("model") or "").upper():
+                    cfg["quantization"] = "NVFP4"
     elif llm_up and cfg.get("remote"):
         lanes["llm"]["image"] = "docker n/a (remote probe)"
+    # sparkDash posture: auth/scope parity (posture.* fields). Label string
+    # when unauthenticated; None when dash down or auth enforced (no fake).
+    po = _posture_open()
+    if po:
+        lanes["llm"]["posture"] = po["label"]
     gate = _http_json(cfg["gate_url"] + "/health")
     lanes["gate"] = {
         "up": gate is not None or _tcp_up(8710), "port": 8710,
@@ -507,8 +802,9 @@ def _rcol_row(label, value, style="plain"):
     return [seg(f"  {label:<10}"), seg(value, style)]
 
 
-def build_llm_right_col(st, h):
+def build_llm_right_col(st, h, cfg=None):
     """Right column rows: label left, value right, btop-style. '—' = missing."""
+    cfg = cfg if cfg is not None else st.get("cfg") or {}
     w_avgs = st.get("win_avgs") or {}
     rows = []
 
@@ -523,16 +819,28 @@ def build_llm_right_col(st, h):
         return None, "avg"
 
     # ttft/itl/e2e (window avg when deltas exist, else lifetime 'avg'),
-    # kind tag inline — one row per metric
+    # kind tag inline, + P95 (sparkDash ttftP95/e2eP95/itlP95 parity —
+    # histogram_quantile(0.95) over the vLLM _bucket lines) — one row each
     for key, label, unit in _HIST_KEYS:
         v, kind = lat_avg(key)
         if v is None:
             rows.append(_rcol_row(label, "—", "dim"))
             continue
-        val = f"{v * 1000:.1f}ms" if unit == "ms" else f"{v:.2f}s"
-        row = _rcol_row(label, val, "plain")
+        row = _rcol_row(label, _fmt_lat(v, unit), "plain")
         row.append(seg(f"  ({kind})", "dim"))
+        p95 = h.get(f"{key}_p95_seconds")
+        if p95 is not None:
+            row.append(seg(f"  p95 {_fmt_lat(p95, unit)}", "accent"))
         rows.append(row)
+
+    # preemptions: engine lifetime (vLLM num_preemptions_total — sparkDash
+    # preemptionsTotal parity). Dim 0; warn when the engine ever preempted.
+    pre = h.get("preemptions_total")
+    rows.append(_rcol_row(
+        "preempt",
+        f"{pre:.0f}" if pre is not None else "—",
+        "good" if pre == 0 else ("plain" if pre is None else "warn")))
+    rows[-1].append(seg("   engine lifetime", "dim"))
 
     # requests: live + lifetime on one row
     rows.append(_rcol_row(
@@ -543,17 +851,28 @@ def build_llm_right_col(st, h):
         f"   {fmt_num(h.get('requests_completed_total'))} done / "
         f"{fmt_num(h.get('requests_failed_total'))} fail", "dim"))
 
-    # sequences: running / max-num-seqs (config constant)
+    # sequences: running / max-num-seqs (docker inspect > env > default)
     run = h.get("requests_running") or 0
+    seqs_src = cfg.get("vllm_src", {}).get("max_num_seqs", "default")
     rows.append(_rcol_row(
-        "seqs", f"{run:.0f}/{MAX_SEQS}", "plain"))
-    rows[-1].append(seg("   --max-num-seqs (launch cfg)", "dim"))
+        "seqs", f"{run:.0f}/{cfg.get('vllm', {}).get('max_num_seqs') or DEFAULT_SEQS}",
+        "plain"))
+    rows[-1].append(seg(f"   --max-num-seqs ({seqs_src})", "dim"))
 
     # context window: total available (+ KV-token view lives on kv row)
-    cl = h.get("context_length") or DEFAULT_CTX
+    ctx_src = cfg.get("vllm_src", {}).get("max_model_len", "default")
+    cl = cfg.get("vllm", {}).get("max_model_len") or \
+        h.get("context_length") or DEFAULT_CTX
     rows.append(_rcol_row(
         "ctx win", f"{cl / 1000:.1f}K tok", "plain"))
-    rows[-1].append(seg("   max-model-len (launch cfg)", "dim"))
+    rows[-1].append(seg(f"   max-model-len ({ctx_src})", "dim"))
+
+    # batched tokens: surface the launch arg when docker inspect captured it
+    mbt = cfg.get("vllm", {}).get("max_num_batched_tokens")
+    if mbt and cfg.get("vllm_src", {}).get("max_num_batched_tokens") == "docker":
+        rows.append(_rcol_row(
+            "batched", f"{fmt_num(mbt)} tok", "plain"))
+        rows[-1].append(seg("   --max-num-batched-tokens (docker)", "dim"))
 
     # engine lifetime token totals on one row (session tots live on the left)
     rows.append(_rcol_row(
@@ -589,11 +908,34 @@ def build_llm_right_col(st, h):
             "MTP", f"{fmt_num(acc)} acc / {fmt_num(drf)} draft", "plain"))
     else:
         rows.append(_rcol_row("MTP", "—", "dim"))
+
+    # recipe row (sparkDash recipeInfo parity): parsers + spec decode +
+    # launch-cfg quantization + maxLanes. All from the docker-inspect
+    # capture (authoritative) — em-dashes when not captured.
+    vc = cfg.get("vllm") or {}
+    rp = vc.get("reasoning_parser")
+    tp = vc.get("tool_call_parser")
+    sk = vc.get("spec_tokens")
+    parts = []
+    if rp:
+        parts.append(f"rs {rp}")
+    if tp:
+        parts.append(f"tc {tp}")
+    parts.append(f"spec {vc.get('spec_method') or 'MTP'}"
+                 f"{(' k=' + str(sk)) if sk else ''}")
+    if cfg.get("quantization"):
+        parts.append(cfg["quantization"])
+    ml = vc.get("max_lanes")
+    if ml:
+        parts.append(f"lanes {ml}")
+    rows.append(_rcol_row("recipe", " · ".join(parts) or "—", "plain"))
+    rows[-1].append(seg("   launch args (docker inspect)", "dim"))
     return rows
 
 
-def build_lines(st, width):
+def build_lines(st, width, cfg=None):
     """v2 frame: header, LLM lane box, LANES box, memory box, footer."""
+    cfg = cfg if cfg is not None else st.get("cfg") or {}
     L = []
     h = st.get("health") or {}
     off = st.get("offline", False)
@@ -601,10 +943,19 @@ def build_lines(st, width):
     now = st.get("now")
     r = st.get("rates") or {}
     tstr = now.strftime("%H:%M:%S") if now else "--:--:--"
+    vllm_cfg = cfg.get("vllm") or {}
+    spec_k = vllm_cfg.get("spec_tokens") or 3
 
     # ---- header line
     model = h.get("model_name") or h.get("engine", "?")
     eng = h.get("engine", "?")
+    # quantization: docker args don't carry a --quantization flag on this
+    # recipe — derive from the served model id (Qwen3.8-Flash-Next-NVFP4),
+    # which sparkDash recipeInfo also reports as NVFP4
+    quant = cfg.get("quantization")
+    if quant is None and model and "NVFP4" in model.upper():
+        quant = "NVFP4"
+        cfg["quantization"] = "NVFP4"
     if off:
         L.append([seg("  \u25cf OFFLINE", "bad" if not ascii_mode else "plain"),
                   seg(f"  (last ok {st.get('last_ok_age')}s ago)"
@@ -622,6 +973,7 @@ def build_lines(st, width):
         L.append([seg("  \u25cf ONLINE", "good" if not ascii_mode else "plain"),
                   seg("  "), seg(f"{model}", "accent"),
                   seg(f" ({eng})", "dim"),
+                  seg(f" [{quant}]" if quant else "", "badge" if quant else "dim"),
                   seg("  "), seg(badge, bstyle),
                   seg(f"   {tstr}", "dim")])
 
@@ -664,14 +1016,15 @@ def build_lines(st, width):
             cells.append(f"p{p} {fmt_pct(v)}"
                          f" {bar_solid(v, width=6, ascii_mode=ascii_mode)}")
         lane.append([seg("  MTP pos  "), seg("  ".join(cells), "plain"),
-                  seg(f"   ({len(pp)} positions, k=3)", "dim")])
+                  seg(f"   ({len(pp)} positions, k={spec_k})", "dim")])
     else:
         pos_h = h.get("mtp_accept_by_position") or []
         if pos_h:
             cells = [f"p{p.get('position')} {fmt_num(p.get('tested'))} tok"
                      for p in pos_h[:6]]
             lane.append([seg("  MTP pos  "), seg("  ".join(cells), "dim"),
-                         seg("  (lifetime — window warming up)", "dim")])
+                         seg(f"  (lifetime, k={spec_k} — window warming up)",
+                             "dim")])
 
     kv = h.get("kv_cache_usage")
     kvc = h.get("kv_capacity_tok")
@@ -695,7 +1048,7 @@ def build_lines(st, width):
     # Wide terminal: right column hugs the box's right edge (btop-style).
     # Narrow terminal (<100 cols): fixed offset at col 62, drop rows that
     # would overflow.
-    rrows = build_llm_right_col(st, h) if h else []
+    rrows = build_llm_right_col(st, h, cfg) if h else []
     if width >= 100:
         rcol_w = max(len("".join(t for t, _ in rr)) for rr in rrows) if rrows else 0
         rcol_x = max(66, width - 2 - rcol_w)   # 2 = right border + margin
@@ -735,15 +1088,27 @@ def build_lines(st, width):
             row.append(seg(f"   [{ln['image']}]", "dim"))
         if ln.get("detail") and up:
             row.append(seg(f"   {ln['detail']}", "dim"))
+        if key == "llm" and ln.get("posture") and up:
+            row.append(seg(f"   [{ln['posture']}]", "accent"))
         L.append(row)
+    # provenance footnote (sparkDash recipeInfo parity, ADR-0004): author +
+    # engine + quantization for the recipe actually serving, once per frame
+    author = cfg.get("recipe_author")
+    if author:
+        prov = (f"        recipe: {cfg.get('recipe_model') or model} "
+                f"· author {author} · engine {eng}"
+                + (f" · quant {quant}" if quant else ""))
+        L.append([seg(prov, "dim")])
     if h.get("busy") and h.get("requests_waiting") is not None:
         L.append([seg(f"        LLM queue: running "
                       f"{'yes' if h.get('busy') else 'no'}"
                       f", waiting {h.get('requests_waiting', 0):.0f}", "dim")])
     L.append(box_bottom(width, ascii_mode))
 
-    # ---- memory box
-    L.append(box_top("Memory (GB10 unified)", width, ascii_mode))
+    # ---- hardware box (btop language; GPU rows from local nvidia-smi —
+    # full detail lives in btop pane 0 / sparkDash). Honest UMA note kept.
+    L.append(box_top("HARDWARE", width, ascii_mode))
+    hw = st.get("hw") or {}
     total, avail = st.get("mem_total"), st.get("mem_avail")
     if total and avail:
         used = total - avail
@@ -763,8 +1128,81 @@ def build_lines(st, width):
                   seg(bar_solid(gmu, width=24, ascii_mode=ascii_mode), style),
                   seg(f" {gmu * 100:.1f}%", "plain"),
                   seg("   gpu_memory_utilization (engine view)", "dim")])
+
+    def _dash(v, s):
+        return f"{v}{s}" if v is not None else "—"
+
+    def _power_txt():
+        p, lim = hw.get("power_w"), hw.get("power_limit_w")
+        if p is None and lim is None:
+            return "—"
+        return f"{p or 0:g}W / {lim:g}W" if lim is not None else f"{p:g}W"
+
+    def _barfrac(part, whole):
+        """Fraction for the VRAM bar: NVML/limit, else NVML/UMA total."""
+        if part is None or not whole:
+            return None
+        return part / whole
+
+    vram = hw.get("vram_used_mib")
+    limit = hw.get("power_limit_w")
+    uma_total_gib = (total / 1024.0) if total else None
+    vram_frac = _barfrac(vram, uma_total_gib)
+    gpu_row = [
+        seg("  gpu       "),
+        seg(_dash(hw.get("temp_c"), "C"), "plain"),
+        seg(f"  {_power_txt()}", "plain"),
+        seg(f"  SM {_dash(hw.get('sm_mhz'), 'MHz')}", "dim"),
+    ]
+    if hw.get("util_pct") is not None:
+        gpu_row.append(seg(f"  util {hw['util_pct']:.0f}%", "accent"))
+    if hw.get("sm_mhz") is not None and hw.get("sm_max_mhz"):
+        gpu_row.append(seg(f" ({hw['sm_mhz'] / hw['sm_max_mhz'] * 100:.0f}%)",
+                           "dim"))
+    gpu_row.append(seg(f"  thr {_thr_text(hw.get('throttle'))}", "dim"))
+    L.append(gpu_row)
+    if vram is not None:
+        style = (None if vram_frac is None
+                 else "good" if vram_frac < 0.7
+                 else "warn" if vram_frac < 0.9 else "bad")
+        src = "procs sum (NVML [N/A])" if hw.get("vram_from") == "procs" \
+            else "NVML used / UMA total"
+        L.append([seg("  vram      "),
+                  seg(bar_solid(vram_frac, width=24, ascii_mode=ascii_mode)
+                      if vram_frac is not None
+                      else "[" + " " * BAR_WIDTH + "]", style),
+                  seg(f" {fmt_gib(vram * 1024)}", "plain"),
+                  seg(f"   {src}", "dim")])
+    else:
+        L.append([seg("  vram      —", "dim")])
+    up = sorted((p for p in hw.get("vram_procs", []) if p.get("mib")),
+                key=lambda p: -p["mib"])[:3]
+    if up:
+        cells = " · ".join(f"{p['pid']} {fmt_gib(p['mib'] * 1024)}"
+                           for p in up)
+        L.append([seg("  vram procs "),
+                  seg(cells, "dim")])
+    gpuu = st.get("um_gpu")
+    if gpuu is not None and total:
+        cf = gpuu / (total / 1024.0)            # sparkDash unifiedMemory = MiB
+        style = "good" if cf < 0.7 else ("warn" if cf < 0.9 else "bad")
+        L.append([seg("  uma gpu   "),
+                  seg(bar_solid(cf, width=24, ascii_mode=ascii_mode), style),
+                  seg(f" {fmt_gib(gpuu * 1024)}", "plain"),
+                  seg(f"   unified split (cpu "
+                      f"{fmt_gib((st.get('um_cpu') or 0) * 1024)})"
+                      "  sparkDash view", "dim")])
+    else:
+        L.append([seg("  uma gpu   —", "dim")])
+    orisk = st.get("um_oom")
+    if orisk:
+        L.append([seg(f"  oomRisk {orisk}", "bad" if orisk == "high" else "warn")])
+    thr = hw.get("throttle")
+    if _thr_text(thr).startswith("ACTIVE:"):
+        L.append([seg(f"  throttle: {_thr_text(thr)[7:]}", "bad")])
     L.append([seg("  note: system row = /proc/meminfo available (honest on"
-                  " coherent UMA); NVML 'used' reports reservation.", "dim")])
+                  " coherent UMA); NVML 'used' reports reservation."
+                  "  full detail: btop / sparkDash", "dim")])
     L.append(box_bottom(width, ascii_mode))
 
     # ---- footer
@@ -799,17 +1237,20 @@ def run_once(args, cfg):
         "decode_tps": None, "prefill_tps": None, "prefill_src": None}
     w_avgs = compute_window_avgs(health, prev, prev_t, now) if health else {}
     total, avail = read_meminfo()
+    gpuu, cpuu, oom = _dash_um()
     st = {"health": health, "rates": rates, "offline": health is None,
           "last_ok_age": None, "errors": 0, "interval": args.interval,
           "now": datetime.now(), "ascii": args.ascii,
-          "mem_total": total, "mem_avail": avail,
-          "host_uptime": read_host_uptime(), "once": True,
+          "mem_total": total, "mem_avail": avail, "hw": read_hardware(),
+          "um_gpu": gpuu, "um_cpu": cpuu, "um_oom": oom,
+          "host_uptime": read_host_uptime(),
+          "once": True,
           "hist": {"decode": deque(maxlen=HIST_N),
                    "prefill": deque(maxlen=HIST_N)},
           "avg": {"decode": None, "dec_tot": None, "pre_tot": None},
           "win_avgs": w_avgs,
           "mtp_win": {}, "lanes": probe_lanes(cfg) if cfg["lanes"] else {}}
-    lines = build_lines(st, 110)
+    lines = build_lines(st, 110, cfg)
     print("\n".join("".join(t for t, _ in line).rstrip() for line in lines))
 
 
@@ -817,8 +1258,23 @@ def run_once(args, cfg):
 
 
 def make_cfg(args):
+    # launch-arg defaults; env SPARKMON_* (read in the constants region)
+    # already carries the user override — seed it into cfg so the render
+    # fallback (env > docker > default) holds even with --no-lanes
     return {"lanes": not args.no_lanes, "gate_url": DEFAULT_GATE,
-            "deci_url": DEFAULT_DECI, "llm_model": None, "remote": args.remote}
+            "deci_url": DEFAULT_DECI, "llm_model": None, "remote": args.remote,
+            # sparkDash recipeInfo parity (v2.2): filled here, refined by the
+            # docker-inspect capture in probe_lanes once lanes probe runs.
+            "recipe_model": "Mia-AiLab/Qwen3.8-Flash-Next-NVFP4",
+            "recipe_author": "styles01",
+            "quantization": "NVFP4",
+            "vllm": {"max_num_seqs": DEFAULT_SEQS,
+                     "max_model_len": DEFAULT_CTX},
+            # source tags: env SPARKMON_* always beats docker-inspect capture
+            "vllm_src": {"max_num_seqs": "env" if "SPARKMON_MAX_SEQS"
+                         in os.environ else "default",
+                         "max_model_len": "env" if "SPARKMON_CTX"
+                         in os.environ else "default"}}
 
 
 class Avg:
@@ -876,6 +1332,7 @@ def _poll_once(args, cfg, state):
     total, avail = read_meminfo()
     if not state.get("host_uptime"):
         state["host_uptime"] = read_host_uptime()
+    gpuu, cpuu, oom = _dash_um()
     avg = state["avg"]
     avg_d = {"decode": avg.decode, "dec_tot": avg.dec_tot, "pre_tot": avg.pre_tot}
     return {"health": health, "rates": rates, "offline": health is None,
@@ -883,10 +1340,12 @@ def _poll_once(args, cfg, state):
             if state.get("last_ok") else None,
             "errors": state["errors"], "interval": args.interval,
             "now": datetime.now(), "ascii": state["ascii"],
-            "mem_total": total, "mem_avail": avail,
+            "mem_total": total, "mem_avail": avail, "hw": read_hardware(),
+            "um_gpu": gpuu, "um_cpu": cpuu, "um_oom": oom,
             "host_uptime": state.get("host_uptime"),
             "hist": state["hist"], "avg": avg_d, "win_avgs": w_avgs,
-            "mtp_win": mtp_win, "lanes": state["lanes"] or {}}
+            "mtp_win": mtp_win, "lanes": state["lanes"] or {},
+            "cfg": cfg}
 
 
 def _tui_loop(stdscr, args, cfg):
@@ -926,7 +1385,7 @@ def _draw(stdscr, st):
     maxy, maxx = stdscr.getmaxyx()
     st["compact"] = maxy < 26
     width = max(40, maxx - 1)
-    lines = build_lines(st, width)
+    lines = build_lines(st, width, st.get("cfg"))
     styles = {
         "title": curses.A_BOLD | curses.color_pair(5),
         "dim": curses.A_DIM,
