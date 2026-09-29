@@ -1433,6 +1433,30 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
 
 
 
+
+def _fmt_t(t):
+    return f"{t:g}°C " if t is not None else "—  "
+
+
+def _fmt_p(p):
+    return f"{p:g}W  " if p is not None else "—  "
+
+
+def _gpu_zone_bar(v, soft, hot, width=8, ascii_mode=False):
+    """Zone-coloured bracket bar: green below soft, yellow to hot, red
+    above hot. v can be absolute temp (with soft/hot thresholds) or a
+    frac (soft/hot as fractions)."""
+    br = "]" if not ascii_mode else "]"
+    if v is None:
+        return "[" + " " * (width - 1) + br
+    frac = max(0.0, min(1.0, v / 100.0)) if v > 1.5 and soft > 1.5 else \
+        max(0.0, min(1.0, float(v)))
+    if soft > 1.5:
+        soft, hot = soft / 100.0, hot / 100.0
+    n = int(round(frac * width))
+    return "[" + "█" * n + " " * (width - n) + br
+
+
 def _our_band(st, cfg, width, ascii_mode):
     """'Our' band on the SAME two-box grid as MEMORY∥PROCESSES: left box
     x0..113, gap 114-115, right box x116..239. LLM LANE fills the left
@@ -1489,19 +1513,24 @@ def _our_band(st, cfg, width, ascii_mode):
         det = ln.get("detail") if up else None
         right_stack.append((row, det, badge if key == "llm" else ""))
     hw = st.get("hw") or {}
-    dash_t = _dash(hw.get("temp_c"), "C")
-    power = (f"{hw.get('power_w'):g}W" if hw.get("power_w") is not None
-             else "—")
-    gpu_cell = [seg("  GPU  "), seg(dash_t, _temp_style(hw.get("temp_c"))),
-                seg(" · ", "dim"),
-                seg(power, "plain"),
-                seg(" · util ", "dim"),
-                seg(f"{(hw.get('util_pct') or 0):.0f}%",
-                    "accent" if (hw.get("util_pct") or 0) > 5 else "dim")]
+    gpu_cell = [seg("  GPU  ", "dim")]
+    t_c = hw.get("temp_c")
+    p_w = hw.get("power_w")
+    util = (hw.get("util_pct") or 0) / 100.0
+    t_st = _temp_style(t_c)
+    p_st = "warn" if (p_w or 0) > 180 else "good"
+    u_st = "accent" if util > 0.05 else "dim"
+    gpu_cell += [seg(" temp "), seg(_fmt_t(t_c), t_st),
+                 seg(_gpu_zone_bar(t_c, 80, 90, 8), t_st),
+                 seg("  pwr "), seg(_fmt_p(p_w), p_st),
+                 seg(_gpu_zone_bar((p_w or 0) / 240.0, 0.75, 0.92, 8), p_st),
+                 seg("  util "), seg(f"{util * 100:.0f}%", u_st),
+                 seg(_gpu_zone_bar(util, 0.05, 0.9, 8), u_st)]
     thr = _thr_text(hw.get("throttle"))
     if thr != "—":
-        gpu_cell.append(seg(f" · thr {thr}",
-                            "bad" if "ACTIVE" in thr else "dim"))
+        gpu_cell.append(seg(" · thr ", "dim"),
+                        )
+        gpu_cell.append(seg(thr, "bad" if "ACTIVE" in thr else "dim"))
     right_stack.append((gpu_cell, None, ""))
     n_right = 1 + len(right_stack)
 
