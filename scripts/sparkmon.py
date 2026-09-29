@@ -1122,9 +1122,11 @@ def _llm_left_rows(st, h, bar_w, ascii_mode):
         tail = (f"k={spec_k} (lifetime)" if bar_w < 14
                 else f"k={spec_k} (lifetime \u2014 window warming up)")
         style = "dim"
-    rows.append([seg(f"{'mtp pos' if bar_w >= 14 else 'mpos':<9} "),
-                 seg(" ".join(cells) if cells else "\u2014", style),
-                 seg("   " + tail, "dim")])
+    pos_row = [seg(f"{'mtp pos' if bar_w >= 14 else 'mpos':<9} "),
+               seg(" ".join(cells) if cells else "\u2014 no by-position data",
+                   style),
+               seg("   " + tail, "dim")]
+    rows.append(pos_row)
     return rows
 
 
@@ -1190,18 +1192,22 @@ def _llm_right_rows(st, h, cfg):
 
 
 def _merge_columns(rows_per_col, gutters, width):
-    """Zip 3 columns of rows into rows with fixed gutters. Gutter x for a
-    column = max(spec_x, content width so far + 2): content never collides;
-    panels stay 3-col while content is short and degrade gracefully
-    (tail-shed, provenance first — never the label/value head) when cells
-    run long (P3-1)."""
+    """Zip columns of rows into one band.
+
+    Columns 0..n-2 sit LEFT-ANCHORED at their gutter x; the FINAL column
+    is RIGHT-ANCHORED — its label block ends 2 cols inside the right
+    border. Every row reads as bars | values | right rail: no long dead
+    tail after the last column, no mid-row gaps that read as breakage.
+    Content longer than its span sheds dim tails (values never)."""
     out = []
     single = any(g is None for g in gutters)
     if single:
         flat = [r for gi, col in enumerate(rows_per_col)
-                if gutters[gi] is not None for r in col]
-        return [list(r) for r in flat]
+                if gutters is not None for r in col]
+        return [list(r) for r in flat if isinstance(r, list)]
     nrows = max((len(c) for c in rows_per_col), default=0)
+    xs = list(gutters)
+    last_ci = len(rows_per_col) - 1
 
     def _shed(cell, span):
         c = [t for t in cell
@@ -1210,26 +1216,28 @@ def _merge_columns(rows_per_col, gutters, width):
             c.pop()
         return c
 
-    # columns anchor AT their spec gutters (never drift); content longer
-    # than its span sheds dim tails (provenance/rightmost first), losing
-    # decoration before data (P3-1). Left column span includes its extra
-    # room so bars stay intact at every width.
-    xs = list(gutters)
     for i in range(nrows):
         row, x = [], 0
         for ci, col in enumerate(rows_per_col):
             cell = col[i] if i < len(col) else []
-            nxt = xs[ci + 1] if ci + 1 < len(xs) else width - 4
-            ccell = _shed(cell, nxt - x - (0 if ci + 1 < len(xs) else 0))
-            if ci + 1 < len(xs):
-                while ccell and x + sum(len(t) for t, _ in ccell) > nxt:
-                    ccell.pop()
-            text = _row_text(ccell)
-            row += ccell
-            x += len(text)
-            if ci + 1 < len(xs) and x < xs[ci + 1]:
-                row.append(seg(" " * (xs[ci + 1] - x)))
-                x = xs[ci + 1]
+            if ci < last_ci:
+                nxt = xs[ci + 1]
+                ccell = _shed(cell, nxt - xs[ci] - 2)
+                text = _row_text(ccell)
+                row += ccell
+                x += len(text)
+                if x < xs[ci + 1]:
+                    row.append(seg(" " * (xs[ci + 1] - x)))
+                    x = xs[ci + 1]
+            else:
+                span = (width - 3) - xs[ci]
+                ccell = _shed(cell, span)
+                text = _row_text(ccell)
+                lead = max(0, span - len(text))
+                if lead:
+                    row.append(seg(" " * lead))
+                row += ccell
+                x += lead + len(text)
         out.append(row)
     return out
 
@@ -1480,6 +1488,17 @@ def build_lines(st, width, cfg=None):
         [[seg("  (vLLM telemetry offline)", "dim")]]
     mid_rows = _llm_mid_rows(st, h) if h else [[] for _ in range(0)]
     right_rows = _llm_right_rows(st, h, cfg) if h else []
+    # per-pos row (4th) mid/right content: window note + spec config in
+    # the right rail — removes the dead two columns on that row
+    if h and lane_rows and len(lane_rows) == 4:
+        win = st.get("mtp_win") or {}
+        pp = win.get("per_pos") or {}
+        hot = sum(1 for v in pp.values() if v > 0.5)
+        wn = (f"win {win.get('window_s', '--')}s \u00b7 {hot}/{len(pp)}"
+              f" pos >50%" if pp else "\u2014 window warming")
+        sk = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
+        mid_rows = mid_rows[:3] + [[seg(wn, "dim")]]
+        right_rows = right_rows[:3] + [[seg(f"k={sk}", "dim")]]
     if compact:
         if width >= 116:
             gutters = (2, 44, 74)
