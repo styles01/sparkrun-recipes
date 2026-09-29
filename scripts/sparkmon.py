@@ -944,21 +944,18 @@ def _temp_style(t):
     return "bad" if t >= 90 else ("warn" if t >= 80 else "good")
 
 
-def build_vitals_row(st, width, ascii_mode):
-    """VITALS strip: dec | pre | RAM | CPU | OOM on ONE segmented line.
-
-    Each cell self-coloured by state (James's steer): rate cells green
-    (decode) / cyan (prefill), utilisation cells warn/bad by threshold,
-    OOM badge reverse-red. 10-wide bars wide, 6-wide compact.
-    """
+def build_vitals_rows(st, width, ascii_mode):
+    """VITALS as TWO rows (dec/pre | RAM/CPU/OOM) so it pairs with the
+    THROUGHPUT box (2 sparkline rows) side-by-side — every band is now
+    two columns; heights match, borders share one grid."""
     r = st.get("rates") or {}
     avg = st.get("avg") or {}
     dec, pre = r.get("decode_tps"), r.get("prefill_tps")
     dec_avg, pre_avg = avg.get("decode"), avg.get("prefill")
     compact = width < 200
     bar_w = 6 if compact else 10
-    sep = seg(" \u00b7 ", "dim") if compact else seg("   \u2502   ", "dim")
     insep = " \u2502 " if compact else " \u00b7 "
+    sep = seg(" \u2502 ", "dim")
 
     def _num1(v, nd=1):
         return "--" if v is None else f"{v:,.{nd}f}"
@@ -974,26 +971,31 @@ def build_vitals_row(st, width, ascii_mode):
     if pre_avg is not None:
         c.append(seg(f"{insep}avg {_num1(pre_avg, 0)}", "dim"))
     cells.append(c)
+    row_rate = [seg("  ")] + sum((cc + [sep] for cc in cells[:-1]),
+                                 start=[]) + cells[-1]
+
+    cells2 = []
     total, avail = st.get("mem_total"), st.get("mem_avail")
     if total and avail:
         frac = (total - avail) / total
         stl = _thr_pct_style(frac)
-        cells.append([seg(f"RAM {frac * 100:.0f}%{insep if compact else ' '}"
-                          f"{'' if compact else ''}", stl),
-                      seg(bar_solid(frac, width=bar_w, ascii_mode=ascii_mode), stl)])
+        cells2.append([seg(f"RAM {frac * 100:.0f}%{insep if compact else ' '}", stl),
+                       seg(bar_solid(frac, width=bar_w, ascii_mode=ascii_mode), stl)])
     cpu = st.get("cpu_pct")
     if cpu is not None:
-        stl = _thr_pct_style(cpu / 100.0)
-        cells.append([seg(f"CPU {cpu:.0f}%{insep if compact else ' '}", stl),
-                      seg(bar_solid(cpu / 100.0, width=bar_w,
-                                    ascii_mode=ascii_mode), stl)])
+        stl2 = _thr_pct_style(cpu / 100.0)
+        cells2.append([seg(f"CPU {cpu:.0f}%{insep if compact else ' '}", stl2),
+                       seg(bar_solid(cpu / 100.0, width=bar_w,
+                                     ascii_mode=ascii_mode), stl2)])
     oom = st.get("um_oom")
     if oom:
-        cells.append([seg("OOM ", "dim"), seg(f"[{oom.upper()}]", _oom_style(oom))])
+        cells2.append([seg("OOM ", "dim"),
+                       seg(f"[{oom.upper()}]", _oom_style(oom))])
     else:
-        cells.append([seg("OOM \u2014", "dim")])
-    return [seg("  ")] + sum((c + [sep] for c in cells[:-1]),
-                             start=[]) + cells[-1]
+        cells2.append([seg("OOM \u2014", "dim")])
+    row_res = [seg("  ")] + sum((cc + [sep] for cc in cells2[:-1]),
+                                start=[]) + cells2[-1]
+    return [row_rate, row_res]
 
 
 def build_throughput_rows(st, width, ascii_mode):
@@ -1418,24 +1420,24 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
 
 
 def _our_band(st, cfg, width, ascii_mode):
-    """'Our' band: LLM LANE occupies the LEFT column full-height; LANES
-    then GPU stack in the RIGHT column. Columns: left box interior 116
-    wide = bars+tails (x3..64) | latency (x66..114); counters render as
-    ONE dim full-left-width line (row 7) so nothing sheds. Right stack:
-    title, 5 lanes (detail right-anchored), GPU strip. Band rows align
-    across both columns."""
+    """'Our' band on the SAME two-box grid as MEMORY∥PROCESSES: left box
+    x0..113, gap 114-115, right box x116..239. LLM LANE fills the left
+    box full-height on a 2-column interior (bars+tails | latency);
+    counters render as one dim line under the lanes; right box stacks
+    the 5 LANES rows then a GPU strip row. No dead columns: every row
+    either spans or right-anchors its tail."""
     h = st.get("health") or {}
-    lw = 118
+    lw = 114                       # ┌ 0..┐ 113 — matches _merge_sideboxes
     gap = 2
-    rx = lw + gap                                    # right col at x=120
+    inner_l = max(1, lw - 5)       # content x=3..111 (109)
+    rx = lw + gap                  # right box border x=116
+    inner_r = width - rx - 4       # content x=118..~237
     bar_w = 18
 
     lane_rows = (_llm_left_rows(st, h, bar_w, ascii_mode)
                  if h else [[seg("  (vLLM telemetry offline)", "dim")]])
     mid_rows = _llm_mid_rows(st, h) if h else []
 
-    # counters one-liner (full left width, row 7): reqs/seqs/preempt/eng +
-    # spec k — from _llm_right_rows flattened
     counters = ""
     if h:
         rr = _llm_right_rows(st, h, cfg)
@@ -1446,11 +1448,12 @@ def _our_band(st, cfg, width, ascii_mode):
         hot = sum(1 for v in pp.values() if v > 0.5)
         wn = (f"win {win.get('window_s', '--')}s · {hot}/{len(pp)}"
               f" pos >50%" if pp else "— window warming")
-        mid_rows = (mid_rows + [None, None, None])[:3] + [[seg(wn, "dim")]]
-        counters += f" · spec MTP k={sk}" \
-            if (sk := (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens")
-                or 3) else ""
-    n_left = max(1, len(lane_rows) + 1) + (1 if counters else 0)
+        mid_rows = (list(mid_rows) + [None, None, None])[:3] \
+            + [[seg(wn, "dim")]]
+        sk = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
+        counters += f" · spec MTP k={sk}"
+    # left rows total: title + lanes + counters (+1 spare)
+    n_left = 1 + len(lane_rows) + (1 if counters else 0)
 
     lanes = st.get("lanes") or {}
     posture = (lanes.get("llm") or {}).get("posture")
@@ -1463,30 +1466,30 @@ def _our_band(st, cfg, width, ascii_mode):
         dot, dstyle = (("●", "good") if up else ("○", "bad")) \
             if not ascii_mode else (("*" if up else "x"),
                                     "good" if up else "bad")
-        row = [seg(f"  {label:<6}"), seg(dot, dstyle),
-               seg(f":{ln.get('port', '--')}", "dim"),
+        row = [seg("  "), seg(f"{label:<6}"), seg(dot, dstyle),
+               seg(f" :{ln.get('port', '--')}", "dim"),
                seg(f" {ln.get('model') or '?'}",
                    "plain" if up else "dim")]
         if ln.get("image"):
-            row.append(seg(f" [{ln['image']}]", "dim"))
+            row.append(seg(f"  [{ln['image']}]", "dim"))
         det = ln.get("detail") if up else None
         right_stack.append((row, det, badge if key == "llm" else ""))
     hw = st.get("hw") or {}
-    under = (hw.get("util_pct") or 0) > 5
     dash_t = _dash(hw.get("temp_c"), "C")
     power = (f"{hw.get('power_w'):g}W" if hw.get("power_w") is not None
              else "—")
-    gpu_cell = [seg("GPU", "dim"),
-                seg("  " + dash_t + " · " + power + " · util "
-                    f"{(hw.get('util_pct') or 0):.0f}%",
-                    _temp_style(hw.get("temp_c")))]
+    gpu_cell = [seg("  GPU  "), seg(dash_t, _temp_style(hw.get("temp_c"))),
+                seg(" · ", "dim"),
+                seg(power, "plain"),
+                seg(" · util ", "dim"),
+                seg(f"{(hw.get('util_pct') or 0):.0f}%",
+                    "accent" if (hw.get("util_pct") or 0) > 5 else "dim")]
     thr = _thr_text(hw.get("throttle"))
     if thr != "—":
-        gpu_cell.append(seg(" · thr " + thr,
+        gpu_cell.append(seg(f" · thr {thr}",
                             "bad" if "ACTIVE" in thr else "dim"))
     right_stack.append((gpu_cell, None, ""))
-    n_right = len(right_stack) + 1                   # + title row
-    n_left = max(n_left, 1 + len(right_stack))
+    n_right = 1 + len(right_stack)
 
     def _cl(segs, span):
         cl, used = [], 0
@@ -1501,51 +1504,62 @@ def _our_band(st, cfg, width, ascii_mode):
             cl.append(seg(" " * (span - used)))
         return cl
 
+    def _ra(clamped, span):
+        """right-ALIGN a clamped cell inside span (lead pad)."""
+        txt = _row_text(clamped)
+        lead = max(0, span - len(txt))
+        return [seg(" " * lead)] + clamped
+
     out = []
-    lw_inner = lw - 2
     nrows = max(n_left, n_right)
     for i in range(nrows):
+        vbar = "|" if ascii_mode else "│"
         if i == 0:
-            lcell = [seg("LLM LANE", "title")]
-            rcell = [seg("LANES — what is serving", "title")]
+            lcell = [seg("LLM LANE · " + (h.get("model_name")
+                        or h.get("engine", "")), "title")]
+            rcell = [seg("  "), seg("LANES — what is serving", "title")]
         else:
             li = i - 1
-            # LEFT rows: 1..4 = lane_rows, 5 = counters (one-liner)
+            lcell = []
             if li < len(lane_rows):
                 l1 = lane_rows[li]
                 lm = mid_rows[li] if li < len(mid_rows) else []
                 c1 = _cl([t for t in l1 if isinstance(t, tuple)], 61)
-                c2 = _cl([t for t in lm if isinstance(t, tuple)], 52)
-                lcell = [*c1, seg(" "), *c2]
+                c2 = [t for t in lm if isinstance(t, tuple)]
+                t2 = _row_text(c2)
+                lead2 = max(1, 61 - len(_row_text(c1)))
+                lcell = [*c1, seg(" " * lead2), *c2]
             elif counters and li == len(lane_rows):
-                span = lw_inner - 4
+                span = inner_l - 2
                 if len(counters) > span:
-                    counters = counters[:span].rsplit(" \u00b7 ", 1)[0]
+                    counters = counters[:span].rsplit(" · ", 1)[0]
                 lcell = [seg(counters, "dim")]
-            else:
-                lcell = []
-            # RIGHT rows: lanes then GPU
-            si = i - 1                    # row1 → stack[0] ... row6 → GPU
-            if si < len(right_stack):
-                row, det, bd = right_stack[si]
-                rcell = list(row)
-                span_r = width - rx - 5
-                if det:
-                    pad = span_r - len(_row_text(rcell)) - len(det)
-                    if pad >= 1:
-                        rcell.append(seg(" " * pad, "dim"))
-                    rcell.append(seg(det, "dim"))
-                if bd:
-                    pad2 = span_r - len(_row_text(rcell)) - len(bd)
-                    if pad2 >= 1:
-                        rcell.append(seg(" " * pad2, "dim"))
-                    rcell.append(seg(bd, "rev_acc" if not ascii_mode
-                                     else "plain"))
-            else:
-                rcell = []
-        out.append([seg(" "), seg("│"), seg(" "),
-                    *_cl(lcell, lw_inner), seg("│"), seg(" " * gap),
-                    *_cl(rcell, width - rx - 3), seg("│")])
+            rsi = li - (len(lane_rows) + (1 if counters else 0) - 0) \
+                if li >= len(lane_rows) + (1 if counters else 0) else None
+        # RIGHT: stack index = i-1 (title=0). GPU row = last.
+        si = i - 1
+        rcell = []
+        if i == 0:
+            rcell = [seg("  "), seg("LANES — what is serving", "title")]
+        elif si < len(right_stack):
+            row, det, bd = right_stack[si]
+            rcell = list(row)
+            if det:
+                pad = inner_r - len(_row_text(rcell)) - len(det)
+                if pad >= 1:
+                    rcell.append(seg(" " * pad, "dim"))
+                rcell.append(seg(det, "dim"))
+            if bd:
+                pad2 = inner_r - len(_row_text(rcell)) - len(bd)
+                if pad2 >= 1:
+                    rcell.append(seg(" " * pad2, "dim"))
+                rcell.append(seg(bd, "rev_acc" if not ascii_mode
+                                 else "plain"))
+        # shared row skeleton — fixed border columns
+        out.append([seg(" "), seg(vbar), seg(" "),
+                    *_cl(lcell, inner_l), seg(" "), seg(vbar),
+                    seg(" " * gap), seg(" "), *_cl(rcell, inner_r),
+                    seg(" "), seg(vbar)])
     return out
 
 
@@ -1591,17 +1605,22 @@ def build_lines(st, width, cfg=None):
                   seg("  "), seg(badge, bstyle),
                   seg(f"   {tstr}", "dim")])
 
-    # ---- VITALS strip
-    L.append(box_top("VITALS", width, ascii_mode))
-    L.append(build_vitals_row(st, width, ascii_mode))
-    L.append(box_bottom(width, ascii_mode))
+    # ---- VITALS || THROUGHPUT side-by-side (shared two-box grid)
+    if not compact:
+        vit_rows = build_vitals_rows(st, width, ascii_mode)
+        thr_rows = build_throughput_rows(st, width, ascii_mode)
+        L += _merge_sideboxes("VITALS", "THROUGHPUT \u00b7 instant \u00b7 rolling"
+                              " 48s \u00b7 avg \u00b7 peak", vit_rows, thr_rows,
+                              width, ascii_mode)
+    else:
+        L.append(box_top("VITALS", width, ascii_mode))
+        L.append(build_vitals_rows(st, width, ascii_mode)[0])
+        L.append(box_bottom(width, ascii_mode))
 
-    # ---- THROUGHPUT panel (full width graphs: James's #1)
-    title = ("" if compact else
-             " \u2014 instant \u00b7 rolling 48s \u00b7 session avg \u00b7 peak")
-    L.append(box_top("THROUGHPUT" + title, width, ascii_mode))
-    L += build_throughput_rows(st, width, ascii_mode)
-    L.append(box_bottom(width, ascii_mode))
+        # ---- THROUGHPUT panel
+        L.append(box_top("THROUGHPUT", width, ascii_mode))
+        L += build_throughput_rows(st, width, ascii_mode)
+        L.append(box_bottom(width, ascii_mode))
 
     # ---- MEMORY || PROCESSES (wide: side-by-side; compact: stacked box)
     if compact:
