@@ -971,8 +971,23 @@ def build_vitals_rows(st, width, ascii_mode):
     if pre_avg is not None:
         c.append(seg(f"{insep}avg {_num1(pre_avg, 0)}", "dim"))
     cells.append(c)
-    row_rate = [seg("  ")] + sum((cc + [sep] for cc in cells[:-1]),
-                                 start=[]) + cells[-1]
+    # fixed cell anchors so VITALS row1 (dec/pre) and row2 (RAM/CPU/OOM)
+    # share the same columns: cell1@3, cell2@31, cell3@59
+    def _at(cells_list, xs=(3, 31, 59)):
+        out_c, x = [], 0
+        for k_i, cc in enumerate(cells_list):
+            x_t = xs[k_i] if k_i < len(xs) else x + 2
+            txt = _row_text(cc)
+            if x_t > x:
+                out_c.append(seg(" " * (x_t - x)))
+                x = x_t
+            elif x > x_t:
+                pass
+            out_c += cc
+            x += len(txt)
+        return out_c
+
+    row_rate = _at(cells)
 
     cells2 = []
     total, avail = st.get("mem_total"), st.get("mem_avail")
@@ -993,8 +1008,7 @@ def build_vitals_rows(st, width, ascii_mode):
                        seg(f"[{oom.upper()}]", _oom_style(oom))])
     else:
         cells2.append([seg("OOM \u2014", "dim")])
-    row_res = [seg("  ")] + sum((cc + [sep] for cc in cells2[:-1]),
-                                start=[]) + cells2[-1]
+    row_res = _at(cells2)
     return [row_rate, row_res]
 
 
