@@ -124,6 +124,11 @@ def fmt_rate(v):
     return "-- tok/s" if v is None else f"{v:,.1f} tok/s"
 
 
+def _dash(v, suffix=""):
+    """Compact 'value+unit or em-dash' cell text (v3.0 GPU/vitals rows)."""
+    return f"{v}{suffix}" if v is not None else "\u2014"
+
+
 def fmt_pct(v, digits=1):
     return "--" if v is None else f"{v * 100:.{digits}f}%"
 
@@ -231,28 +236,75 @@ def _thr_text(throttle):
     return "—"
 
 
-def _dash_um():
-    """(gpuGB, cpuGB, oomRisk) from the local sparkDash API, None when down.
+def _proc_name(n):
+    """sparkDash proc label -> compact display name (VLLM::Worker etc.)."""
+    if not n:
+        return "?"
+    if n.startswith("VLLM::"):
+        return n
+    base = n.rsplit("/", 1)[-1]
+    if base == "python" and "laya" in n:
+        return "laya python"
+    return base
 
-    One short curl per frame (~3KB JSON) — acceptable; NOT the full API.
-    """
+
+_DASH_CACHE = {"ts": 0.0, "data": None}
+DASH_METRICS_URL = "http://127.0.0.1:5555/api/sparks/spark-001/metrics"
+
+
+def _dash_poll(ttl=3.0):
+    """Full-but-compact sparkDash payload, cached ~3s (v3.0: ONE curl feeds
+    VITALS (CPU %/temp/draw, oomRisk, UMA split) + PROCESSES per-proc VRAM;
+    reuses this helper's cheap-curl pattern). Dict or None when down."""
+    now = time.time()
+    if now - _DASH_CACHE["ts"] < ttl:
+        return _DASH_CACHE["data"]
+    _DASH_CACHE["ts"] = now
+    data = None
     try:
         r = subprocess.run(
-            ["curl", "-sf", "-m", "2",
-             "http://127.0.0.1:5555/api/sparks/spark-001/metrics"],
+            ["curl", "-sf", "-m", "2", DASH_METRICS_URL],
             capture_output=True, text=True, timeout=4)
-        if r.returncode != 0 or not r.stdout.strip():
-            return None, None, None
-        um = (json.loads(r.stdout).get("metrics") or {}).get(
-            "unifiedMemory") or {}
-        gpu = um.get("gpuUsed")
-        cpu = um.get("cpuUsed")
-        return (float(gpu) if gpu is not None else None,
-                float(cpu) if cpu is not None else None,
-                um.get("oomRisk"))
+        if r.returncode == 0 and r.stdout.strip():
+            m = (json.loads(r.stdout).get("metrics") or {})
+            um = m.get("unifiedMemory") or {}
+            gp = m.get("gpu") or {}
+            cpu = m.get("cpu") or {}
+            procs = []
+            for p in (gp.get("vram") or {}).get("processes") \
+                    if isinstance(gp.get("vram"), dict) else \
+                    (gp.get("processes") or []):
+                mib = p.get("vramMB") if p.get("vramMB") is not None \
+                    else p.get("vram_mb") or p.get("memMB") or 0
+                if not mib:
+                    continue
+                procs.append({"name": _proc_name(p.get("name") or p.get("process")),
+                              "pid": p.get("pid"), "mib": float(mib)})
+            procs.sort(key=lambda p: -p["mib"])
+            data = {
+                "um_gpu": float(um["gpuUsed"]) if um.get("gpuUsed") is not None else None,
+                "um_cpu": float(um["cpuUsed"]) if um.get("cpuUsed") is not None else None,
+                "um_oom": um.get("oomRisk"),
+                "cpu_pct": float(cpu["usage"]) if cpu.get("usage") is not None else None,
+                "cpu_temp": float(cpu["temp"]) if cpu.get("temp") is not None else None,
+                "cpu_draw": float(cpu["draw"]) if cpu.get("draw") is not None else None,
+                "cpu_tdp": float(cpu["tdp"]) if cpu.get("tdp") is not None else None,
+                "procs": procs,
+            }
     except (OSError, subprocess.SubprocessError, ValueError, AttributeError,
             TypeError):
+        data = None
+    _DASH_CACHE["data"] = data
+    return data
+
+
+def _dash_um():
+    """(gpuGB, cpuGB, oomRisk) — now a thin wrapper over the cached
+    _dash_poll so the whole TUI shares ONE sparkDash curl per ~3s."""
+    d = _dash_poll()
+    if not d:
         return None, None, None
+    return d["um_gpu"], d["um_cpu"], d["um_oom"]
 
 
 def read_host_uptime():
@@ -775,9 +827,20 @@ def probe_lanes(cfg):
 
 
 # ------------------------------------------------------------ rendering
+#
+# v3.0 frame (Hailey's approved redesign, task t_14bc01ee):
+#   HEADER -> VITALS strip -> full-width THROUGHPUT -> MEMORY || PROCESSES
+#   -> LLM LANE (3 fixed-gutter columns) -> LANES (right-aligned posture
+#   badge + ╰ recipe footnote) -> single-row GPU panel -> footer.
+# JAMES'S COLOUR/BAR DIRECTIVE (binding, applies to every panel): colour is
+#   a state channel, not decoration - every styled token exercised, every
+#   bar in the bar_solid() solid-█ contract (never ░/diamonds), thresholds
+#   noted per panel; --ascii keeps bracket/state badges so semantics
+#   survive without colour. Palette assumes a dark background (btop does).
 
 S = {"plain": None, "title": "title", "dim": "dim", "good": "good",
-     "warn": "warn", "bad": "bad", "accent": "accent", "badge": "badge"}
+     "warn": "warn", "bad": "bad", "accent": "accent", "badge": "badge",
+     "rev_bad": "rev_bad", "rev_good": "rev_good", "rev_acc": "rev_acc"}
 
 
 def seg(text, style="plain"):
@@ -786,7 +849,9 @@ def seg(text, style="plain"):
 
 def box_top(title, width, ascii_mode):
     if ascii_mode:
-        return [seg("+" + ("-" * max(3, width - 2)) + "+", "dim"),
+        # combined row length == width: bar + title share the row
+        return [seg("+" + ("-" * max(1, width - len(title) - 5)) + "+",
+                    "dim"),
                 seg(f"| {title} ", "title")]
     return [seg("\u250c\u2500 " + title + " ", "title"),
             seg("\u2500" * max(3, width - len(title) - 5) + "\u2510", "dim")]
@@ -797,16 +862,259 @@ def box_bottom(width, ascii_mode):
                 else "\u2514" + "\u2500" * max(3, width - 2) + "\u2518", "dim")]
 
 
-def _rcol_row(label, value, style="plain"):
-    """Right-column row: fixed label pad + value, btop label-left/value-right."""
-    return [seg(f"  {label:<10}"), seg(value, style)]
+def _rcol_row(label, value, style="plain", tail=None, lab_w=8):
+    """Aligned cell (P0-2/P1-2): fixed label pad + value + dim tail."""
+    row = [seg(f"{label:<{lab_w}} "), seg(value, style)]
+    if tail:
+        row.append(seg(f" {tail}", "dim"))
+    return row
 
 
-def build_llm_right_col(st, h, cfg=None):
-    """Right column rows: label left, value right, btop-style. '—' = missing."""
-    cfg = cfg if cfg is not None else st.get("cfg") or {}
-    w_avgs = st.get("win_avgs") or {}
+def _row_text(row):
+    return "".join(t for t, _ in row)
+
+
+def _dq_valid(dq):
+    return [v for v in dq if v is not None]
+
+
+def _dq_mean(dq):
+    v = _dq_valid(dq)
+    return sum(v) / len(v) if v else None
+
+
+def _dq_max(dq):
+    v = _dq_valid(dq)
+    return max(v) if v else None
+
+
+def _dq_wmean(dq, interval):
+    """10s window mean from the deque tail (sample rate = poll interval)."""
+    n = max(1, int(round(10.0 / max(interval, 0.1))))
+    v = _dq_valid(dq)[-n:]
+    return sum(v) / len(v) if v else None
+
+
+def _proc_name(n):
+    """sparkDash proc label -> compact display name (VLLM::Worker etc.)."""
+    if not n:
+        return "?"
+    if n.startswith("VLLM::"):
+        return n
+    base = n.rsplit("/", 1)[-1]
+    if base == "python" and "laya" in n:
+        return "laya python"
+    return base
+
+
+def _oom_style(risk):
+    """oomRisk badge style: HIGH=red-reverse, mod*=warn, low=green-reverse."""
+    r = (risk or "").lower()
+    if not r:
+        return "dim"
+    if "high" in r:
+        return "rev_bad"
+    if "mod" in r or "risk" in r:
+        return "warn"
+    return "rev_good" if r == "low" else "good"
+
+
+def _thr_pct_style(frac):
+    """VITALS utilisation cells (RAM/CPU): warn >=0.6, bad >=0.8 (steer)."""
+    return "good" if frac < 0.6 else ("warn" if frac < 0.8 else "bad")
+
+
+def _mem_style(frac):
+    """Big memory bars (system/UMA/VRAM): 0.7/0.9 thresholds (deliberate,
+    coarse memory bars stay calm longer than VITALS alert cells)."""
+    return "good" if frac < 0.7 else ("warn" if frac < 0.9 else "bad")
+
+
+def _temp_style(t):
+    if t is None:
+        return "dim"
+    return "bad" if t >= 90 else ("warn" if t >= 80 else "good")
+
+
+def build_vitals_row(st, width, ascii_mode):
+    """VITALS strip: dec | pre | RAM | CPU | OOM on ONE segmented line.
+
+    Each cell self-coloured by state (James's steer): rate cells green
+    (decode) / cyan (prefill), utilisation cells warn/bad by threshold,
+    OOM badge reverse-red. 10-wide bars wide, 6-wide compact.
+    """
+    r = st.get("rates") or {}
+    avg = st.get("avg") or {}
+    dec, pre = r.get("decode_tps"), r.get("prefill_tps")
+    dec_avg, pre_avg = avg.get("decode"), avg.get("prefill")
+    compact = width < 200
+    bar_w = 6 if compact else 10
+    sep = seg(" \u00b7 ", "dim") if compact else seg("   \u2502   ", "dim")
+    insep = "\u2502" if compact else " \u00b7 "
+
+    def _num1(v, nd=1):
+        return "--" if v is None else f"{v:,.{nd}f}"
+
+    cells = []
+    dec_txt = "--" if dec is None else f"{_num1(dec)}{'t/s' if compact else ' tok/s'}"
+    c = [seg("dec ", "dim"), seg(dec_txt, "good" if dec else "dim")]
+    if dec_avg is not None:
+        c.append(seg(f"{insep}avg {_num1(dec_avg)}", "dim"))
+    cells.append(c)
+    pre_txt = "--" if pre is None else f"{_num1(pre)}{'t/s' if compact else ' tok/s'}"
+    c = [seg("pre ", "dim"), seg(pre_txt, "accent" if pre else "dim")]
+    if pre_avg is not None:
+        c.append(seg(f"{insep}avg {_num1(pre_avg, 0)}", "dim"))
+    cells.append(c)
+    total, avail = st.get("mem_total"), st.get("mem_avail")
+    if total and avail:
+        frac = (total - avail) / total
+        stl = _thr_pct_style(frac)
+        cells.append([seg(f"RAM {frac * 100:.0f}%{insep if compact else ' '}", stl),
+                      seg(bar_solid(frac, width=bar_w, ascii_mode=ascii_mode), stl)])
+    cpu = st.get("cpu_pct")
+    if cpu is not None:
+        stl = _thr_pct_style(cpu / 100.0)
+        cells.append([seg(f"CPU {cpu:.0f}%{insep if compact else ' '}", stl),
+                      seg(bar_solid(cpu / 100.0, width=bar_w,
+                                    ascii_mode=ascii_mode), stl)])
+    oom = st.get("um_oom")
+    if oom:
+        cells.append([seg("OOM ", "dim"), seg(f"[{oom.upper()}]", _oom_style(oom))])
+    else:
+        cells.append([seg("OOM \u2014", "dim")])
+    return [seg("  ")] + sum((c + [sep] for c in cells[:-1]),
+                             start=[]) + cells[-1]
+
+
+def build_throughput_rows(st, width, ascii_mode):
+    """THROUGHPUT panel: decode+prefill sparklines (48 wide / 30 compact),
+    rate cell coloured per steer, instant|10s|avg|peak all from deques."""
+    r = st.get("rates") or {}
+    avg = st.get("avg") or {}
+    interval = st.get("interval") or 1.0
+    compact = width < 200
+
+    def _row(label, key, hist, rate, avg_v, label_style, rate_style):
+        sw = 30 if compact else 48
+        dec10 = _dq_wmean(hist, interval)
+        peak = _dq_max(hist)
+        inst = "--" if rate is None else f"{rate:,.1f}"
+        stats = []
+        if compact:
+            stats.append(f"avg {_dq_mean(hist) if avg_v is None else avg_v:,.1f}"
+                         if (avg_v is not None or _dq_mean(hist) is not None)
+                         else "avg --")
+            if peak is not None:
+                stats.append(f"pk {fmt_num(peak)}")
+        else:
+            if dec10 is not None:
+                stats.append(f"10s {dec10:,.1f}")
+            if avg_v is not None:
+                stats.append(f"avg {avg_v:,.1f}")
+            elif _dq_mean(hist) is not None:
+                stats.append(f"avg {_dq_mean(hist):,.1f}")
+            if peak is not None:
+                stats.append(f"peak {fmt_num(peak)}")
+        row = [seg(f"  {label} "),
+               seg(spark(hist, width=sw, ascii_mode=ascii_mode), label_style),
+               seg("  "),
+               seg(f"{inst} {'t/s' if compact else 'tok/s'}",
+                   rate_style if rate else "dim")]
+        row.append(seg("   " + " \u2502 ".join(stats), "dim"))
+        return row
+
+    return [
+        _row("dec", "decode", st["hist"].get("decode") or [],
+             r.get("decode_tps"), avg.get("decode"), "good", "good"),
+        _row("pre", "prefill", st["hist"].get("prefill") or [],
+             r.get("prefill_tps"), avg.get("prefill"), "accent", "accent"),
+    ]
+
+
+def _llm_left_rows(st, h, bar_w, ascii_mode):
+    """LLM LANE column 1: kv / prefix / mtp / mtp-pos bars (18 wide/12)."""
+    win = st.get("mtp_win") or {}
+    spec_k = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
     rows = []
+
+    # kv cache: usage% bar + state colour (0.6/0.85), capacity + fp8 badge
+    kv = h.get("kv_cache_usage")
+    kvc = h.get("kv_capacity_tok")
+    kv_lbl = "kv" if bar_w < 14 else "kv cache"
+    stl = "good" if (kv or 0) < 0.6 else ("warn" if (kv or 0) < 0.85 else "bad")
+    row = [seg(f"{kv_lbl:<9} "),
+           seg(bar_solid(kv, width=bar_w, ascii_mode=ascii_mode)
+               if kv is not None else "[" + " " * bar_w + "]", stl),
+           seg(" "), seg(fmt_pct(kv), stl if kv else "plain")]
+    if kvc:
+        row.append(seg(f" {fmt_num(kvc)} tok", "dim"))
+    dtype = h.get("kv_cache_dtype")
+    if dtype and dtype != "auto":
+        row.append(seg(f" [fp8]" if bar_w < 14 else f" [kv {dtype}]",
+                       "accent" if dtype == "fp8" else "dim"))
+    rows.append(row)
+
+    # prefix cache: hit-rate bar (cyan family), queries/hits tail
+    pfx = h.get("prefix_cache_hit_rate")
+    pq, ph = h.get("prefix_queries"), h.get("prefix_hits")
+    row = [seg(f"{'prefix' if bar_w >= 14 else 'pfx':<9} "),
+           seg(bar_solid(pfx, width=bar_w, ascii_mode=ascii_mode)
+               if pfx is not None else "[" + " " * bar_w + "]", "accent"),
+           seg(" "), seg(fmt_pct(pfx), "accent" if pfx else "dim")]
+    if pq is not None:
+        row.append(seg(f" {fmt_num(pq)}q/{fmt_num(ph or 0)}h", "dim"))
+    rows.append(row)
+
+    # MTP: acceptance bar + live window + accepted/drafted tokens
+    acc = h.get("mtp_accepted_tokens_total")
+    drf = h.get("mtp_drafted_tokens_total")
+    overall = (acc / drf) if (acc is not None and drf) else None
+    w_over = win.get("overall")
+    mst = ("good" if (w_over or overall or 0) >= 0.5
+           else ("warn" if (w_over or overall or 0) >= 0.3 else "dim"))
+    row = [seg(f"{'mtp' if bar_w >= 14 else 'mtp':<9} "),
+           seg(bar_solid(overall, width=bar_w, ascii_mode=ascii_mode)
+               if overall is not None else "[" + " " * bar_w + "]", mst),
+           seg(" "), seg(fmt_pct(overall), "plain")]
+    if w_over is not None:
+        row.append(seg(f" live {fmt_pct(w_over, 0)}"
+                       f" ({win.get('window_s', '--')}s)", "dim"))
+    if acc is not None:
+        row.append(seg(f" {fmt_num(acc)}/{fmt_num(drf)} tok"
+                       + (f" \u00b7 k={spec_k}" if bar_w < 14 else ""), "dim"))
+    else:
+        row.append(seg(f" k={spec_k}", "dim"))
+    rows.append(row)
+
+    # per-position, ONE shared row (live window preferred, lifetime fallback)
+    # - always rendered so the panel never gains/loses a line (P3-2 fix)
+    pp = win.get("per_pos") or {}
+    cells = []
+    if pp:
+        for p in sorted(pp)[:6]:
+            v = pp[p]
+            cells.append(f"p{p} {bar_solid(v, width=6, ascii_mode=ascii_mode)}"
+                         f" {fmt_pct(v, 0)}")
+        tail = f"k={spec_k} (live)"
+        style = "plain"
+    else:
+        pos_h = h.get("mtp_accept_by_position") or []
+        for p in pos_h[:6]:
+            cells.append(f"p{p.get('position')} tok {fmt_num(p.get('tested'))}")
+        tail = (f"k={spec_k} (lifetime)" if bar_w < 14
+                else f"k={spec_k} (lifetime \u2014 window warming up)")
+        style = "dim"
+    rows.append([seg(f"{'mtp pos' if bar_w >= 14 else 'mpos':<9} "),
+                 seg(" ".join(cells) if cells else "\u2014", style),
+                 seg("   " + tail, "dim")])
+    return rows
+
+
+def _llm_mid_rows(st, h):
+    """LLM LANE column 2: ttft / itl / e2e mean + p95 (p95 cyan)."""
+    w_avgs = st.get("win_avgs") or {}
+    out = []
 
     def lat_avg(key):
         wv = w_avgs.get(key)
@@ -818,123 +1126,247 @@ def build_llm_right_col(st, h, cfg=None):
             return s / c, "avg"
         return None, "avg"
 
-    # ttft/itl/e2e (window avg when deltas exist, else lifetime 'avg'),
-    # kind tag inline, + P95 (sparkDash ttftP95/e2eP95/itlP95 parity —
-    # histogram_quantile(0.95) over the vLLM _bucket lines) — one row each
     for key, label, unit in _HIST_KEYS:
         v, kind = lat_avg(key)
+        lab = f"{label.lower()}  "
         if v is None:
-            rows.append(_rcol_row(label, "—", "dim"))
+            out.append(_rcol_row(lab, "\u2014", "dim", lab_w=5))
             continue
-        row = _rcol_row(label, _fmt_lat(v, unit), "plain")
-        row.append(seg(f"  ({kind})", "dim"))
+        row = _rcol_row(lab, _fmt_lat(v, unit), "plain", lab_w=5)
+        row.append(seg(" (6s)" if kind.startswith("6s") or
+                       "window" in kind else f" ({kind})", "dim"))
         p95 = h.get(f"{key}_p95_seconds")
         if p95 is not None:
-            row.append(seg(f"  p95 {_fmt_lat(p95, unit)}", "accent"))
-        rows.append(row)
+            row.append(seg(f" p95 {_fmt_lat(p95, unit)}", "accent"))
+        out.append(row)
+    return out
 
-    # preemptions: engine lifetime (vLLM num_preemptions_total — sparkDash
-    # preemptionsTotal parity). Dim 0; warn when the engine ever preempted.
-    pre = h.get("preemptions_total")
-    rows.append(_rcol_row(
-        "preempt",
-        f"{pre:.0f}" if pre is not None else "—",
-        "good" if pre == 0 else ("plain" if pre is None else "warn")))
-    rows[-1].append(seg("   engine lifetime", "dim"))
 
-    # requests: live + lifetime on one row
-    rows.append(_rcol_row(
-        "reqs",
-        f"{h.get('requests_running') or 0:.0f} run / "
-        f"{h.get('requests_waiting') or 0:.0f} wait", "plain"))
-    rows[-1].append(seg(
-        f"   {fmt_num(h.get('requests_completed_total'))} done / "
-        f"{fmt_num(h.get('requests_failed_total'))} fail", "dim"))
-
-    # sequences: running / max-num-seqs (docker inspect > env > default)
-    run = h.get("requests_running") or 0
+def _llm_right_rows(st, h, cfg):
+    """LLM LANE column 3: reqs / seqs / preempt / eng tok (+ source tags)."""
+    rows = []
+    rr = h.get("requests_running") or 0
+    rw = h.get("requests_waiting") or 0
+    tail = (f"{fmt_num(h.get('requests_completed_total'))}d/"
+            f"{fmt_num(h.get('requests_failed_total'))}f"
+            + (" QUEUE" if rw else ""))
+    rows.append(_rcol_row("reqs", f"{rr:.0f}r/{rw:.0f}w", "plain", tail))
     seqs_src = cfg.get("vllm_src", {}).get("max_num_seqs", "default")
-    rows.append(_rcol_row(
-        "seqs", f"{run:.0f}/{cfg.get('vllm', {}).get('max_num_seqs') or DEFAULT_SEQS}",
-        "plain"))
-    rows[-1].append(seg(f"   --max-num-seqs ({seqs_src})", "dim"))
-
-    # context window: total available (+ KV-token view lives on kv row)
+    run = h.get("requests_running") or 0
+    seqs = cfg.get("vllm", {}).get("max_num_seqs") or DEFAULT_SEQS
     ctx_src = cfg.get("vllm_src", {}).get("max_model_len", "default")
     cl = cfg.get("vllm", {}).get("max_model_len") or \
         h.get("context_length") or DEFAULT_CTX
-    rows.append(_rcol_row(
-        "ctx win", f"{cl / 1000:.1f}K tok", "plain"))
-    rows[-1].append(seg(f"   max-model-len ({ctx_src})", "dim"))
-
-    # batched tokens: surface the launch arg when docker inspect captured it
-    mbt = cfg.get("vllm", {}).get("max_num_batched_tokens")
+    rows.append(_rcol_row("seqs", f"{run:.0f}/{seqs:.0f}", "plain",
+                          f"\u00b7 ctx {cl / 1000:.1f}K ({ctx_src})"))
+    mbt = (cfg.get("vllm") or {}).get("max_num_batched_tokens")
     if mbt and cfg.get("vllm_src", {}).get("max_num_batched_tokens") == "docker":
-        rows.append(_rcol_row(
-            "batched", f"{fmt_num(mbt)} tok", "plain"))
-        rows[-1].append(seg("   --max-num-batched-tokens (docker)", "dim"))
+        rows[-1].append(seg(f" \u00b7 batched {fmt_num(mbt)}", "dim"))
+    pre = h.get("preemptions_total")
+    stl = "good" if pre == 0 else ("plain" if pre is None else "warn")
+    tail2 = (f"\u00b7 eng {fmt_num(h.get('prompt_tokens_total'))}/"
+             f"{fmt_num(h.get('completion_tokens_total'))}")
+    rows.append(_rcol_row("preempt",
+                          f"{pre:.0f}" if pre is not None else "\u2014",
+                          stl, tail2))
+    return rows
 
-    # engine lifetime token totals on one row (session tots live on the left)
-    rows.append(_rcol_row(
-        "eng tok",
-        f"{fmt_num(h.get('prompt_tokens_total'))} pre / "
-        f"{fmt_num(h.get('completion_tokens_total'))} gen", "plain"))
 
-    # prefix cache: rate + raw queries/hits on one row
-    pfx = h.get("prefix_cache_hit_rate")
-    pq, ph = h.get("prefix_queries"), h.get("prefix_hits")
-    if pfx is not None and pq is not None:
-        rows.append(_rcol_row("prefix", f"{pfx * 100:.1f}%", "plain"))
-        rows[-1].append(seg(f"   {fmt_num(pq)}q / {fmt_num(ph)} hits", "dim"))
+def _merge_columns(rows_per_col, gutters, width):
+    """Zip 3 columns of rows into rows with fixed gutters. Gutter x for a
+    column = max(spec_x, content width so far + 2): content never collides;
+    panels stay 3-col while content is short and degrade gracefully
+    (tail-shed, provenance first — never the label/value head) when cells
+    run long (P3-1)."""
+    out = []
+    single = any(g is None for g in gutters)
+    if single:
+        flat = [r for gi, col in enumerate(rows_per_col)
+                if gutters[gi] is not None for r in col]
+        return [list(r) for r in flat]
+    nrows = max((len(c) for c in rows_per_col), default=0)
+
+    def _shed(cell, span):
+        c = [t for t in cell
+             if isinstance(t, tuple) and len(t) == 2 and isinstance(t[0], str)]
+        while c and sum(len(t) for t, _ in c) > span:
+            c.pop()
+        return c
+
+    # columns anchor AT their spec gutters (never drift); content longer
+    # than its span sheds dim tails (provenance/rightmost first), losing
+    # decoration before data (P3-1). Left column span includes its extra
+    # room so bars stay intact at every width.
+    xs = list(gutters)
+    for i in range(nrows):
+        row, x = [], 0
+        for ci, col in enumerate(rows_per_col):
+            cell = col[i] if i < len(col) else []
+            nxt = xs[ci + 1] if ci + 1 < len(xs) else width - 4
+            ccell = _shed(cell, nxt - x - (0 if ci + 1 < len(xs) else 0))
+            if ci + 1 < len(xs):
+                while ccell and x + sum(len(t) for t, _ in ccell) > nxt:
+                    ccell.pop()
+            text = _row_text(ccell)
+            row += ccell
+            x += len(text)
+            if ci + 1 < len(xs) and x < xs[ci + 1]:
+                row.append(seg(" " * (xs[ci + 1] - x)))
+                x = xs[ci + 1]
+        out.append(row)
+    return out
+
+
+def build_mem_proc(st, cfg, width, ascii_mode):
+    """MEMORY panel rows, COMPACT variant (per A.2): system/cpu, uma+OOM,
+    procs one-liner. Wide mode uses _split_memory + _proc_rows side-by-side."""
+    h = st.get("health") or {}
+    total, avail = st.get("mem_total"), st.get("mem_avail")
+    mem_rows = []
+
+    if total and avail:
+        used = total - avail
+        frac = used / total
+        stl = _thr_pct_style(frac)
+        mem_rows.append(
+            [seg("system "),
+             seg(bar_solid(frac, width=14, ascii_mode=ascii_mode), stl),
+             seg(f" {frac * 100:.1f}%", stl),
+             seg(f"  {fmt_gib(used)} / {fmt_gib(total)}", "dim")])
     else:
-        rows.append(_rcol_row("prefix", "—", "dim"))
-
-    # kv cache usage + dtype badge on one row
-    kv = h.get("kv_cache_usage")
-    if kv is not None:
-        rows.append(_rcol_row("kv cache", f"{kv * 100:.1f}%", "plain"))
-        dtype = h.get("kv_cache_dtype")
-        if dtype and dtype != "auto":
-            rows[-1].append(seg(f"   [kv {dtype}]", "accent" if dtype == "fp8"
-                                else "dim"))
+        mem_rows.append([seg("system   meminfo unavailable", "dim")])
+    gmu = h.get("gpu_memory_utilization")
+    if gmu is not None:
+        stl = _mem_style(gmu)
+        mem_rows.append(
+            [seg("engine "),
+             seg(bar_solid(gmu, width=14, ascii_mode=ascii_mode), stl),
+             seg(f" {gmu * 100:.1f}%", stl),
+             seg("   gpu_memory_utilization (engine view)", "dim")])
     else:
-        rows.append(_rcol_row("kv cache", "—", "dim"))
-
-    # MTP accepted/drafted totals
-    acc = h.get("mtp_accepted_tokens_total")
-    drf = h.get("mtp_drafted_tokens_total")
-    if acc is not None or drf is not None:
-        rows.append(_rcol_row(
-            "MTP", f"{fmt_num(acc)} acc / {fmt_num(drf)} draft", "plain"))
+        mem_rows.append([seg("engine   \u2014", "dim")])
+    gpuu = st.get("um_gpu")
+    if gpuu is not None and total:
+        cf = gpuu / (total / 1024.0)          # sparkDash unifiedMemory = MiB
+        stl = _mem_style(cf)
+        uma = [seg("uma gpu "),
+               seg(bar_solid(cf, width=14, ascii_mode=ascii_mode), stl),
+               seg(f" {fmt_gib(gpuu * 1024)}", stl)]
+        uma.append(seg(f"  split cpu {fmt_gib((st.get('um_cpu') or 0) * 1024)}"
+                       "  (d)", "dim"))
+        mem_rows.append(uma)
     else:
-        rows.append(_rcol_row("MTP", "—", "dim"))
+        mem_rows.append([seg("uma gpu  \u2014", "dim")])
+    # compact folds: oomRisk badge row (P0-3 style) + procs one-liner
+    oom = st.get("um_oom")
+    mem_rows.append(
+        [seg("oom   ", "dim"),
+         seg(f"[{oom.upper()}]" if oom else "\u2014",
+             _oom_style(oom) if oom else "dim"),
+         seg("   oomRisk (sparkDash)" if oom
+             else "\u2014 oomRisk unknown (sparkDash offline)", "dim")])
+    procs = st.get("procs") or []
+    if procs:
+        cells = " \u00b7 ".join(
+            f"{p['name']} {fmt_gib(p['mib'] * 1024)}" for p in procs[:4])
+        s_mib = sum(p["mib"] for p in procs)
+        mem_rows.append([seg("procs ", "dim"),
+                         seg(cells, "plain"),
+                         seg(f"  \u03a3 {fmt_gib(s_mib * 1024)} (d)", "dim")])
+    else:
+        mem_rows.append([seg("procs  (sparkDash offline \u2014 no per-proc data)",
+                             "dim")])
+    return mem_rows
 
-    # recipe row (sparkDash recipeInfo parity): parsers + spec decode +
-    # launch-cfg quantization + maxLanes. All from the docker-inspect
-    # capture (authoritative) — em-dashes when not captured.
-    vc = cfg.get("vllm") or {}
-    rp = vc.get("reasoning_parser")
-    tp = vc.get("tool_call_parser")
-    sk = vc.get("spec_tokens")
+
+def build_gpu_row(st, width, ascii_mode):
+    """Single-row GPU panel: temp · watts · SM · util · throttle."""
+    hw = st.get("hw") or {}
+    under_load = (hw.get("util_pct") or 0) > 5
+    dash = _dash(hw.get("temp_c"), "C")
+    power = (f"{hw.get('power_w'):g}W" if hw.get("power_w") is not None
+             else "\u2014")
+    row = [seg(f"  {dash} \u00b7 {power}", _temp_style(hw.get("temp_c"))),
+           seg(f" \u00b7 SM {_dash(hw.get('sm_mhz'), 'MHz')}", "dim")]
+    if hw.get("sm_mhz") is not None and hw.get("sm_max_mhz"):
+        row.append(seg(f" ({hw['sm_mhz'] / hw['sm_max_mhz'] * 100:.0f}%)", "dim"))
+    if hw.get("util_pct") is not None:
+        row.append(seg(f" \u00b7 util {hw['util_pct']:.0f}%",
+                       "accent" if under_load else "dim"))
+    thr_txt = _thr_text(hw.get("throttle"))
+    row.append(seg(f" \u00b7 thr {thr_txt}",
+                   "bad" if thr_txt.startswith("ACTIVE:") else "dim"))
+    row.append(seg(f"   detail: btop \u00b7 sparkDash"
+                   + ("  (idle)" if not under_load else ""), "dim"))
+    return row
+
+
+def build_lanes_rows(st, width, cfg, ascii_mode):
+    """LANES panel: 5 lane rows + right-aligned posture + ╰ recipe footnote."""
+    lanes = st.get("lanes") or {}
+    h = st.get("health") or {}
+    eng = h.get("engine", "?")
+    model = h.get("model_name") or eng
+    quant = cfg.get("quantization")
+    rows = []
+    posture = (lanes.get("llm") or {}).get("posture")
+    badge = f"[{posture}]" if posture else ""
+    for key, label, lcol in (("llm", "LLM", "good"), ("gate", "gate", "good"),
+                             ("deci", "deci", "good"), ("router", "route", "dim"),
+                             ("dash", "dash", "dim")):
+        ln = lanes.get(key) or {}
+        up = ln.get("up")
+        dot, dstyle = (("\u25cf", "good") if up else ("\u25cb", "bad")) \
+            if not ascii_mode else (("*" if up else "x"),
+                                    "good" if up else "bad")
+        row = [seg(f"  {label:<5} "), seg(dot, dstyle),
+               seg(f" :{ln.get('port', '--')}", "dim"),
+               seg(f"  {ln.get('model') or '?'}",
+                   "plain" if up else "dim")]
+        if ln.get("image"):
+            row.append(seg(f"  [{ln['image']}]", "dim"))
+        if ln.get("detail") and up:
+            row.append(seg(f"  {ln['detail']}", "dim"))
+        rows.append(row)
+        if key == "llm" and posture:
+            # right-align the posture badge inside the box (P1-4)
+            pad = width - 4 - len(_row_text(row)) - len(badge) - 2
+            if pad >= 1:
+                row.append(seg(" " * pad))
+            row.append(seg(badge, "rev_acc" if not ascii_mode else "plain"))
+
+    # recipe footnote: merged recipe row (rs/tc/spec/quant/lanes) + author /
+    # engine provenance, '╰' marker, indent 2 (P1-3). Recipe row content
+    # moved here from the LLM-lane right column (its natural home).
+    vllm_cfg = cfg.get("vllm") or {}
     parts = []
+    author = cfg.get("recipe_author")
+    if cfg.get("recipe_model"):
+        parts.append(cfg["recipe_model"])
+    if author:
+        parts.append(f"author {author}")
+    parts.append(f"engine {eng}")
+    if quant:
+        parts.append(quant)
+    rp = vllm_cfg.get("reasoning_parser")
+    tp = vllm_cfg.get("tool_call_parser")
+    sk = vllm_cfg.get("spec_tokens")
     if rp:
         parts.append(f"rs {rp}")
     if tp:
         parts.append(f"tc {tp}")
-    parts.append(f"spec {vc.get('spec_method') or 'MTP'}"
-                 f"{(' k=' + str(sk)) if sk else ''}")
-    if cfg.get("quantization"):
-        parts.append(cfg["quantization"])
-    ml = vc.get("max_lanes")
+    parts.append(f"spec {vllm_cfg.get('spec_method') or 'MTP'}"
+                 + (f" k={sk}" if sk else ""))
+    ml = vllm_cfg.get("max_lanes")
     if ml:
         parts.append(f"lanes {ml}")
-    rows.append(_rcol_row("recipe", " · ".join(parts) or "—", "plain"))
-    rows[-1].append(seg("   launch args (docker inspect)", "dim"))
+    rows.append([seg("  \u2570 recipe: " + " \u00b7 ".join(parts), "dim")])
     return rows
 
 
 def build_lines(st, width, cfg=None):
-    """v2 frame: header, LLM lane box, LANES box, memory box, footer."""
+    """v3.0 frame per approved redesign: zero data removal, reorganize/promote
+    (James's constraints: reorg + demote only; solid █ bars; colour=state)."""
     cfg = cfg if cfg is not None else st.get("cfg") or {}
     L = []
     h = st.get("health") or {}
@@ -943,15 +1375,11 @@ def build_lines(st, width, cfg=None):
     now = st.get("now")
     r = st.get("rates") or {}
     tstr = now.strftime("%H:%M:%S") if now else "--:--:--"
-    vllm_cfg = cfg.get("vllm") or {}
-    spec_k = vllm_cfg.get("spec_tokens") or 3
+    compact = width < 200
 
     # ---- header line
     model = h.get("model_name") or h.get("engine", "?")
     eng = h.get("engine", "?")
-    # quantization: docker args don't carry a --quantization flag on this
-    # recipe — derive from the served model id (Qwen3.8-Flash-Next-NVFP4),
-    # which sparkDash recipeInfo also reports as NVFP4
     quant = cfg.get("quantization")
     if quant is None and model and "NVFP4" in model.upper():
         quant = "NVFP4"
@@ -973,245 +1401,248 @@ def build_lines(st, width, cfg=None):
         L.append([seg("  \u25cf ONLINE", "good" if not ascii_mode else "plain"),
                   seg("  "), seg(f"{model}", "accent"),
                   seg(f" ({eng})", "dim"),
-                  seg(f" [{quant}]" if quant else "", "badge" if quant else "dim"),
+                  seg(f" [{quant}]" if quant else "",
+                      "badge" if quant else "dim"),
                   seg("  "), seg(badge, bstyle),
                   seg(f"   {tstr}", "dim")])
 
-    # ---- LLM lane box
-    L.append(box_top("LLM lane", width, ascii_mode))
-    dec = r.get("decode_tps")
-    pre = r.get("prefill_tps")
-    src = r.get("prefill_src") or ""
-    dec_h = st["hist"].get("decode")
-    pre_h = st["hist"].get("prefill")
-    avg = st["avg"].get("decode")
-    lane = []
-    lane.append([seg("  decode   "), seg(spark(dec_h, ascii_mode=ascii_mode), "accent"),
-                 seg("  "), seg(fmt_rate(dec), "good" if dec else "dim")])
-    lane.append([seg("  prefill  "), seg(spark(pre_h, ascii_mode=ascii_mode), "accent"),
-                 seg("  "), seg(fmt_rate(pre), "accent" if pre else "dim"),
-                 seg(f"  [{src}]" if src else "", "dim")])
-
-    # MTP overall (token-accepted / token-drafted)
-    acc, drf = h.get("mtp_accepted_tokens_total"), h.get("mtp_drafted_tokens_total")
-    overall = (acc / drf) if (acc is not None and drf) else None
-    win = st.get("mtp_win") or {}
-    w_over = win.get("overall")
-    lane.append([seg("  MTP      "),
-              seg(bar_solid(overall, ascii_mode=ascii_mode) if overall is not None
-                  else "[" + " " * BAR_WIDTH + "]",
-                  "good" if (w_over or overall or 0) >= 0.5
-                  else ("warn" if (w_over or overall or 0) >= 0.3 else "dim")),
-              seg(" "), seg(fmt_pct(overall), "plain"),
-              seg(f"   live window {fmt_pct(w_over)}"
-                  f" ({win.get('window_s', '--')}s)" if w_over is not None else "",
-                  "dim"),
-              seg(f"   {fmt_num(acc)}/{fmt_num(drf)} tok", "dim")])
-    # per-position compact bars
-    pp = win.get("per_pos") or {}
-    if pp:
-        cells = []
-        for p in sorted(pp)[:6]:
-            v = pp[p]
-            cells.append(f"p{p} {fmt_pct(v)}"
-                         f" {bar_solid(v, width=6, ascii_mode=ascii_mode)}")
-        lane.append([seg("  MTP pos  "), seg("  ".join(cells), "plain"),
-                  seg(f"   ({len(pp)} positions, k={spec_k})", "dim")])
-    else:
-        pos_h = h.get("mtp_accept_by_position") or []
-        if pos_h:
-            cells = [f"p{p.get('position')} {fmt_num(p.get('tested'))} tok"
-                     for p in pos_h[:6]]
-            lane.append([seg("  MTP pos  "), seg("  ".join(cells), "dim"),
-                         seg(f"  (lifetime, k={spec_k} — window warming up)",
-                             "dim")])
-
-    kv = h.get("kv_cache_usage")
-    kvc = h.get("kv_capacity_tok")
-    pfx = h.get("prefix_cache_hit_rate")
-    lane.append([seg("  kv cache  "),
-                 seg(bar_solid(kv, ascii_mode=ascii_mode) if kv is not None
-                     else "[" + " " * BAR_WIDTH + "]",
-                     "good" if (kv or 0) < 0.6
-                     else ("warn" if (kv or 0) < 0.85 else "bad")),
-                 seg(" "), seg(fmt_pct(kv), "plain"),
-                 seg(f"   cap {fmt_num(kvc)} tok" if kvc else "", "dim")])
-    lane.append([seg("  prefix    "),
-                 seg(bar_solid(pfx, ascii_mode=ascii_mode) if pfx is not None
-                     else "[" + " " * BAR_WIDTH + "]", "accent"),
-                 seg(" "), seg(fmt_pct(pfx), "plain")])
-    if not h:
-        lane.append([seg("  (vLLM telemetry offline)", "dim")])
-    ctx_len = h.get("context_length") or DEFAULT_CTX
-
-    # right column: merge lane rows and metric rows side by side.
-    # Wide terminal: right column hugs the box's right edge (btop-style).
-    # Narrow terminal (<100 cols): fixed offset at col 62, drop rows that
-    # would overflow.
-    rrows = build_llm_right_col(st, h, cfg) if h else []
-    if width >= 100:
-        rcol_w = max(len("".join(t for t, _ in rr)) for rr in rrows) if rrows else 0
-        rcol_x = max(66, width - 2 - rcol_w)   # 2 = right border + margin
-        narrow = False
-    else:
-        rcol_x, narrow = 62, True
-    merged = []
-    for i in range(max(len(lane), len(rrows))):
-        left = list(lane[i]) if i < len(lane) else [seg(" " * 12)]
-        ltxt = sum(len(t) for t, _ in left)
-        pad = rcol_x - ltxt if not narrow else max(1, rcol_x - ltxt)
-        rrow = rrows[i] if i < len(rrows) else []
-        if narrow and ltxt + len("".join(t for t, _ in rrow)) > width - 2:
-            rrow = []                          # would overflow: drop
-        merged.append(left + [seg(" " * max(1, pad))] + rrow)
-    for row in merged:
-        L.append(row)
+    # ---- VITALS strip
+    L.append(box_top("VITALS", width, ascii_mode))
+    L.append(build_vitals_row(st, width, ascii_mode))
     L.append(box_bottom(width, ascii_mode))
 
-    # ---- LANES box
-    L.append(box_top("LANES — what is serving", width, ascii_mode))
-    lanes = st.get("lanes") or {}
-    for key, label, lcol in [("llm", "LLM  ", "good"),
-                             ("gate", "gate ", "good"),
-                             ("deci", "deci ", "good"),
-                             ("router", "route", "dim"),
-                             ("dash", "dash ", "dim")]:
-        ln = lanes.get(key) or {}
-        up = ln.get("up")
-        dot, dstyle = (("\u25cf", "good") if up else ("\u25cb", "bad")) \
-            if not ascii_mode else (("*" if up else "x"),
-                                    "good" if up else "bad")
-        row = [seg(f"  {label} "), seg(dot, dstyle),
-               seg(f" :{ln.get('port', '--')}", "dim"),
-               seg(f"  {ln.get('model') or '?'}", "plain" if up else "dim")]
-        if ln.get("image"):
-            row.append(seg(f"   [{ln['image']}]", "dim"))
-        if ln.get("detail") and up:
-            row.append(seg(f"   {ln['detail']}", "dim"))
-        if key == "llm" and ln.get("posture") and up:
-            row.append(seg(f"   [{ln['posture']}]", "accent"))
-        L.append(row)
-    # provenance footnote (sparkDash recipeInfo parity, ADR-0004): author +
-    # engine + quantization for the recipe actually serving, once per frame
-    author = cfg.get("recipe_author")
-    if author:
-        prov = (f"        recipe: {cfg.get('recipe_model') or model} "
-                f"· author {author} · engine {eng}"
-                + (f" · quant {quant}" if quant else ""))
-        L.append([seg(prov, "dim")])
-    if h.get("busy") and h.get("requests_waiting") is not None:
-        L.append([seg(f"        LLM queue: running "
-                      f"{'yes' if h.get('busy') else 'no'}"
-                      f", waiting {h.get('requests_waiting', 0):.0f}", "dim")])
+    # ---- THROUGHPUT panel (full width graphs: James's #1)
+    title = ("" if compact else
+             " \u2014 instant \u00b7 rolling 48s \u00b7 session avg \u00b7 peak")
+    L.append(box_top("THROUGHPUT" + title, width, ascii_mode))
+    L += build_throughput_rows(st, width, ascii_mode)
     L.append(box_bottom(width, ascii_mode))
 
-    # ---- hardware box (btop language; GPU rows from local nvidia-smi —
-    # full detail lives in btop pane 0 / sparkDash). Honest UMA note kept.
-    L.append(box_top("HARDWARE", width, ascii_mode))
+    # ---- MEMORY || PROCESSES (wide: side-by-side; compact: stacked box)
+    if compact:
+        L.append(box_top("MEMORY", width, ascii_mode))
+        L += build_mem_proc(st, cfg, width, ascii_mode)
+        L.append(box_bottom(width, ascii_mode))
+    else:
+        mem_rows = _split_memory(st, cfg, width, ascii_mode)
+        proc_rows = _proc_rows(st, cfg, width, ascii_mode)
+        L += _merge_sideboxes("MEMORY", "PROCESSES \u00b7 VRAM by reservation"
+                              " (sparkDash)", mem_rows, proc_rows, width,
+                              ascii_mode)
+
+    # ---- LLM LANE: 3 fixed-gutter columns
+    bar_w = 18 if not compact else 12
+    lane_title = f" \u00b7 {model}" if model and model != eng else ""
+    L.append(box_top("LLM LANE" + lane_title, width, ascii_mode))
+    lane_rows = _llm_left_rows(st, h, bar_w, ascii_mode) if h else \
+        [[seg("  (vLLM telemetry offline)", "dim")]]
+    mid_rows = _llm_mid_rows(st, h) if h else [[] for _ in range(0)]
+    right_rows = _llm_right_rows(st, h, cfg) if h else []
+    if compact:
+        if width >= 116:
+            gutters = (2, 44, 74)
+        else:
+            gutters = (2, None, None)          # single column: stack verbatim
+            mid_rows = []
+            right_rows = []
+        merged = _merge_columns([lane_rows, mid_rows, right_rows],
+                                gutters, width)
+    else:
+        merged = _merge_columns([lane_rows, mid_rows, right_rows],
+                                (2, 78, 118), width)
+    L += merged[:4] if h else merged
+    L.append(box_bottom(width, ascii_mode))
+
+    # ---- LANES panel (compact: gpu+footer fold into the bottom row, A.2)
+    L.append(box_top("LANES \u2014 what is serving", width, ascii_mode))
+    L += build_lanes_rows(st, width, cfg, ascii_mode)
+    if compact:
+        L += _gpu_footer_compact(st, tstr)
+        return L
+    L.append(box_bottom(width, ascii_mode))
+    # ---- GPU panel: single honest row (wide only)
+    L.append(box_top("GPU", width, ascii_mode))
+    L.append(build_gpu_row(st, width, ascii_mode))
+    L.append(box_bottom(width, ascii_mode))
+    # ---- footer (wide)
+    L.append([seg(f"  poll {st.get('interval', 1):g}s   "
+                      f"errors {st.get('errors', 0)}   "
+                      f"lanes {'on' if st.get('lanes') else 'off'}   "
+                      f"{'[q] quit' if not st.get('once') else '--once snapshot'}"
+                      f"   {tstr}", "dim")])
+    return L
+
+
+def _gpu_footer_compact(st, tstr):
+    """Compact LANES bottom row: gpu strip + footer folded (A.2 row 24)."""
     hw = st.get("hw") or {}
+    t = hw.get("temp_c")
+    p = hw.get("power_w")
+    sm = hw.get("sm_mhz")
+    smx = hw.get("sm_max_mhz")
+    u = hw.get("util_pct")
+    thr = _thr_text(hw.get("throttle"))
+    parts = [f"{_dash(t, 'C')}", f"{p:g}W" if p is not None else "\u2014"]
+    if sm is not None:
+        pct = f"({sm / smx * 100:.0f}%)" if smx else ""
+        parts.append(f"SM{sm:g}MHz{pct}")
+    if u is not None:
+        parts.append(f"util{u:.0f}%")
+    parts.append(f"thr{thr}")
+    foot = (f"poll {st.get('interval', 1):g}s err {st.get('errors', 0)}"
+            f" [q] quit {tstr}")
+    return [[seg("  gpu " + " \u00b7 ".join(parts) + "   " + foot, "dim")]]
+
+
+def _merge_sideboxes(title_l, title_r, left_rows, right_rows, width,
+                     ascii_mode):
+    """MEMORY | PROCESSES side-by-side, SEG-AWARE (colours preserved per
+    James's colour steer — string-concat rows would drop them). Left box
+    spans x=0..lw (borders incl.), gap, right box to edge; only text is
+    clamped, structure kept."""
+    lw = 114                       # left box total width incl. borders
+    gap = 2
+    inner_l = max(1, lw - 3)
+    rw = width - lw - gap          # right box total width incl. borders
+    inner_r = max(1, rw - 3)
+    out = []
+    dash = "-" if ascii_mode else "\u2500"
+    vbar = "|" if ascii_mode else "\u2502"
+
+    def _top(ttl, w):
+        pad = max(3, w - len(ttl) - 6)
+        return (("+\u2500 " + ttl + " " + dash * (pad + 1) + "+")
+                if ascii_mode else
+                ("\u250c\u2500 " + ttl + " " + "\u2500" * (pad + 1)
+                 + "\u2510"))
+
+    out.append([seg(_top(title_l, lw) + " " * gap + _top(title_r, rw),
+                    "dim")])
+    nl, nr = len(left_rows), len(right_rows)
+    for i in range(max(nl, nr)):
+        lsegs = [t for t in (left_rows[i] if i < nl else [])
+                 if isinstance(t, tuple) and len(t) == 2]
+        rsegs = [t for t in (right_rows[i] if i < nr else [])
+                 if isinstance(t, tuple) and len(t) == 2]
+
+        def _clamp(segs, span):
+            cl, used = [], 0
+            for t, s in segs:
+                if used + len(t) > span:
+                    t = t[: span - used]
+                if not t:
+                    break
+                cl.append(seg(t, s))
+                used += len(t)
+            if used < span:
+                cl.append(seg(" " * (span - used)))
+            return cl
+
+        row = [seg(" " + vbar + " "), *_clamp(lsegs, inner_l),
+               seg(vbar + " "), *_clamp(rsegs, inner_r), seg(vbar)]
+        out.append(row)
+    out.append([seg((" \u2514" + dash * (inner_l + 2) + "\u2518"
+                     + " " * gap + "\u2514" + dash * (inner_r + 1)
+                     + "\u2518")[:width - 2], "dim")])
+    return out
+
+
+def _split_memory(st, cfg, width, ascii_mode):
+    h = st.get("health") or {}
     total, avail = st.get("mem_total"), st.get("mem_avail")
+    rows = []
     if total and avail:
         used = total - avail
         frac = used / total
-        style = "good" if frac < 0.7 else ("warn" if frac < 0.9 else "bad")
-        L.append([seg("  system    "),
-                  seg(bar_solid(frac, width=24, ascii_mode=ascii_mode), style),
-                  seg(f" {frac * 100:.1f}%", "plain"),
-                  seg(f"  {fmt_gib(used)} / {fmt_gib(total)}"
-                      f"   ({fmt_gib(avail)} avail)", "dim")])
+        stl = _thr_pct_style(frac)
+        rows.append(
+            [seg("system  "),
+             seg(bar_solid(frac, width=22, ascii_mode=ascii_mode), stl),
+             seg(f" {frac * 100:.1f}%", stl),
+             seg(f"  {fmt_gib(used)} / {fmt_gib(total)}"
+                 f"  ({fmt_gib(avail)} avail)", "dim")])
     else:
-        L.append([seg("  system      meminfo unavailable", "dim")])
+        rows.append([seg("system    meminfo unavailable", "dim")])
     gmu = h.get("gpu_memory_utilization")
     if gmu is not None:
-        style = "good" if gmu < 0.7 else ("warn" if gmu < 0.9 else "bad")
-        L.append([seg("  engine     "),
-                  seg(bar_solid(gmu, width=24, ascii_mode=ascii_mode), style),
-                  seg(f" {gmu * 100:.1f}%", "plain"),
-                  seg("   gpu_memory_utilization (engine view)", "dim")])
-
-    def _dash(v, s):
-        return f"{v}{s}" if v is not None else "—"
-
-    def _power_txt():
-        p, lim = hw.get("power_w"), hw.get("power_limit_w")
-        if p is None and lim is None:
-            return "—"
-        return f"{p or 0:g}W / {lim:g}W" if lim is not None else f"{p:g}W"
-
-    def _barfrac(part, whole):
-        """Fraction for the VRAM bar: NVML/limit, else NVML/UMA total."""
-        if part is None or not whole:
-            return None
-        return part / whole
-
-    vram = hw.get("vram_used_mib")
-    limit = hw.get("power_limit_w")
-    uma_total_gib = (total / 1024.0) if total else None
-    vram_frac = _barfrac(vram, uma_total_gib)
-    gpu_row = [
-        seg("  gpu       "),
-        seg(_dash(hw.get("temp_c"), "C"), "plain"),
-        seg(f"  {_power_txt()}", "plain"),
-        seg(f"  SM {_dash(hw.get('sm_mhz'), 'MHz')}", "dim"),
-    ]
-    if hw.get("util_pct") is not None:
-        gpu_row.append(seg(f"  util {hw['util_pct']:.0f}%", "accent"))
-    if hw.get("sm_mhz") is not None and hw.get("sm_max_mhz"):
-        gpu_row.append(seg(f" ({hw['sm_mhz'] / hw['sm_max_mhz'] * 100:.0f}%)",
-                           "dim"))
-    gpu_row.append(seg(f"  thr {_thr_text(hw.get('throttle'))}", "dim"))
-    L.append(gpu_row)
-    if vram is not None:
-        style = (None if vram_frac is None
-                 else "good" if vram_frac < 0.7
-                 else "warn" if vram_frac < 0.9 else "bad")
-        src = "procs sum (NVML [N/A])" if hw.get("vram_from") == "procs" \
-            else "NVML used / UMA total"
-        L.append([seg("  vram      "),
-                  seg(bar_solid(vram_frac, width=24, ascii_mode=ascii_mode)
-                      if vram_frac is not None
-                      else "[" + " " * BAR_WIDTH + "]", style),
-                  seg(f" {fmt_gib(vram * 1024)}", "plain"),
-                  seg(f"   {src}", "dim")])
+        stl = _mem_style(gmu)
+        rows.append(
+            [seg("engine  "),
+             seg(bar_solid(gmu, width=22, ascii_mode=ascii_mode), stl),
+             seg(f" {gmu * 100:.1f}%", stl),
+             seg("   gpu_memory_utilization", "dim")])
     else:
-        L.append([seg("  vram      —", "dim")])
-    up = sorted((p for p in hw.get("vram_procs", []) if p.get("mib")),
-                key=lambda p: -p["mib"])[:3]
-    if up:
-        cells = " · ".join(f"{p['pid']} {fmt_gib(p['mib'] * 1024)}"
-                           for p in up)
-        L.append([seg("  vram procs "),
-                  seg(cells, "dim")])
+        rows.append([seg("engine    \u2014", "dim")])
     gpuu = st.get("um_gpu")
-    if gpuu is not None and total:
-        cf = gpuu / (total / 1024.0)            # sparkDash unifiedMemory = MiB
-        style = "good" if cf < 0.7 else ("warn" if cf < 0.9 else "bad")
-        L.append([seg("  uma gpu   "),
-                  seg(bar_solid(cf, width=24, ascii_mode=ascii_mode), style),
-                  seg(f" {fmt_gib(gpuu * 1024)}", "plain"),
-                  seg(f"   unified split (cpu "
-                      f"{fmt_gib((st.get('um_cpu') or 0) * 1024)})"
-                      "  sparkDash view", "dim")])
+    if gpuu is not None and st.get("mem_total"):
+        cf = gpuu / (st["mem_total"] / 1024.0)
+        stl = _mem_style(cf)
+        rows.append(
+            [seg("uma gpu "),
+             seg(bar_solid(cf, width=22, ascii_mode=ascii_mode), stl),
+             seg(f" {fmt_gib(gpuu * 1024)}", stl),
+             seg(f"  split cpu {fmt_gib((st.get('um_cpu') or 0) * 1024)}"
+                 " (d)", "dim")])
+        # demoted v2 'note:' content rides here (P1-5: content kept, dim)
+        rows[-1].append(seg(
+            "  \u00b7 meminfo avail honest, NVML used = reservation", "dim"))
     else:
-        L.append([seg("  uma gpu   —", "dim")])
-    orisk = st.get("um_oom")
-    if orisk:
-        L.append([seg(f"  oomRisk {orisk}", "bad" if orisk == "high" else "warn")])
-    thr = hw.get("throttle")
-    if _thr_text(thr).startswith("ACTIVE:"):
-        L.append([seg(f"  throttle: {_thr_text(thr)[7:]}", "bad")])
-    L.append([seg("  note: system row = /proc/meminfo available (honest on"
-                  " coherent UMA); NVML 'used' reports reservation."
-                  "  full detail: btop / sparkDash", "dim")])
-    L.append(box_bottom(width, ascii_mode))
+        rows.append([seg("uma gpu  \u2014", "dim")])
+    cpu = st.get("cpu_pct")
+    if cpu is not None:
+        stl = _thr_pct_style(cpu / 100.0)
+        draw = st.get("cpu_draw")
+        tdp = st.get("cpu_tdp")
+        temp = st.get("cpu_temp")
+        pw = (f"{draw:g}W" if draw is not None else "\u2014") \
+            + (f"/{tdp:g}W" if tdp else "")
+        rows.append(
+            [seg(f"cpu {cpu:.0f}% "),
+             seg(bar_solid(cpu / 100.0, width=10, ascii_mode=ascii_mode),
+                 stl),
+             seg(f" {pw}", "plain"),
+             seg(f" {temp:g}C" if temp is not None else "", "dim")])
+    return rows
 
-    # ---- footer
-    L.append([seg(f"  poll {st.get('interval', 1):g}s   "
-                  f"errors {st.get('errors', 0)}   "
-                  f"lanes {'on' if st.get('lanes') else 'off'}   "
-                  f"{'[q] quit' if not st.get('once') else '--once snapshot'}"
-                  f"   {tstr}", "dim")])
-    return L
+
+def _proc_rows(st, cfg, width, ascii_mode):
+    """PROCESSES right box rows (wide): per-proc VRAM bars + footnote.
+
+    Bar fraction = proc's VRAM / UMA total (meminfo KiB -> MiB)."""
+    procs = st.get("procs") or []
+    total = st.get("mem_total")
+    total_mib = (total / 1024.0) if total else None
+    rows = []
+    for p in procs[:4]:
+        frac = (p["mib"] / total_mib
+                if (total_mib and p.get("mib")) else None)
+        stl = _mem_style(frac or 0)
+        rows.append(
+            [seg(f"{p['name']:<12} "),
+             seg(bar_solid(frac, width=18, ascii_mode=ascii_mode), stl),
+             seg(f" {fmt_gib(p['mib'] * 1024)}", "plain"),
+             seg(f"  pid {p.get('pid', '?')}", "dim")])
+    if not rows:
+        rows.append([seg("(sparkDash offline \u2014 no per-proc VRAM)",
+                         "dim")])
+    hw = st.get("hw") or {}
+    vram = hw.get("vram_used_mib")
+    s_mib = sum(p["mib"] for p in procs)
+    if vram is not None:
+        agree = ("sources agree" if s_mib and abs(s_mib - vram) < vram * 0.05
+                 else "NVML [N/A] \u2014 procs sum")
+        rows.append(
+            [seg("\u2570 procs-sum ", "dim"),
+             seg(fmt_gib(s_mib * 1024) if s_mib else fmt_gib(vram * 1024),
+                 "plain"),
+             seg(f" \u2248 NVML used \u2014 {agree}", "dim")])
+    return rows
+
+
+def _merge_str_pad(left, lw, right, width):
+    """Two border strings on one row: left at lw, right hugs the edge."""
+    line = left.ljust(lw + 2) + right
+    return line[:max(0, width)]
 
 
 # ------------------------------------------------------------ snapshot mode
@@ -1237,20 +1668,28 @@ def run_once(args, cfg):
         "decode_tps": None, "prefill_tps": None, "prefill_src": None}
     w_avgs = compute_window_avgs(health, prev, prev_t, now) if health else {}
     total, avail = read_meminfo()
-    gpuu, cpuu, oom = _dash_um()
+    dash = _dash_poll()
+    d0 = dash or {}
+    gpuu, cpuu, oom = d0.get("um_gpu"), d0.get("um_cpu"), d0.get("um_oom")
+    pa = {"sum": rates.get("prefill_tps") or 0.0,
+          "n": 1 if rates.get("prefill_tps") is not None else 0}
     st = {"health": health, "rates": rates, "offline": health is None,
           "last_ok_age": None, "errors": 0, "interval": args.interval,
           "now": datetime.now(), "ascii": args.ascii,
           "mem_total": total, "mem_avail": avail, "hw": read_hardware(),
           "um_gpu": gpuu, "um_cpu": cpuu, "um_oom": oom,
+          "cpu_pct": d0.get("cpu_pct"), "cpu_temp": d0.get("cpu_temp"),
+          "cpu_draw": d0.get("cpu_draw"), "cpu_tdp": d0.get("cpu_tdp"),
+          "procs": d0.get("procs") or [],
           "host_uptime": read_host_uptime(),
           "once": True,
           "hist": {"decode": deque(maxlen=HIST_N),
                    "prefill": deque(maxlen=HIST_N)},
-          "avg": {"decode": None, "dec_tot": None, "pre_tot": None},
+          "avg": {"decode": None, "dec_tot": None, "pre_tot": None,
+                  "prefill": (pa["sum"] / pa["n"]) if pa["n"] else None},
           "win_avgs": w_avgs,
           "mtp_win": {}, "lanes": probe_lanes(cfg) if cfg["lanes"] else {}}
-    lines = build_lines(st, 110, cfg)
+    lines = build_lines(st, 120, cfg)
     print("\n".join("".join(t for t, _ in line).rstrip() for line in lines))
 
 
@@ -1323,6 +1762,10 @@ def _poll_once(args, cfg, state):
         state["hist"]["decode"].append(rates.get("decode_tps"))
         state["hist"]["prefill"].append(rates.get("prefill_tps"))
         state["avg"].update(rates, health)
+        pa = state.setdefault("pre_avg", {"sum": 0.0, "n": 0})
+        if rates.get("prefill_tps") is not None:
+            pa["sum"] += rates["prefill_tps"]
+            pa["n"] += 1
         if not cfg.get("llm_model") and health.get("model_name"):
             cfg["llm_model"] = health["model_name"]
     if cfg["lanes"] and (now - state["lanes_ts"] > 3.0 or state["lanes"] is None):
@@ -1332,16 +1775,20 @@ def _poll_once(args, cfg, state):
     total, avail = read_meminfo()
     if not state.get("host_uptime"):
         state["host_uptime"] = read_host_uptime()
-    gpuu, cpuu, oom = _dash_um()
+    dash = _dash_poll()
+    d0 = dash or {}
+    gpuu, cpuu, oom = d0.get("um_gpu"), d0.get("um_cpu"), d0.get("um_oom")
     avg = state["avg"]
-    avg_d = {"decode": avg.decode, "dec_tot": avg.dec_tot, "pre_tot": avg.pre_tot}
+    avg_d = {"decode": avg.decode, "dec_tot": avg.dec_tot, "pre_tot": avg.pre_tot,
+             "prefill": (state["pre_avg"]["sum"] / state["pre_avg"]["n"])
+             if state.get("pre_avg", {}).get("n") else None}
     return {"health": health, "rates": rates, "offline": health is None,
             "last_ok_age": int(now - state["last_ok"])
             if state.get("last_ok") else None,
             "errors": state["errors"], "interval": args.interval,
             "now": datetime.now(), "ascii": state["ascii"],
             "mem_total": total, "mem_avail": avail, "hw": read_hardware(),
-            "um_gpu": gpuu, "um_cpu": cpuu, "um_oom": oom,
+            "um_gpu": gpuu, "um_cpu": cpuu, "um_oom": oom, "cpu_pct": d0.get("cpu_pct"), "cpu_temp": d0.get("cpu_temp"), "cpu_draw": d0.get("cpu_draw"), "cpu_tdp": d0.get("cpu_tdp"), "procs": d0.get("procs") or [],
             "host_uptime": state.get("host_uptime"),
             "hist": state["hist"], "avg": avg_d, "win_avgs": w_avgs,
             "mtp_win": mtp_win, "lanes": state["lanes"] or {},
@@ -1394,6 +1841,9 @@ def _draw(stdscr, st):
         "bad": curses.color_pair(3),
         "accent": curses.color_pair(4),
         "badge": curses.A_REVERSE,
+        "rev_bad": curses.A_REVERSE | curses.color_pair(3),
+        "rev_good": curses.A_REVERSE | curses.color_pair(1),
+        "rev_acc": curses.A_REVERSE | curses.color_pair(4),
         None: curses.A_NORMAL,
     }
     stdscr.erase()
