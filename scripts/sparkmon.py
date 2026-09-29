@@ -958,7 +958,7 @@ def build_vitals_row(st, width, ascii_mode):
     compact = width < 200
     bar_w = 6 if compact else 10
     sep = seg(" \u00b7 ", "dim") if compact else seg("   \u2502   ", "dim")
-    insep = "\u2502" if compact else " \u00b7 "
+    insep = " \u2502 " if compact else " \u00b7 "
 
     def _num1(v, nd=1):
         return "--" if v is None else f"{v:,.{nd}f}"
@@ -978,7 +978,8 @@ def build_vitals_row(st, width, ascii_mode):
     if total and avail:
         frac = (total - avail) / total
         stl = _thr_pct_style(frac)
-        cells.append([seg(f"RAM {frac * 100:.0f}%{insep if compact else ' '}", stl),
+        cells.append([seg(f"RAM {frac * 100:.0f}%{insep if compact else ' '}"
+                          f"{'' if compact else ''}", stl),
                       seg(bar_solid(frac, width=bar_w, ascii_mode=ascii_mode), stl)])
     cpu = st.get("cpu_pct")
     if cpu is not None:
@@ -1124,8 +1125,7 @@ def _llm_left_rows(st, h, bar_w, ascii_mode):
         style = "dim"
     pos_row = [seg(f"{'mtp pos' if bar_w >= 14 else 'mpos':<9} "),
                seg(" ".join(cells) if cells else "\u2014 no by-position data",
-                   style),
-               seg("   " + tail, "dim")]
+                   style)]
     rows.append(pos_row)
     return rows
 
@@ -1323,25 +1323,26 @@ def build_gpu_row(st, width, ascii_mode):
                    "bad" if thr_txt.startswith("ACTIVE:") else "dim"))
     row.append(seg(f"   detail: btop \u00b7 sparkDash"
                    + ("  (idle)" if not under_load else ""), "dim"))
-    # right half: system quick stats — RAM reprise + OOM + proc count
-    # (single row uses the full 240; no dead tail)
-    total, avail = st.get("mem_total"), st.get("mem_avail")
-    oom = st.get("um_oom")
-    nproc = len(st.get("procs") or [])
-    quick = []
-    if total and avail:
-        frac = (total - avail) / total
-        quick.append(f"RAM {frac * 100:.0f}%")
-    if oom:
-        quick.append(f"OOM {oom.upper()}")
-    if nproc:
-        quick.append(f"{nproc} proc")
-    if quick:
-        txt = " · ".join(quick)
-        pad = width - 3 - len(_row_text(row)) - len(txt)
-        if pad >= 2:
-            row.append(seg(" " * pad, "dim"))
-            row.append(seg(txt, _oom_style(oom) if oom == "high" else "dim"))
+        # right half: system quick stats — wide standalone GPU panel only
+    if width >= 200:
+        total, avail = st.get("mem_total"), st.get("mem_avail")
+        oom = st.get("um_oom")
+        nproc = len(st.get("procs") or [])
+        quick = []
+        if total and avail:
+            frac = (total - avail) / total
+            quick.append(f"RAM {frac * 100:.0f}%")
+        if oom:
+            quick.append(f"OOM {oom.upper()}")
+        if nproc:
+            quick.append(f"{nproc} proc")
+        if quick:
+            txt = " · ".join(quick)
+            pad = width - 3 - len(_row_text(row)) - len(txt)
+            if pad >= 2:
+                row.append(seg(" " * pad, "dim"))
+                row.append(seg(txt,
+                               _oom_style(oom) if oom == "high" else "dim"))
     return row
 
 
@@ -1414,6 +1415,140 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
     return rows
 
 
+
+
+def _our_band(st, cfg, width, ascii_mode):
+    """'Our' band: LLM LANE occupies the LEFT column full-height; LANES
+    then GPU stack in the RIGHT column. Columns: left box interior 116
+    wide = bars+tails (x3..64) | latency (x66..114); counters render as
+    ONE dim full-left-width line (row 7) so nothing sheds. Right stack:
+    title, 5 lanes (detail right-anchored), GPU strip. Band rows align
+    across both columns."""
+    h = st.get("health") or {}
+    lw = 118
+    gap = 2
+    rx = lw + gap                                    # right col at x=120
+    bar_w = 18
+
+    lane_rows = (_llm_left_rows(st, h, bar_w, ascii_mode)
+                 if h else [[seg("  (vLLM telemetry offline)", "dim")]])
+    mid_rows = _llm_mid_rows(st, h) if h else []
+
+    # counters one-liner (full left width, row 7): reqs/seqs/preempt/eng +
+    # spec k — from _llm_right_rows flattened
+    counters = ""
+    if h:
+        rr = _llm_right_rows(st, h, cfg)
+        counters = " · ".join(_row_text(r).strip() for r in rr
+                              if _row_text(r).strip())
+        win = st.get("mtp_win") or {}
+        pp = win.get("per_pos") or {}
+        hot = sum(1 for v in pp.values() if v > 0.5)
+        wn = (f"win {win.get('window_s', '--')}s · {hot}/{len(pp)}"
+              f" pos >50%" if pp else "— window warming")
+        mid_rows = (mid_rows + [None, None, None])[:3] + [[seg(wn, "dim")]]
+        counters += f" · spec MTP k={sk}" \
+            if (sk := (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens")
+                or 3) else ""
+    n_left = max(1, len(lane_rows) + 1) + (1 if counters else 0)
+
+    lanes = st.get("lanes") or {}
+    posture = (lanes.get("llm") or {}).get("posture")
+    badge = f"[{posture}]" if posture else ""
+    right_stack = []
+    for key, label in (("llm", "LLM"), ("gate", "gate"), ("deci", "deci"),
+                       ("router", "route"), ("dash", "dash")):
+        ln = lanes.get(key) or {}
+        up = ln.get("up")
+        dot, dstyle = (("●", "good") if up else ("○", "bad")) \
+            if not ascii_mode else (("*" if up else "x"),
+                                    "good" if up else "bad")
+        row = [seg(f"  {label:<6}"), seg(dot, dstyle),
+               seg(f":{ln.get('port', '--')}", "dim"),
+               seg(f" {ln.get('model') or '?'}",
+                   "plain" if up else "dim")]
+        if ln.get("image"):
+            row.append(seg(f" [{ln['image']}]", "dim"))
+        det = ln.get("detail") if up else None
+        right_stack.append((row, det, badge if key == "llm" else ""))
+    hw = st.get("hw") or {}
+    under = (hw.get("util_pct") or 0) > 5
+    dash_t = _dash(hw.get("temp_c"), "C")
+    power = (f"{hw.get('power_w'):g}W" if hw.get("power_w") is not None
+             else "—")
+    gpu_cell = [seg("GPU", "dim"),
+                seg("  " + dash_t + " · " + power + " · util "
+                    f"{(hw.get('util_pct') or 0):.0f}%",
+                    _temp_style(hw.get("temp_c")))]
+    thr = _thr_text(hw.get("throttle"))
+    if thr != "—":
+        gpu_cell.append(seg(" · thr " + thr,
+                            "bad" if "ACTIVE" in thr else "dim"))
+    right_stack.append((gpu_cell, None, ""))
+    n_right = len(right_stack) + 1                   # + title row
+    n_left = max(n_left, 1 + len(right_stack))
+
+    def _cl(segs, span):
+        cl, used = [], 0
+        for t, s in segs:
+            if used + len(t) > span:
+                t = t[: span - used]
+            if not t:
+                break
+            cl.append(seg(t, s))
+            used += len(t)
+        if used < span:
+            cl.append(seg(" " * (span - used)))
+        return cl
+
+    out = []
+    lw_inner = lw - 2
+    nrows = max(n_left, n_right)
+    for i in range(nrows):
+        if i == 0:
+            lcell = [seg("LLM LANE", "title")]
+            rcell = [seg("LANES — what is serving", "title")]
+        else:
+            li = i - 1
+            # LEFT rows: 1..4 = lane_rows, 5 = counters (one-liner)
+            if li < len(lane_rows):
+                l1 = lane_rows[li]
+                lm = mid_rows[li] if li < len(mid_rows) else []
+                c1 = _cl([t for t in l1 if isinstance(t, tuple)], 61)
+                c2 = _cl([t for t in lm if isinstance(t, tuple)], 52)
+                lcell = [*c1, seg(" "), *c2]
+            elif counters and li == len(lane_rows):
+                span = lw_inner - 4
+                if len(counters) > span:
+                    counters = counters[:span].rsplit(" \u00b7 ", 1)[0]
+                lcell = [seg(counters, "dim")]
+            else:
+                lcell = []
+            # RIGHT rows: lanes then GPU
+            si = i - 1                    # row1 → stack[0] ... row6 → GPU
+            if si < len(right_stack):
+                row, det, bd = right_stack[si]
+                rcell = list(row)
+                span_r = width - rx - 5
+                if det:
+                    pad = span_r - len(_row_text(rcell)) - len(det)
+                    if pad >= 1:
+                        rcell.append(seg(" " * pad, "dim"))
+                    rcell.append(seg(det, "dim"))
+                if bd:
+                    pad2 = span_r - len(_row_text(rcell)) - len(bd)
+                    if pad2 >= 1:
+                        rcell.append(seg(" " * pad2, "dim"))
+                    rcell.append(seg(bd, "rev_acc" if not ascii_mode
+                                     else "plain"))
+            else:
+                rcell = []
+        out.append([seg(" "), seg("│"), seg(" "),
+                    *_cl(lcell, lw_inner), seg("│"), seg(" " * gap),
+                    *_cl(rcell, width - rx - 3), seg("│")])
+    return out
+
+
 def build_lines(st, width, cfg=None):
     """v3.0 frame per approved redesign: zero data removal, reorganize/promote
     (James's constraints: reorg + demote only; solid █ bars; colour=state)."""
@@ -1480,51 +1615,55 @@ def build_lines(st, width, cfg=None):
                               " (sparkDash)", mem_rows, proc_rows, width,
                               ascii_mode)
 
-    # ---- LLM LANE: 3 fixed-gutter columns
-    bar_w = 18 if not compact else 12
-    lane_title = f" \u00b7 {model}" if model and model != eng else ""
-    L.append(box_top("LLM LANE" + lane_title, width, ascii_mode))
-    lane_rows = _llm_left_rows(st, h, bar_w, ascii_mode) if h else \
-        [[seg("  (vLLM telemetry offline)", "dim")]]
-    mid_rows = _llm_mid_rows(st, h) if h else [[] for _ in range(0)]
-    right_rows = _llm_right_rows(st, h, cfg) if h else []
-    # per-pos row (4th) mid/right content: window note + spec config in
-    # the right rail — removes the dead two columns on that row
-    if h and lane_rows and len(lane_rows) == 4:
-        win = st.get("mtp_win") or {}
-        pp = win.get("per_pos") or {}
-        hot = sum(1 for v in pp.values() if v > 0.5)
-        wn = (f"win {win.get('window_s', '--')}s \u00b7 {hot}/{len(pp)}"
-              f" pos >50%" if pp else "\u2014 window warming")
-        sk = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
-        mid_rows = mid_rows[:3] + [[seg(wn, "dim")]]
-        right_rows = right_rows[:3] + [[seg(f"k={sk}", "dim")]]
-    if compact:
-        if width >= 116:
-            gutters = (2, 44, 74)
-        else:
-            gutters = (2, None, None)          # single column: stack verbatim
-            mid_rows = []
-            right_rows = []
-        merged = _merge_columns([lane_rows, mid_rows, right_rows],
-                                gutters, width)
+    # ---- LLM LANE / LANES / GPU composite band (wide)
+    if width >= 200 and not compact:
+        band = _our_band(st, cfg, width, ascii_mode)
+        # frame: one shared top border, divider rows already carry │;
+        # bottom border ends the composite
+        L.append(box_top("LLM LANE │ LANES", width, ascii_mode))
+        L += [r for jx, r in enumerate(band) if jx > 0]   # skip band title row
+        L.append(box_bottom(width, ascii_mode))
     else:
-        merged = _merge_columns([lane_rows, mid_rows, right_rows],
-                                (2, 66, 130), width)
-    L += merged[:4] if h else merged
-    L.append(box_bottom(width, ascii_mode))
-
-    # ---- LANES panel (compact: gpu+footer fold into the bottom row, A.2)
-    L.append(box_top("LANES \u2014 what is serving", width, ascii_mode))
-    L += build_lanes_rows(st, width, cfg, ascii_mode)
-    if compact:
-        L += _gpu_footer_compact(st, tstr)
-        return L
-    L.append(box_bottom(width, ascii_mode))
-    # ---- GPU panel: single honest row (wide only)
-    L.append(box_top("GPU", width, ascii_mode))
-    L.append(build_gpu_row(st, width, ascii_mode))
-    L.append(box_bottom(width, ascii_mode))
+        # ---- LLM LANE: 3 fixed-gutter columns (compact path preserved)
+        bar_w = 18 if not compact else 12
+        lane_title = f" \u00b7 {model}" if model and model != eng else ""
+        L.append(box_top("LLM LANE" + lane_title, width, ascii_mode))
+        lane_rows = _llm_left_rows(st, h, bar_w, ascii_mode) if h else \
+            [[seg("  (vLLM telemetry offline)", "dim")]]
+        mid_rows = _llm_mid_rows(st, h) if h else [[] for _ in range(0)]
+        right_rows = _llm_right_rows(st, h, cfg) if h else []
+        if h and lane_rows and len(lane_rows) == 4:
+            win = st.get("mtp_win") or {}
+            pp = win.get("per_pos") or {}
+            hot = sum(1 for v in pp.values() if v > 0.5)
+            wn = (f"win {win.get('window_s', '--')}s \u00b7 {hot}/{len(pp)}"
+                  f" pos >50%" if pp else "\u2014 window warming")
+            sk = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
+            mid_rows = mid_rows[:3] + [[seg(wn, "dim")]]
+            right_rows = right_rows[:3] + [[seg(f"k={sk}", "dim")]]
+        if compact:
+            if width >= 116:
+                gutters = (2, 44, 74)
+            else:
+                gutters = (2, None, None)      # single: stack verbatim
+                mid_rows = []
+                right_rows = []
+            merged = _merge_columns([lane_rows, mid_rows, right_rows],
+                                    gutters, width)
+        else:
+            merged = _merge_columns([lane_rows, mid_rows, right_rows],
+                                    (2, 66, 130), width)
+        L += merged[:4] if h else merged
+        L.append(box_bottom(width, ascii_mode))
+        # ---- LANES panel
+        L.append(box_top("LANES \u2014 what is serving", width, ascii_mode))
+        L += build_lanes_rows(st, width, cfg, ascii_mode)
+        L.append(box_bottom(width, ascii_mode))
+        # ---- GPU panel: single honest row
+        L.append(box_top("GPU", width, ascii_mode))
+        L.append(build_gpu_row(st, width, cfg, ascii_mode) if False
+                 else build_gpu_row(st, width, ascii_mode))
+        L.append(box_bottom(width, ascii_mode))
     # ---- footer (wide)
     L.append([seg(f"  poll {st.get('interval', 1):g}s   "
                       f"errors {st.get('errors', 0)}   "
