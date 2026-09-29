@@ -1107,14 +1107,18 @@ def _llm_left_rows(st, h, bar_w, ascii_mode):
     if pp:
         for p in sorted(pp)[:6]:
             v = pp[p]
-            cells.append(f"p{p} {bar_solid(v, width=6, ascii_mode=ascii_mode)}"
+            cells.append(f"p{p} {bar_solid(v, width=8, ascii_mode=ascii_mode)}"
                          f" {fmt_pct(v, 0)}")
-        tail = f"k={spec_k} (live)"
+        tail = f"k={spec_k} (live window)"
         style = "plain"
     else:
         pos_h = h.get("mtp_accept_by_position") or []
+        mx = max((p.get("tested") or 0) for p in pos_h[:6]) or 1
         for p in pos_h[:6]:
-            cells.append(f"p{p.get('position')} tok {fmt_num(p.get('tested'))}")
+            b = bar_solid((p.get("tested") or 0) / mx, width=4,
+                          ascii_mode=ascii_mode)
+            cells.append(f"p{p.get('position')} {b}"
+                         f" {fmt_num(p.get('tested'))}")
         tail = (f"k={spec_k} (lifetime)" if bar_w < 14
                 else f"k={spec_k} (lifetime \u2014 window warming up)")
         style = "dim"
@@ -1311,6 +1315,25 @@ def build_gpu_row(st, width, ascii_mode):
                    "bad" if thr_txt.startswith("ACTIVE:") else "dim"))
     row.append(seg(f"   detail: btop \u00b7 sparkDash"
                    + ("  (idle)" if not under_load else ""), "dim"))
+    # right half: system quick stats — RAM reprise + OOM + proc count
+    # (single row uses the full 240; no dead tail)
+    total, avail = st.get("mem_total"), st.get("mem_avail")
+    oom = st.get("um_oom")
+    nproc = len(st.get("procs") or [])
+    quick = []
+    if total and avail:
+        frac = (total - avail) / total
+        quick.append(f"RAM {frac * 100:.0f}%")
+    if oom:
+        quick.append(f"OOM {oom.upper()}")
+    if nproc:
+        quick.append(f"{nproc} proc")
+    if quick:
+        txt = " · ".join(quick)
+        pad = width - 3 - len(_row_text(row)) - len(txt)
+        if pad >= 2:
+            row.append(seg(" " * pad, "dim"))
+            row.append(seg(txt, _oom_style(oom) if oom == "high" else "dim"))
     return row
 
 
@@ -1338,8 +1361,14 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
                    "plain" if up else "dim")]
         if ln.get("image"):
             row.append(seg(f"  [{ln['image']}]", "dim"))
-        if ln.get("detail") and up:
-            row.append(seg(f"  {ln['detail']}", "dim"))
+        detail = ln.get("detail") if up else None
+        if detail:
+            # right-align the detail tag at the panel's right edge — the
+            # right half of LANES stops being dead space (P1-4 extension)
+            pad = width - 5 - len(_row_text(row)) - len(detail)
+            if pad >= 1:
+                row.append(seg(" " * pad, "dim"))
+            row.append(seg(detail, "dim"))
         rows.append(row)
         if key == "llm" and posture:
             # right-align the posture badge inside the box (P1-4)
@@ -1462,7 +1491,7 @@ def build_lines(st, width, cfg=None):
                                 gutters, width)
     else:
         merged = _merge_columns([lane_rows, mid_rows, right_rows],
-                                (2, 78, 118), width)
+                                (2, 66, 130), width)
     L += merged[:4] if h else merged
     L.append(box_bottom(width, ascii_mode))
 
