@@ -93,12 +93,19 @@ _SPARK_ASCII = "_.-~=*#"
 
 
 def spark(vals, width=24, ascii_mode=False):
-    """Rolling sparkline; None-valued samples render as blank."""
+    """Rolling sparkline; None-valued samples render as blank.
+
+    Idle line rule: when every sample is 0/None the line renders BLANK —
+    a full bed of ▁ sliver glyphs read as "diamonds" in Menlo/mono at
+    1-cell height (James's complaint); btop does the same (no baseline
+    noise). Glyphs only appear once samples carry signal."""
     glyphs = _SPARK_ASCII if ascii_mode else _SPARK
     vals = list(vals)[-width:]
     if not vals:
         return " " * width
     known = [v for v in vals if v is not None]
+    if not known or max(known) <= 0.0:
+        return " " * width
     peak = (max(known) if known else 0.0) or 1.0
     out = []
     for v in vals:
@@ -106,7 +113,7 @@ def spark(vals, width=24, ascii_mode=False):
             out.append(" ")
         else:
             idx = min(len(glyphs) - 1, 1 + int((v / peak) * (len(glyphs) - 2)))
-            out.append(glyphs[idx])
+            out.append(glyphs[idx] if idx > 1 or v > 0 else " ")
     return "".join(out)
 
 
@@ -848,13 +855,14 @@ def seg(text, style="plain"):
 
 
 def box_top(title, width, ascii_mode):
-    if ascii_mode:
-        # combined row length == width: bar + title share the row
-        return [seg("+" + ("-" * max(1, width - len(title) - 5)) + "+",
-                    "dim"),
-                seg(f"| {title} ", "title")]
-    return [seg("\u250c\u2500 " + title + " ", "title"),
-            seg("\u2500" * max(3, width - len(title) - 5) + "\u2510", "dim")]
+    bar = "-" if ascii_mode else "\u2500"
+    if not ascii_mode:
+        return [seg("\u250c\u2500 " + title + " ", "title"),
+                seg("\u2500" * max(3, width - len(title) - 5) + "\u2510",
+                    "dim")]
+    # ascii: '+-- TITLE --… --+' — title INSIDE the bar (matches unicode)
+    dash_len = max(3, width - len(title) - 6)
+    return [seg("+" + "-- " + title + " " + "-" * dash_len + "+", "dim")]
 
 
 def box_bottom(width, ascii_mode):
@@ -1016,12 +1024,17 @@ def build_throughput_rows(st, width, ascii_mode):
                 stats.append(f"avg {_dq_mean(hist):,.1f}")
             if peak is not None:
                 stats.append(f"peak {fmt_num(peak)}")
-        row = [seg(f"  {label} "),
-               seg(spark(hist, width=sw, ascii_mode=ascii_mode), label_style),
-               seg("  "),
-               seg(f"{inst} {'t/s' if compact else 'tok/s'}",
-                   rate_style if rate else "dim")]
-        row.append(seg("   " + " \u2502 ".join(stats), "dim"))
+        # stats column snaps to the shared x=78 anchor (column parity with
+        # LLM LANE mid col + PROCESSES left edge — one grid, top to bottom)
+        head = [seg(f"  {label} "),
+                seg(spark(hist, width=sw, ascii_mode=ascii_mode),
+                    label_style),
+                seg("  "),
+                seg(f"{inst} {'t/s' if compact else 'tok/s'}",
+                    rate_style if rate else "dim")]
+        used = sum(len(t) for t, _ in head)
+        pad = max(1, 78 - used)
+        row = head + [seg(" " * pad), seg(" \u2502 ".join(stats), "dim")]
         return row
 
     return [
@@ -1494,27 +1507,36 @@ def _gpu_footer_compact(st, tstr):
     return [[seg("  gpu " + " \u00b7 ".join(parts) + "   " + foot, "dim")]]
 
 
+
+def _pad_to(x_abs):
+    """seg of spaces up to absolute x — rows start at 0 in sideboxes."""
+    return seg(" " * x_abs)
+
+
 def _merge_sideboxes(title_l, title_r, left_rows, right_rows, width,
                      ascii_mode):
     """MEMORY | PROCESSES side-by-side, SEG-AWARE (colours preserved per
     James's colour steer — string-concat rows would drop them). Left box
     spans x=0..lw (borders incl.), gap, right box to edge; only text is
     clamped, structure kept."""
-    lw = 114                       # left box total width incl. borders
-    gap = 2
-    inner_l = max(1, lw - 3)
-    rw = width - lw - gap          # right box total width incl. borders
-    inner_r = max(1, rw - 3)
+    lw = 114                       # left box: ┌ at 0, ┐ at 113
+    gap = 2                        # blank columns between the two boxes
+    inner_l = max(1, lw - 5)       # content x=3..111 (109) with ' │ ' pre
+    rw = width - lw - gap          # right box: ┌ at 116, ┐ at 239
+    inner_r = max(1, rw - 4)       # content x=118..237 (120)
     out = []
     dash = "-" if ascii_mode else "\u2500"
     vbar = "|" if ascii_mode else "\u2502"
 
+    corner_l = "+" if ascii_mode else "\u250c"
+    corner_r = "+" if ascii_mode else "\u2510"
+    corner_b_l = "+" if ascii_mode else "\u2514"
+    corner_b_r = "+" if ascii_mode else "\u2518"
+
     def _top(ttl, w):
         pad = max(3, w - len(ttl) - 6)
-        return (("+\u2500 " + ttl + " " + dash * (pad + 1) + "+")
-                if ascii_mode else
-                ("\u250c\u2500 " + ttl + " " + "\u2500" * (pad + 1)
-                 + "\u2510"))
+        return (corner_l + dash + " " + ttl + " "
+                + dash * (pad + 1) + corner_r)
 
     out.append([seg(_top(title_l, lw) + " " * gap + _top(title_r, rw),
                     "dim")])
@@ -1538,12 +1560,18 @@ def _merge_sideboxes(title_l, title_r, left_rows, right_rows, width,
                 cl.append(seg(" " * (span - used)))
             return cl
 
-        row = [seg(" " + vbar + " "), *_clamp(lsegs, inner_l),
-               seg(vbar + " "), *_clamp(rsegs, inner_r), seg(vbar)]
+        # FIXED column map (240-wide): left │ at x=1, content 3..112,
+        # left-right │ x=114; gap 115-116; right box border+content to
+        # right │ at x=238. Every part is width-fixed, zero drift.
+        row = [seg(" "), seg(vbar), seg(" "), *_clamp(lsegs, inner_l),
+               seg(" "), seg(vbar), seg(" " * gap), seg(vbar), seg(" "),
+               *_clamp(rsegs, inner_r), seg(" "), seg(vbar)]
         out.append(row)
-    out.append([seg((" \u2514" + dash * (inner_l + 2) + "\u2518"
-                     + " " * gap + "\u2514" + dash * (inner_r + 1)
-                     + "\u2518")[:width - 2], "dim")])
+    # mirror the top border exactly: left └..┘ at 0..113, gap 2,
+    # right └ at 116 .. ┘ at width-1 (239)
+    bot_l = corner_b_l + dash * (lw - 2) + corner_b_r          # 0..113
+    bot_r = corner_b_l + dash * (width - 117 - 1) + corner_b_r
+    out.append([seg(bot_l + " " * gap + bot_r, "dim")])
     return out
 
 
