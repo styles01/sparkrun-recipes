@@ -1443,18 +1443,19 @@ def _fmt_p(p):
 
 
 def _gpu_zone_bar(v, soft, hot, width=8, ascii_mode=False):
-    """Zone-coloured bracket bar: green below soft, yellow to hot, red
-    above hot. v can be absolute temp (with soft/hot thresholds) or a
-    frac (soft/hot as fractions)."""
-    br = "]" if not ascii_mode else "]"
+    """Zone-coloured bracket bar. v absolute (temp, with soft/hot in
+    same units) or a frac (soft/hot as fractions). Nonzero values show
+    a minimum 1-cell fill so a live metric never reads as empty."""
     if v is None:
-        return "[" + " " * (width - 1) + br
+        return "[" + " " * (width - 1) + "]"
     frac = max(0.0, min(1.0, v / 100.0)) if v > 1.5 and soft > 1.5 else \
         max(0.0, min(1.0, float(v)))
     if soft > 1.5:
         soft, hot = soft / 100.0, hot / 100.0
     n = int(round(frac * width))
-    return "[" + "█" * n + " " * (width - n) + br
+    if frac > 0 and n == 0:
+        n = 1
+    return "[" + "█" * n + " " * (width - n) + "]"
 
 
 def _our_band(st, cfg, width, ascii_mode):
@@ -1524,7 +1525,7 @@ def _our_band(st, cfg, width, ascii_mode):
                  seg(_gpu_zone_bar(t_c, 80, 90, 8), t_st),
                  seg("  pwr "), seg(_fmt_p(p_w), p_st),
                  seg(_gpu_zone_bar((p_w or 0) / 240.0, 0.75, 0.92, 8), p_st),
-                 seg("  util "), seg(f"{util * 100:.0f}%", u_st),
+                 seg("  util "), seg(f"{util * 100:.0f}% ", u_st),
                  seg(_gpu_zone_bar(util, 0.05, 0.9, 8), u_st)]
     thr = _thr_text(hw.get("throttle"))
     if thr != "—":
