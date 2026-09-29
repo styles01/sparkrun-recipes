@@ -1166,12 +1166,14 @@ def _llm_left_rows(st, h, bar_w, ascii_mode):
         style = "plain"
     else:
         pos_h = h.get("mtp_accept_by_position") or []
-        mx = max((p.get("tested") or 0) for p in pos_h[:6]) or 1
-        for p in pos_h[:6]:
-            b = bar_solid((p.get("tested") or 0) / mx, width=4,
-                          ascii_mode=ascii_mode)
-            cells.append(f"p{p.get('position')} {b}"
-                         f" {fmt_num(p.get('tested'))}")
+        mx = None
+        if pos_h:
+            mx = max((p.get("tested") or 0) for p in pos_h[:6]) or 1
+            for p in pos_h[:6]:
+                b = bar_solid((p.get("tested") or 0) / mx, width=4,
+                              ascii_mode=ascii_mode)
+                cells.append(f"p{p.get('position')} {b}"
+                             f" {fmt_num(p.get('tested'))}")
         tail = (f"k={spec_k} (lifetime)" if bar_w < 14
                 else f"k={spec_k} (lifetime \u2014 window warming up)")
         style = "dim"
