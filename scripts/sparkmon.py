@@ -325,6 +325,39 @@ def read_host_uptime():
 # ------------------------------------------------------------ fetching (ADR-0003)
 
 
+def _normalize_tf_health(h, url):
+    """TensorFold /health -> sparkmon's normalized dict (ADR-0003 shape).
+
+    TF exposes live counters at non-Prometheus names; map the overlap and
+    mark it so panels can show 'tensorfold' instead of '?'.
+
+    Detects the source by URL/origin. Unknown hosts → vLLM path as before.
+    """
+    if not isinstance(h, dict):
+        return h
+    n = dict(h)
+    if h.get("backend") == "tensorfold" or h.get("backend") == "tensorfold-cuda":
+        n["engine"] = "tensorfold"
+        n["model_name"] = h.get("model") or h.get("served_model") or \
+            ("tensorfold-exl3" if "exl3" in str(url) else "tensorfold")
+        n["busy"] = bool(h.get("busy") or h.get("requests_running"))
+        n["requests_running"] = h.get("requests_running") or 0
+        n["requests_waiting"] = 0     # TF reports prefilling streams not waiting
+        if (h.get("streams") or {}).get("prefilling"):
+            n["requests_waiting"] = h["streams"]["prefilling"]
+        n["completion_tokens_total"] = h.get("completion_tokens_total")
+        n["prompt_tokens_total"] = h.get("prompt_tokens_total")
+        if h.get("drafted_total"):
+            n["mtp_drafted_tokens_total"] = h["drafted_total"]
+            n["mtp_accepted_tokens_total"] = h.get("accepted_total")
+            n["mtp_draft_rounds_total"] = h.get("rounds_total")
+        n["kv_capacity_tok"] = h.get("context_length")
+        n["context_length"] = h.get("context_length")
+        n["kv_cache_dtype"] = "int8" if "exl3" in str(url) else h.get(
+            "kv_cache_dtype")
+    return n
+
+
 def fetch_any(url, timeout=2.0):
     """GET telemetry from a base URL. JSON at /health -> EXL3 dict;
     otherwise -> vLLM /metrics normalized (ADR-0003)."""
@@ -335,7 +368,7 @@ def fetch_any(url, timeout=2.0):
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = resp.read().decode("utf-8", "replace").strip()
         if body.startswith("{"):
-            return json.loads(body)
+            return _normalize_tf_health(json.loads(body), base)
     except urllib.error.HTTPError:
         pass  # no /health route — go straight to metrics
     req2 = urllib.request.Request(base + "/metrics")
@@ -1133,13 +1166,12 @@ def _llm_left_rows(st, h, bar_w, ascii_mode):
         style = "plain"
     else:
         pos_h = h.get("mtp_accept_by_position") or []
-        if pos_h:
-            mx = max((p.get("tested") or 0) for p in pos_h[:6]) or 1
-            for p in pos_h[:6]:
-                b = bar_solid((p.get("tested") or 0) / mx, width=4,
-                              ascii_mode=ascii_mode)
-                cells.append(f"p{p.get('position')} {b}"
-                             f" {fmt_num(p.get('tested'))}")
+        mx = max((p.get("tested") or 0) for p in pos_h[:6]) or 1
+        for p in pos_h[:6]:
+            b = bar_solid((p.get("tested") or 0) / mx, width=4,
+                          ascii_mode=ascii_mode)
+            cells.append(f"p{p.get('position')} {b}"
+                         f" {fmt_num(p.get('tested'))}")
         tail = (f"k={spec_k} (lifetime)" if bar_w < 14
                 else f"k={spec_k} (lifetime \u2014 window warming up)")
         style = "dim"
