@@ -857,6 +857,12 @@ def probe_lanes(cfg):
         "up": _tcp_up(ROUTER_PORT), "port": ROUTER_PORT,
         "model": "intent-router (shadow)", "detail": "CPU-only",
     }
+    music = _http_json("http://127.0.0.1:8010/health")
+    lanes["music"] = {
+        "up": music is not None or _tcp_up(8010), "port": 8010,
+        "model": ((music or {}).get("stages") and "sgl-omni · MiniMax-Music3") or ("sgl-omni" if _tcp_up(8010) else "music (sgl-omni)"),
+        "detail": None,
+    }
     # sparkDash web dashboard (viewer, not a lane) — shown for provenance
     dash = _http_json("http://127.0.0.1:5555/api/health")
     lanes["dash"] = {
@@ -1412,7 +1418,7 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
     badge = f"[{posture}]" if posture else ""
     for key, label, lcol in (("llm", "LLM", "good"), ("gate", "gate", "good"),
                              ("deci", "deci", "good"), ("router", "route", "dim"),
-                             ("dash", "dash", "dim")):
+                             ("music", "music", "accent"), ("dash", "dash", "dim")):
         ln = lanes.get(key) or {}
         up = ln.get("up")
         dot, dstyle = (("\u25cf", "good") if up else ("\u25cb", "bad")) \
