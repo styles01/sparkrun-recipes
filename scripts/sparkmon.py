@@ -1543,7 +1543,7 @@ def _our_band(st, cfg, width, ascii_mode):
     badge = f"[{posture}]" if posture else ""
     right_stack = []
     for key, label in (("llm", "LLM"), ("gate", "gate"), ("deci", "deci"),
-                       ("router", "route"), ("dash", "dash")):
+                       ("router", "route"), ("music", "music"), ("dash", "dash")):
         ln = lanes.get(key) or {}
         up = ln.get("up")
         dot, dstyle = (("●", "good") if up else ("○", "bad")) \
