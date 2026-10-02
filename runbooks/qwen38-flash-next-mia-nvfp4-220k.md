@@ -2,6 +2,11 @@
 
 > **Experimental and inert by default.** This is an independently reviewed variation of MiaAI-Lab’s one-DGX-Spark recipe—not a production replacement, not an Arena recipe, and not running. It never changes Hermes/Loca configuration. Its launcher refuses co-residence; it will not kill a healthy workload to make room.
 
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-flash-next-mia-nvfp4-220k.yaml`](../recipes/qwen3.8-flash-next-mia-nvfp4-220k.yaml)
+
+
 ## Why this variation exists
 
 Mia’s recipe demonstrates a potentially useful vLLM route for the multimodal Qwen3.8-Flash-Next model on one GB10: a smaller third-party NVFP4 checkpoint, a memory-mapped/offloaded PLE n-gram table, native MTP, and a guarded container launch.

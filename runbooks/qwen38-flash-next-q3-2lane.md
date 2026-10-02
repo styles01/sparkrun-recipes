@@ -5,6 +5,11 @@
 > fork fixed the `qwen4exp.cpp:284` GGML_ASSERT that crashed on a 2nd concurrent request.
 > Result: **2 lanes @ 200K context, peak ~50 tok/s aggregate** on a single DGX Spark.
 
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-flash-next-q3-2lane.yaml`](../recipes/qwen3.8-flash-next-q3-2lane.yaml)
+
+
 ## Model
 - **HF repo:** `unsloth/Qwen3.8-Flash-Next-GGUF`
 - **Quant:** `UD-Q3_K_XL` — 3 shards, 90 GB total, **whole model in memory** (no NVMe pin)

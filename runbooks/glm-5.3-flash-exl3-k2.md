@@ -2,6 +2,11 @@
 
 > **Status: staged candidate; not running.** This runbook prepares a safe, reversible evaluation of Vic Cruz's GLM-5.3 Flash EXL3 K2 stack. It is not an Arena recipe and it must not alter Loca/Hermes configuration without James explicitly choosing that change.
 
+## Recipe
+
+**Recipe:** [`recipes/glm-5.3-flash-exl3-k2.yaml`](../recipes/glm-5.3-flash-exl3-k2.yaml)
+
+
 ## What this is
 
 - **Model pack:** [`vcruz305/GLM-5.3-Flash-EXL3-K2`](https://huggingface.co/vcruz305/GLM-5.3-Flash-EXL3-K2), pinned 91.017 GiB / 120 safetensor shards.

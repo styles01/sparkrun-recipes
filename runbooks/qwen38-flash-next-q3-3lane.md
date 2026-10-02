@@ -7,6 +7,11 @@
 > on a single DGX Spark — beats both our old 2-lane config (43-50 t/s) and the
 > vLLM NVFP4 recipe (45.2 t/s, 10x75K = shallower per-lane).
 
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-flash-next-q3-3lane.yaml`](../recipes/qwen3.8-flash-next-q3-3lane.yaml)
+
+
 ## Model
 - **HF repo:** `unsloth/Qwen3.8-Flash-Next-GGUF`
 - **Quant:** `UD-Q3_K_XL` — 3 shards, 90 GB total, **whole model in memory** (no NVMe pin)

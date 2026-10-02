@@ -3,6 +3,11 @@
 Companion recipe: `recipes/qwen38-flash-next-ds4.yaml` (this repo).
 Full engineering notes: engine review + plan docs on the controller (oracle profile workspace).
 
+## Recipe
+
+**Recipe:** [`recipes/qwen38-flash-next-ds4.yaml`](../recipes/qwen38-flash-next-ds4.yaml)
+
+
 ## Quick switch (kill vLLM first, verify GPU free)
 
 ```bash

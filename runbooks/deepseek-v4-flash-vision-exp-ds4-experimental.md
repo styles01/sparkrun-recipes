@@ -2,6 +2,11 @@
 
 > **Experimental only.** This is a separate upstream `antirez/ds4` Vision-Exp lane; it must not replace the production 0731 DS4 CUDA route. It is not wired into Loca/Hermes and has no SLA.
 
+## Recipe
+
+**Recipe:** [`recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml`](../recipes/deepseek-v4-flash-vision-exp-ds4-experimental.yaml)
+
+
 ## Why a separate lane
 
 The production text service is the Entrpi/Bleysg DS4 CUDA `v0.6.2` route with its own `ds4-serve` wrapper, 0731 language GGUF, 0731-specific DSpark drafter, and `DS4_CONT_*`/`DS4_BATCH_*` memory-management contract. Upstream Antirez Vision-Exp has a different model family, support-GGUF layout, server behavior, and recent untagged implementation.

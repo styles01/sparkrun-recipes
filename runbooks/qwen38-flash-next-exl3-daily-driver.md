@@ -13,6 +13,13 @@ you don't rediscover it the hard way.
 
 ---
 
+## Recipe
+
+**Recipe:** [`recipes/qwen38-flash-next-exl3-native.yaml`](../recipes/qwen38-flash-next-exl3-native.yaml)
+
+Canary launcher: [`scripts/switch-to-qwen38-exl3.sh`](../scripts/switch-to-qwen38-exl3.sh) (model pack, vcruz305 fork, venv, and shim paths live there).
+
+
 ## Why EXL3 became the daily driver
 
 | Dimension | EXL3 native (this lane) | vLLM MTP3 NVFP4 (previous) |

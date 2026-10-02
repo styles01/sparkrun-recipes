@@ -2,6 +2,11 @@
 
 **Status:** staged (recipe + launcher published; NOT live). The live lane remains `qwen3.8-flash-next` (Mia NVFP4) on `:8000` until an explicit Go replaces it.
 
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-27b-nvfp4-3d-workbench.yaml`](../recipes/qwen3.8-27b-nvfp4-3d-workbench.yaml)
+
+
 ## Purpose
 
 A dedicated 3D-modelling workbench: Qwen3.8-27B NVFP4 with **vision ON**, **2 lanes**, **450K total context**, and a deliberately large memory headroom so the 3D companion stack (TRELLIS.2 in ComfyUI) runs **on the same Spark at the same time**.

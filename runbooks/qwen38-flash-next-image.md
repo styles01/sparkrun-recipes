@@ -8,8 +8,13 @@
 > **This runbook covers OUR OWN public immutable container**
 > `ghcr.io/styles01/qwen38-flash-next@sha256:d04a430df93f3e9489439620c936e386af07d8134342b9291e4f372933f2d8a8`
 > (tag: `q4-low-reasoning-stock-ngram-20260904`; the "container" recipe:
-> `recipes/qwen3.8-flash-next-image.yaml`). A separate
+> [`recipes/qwen3.8-flash-next-image.yaml`](../recipes/qwen3.8-flash-next-image.yaml)). A separate
 > Q2-native recipe (`recipes/qwen3.8-flash-next-llamacpp.yaml`) is now **superseded**.
+
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-flash-next-image.yaml`](../recipes/qwen3.8-flash-next-image.yaml)
+
 
 ## What you get
 
@@ -18,7 +23,7 @@
 - **Runtime:** llama.cpp `qwen4exp` fork (PR [ggml-org/llama.cpp#27742](https://github.com/ggml-org/llama.cpp/pull/27742), commit `035e227`) + `canreuse-qwen4exp.patch` (+2.8% decode)
 - **Container:** **`ghcr.io/styles01/qwen38-flash-next:q4-low-reasoning-stock-ngram-20260904`** (public, ours)
 
-> Reference `recipes/qwen3.8-flash-next-image.yaml` for the recipe contract.
+> Reference [`recipes/qwen3.8-flash-next-image.yaml`](../recipes/qwen3.8-flash-next-image.yaml) for the recipe contract.
 
 ## Why this fits in 119 GB (the 0xBakeer trick)
 

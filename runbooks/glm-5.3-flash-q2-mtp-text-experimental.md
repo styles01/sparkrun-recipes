@@ -2,6 +2,11 @@
 
 > **Status: staged candidate; not running.** This is a deliberately conservative local experiment, not a production lane, not an Arena recipe, and not a claim that GLM vision or multi-lane serving works on one Spark. It never changes Hermes/Loca configuration.
 
+## Recipe
+
+**Recipe:** [`recipes/glm-5.3-flash-q2-mtp-text-experimental.yaml`](../recipes/glm-5.3-flash-q2-mtp-text-experimental.yaml)
+
+
 ## Why this variant exists
 
 An X post reported a single Spark running **GLM-5.3-Flash** with a 120 GB dynamic IQ3 GGUF and llama.cpp MTP. The author reports 20.8 tok/s and a higher private benchmark score than their own two-Spark EXL3 deployment. Those are author claims, not reproduced evidence.

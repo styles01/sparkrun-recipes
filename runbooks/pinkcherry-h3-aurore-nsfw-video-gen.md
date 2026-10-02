@@ -6,6 +6,13 @@
 
 ---
 
+## Recipe
+
+**Recipe:** [`recipes/pinkcherry-h3-aurore.yaml`](../recipes/pinkcherry-h3-aurore.yaml)
+
+Status: verified end-to-end 2026-09-07 (validation clip rendered from `pinkcherry-h3-aurore`).
+
+
 ## What This Is
 
 PinkCherry H3 v0.5-alpha is a NSFW-capable fine-tune of MiniMax H3 (first-last-frame/audio-video DiT).

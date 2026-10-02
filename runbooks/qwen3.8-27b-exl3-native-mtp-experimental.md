@@ -2,6 +2,11 @@
 
 > **Status: inert candidate; not running.** This is a single, exclusive, text-only evaluation lane. It changes neither Spark services nor Loca/Hermes configuration. It is not an Arena submission.
 
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-27b-exl3-native-mtp-experimental.yaml`](../recipes/qwen3.8-27b-exl3-native-mtp-experimental.yaml)
+
+
 ## Pinned artifacts and boundaries
 
 - **Model:** [`Mia-AiLab/Qwen3.8-27B-EXL3-3.5bpw`](https://huggingface.co/Mia-AiLab/Qwen3.8-27B-EXL3-3.5bpw) at revision `19441ac874c4018295da848e250f23511361cda4` only.

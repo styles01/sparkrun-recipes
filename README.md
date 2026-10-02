@@ -12,12 +12,39 @@ Production lanes, native Spark Arena recipes, benchmark evidence, and runbooks f
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/aitamedia)
 [![Follow on X](https://img.shields.io/badge/Follow%20%40jaita%20on%20X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/jaita)
 
-[Flavors](#the-flavors) · [Start Here](#start-here) · [Arena](#native-spark-arena-benchmarking) · [Recipe Catalog](#recipe-catalog) · [Benchmarks](#benchmark-interpretation) · [Contributing](#contributing)
+[Best by model](#current-best-recipes-by-model) · [Flavors](#the-flavors) · [Start Here](#start-here) · [Arena](#native-spark-arena-benchmarking) · [Recipe Catalog](#recipe-catalog) · [Benchmarks](#benchmark-interpretation) · [Contributing](#contributing)
 
 </div>
 
 > [!IMPORTANT]
 > A DGX Spark has one unified 121 GB memory pool. These recipes are **exclusive lanes**: run one serious model or video workload at a time. Every production claim here belongs to a specific model revision, runtime, quantization, context, and workload. Read the linked runbook before switching anything.
+
+---
+
+## Current best recipes by model
+
+The one recipe to run per model on this box today, per the paired runbook. "Best" is only
+claimed where runbook + recipe history supports it; everything else is listed neutrally as
+available. Alternates and staged lanes stay under [The flavors](#the-flavors) and the
+[recipe catalog](#recipe-catalog).
+
+| Model | Current best recipe | Notes / when to use |
+|---|---|---|
+| **Qwen3.8-Flash-Next (125B-A6B)** | [`recipes/qwen38-flash-next-exl3-native.yaml`](recipes/qwen38-flash-next-exl3-native.yaml) | **CURRENT production daily driver** — plain EXL3 via native ExLlamaV3 (vcruz305 fork, bare-venv, no container), native MTP, 262K single-stream, ~54+ tok/s decode. Runbook: [`runbooks/qwen38-flash-next-exl3-daily-driver.md`](runbooks/qwen38-flash-next-exl3-daily-driver.md) · launcher: [`scripts/switch-to-qwen38-exl3.sh`](scripts/switch-to-qwen38-exl3.sh). **NOT the TensorFold variant** — [`recipes/qwen38-flash-next-tensorfold.yaml`](recipes/qwen38-flash-next-tensorfold.yaml) is the **arena/experimental submission path**, not the daily driver. Other Flash-Next lanes (MTP3 + draft vocab, DwarfStar ds4, llama.cpp Q3/Q4, vLLM NVFP4, Mia NVFP4) remain available as alternates — see the catalog. |
+| **Ling 3.0 Flash** | [`recipes/ling-3.0-flash-int4.yaml`](recipes/ling-3.0-flash-int4.yaml) | Production balanced long-context agent lane (124B MoE, 5.1B active, 256K, 2 lanes). Runbook contract: [`runbooks/ling-3.0-flash-int4.md`](runbooks/ling-3.0-flash-int4.md). Arena-pinned vLLM variant: [`recipes/ling-3.0-flash-vllm.yaml`](recipes/ling-3.0-flash-vllm.yaml) · SGLang+DSPARK variant: [`recipes/ling-3.0-flash-sglang-dspark.yaml`](recipes/ling-3.0-flash-sglang-dspark.yaml). |
+| **DeepSeek-V4-Flash 0731** | [`recipes/deepseek-v4-flash-0731-ds4.yaml`](recipes/deepseek-v4-flash-0731-ds4.yaml) | Production DS4 CUDA route — hardest reasoning, 196K-1M configurations. Runbook: [`runbooks/deepseek-v4-flash-ds4.md`](runbooks/deepseek-v4-flash-ds4.md). Base vLLM recipe [`recipes/deepseek-v4-flash-0731.yaml`](recipes/deepseek-v4-flash-0731.yaml) available; vision-exp lane is experimental-only. |
+| **Qwen 3.8 27B (NVFP4)** | [`recipes/qwen-38-27b.yaml`](recipes/qwen-38-27b.yaml) | Fast general agent traffic — GB10-specific vLLM kernel path, 256K, native MTP. Runbook: [`runbooks/qwen-38-27b.md`](runbooks/qwen-38-27b.md). Variant lanes (eagle-sglang, dspark, fp8, 3D workbench) are alternates/staged. |
+| **Qwen 3.5 122B (DFlash)** | [`recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml`](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | Marked "BREAKTHROUGH — Production Ready" by its runbook (fp8 KV + DFlash n=7 + int8 lm-head). Runbook: [`runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md`](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md). The aeon v0.23 contract [`recipes/qwen-122b.yaml`](recipes/qwen-122b.yaml) stays valid per [`runbooks/qwen-122b.md`](runbooks/qwen-122b.md). |
+| **Qwen 35B (NVFP4)** | [`recipes/qwen-35b.yaml`](recipes/qwen-35b.yaml) | High-concurrency, lower-stakes work. Runbook: [`runbooks/qwen-35b.md`](runbooks/qwen-35b.md). |
+| **Laguna S 2.1** | [`recipes/laguna-s-2.1.yaml`](recipes/laguna-s-2.1.yaml) | Long-context code lane. Runbook: [`runbooks/laguna-s-2.1.md`](runbooks/laguna-s-2.1.md). |
+| **Muse-Glimmer 30B** | [`recipes/muse-glimmer-30b.yaml`](recipes/muse-glimmer-30b.yaml) | SGLang, 131K-class. Runbook: [`runbooks/muse-glimmer-30b.md`](runbooks/muse-glimmer-30b.md). |
+| **Nemotron 3.5 Lightning 30B (A3B NVFP4)** | [`recipes/nemotron-3.5-lightning-30b-a3b-nvfp4.yaml`](recipes/nemotron-3.5-lightning-30b-a3b-nvfp4.yaml) | 100K multi-agent lane. Runbook: [`runbooks/nemotron-3.5-lightning-30b-a3b-nvfp4.md`](runbooks/nemotron-3.5-lightning-30b-a3b-nvfp4.md). |
+| **Nemotron Super 120B (NVFP4)** | [`recipes/nemotron-super-120b-nvfp4.yaml`](recipes/nemotron-super-120b-nvfp4.yaml) | Available (single recipe; no documented best-vs-alternate history). Runbook: [`runbooks/nemotron-super-120b-nvfp4.md`](runbooks/nemotron-super-120b-nvfp4.md). |
+| **MedGemma 27B** | — both available | [`recipes/medgemma-27b.yaml`](recipes/medgemma-27b.yaml) · [`recipes/medgemma-27b-medicomp.yaml`](recipes/medgemma-27b-medicomp.yaml) — sibling recipes, no documented ranking; see [`runbooks/medgemma-27b.md`](runbooks/medgemma-27b.md) and [`runbooks/medgemma-27b-medicomp.md`](runbooks/medgemma-27b-medicomp.md). |
+| **Puzzle 75B** | [`recipes/puzzle-75b.yaml`](recipes/puzzle-75b.yaml) | Available. Runbook: [`runbooks/puzzle-75b.md`](runbooks/puzzle-75b.md). |
+| **PinkCherry H3 Aurore (video)** | [`recipes/pinkcherry-h3-aurore.yaml`](recipes/pinkcherry-h3-aurore.yaml) | Verified end-to-end 2026-09-07. Runbook: [`runbooks/pinkcherry-h3-aurore-nsfw-video-gen.md`](runbooks/pinkcherry-h3-aurore-nsfw-video-gen.md). |
+
+**No runbook-to-recipe pairing exists (gaps — do not infer one):** [`runbooks/qwen-image-2.1-nsfw-image-gen.md`](runbooks/qwen-image-2.1-nsfw-image-gen.md) (ComfyUI image lane, no sparkrun recipe in this repo yet), [`runbooks/nvme-interrupt-coalescing.md`](runbooks/nvme-interrupt-coalescing.md) (host-NVMe tuning, no model), and [`runbooks/gannotti-h3-chaining/`](runbooks/gannotti-h3-chaining/) (video-chaining workflow docs, no recipe).
 
 ---
 

@@ -14,6 +14,11 @@ parity, null only where the backend genuinely cannot provide the value).
 contract) → LlmProbe `_probeOpenAICompatible` → `_applyExl3Health` → `/api/sparks/spark-001/metrics`
 (`metrics.llm[0]`) → frontend panel dials + showcase.
 
+## Recipe
+
+**Recipe:** [`recipes/qwen38-flash-next-exl3-native.yaml`](../recipes/qwen38-flash-next-exl3-native.yaml)
+
+
 ## Shim /health contract (v3, verified live)
 
 ```

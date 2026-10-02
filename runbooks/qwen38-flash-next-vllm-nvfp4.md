@@ -11,6 +11,11 @@
 >
 > We are **waiting on deployment** — this is documentation only.
 
+## Recipe
+
+**Recipe:** [`recipes/qwen3.8-flash-next-vllm-nvfp4.yaml`](../recipes/qwen3.8-flash-next-vllm-nvfp4.yaml)
+
+
 ## Model
 - **HF repo:** `RadixArk/Qwen3.8-Flash-Next-NVFP4`
 - **Size:** 126 GB on disk, **206 shards** (NVFP4 compute + FP8 PLE table + BF16 MTP head)

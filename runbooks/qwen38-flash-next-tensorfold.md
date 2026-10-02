@@ -18,6 +18,11 @@
 > Sources: post https://x.com/MiaAI_lab/status/2104835240157945891 (MiaAI Lab,
 > 2026-09-29 07:26 UTC) and the live repo (see *Source references*).
 
+## Recipe
+
+**Recipe:** [`recipes/qwen38-flash-next-tensorfold.yaml`](../recipes/qwen38-flash-next-tensorfold.yaml)
+
+
 ## Model
 - **Checkpoint (served):** [`Vontra/Qwen3.8-Flash-Next-MLX-4bit-MTP`](https://huggingface.co/Vontra/Qwen3.8-Flash-Next-MLX-4bit-MTP) — **MLX 4-bit, group size 32, with the MTP draft head**. ~106 GiB of files (~114 GB by the scripts' disk check; README counts a download footprint of ~125 GB including temp).
 - **⚠ This is a DIFFERENT quant than our daily driver.** Ours is `Mia-AiLab/Qwen3.8-Flash-Next-NVFP4` (hardware-native NVFP4 on Blackwell, @ `925d7be6`). TF serves a Mac-ecosystem MLX 4-bit (g32) checkpoint through MLX-format tensors on the CUDA backend — **no quality comparison between the two quantizations exists anywhere we have looked**. Outputs will differ from today's lane (different quant + different engine). Flag before any production use: A/B an eval set (retrieval + code + prose quality) across the two quantizations, not just speed.
