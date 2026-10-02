@@ -325,6 +325,25 @@ def read_host_uptime():
 # ------------------------------------------------------------ fetching (ADR-0003)
 
 
+def _normalize_sglang_health(h, url):
+    """sgl-omni /health -> sparkmon ADR-0003 shape (music/stage servers).
+
+    sgl-omni reports stages + request_states, no token counters; treat as
+    an ONLINE music engine showing request activity only.
+    """
+    if not isinstance(h, dict):
+        return h
+    n = dict(h)
+    stages = h.get("stages") or []
+    if any("music" in str(x).lower() for x in stages) or "preprocessing" in stages:
+        n["engine"] = "sgl-omni"
+        n["model_name"] = "MiniMax-Music3"
+        n["busy"] = bool(h.get("requests_running") or h.get("pending_completions"))
+        n["requests_running"] = h.get("requests_running") or 0
+        n["requests_waiting"] = h.get("pending_completions") or 0
+    return n
+
+
 def _normalize_tf_health(h, url):
     """TensorFold /health -> sparkmon's normalized dict (ADR-0003 shape).
 
@@ -368,7 +387,10 @@ def fetch_any(url, timeout=2.0):
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = resp.read().decode("utf-8", "replace").strip()
         if body.startswith("{"):
-            return _normalize_tf_health(json.loads(body), base)
+            data = json.loads(body)
+            probe_n = _normalize_sglang_health(data, base)
+            return probe_n if probe_n.get("engine") == "sgl-omni" \
+                else _normalize_tf_health(data, base)
     except urllib.error.HTTPError:
         pass  # no /health route — go straight to metrics
     req2 = urllib.request.Request(base + "/metrics")
@@ -1459,18 +1481,21 @@ def build_lanes_rows(st, width, cfg, ascii_mode):
     parts.append(f"engine {eng}")
     if quant:
         parts.append(quant)
-    rp = vllm_cfg.get("reasoning_parser")
-    tp = vllm_cfg.get("tool_call_parser")
-    sk = vllm_cfg.get("spec_tokens")
-    if rp:
-        parts.append(f"rs {rp}")
-    if tp:
-        parts.append(f"tc {tp}")
-    parts.append(f"spec {vllm_cfg.get('spec_method') or 'MTP'}"
-                 + (f" k={sk}" if sk else ""))
-    ml = vllm_cfg.get("max_lanes")
-    if ml:
-        parts.append(f"lanes {ml}")
+    if h.get("engine") != "sgl-omni":
+        rp = vllm_cfg.get("reasoning_parser")
+        tp = vllm_cfg.get("tool_call_parser")
+        sk = vllm_cfg.get("spec_tokens")
+        if rp:
+            parts.append(f"rs {rp}")
+        if tp:
+            parts.append(f"tc {tp}")
+        parts.append(f"spec {vllm_cfg.get('spec_method') or 'MTP'}"
+                     + (f" k={sk}" if sk else ""))
+        ml = vllm_cfg.get("max_lanes")
+        if ml:
+            parts.append(f"lanes {ml}")
+    else:
+        parts.append("stage server (music)")
     rows.append([seg("  \u2570 recipe: " + " \u00b7 ".join(parts), "dim")])
     return rows
 
@@ -1533,8 +1558,9 @@ def _our_band(st, cfg, width, ascii_mode):
               f" pos >50%" if pp else "— window warming")
         mid_rows = (list(mid_rows) + [None, None, None])[:3] \
             + [[seg(wn, "dim")]]
-        sk = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
-        counters += f" · spec MTP k={sk}"
+        if h.get("engine") != "sgl-omni":
+            sk = (st.get("cfg") or {}).get("vllm", {}).get("spec_tokens") or 3
+            counters += f" · spec MTP k={sk}"
     # left rows total: title + lanes + counters (+1 spare)
     n_left = 1 + len(lane_rows) + (1 if counters else 0)
 
@@ -1668,7 +1694,8 @@ def build_lines(st, width, cfg=None):
     model = h.get("model_name") or h.get("engine", "?")
     eng = h.get("engine", "?")
     quant = cfg.get("quantization")
-    if quant is None and model and "NVFP4" in model.upper():
+    if quant is None and model and "NVFP4" in model.upper() \
+            and h.get("engine") != "sgl-omni":
         quant = "NVFP4"
         cfg["quantization"] = "NVFP4"
     if off:
@@ -2026,9 +2053,10 @@ def make_cfg(args):
             "deci_url": DEFAULT_DECI, "llm_model": None, "remote": args.remote,
             # sparkDash recipeInfo parity (v2.2): filled here, refined by the
             # docker-inspect capture in probe_lanes once lanes probe runs.
-            "recipe_model": "Mia-AiLab/Qwen3.8-Flash-Next-NVFP4",
+            "recipe_model": os.environ.get("SPARKMON_MODEL")
+                            or "Mia-AiLab/Qwen3.8-Flash-Next-NVFP4",
             "recipe_author": "styles01",
-            "quantization": "NVFP4",
+            "quantization": os.environ.get("SPARKMON_QUANT"),
             "vllm": {"max_num_seqs": DEFAULT_SEQS,
                      "max_model_len": DEFAULT_CTX},
             # source tags: env SPARKMON_* always beats docker-inspect capture
