@@ -1,6 +1,6 @@
 # Qwen-Image-2.1 NSFW Image Lane (ComfyUI, GB10)
 
-**Status:** WEIGHTS INSTALLED + NODES VERIFIED. First generation pending lane-down window (one-heavy-engine rule).
+**Status:** LIVE — first generation succeeded 2026-10-03 (ComfyUI :8189, 512px probe in 11.3s, image verified coherent). Lane: server on :8189 + TextEncodeQwenImage21 workflow.
 **Released:** 2026-09-20 (QwenLM). License: **Qwen Research License — NON-COMMERCIAL.** Local personal use OK; do NOT use outputs commercially.
 
 ## Why this model (James: "its native nsfw — you know what that means")
@@ -52,7 +52,7 @@ curl -X POST http://192.168.2.185:8189/prompt -H 'Content-Type: application/json
 - Memory math: 121GB total; EXL3 ~94GB; QI-2.1 int8 ~20-25GB peak → never together.
 
 ## Open items
-- [ ] First gen test (needs lane-down window)
+- [x] First gen test (2026-10-03: golden-retriever portrait 512px, euler 8 steps, 11.3s, ~15 GiB VRAM steady with TE+DiT+VAE)
 - [ ] Timing measurement (expect ~20-40s/image at 1024² on GB10 from community numbers)
 - [ ] Image-edit variant (10-image refs) + qwen3.5_9b PE encoder test
 - [ ] NSFW verification of unrestricted prompting (v1 Qwen-Image had no refusal; 2.1
