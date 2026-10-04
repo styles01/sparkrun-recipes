@@ -29,6 +29,10 @@ ssh jaita@192.168.2.185 'cd ~/ComfyUI && setsid nohup ./venv/bin/python main.py 
   broke startup until this was run).
 - Server start (no model load) is safe while the LLM lane is up. RUNNING a gen is NOT.
 
+## Side-by-side vs MiniMax H3 (2026-10-04)
+
+Same prompt/seed (832px, 20 steps, res_multistep): Qwen-Image-2.1 25.1s vs MiniMax H3 fl2va 44.5s (5 frames). Both photographic and on-prompt. H3 fl2va stays available as the video-native alternative; Qwen 2.1 remains the default stills lane - faster and purpose-built T2I.
+
 ## Workflow (API format)
 `workflows/qwen-image-2.1-t2i-api.json` — 8 nodes:
 UNETLoader(int8) → KSampler(euler/simple/25/cfg 1.0 — template default, distilled) ←
