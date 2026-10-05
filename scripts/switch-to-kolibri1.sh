@@ -147,10 +147,12 @@ if (( DO_START )); then
     docker run --rm --name "$CONTAINER" \
       --runtime nvidia --gpus all --ipc=host --network host \
       -v "$HF_CACHE:/root/.cache/huggingface" \
+      -v /home/jaita/kolibri-moe-config:/moe-configs \
       -e HF_HOME=/root/.cache/huggingface \
-      -e HF_HUB_OFFLINE=1 \
-      -e TRANSFORMERS_OFFLINE=1 \
+      -e HF_HUB_OFFLINE=0 \
+      -e VLLM_TUNED_CONFIG_FOLDER=/moe-configs \
       "$IMAGE" \
+      "$MODEL_ID" \
       --served-model-name "$MODEL_ID" \
       --max-model-len "$MAX_LEN" --max-num-seqs "$MAX_SEQS" \
       --tensor-parallel-size 1 --kv-cache-dtype fp8 \

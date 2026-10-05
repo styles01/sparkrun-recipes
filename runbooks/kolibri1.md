@@ -1,8 +1,8 @@
 # Runbook: Aleph Alpha Kolibri-1 on DGX Spark (GB10)
 
-> **Status: DRAFT-DO-NOT-DEPLOY.** Written 2026-10-04 from the Aleph Alpha
-> launch post. Nothing on this box was changed, downloaded, or started to
-> produce this file. The running daily driver is and remains the **EXL3 native
+> **Status: PARKED — benched & rejected as daily driver (2026-10-05).** The
+> full story is the OUTCOME section at the bottom (SparkArena submission
+> sub1791196186190). Original draft preamble, for the record: The running daily driver is and remains the **EXL3 native
 > MTP lane** ([runbook](qwen38-flash-next-exl3-daily-driver.md)), port 8000.
 >
 > **Why still draft:** (1) weights ~78.9 GB — NOT local, download blocked by
@@ -174,3 +174,51 @@ free -g    # verify MemAvailable ≥ ~100 GiB for the EXL3 daily driver (house r
 - Launch blog: https://aleph-alpha.com/en/blog/kolibri-has-landed-a-sovereign-open-weight-model/ · Tech report: https://aleph-alpha.com/downloads/tech-report.pdf
 - Engine image: vllm/vllm-openai:v0.29.0 — arm64 manifest confirmed via Docker Hub API (8.7 GB amd64 / 9.6 GB arm64)
 - House rollback target: [qwen38-flash-next-exl3-daily-driver.md](qwen38-flash-next-exl3-daily-driver.md) · NVMe: [nvme-interrupt-coalescing.md](nvme-interrupt-coalescing.md) · TF context: [qwen38-flash-next-tensorfold.md](qwen38-flash-next-tensorfold.md)
+---
+
+## OUTCOME (2026-10-05): BENCHED, REJECTED as daily driver — PARKED
+
+Status changed: DRAFT → PARKED-LANE (documented, not deployed by default). Everything below was run for real on this box.
+
+### What was deployed (real, verified)
+- Image: `kolibri1:v0.29.0-p1` (local build; FROM vllm/vllm-openai:v0.29.0 + `pip install aleph-alpha-inference==1.0.0 --no-deps`; ** rebuilt 2026-10-05 with `USER root + useradd -o -u 1000 -m jaita` — sparkrun runs containers as host user unless overridden)
+- Weights: 74G pack hardlink-mirrored to `/home/jaita/.cache/huggingface/hub/models--Aleph-Alpha--Kolibri-1` (the sparkrun ARENA executor mounts `~/.cache/huggingface:/cache/huggingface`; the cluster `cache_dir` /home/jaita/models/hf is NOT auto-mounted in this path — see pitfalls)
+- MoE tuned config: `VLLM_TUNED_CONFIG_FOLDER=/moe-configs` + `/home/jaita/kolibri-moe-config` bind (copied stock E=256 GB10 fp8 json as E=384; kills the default-config warning, perf ~= baseline)
+- Serve: `vllm serve Aleph-Alpha/Kolibri-1 --max-model-len 131072 --max-num-seqs 4 --tensor-parallel-size 1 --kv-cache-dtype fp8 --reasoning-parser kolibri1 --tool-call-parser kolibri1 --enable-auto-tool-choice` (reasoning_effort:none)
+- Smoke perf: 46 tok/s 1-stream, ~148 tok/s at 4 streams (code+chat)
+
+### SparkArena submission (llama-benchy 0.4.0, bench_b09131fab9b9, 28 cells, EXACT protocol)
+Uploaded: **submission sub1791196186190** (2026-10-05 ~06:47 UTC; arena profile spark-arena-v2)
+
+Gen tok/s (tg), by depth x concurrency:
+
+| Depth | c1 | c2 | c5 | c10 |
+|---|---|---|---|---|
+| d0 | 45.8 | 75.8 | 83.5 | 95.7 |
+| d4096 | 45.4 | 72.4 | 72.1 | 78.3 |
+| d8192 | 45.1 | 65.8 | 62.7 | 66.4 |
+| d16384 | 44.1 | 53.6 | 48.5 | 49.5 |
+| d32768 | 42.4 | 39.1 | 34.0 | 31.4 |
+| d65535 | 93.4* | 35.6 | 25.4 | 20.9 |
+| d100000 | 37.3 | 28.5 | 10.9 | 10.1 |
+
+*d65535/c1 93.4 = warmup-order artifact (ran right after the hot 10-stream cell); treat ~40 as steady c1 at 65k.
+
+Prefill tok/s (pp): 4,200-4,400 at d<=4096 (peak 4,449 d16384/c2); ~2,400-3,100 at 32k-100k; 2698 at d65535/c10; 2266 at d100000/c10. Prefill is the one genuinely strong number on this box.
+
+### Verdict (vs EXL3 native daily driver, vcruz305 fork + native MTP)
+- Seat number: 45 tok/s single-stream vs driver's 84 — HALF, and flat from d0 to 32k
+- Concurrency: c10 aggregate 95.7 vs driver's 206 at just 4 streams — decode is bandwidth-starved on GB10, not fixable by config
+- 100k-context collapse: 10-37 tok/s — fp8 KV + SWA hybrid does not save it
+- **REJECTED: stays parked.** Parked-lane value: prefill strength + DE/EN bilingual + Apache-2.0. Revisit triggers: (a) vendor/community drafter ships (see below), (b) EXL3 pack appears (turboderp), (c) vLLM mainline lands Kolibri1 natively (#60026 merged 2026-10-05) AND hardware changes.
+
+### Drafter situation (exhaustive search, 2026-10-05, 78 sources, 719s)
+**No drafter exists for Kolibri-1** (EAGLE/MTP/Medusa/nextn/ngram head): HF (all name variants + all 23 derived repos = quants only), GitHub (repo+code+issues), PyPI, X (fxtwitter sweep), Reddit r/LocalLLaMA, HN, AA blog/tech-report/60-page PDF (zero 'speculative' mentions). Plugin registers no proposer; config.json has zero draft keys. AA has made no statement about shipping MTP later. Community demand exists (r/LocalLLaMA + HF discussions) but nothing shipped. vLLM PR #60026 merged Kolibri1ForCausalLM into upstream mainline TODAY (2026-10-05) — future mainline spec-decode support path.
+- n-gram tested live: 28.6 tok/s vs 46 baseline on prose — REJECTED (matches the only working community recipe's data: 2.26x on copy-heavy, ~0.5x on prose)
+- If quality ever matters enough: EAGLE-2 head (hidden 2560, ~1B params, extract_hidden_states.py in the image) = the documented build path; ~1-2 days training on this box
+
+### Optimization pass (2026-10-05, all tested A/B)
+- n-gram speculative: REJECTED (above)
+- MoE tuned config: deployed (stock E=256->E=384 copy); perf ~= baseline (stock fallback was already close)
+- Already-on: CUDA graphs, KV fp8, FlashInfer attention, chunked prefill
+- Remaining untried levers: TRTLLM/CUTLASS MoE backend test, real triton autotune for E=384x512 (needs kernels repo tooling, not in wheel)
