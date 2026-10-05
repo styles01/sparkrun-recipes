@@ -1,0 +1,87 @@
+# Recipe: kolibri1-vllm-plugin (P5 alternate lane — DRAFT, DO NOT DEPLOY)
+#
+# Status: DRAFT-DO-NOT-DEPLOY — written 2026-10-04 from the Aleph Alpha launch
+# post (x.com/Aleph__Alpha/status/2106306843052052616). Nothing here was
+# downloaded, installed, started or benchmarked; weights are NOT on disk.
+# Full plan: runbooks/kolibri1.md
+#
+# Role: candidate German/English MoE daily-driver replacement (~120 GB RAM when
+# resident, solo lane). Requires a vLLM 0.29 + aleph-alpha-inference 1.0.0
+# plugin image — Kolibri1ForCausalLM does NOT exist in stock vLLM.
+# NEVER co-resident with the EXL3 daily driver — swap, don't stack.
+
+recipe_version: "4"
+name: kolibri1-vllm-plugin
+description: >
+  Aleph Alpha Kolibri-1 (78B-A3.46B MoE, FP8 block-quant, 4:1 SWA:GQA,
+  262144 ctx) on DGX Spark GB10 via vLLM 0.29 + the official
+  aleph-alpha-inference 1.0.0 vLLM plugin, in an arm64 vllm/vllm-openai
+  container. Apache-2.0. DRAFT ONLY — not deployed, weights not downloaded.
+model: Aleph-Alpha/Kolibri-1
+model_revision: e52eb4627d11516b0c01de49210ab5a4e4061444
+runtime: vllm
+container: vllm/vllm-openai:v0.29.0  # official image — HAS arm64 (8.7/9.6 GB)
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-10-04"
+  status: "draft-do-not-deploy"
+  tags: [kolibri, kolibri1, aleph-alpha, moe, fp8, vllm, plugin, gb10, sm121, text-only, one-lane, draft]
+  quantization: "FP8 (float8_e4m3fn) 128x128 blocks, dynamic activations, bf16 gates/router/emb/head"
+  model_dtype: "fp8-dynamic"
+  engine_repo: "https://github.com/Aleph-Alpha/aleph-alpha-inference"
+  engine_version: "aleph-alpha-inference 1.0.0 (vLLM >=0.29.0,<0.30.0)"
+  source: "https://huggingface.co/Aleph-Alpha/Kolibri-1"
+  announcement: "https://x.com/Aleph__Alpha/status/2106306843052052616"
+  launch_blog: "https://aleph-alpha.com/en/blog/kolibri-has-landed-a-sovereign-open-weight-model/"
+  tech_report: "https://aleph-alpha.com/downloads/tech-report.pdf"
+
+solo_only: true
+min_nodes: 1
+max_nodes: 1
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  exclusive_spark_lane: true
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  served_model_name: Aleph-Alpha/Kolibri-1
+  max_model_len: 262144
+  max_num_seqs: 8
+
+# Weights are NOT local (repo checked 2026-10-04): /home/jaita/models/hf has no
+# Aleph-Alpha/ dir. First deploy pulls ~78.9 GB from HF into the bind-mounted
+# cache. NO DOWNLOAD until the deploy gate in the runbook.
+
+env:
+  HF_HOME: /root/.cache/huggingface
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+pre_exec:
+  - "pip install --no-deps aleph-alpha-inference==1.0.0"  # --no-deps: vLLM in image stays untouched
+
+command: |
+  vllm serve Aleph-Alpha/Kolibri-1 \\
+    --host {host} --port {port} --served-model-name {served_model_name} \\
+    --max-model-len {max_model_len} --max-num-seqs {max_num_seqs} \\
+    --tensor-parallel-size 1 --kv-cache-dtype fp8 \\
+    --reasoning-parser kolibri1 --tool-call-parser kolibri1 \\
+    --enable-auto-tool-choice
+
+# Served name: keep the full HF id to avoid client-config surprises; if a
+# lowercase alias is wanted use --served-model-name kolibri-1 instead.
+#
+# Sampling defaults (vendor card): temperature=1.0, top_p=0.97, top_k=128.
+# Reasoning per-request via chat_template_kwargs reasoning_effort
+# (none|low|medium|high) or enable_thinking (bool).
+#
+# VRAM math (solo lane): weights 72.7 GiB readable + up to ~5.6 GiB CUDA-graph
+# activation/transient ≈ ~78 GiB; KV @ fp8 ≈ 26.2 MB/1k tok → max_model_len
+# 262144 ≈ ~6.9 GiB/stream, 8 streams ≈ ~55 GiB. gpu_memory_utilization 0.92
+# (≈111 GiB pool) hosts ~6 streams at 262k. Music 3 (~59 GB, ComfyUI) must be
+# down for this lane; swap, don't stack. Full math: runbooks/kolibri1.md.
