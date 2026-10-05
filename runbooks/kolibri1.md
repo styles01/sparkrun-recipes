@@ -36,7 +36,16 @@
 - **BF16 checkpoint:** [Kolibri-1-BF16](https://huggingface.co/Aleph-Alpha/Kolibri-1-BF16) — 78.1B BF16 = 145.5 GiB readable, usedStorage 156.2 GB. **Does not fit** even solo (0.92·121 ≈ 111 < 145.5+KV). Not a candidate.
 - **Third-party quants:** [audreyt/Kolibri-1-NVFP4-W4A16](https://huggingface.co/audreyt/Kolibri-1-NVFP4-W4A16) 47.4 GB storage / **~37.5 GiB readable — over the <20GB rule**; GGUF (Eliasfpv28 Q3_K_S, Hob-forge, Prompt48) and MLX (Apple-only) conversions exist — all above 20 GB. **No EXL3 quant exists** (turboderp has none; HF search 2026-10-04).
 
-### Claimed benchmarks (vendor post-training eval table, MoE peers, temp 0.6/top_p 0.6)
+### LANE POLICY (James, 2026-10-04): Kolibri NEVER cohabits with the media stack.
+
+Media stack = Music 3 (sgl-omni :8010) + ComfyUI image lane (:8189) + anything
+serving them. Kolibri-1 at ~78 GiB replaces the ENTIRE box for the test
+window; the ~78-20=~40 GiB cohabitation idea is dead. Teardown (switch
+script) covers ALL of it: docker lanes, EXL3/ds4/llama-server natives,
+sgl-omni/minimax_music3, decider family, ComfyUI ports. If an LLM is ever
+needed alongside the media stack it will be a tiny one - not Kolibri.
+
+## Claimed benchmarks (vendor post-training eval table, MoE peers, temp 0.6/top_p 0.6)
 
 | Eval | Kolibri-1 | Same-table peer note |
 |---|---:|---|

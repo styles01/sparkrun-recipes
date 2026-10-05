@@ -34,7 +34,7 @@ MAX_SEQS="${KOLIBRI_MAX_SEQS:-4}"
 # unrelated host services). Container lanes go by docker rm -f; native lanes
 # by their exact script/binary name; CLI UIs by listening-port owner.
 DOCKER_LANES="qwen-spark qwen35b-spark qwen38 puzzle-spark glm53-exl3 comfyui-spark vllm-fn-tp1"
-NATIVE_LANE_PATTERNS='exl3_serve_openai\.py|ds4-server|llama-server'
+NATIVE_LANE_PATTERNS='exl3_serve_openai\.py|ds4-server|llama-server|sgl-omni serve|minimax_music3|sglang_omni|server_decider|deciserv-router'
 COMFY_PORTS="8188 8189 8299"
 
 DO_CHECK=0; DO_START=0; DO_STATUS=0; DO_STOP=0
