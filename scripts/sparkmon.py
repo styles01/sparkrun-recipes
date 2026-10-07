@@ -2118,6 +2118,8 @@ def _poll_once(args, cfg, state):
             pa["n"] += 1
         if not cfg.get("llm_model") and health.get("model_name"):
             cfg["llm_model"] = health["model_name"]
+        elif health is None or not health.get("model_name"):
+            cfg["llm_model"] = None
     if cfg["lanes"] and (now - state["lanes_ts"] > 3.0 or state["lanes"] is None):
         state["lanes"] = probe_lanes(cfg)
         state["lanes_ts"] = now
