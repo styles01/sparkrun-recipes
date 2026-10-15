@@ -22,6 +22,7 @@ command: |
     --trust-remote-code \
     --load-format auto \
     --tensor-parallel-size 1 \
+    --gpu-memory-utilization 0.90 \
     --max-model-len 262144 \
     --max-num-seqs 1 \
     --enable-chunked-prefill \
