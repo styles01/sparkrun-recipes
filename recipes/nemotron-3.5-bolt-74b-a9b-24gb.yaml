@@ -16,7 +16,7 @@ defaults:
 
 command: |
   pip install -q b12x && vllm download-kernels && \
-  curl -fsSL https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/resolve/main/ultra_v3_reasoning_parser.py -o /root/ultra_v3_reasoning_parser.py && \
+  curl -fsSL https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/resolve/main/ultra_v3_reasoning_parser.py -o /home/jaita/ultra_v3_reasoning_parser.py && \
   export VLLM_USE_V2_MODEL_RUNNER=1 && \
   vllm serve nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB \
     --trust-remote-code \
@@ -40,7 +40,7 @@ command: |
     --media-io-kwargs '{"video":{"fps":2,"num_frames":256}}' \
     --enable-auto-tool-choice \
     --tool-call-parser qwen3_coder \
-    --reasoning-parser-plugin /root/ultra_v3_reasoning_parser.py \
+    --reasoning-parser-plugin /home/jaita/ultra_v3_reasoning_parser.py \
     --reasoning-parser ultra_v3 \
     --speculative-config '{"method":"dflash","model":"nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr","num_speculative_tokens":7,"rejection_sample_method":"standard","attention_backend":"FLASHINFER","draft_load_config":{"load_format":"auto"}}'
 
