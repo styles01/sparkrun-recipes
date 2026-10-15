@@ -16,7 +16,7 @@ defaults:
 
 command: |
   vllm serve nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 \
-    --served-model-name nemotron-3.5-super-vl \
+    --served-model-name nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 \
     --max-num-seqs 1 \
     --trust-remote-code \
     --gpu-memory-utilization 0.75 \
