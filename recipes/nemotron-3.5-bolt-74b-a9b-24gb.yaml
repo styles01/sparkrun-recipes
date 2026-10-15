@@ -15,7 +15,7 @@ defaults:
   host: 0.0.0.0
 
 command: |
-  pip install -q b12x && vllm download-kernels && \
+  pip install -q b12x "vllm[b12x]" && vllm download-kernels && \
   curl -fsSL https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/resolve/main/ultra_v3_reasoning_parser.py -o /cache/huggingface/ultra_v3_reasoning_parser.py && \
   export VLLM_USE_V2_MODEL_RUNNER=1 && \
   vllm serve nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB \
