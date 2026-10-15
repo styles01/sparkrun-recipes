@@ -1,0 +1,39 @@
+recipe_version: "1"
+name: nemotron-3.5-super-vl-nvfp4
+description: "NVIDIA Nemotron 3.5 Super VL 120B-A12B NVFP4 on 1x DGX Spark (GB10) — official NVIDIA deploy config: dflash/LiLiCorr MTP draft x7, Mamba-2 flashinfer backend, C-RADIO vision, 1M-capable"
+model: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+runtime: vllm
+container: vllm/vllm-openai:v0.32.0
+drafter:
+  model: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+
+command: |
+  vllm serve nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 \
+    --served-model-name nemotron-3.5-super-vl \
+    --max-num-seqs 1 \
+    --trust-remote-code \
+    --gpu-memory-utilization 0.75 \
+    --max-num-batched-tokens 8192 \
+    --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr \
+    --speculative_config.num_speculative_tokens 7 \
+    --speculative_config.method dflash \
+    --mamba-backend flashinfer \
+    --mamba-ssm-cache-dtype float16 \
+    --enable-mamba-cache-stochastic-rounding \
+    --mamba-cache-philox-rounds 5 \
+    --enable-mamba-shared-prefix-checkpoint \
+    --video-pruning-rate 0.5 \
+    --media-io-kwargs '{"video": {"fps": 2, "num_frames": 256}}' \
+    --block-size 64 \
+    --prefix-match-unit 64 \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_coder \
+    --reasoning-parser nemotron_v3
+
+metadata:
+  author: styles01
+  tags: [nemotron, nvidia, nvfp4, vl, mamba, mtp, spark, gb10, model-drop-2026-10]
