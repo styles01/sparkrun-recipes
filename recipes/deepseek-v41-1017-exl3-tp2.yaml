@@ -64,9 +64,10 @@ env:
   EXL3_SMOE_FLAGS: "-DSMOE_RUNFLAGS=1"
   VLLM_EXL3_MOE_TF_PROMPT: "1"
   VLLM_DSV41_MHC_OVERLAP: "1"
+  VLLM_DSPARK_MARKOV_CACHE: "/cache/runtime/markov_top_tokens.json"
   VLLM_ENGRAM_DISK_SPIN_MS: "1000"
   VLLM_SHORT_CTX_BOUNDS: "512,1025"
-  TORCH_EXTENSIONS_DIR: "/root/.cache/torch_extensions"
+  TORCH_EXTENSIONS_DIR: "/cache/runtime/torch_extensions"
 
 benchmark:
   framework: sparkrun llama-benchy (arena profile)
