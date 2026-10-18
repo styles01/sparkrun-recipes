@@ -27,7 +27,7 @@ description: >
 
 cluster_only: true
 runtime: vllm-distributed
-container: ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v1
+container: ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v2
 model: LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw
 
 executor_config:
