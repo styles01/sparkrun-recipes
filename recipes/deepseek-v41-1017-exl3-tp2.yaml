@@ -8,9 +8,14 @@
 # Numbers (kit_bench.py, greedy, streaming): set b code 93.8 / prose 52.4 / structured 126.8 tok/s
 # (Sudosu 2.70bpw lane: 102.7/57.9/141.0 — delta = the 2.9bpw bitrate; per-byte parity. Mia stock: 41.6/25.1/40.4.)
 #
-# ARENA NOTE: model: is the pack's HF id (the arena hard-requires an HF id + served_name == that id;
-# llama-benchy 404s otherwise). The engine carries the 1017 loader overlay and serves a REPACKED tree
-# (~/models/dsv41-1017-ours) — repack via one-button.sh / repack/repack_ours.py first.
+# ARENA NOTES (shape follows Ling-3.0's accepted 2-node recipe):
+# - model: is the pack's HF id (arena identity; llama-benchy calls the served name = that id).
+# - The served tree = the REPACKED form of the pack (union index + config/plan): repack once per node via
+#   repack/repack_ours.py (one-button.sh), and make the HF cache snapshot resolve to it (hardlink prime;
+#   see the runbook). The engine image resolves HF_HUB_OFFLINE lookups to that snapshot.
+# - executor_config.entrypoint="" — the engine image ships ENTRYPOINT ["vllm","serve"]; sparkrun appends
+#   its launcher as CMD args, so the preflight fails closed until the entrypoint is cleared
+#   (sparkrun probe-verified).
 
 recipe_version: "4"
 name: deepseek-v41-1017-exl3-tp2
@@ -18,16 +23,20 @@ description: >
   DeepSeek-V4.1-Flash-1017 EXL3 2.9bpw on two DGX Sparks (TP2, RoCE). Sudosu's tuned engine
   (vLLM 6e517b15 + 22 patches + vllm_exl3_moe, exllamav3 1.6.0) with the 1017 overlay:
   compressor/indexer/drafter EXL3 support, TP2 drafter, measured per-round depth policy.
-  262K context, vision on, DSpark k=6 adaptive.
+  262K context, vision on.
 
+cluster_only: true
 runtime: vllm-distributed
 container: ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v1
 model: LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw
 
+executor_config:
+  entrypoint: ""
+
 defaults:
   port: 8000
   host: "0.0.0.0"
-  tensor_parallel: 2                        # 1 rank per Spark
+  tensor_parallel: 2                        # 1 rank per Spark; native --nnodes 2
   gpu_memory_utilization: 0.85
   max_model_len: 262144
   max_num_seqs: 2
@@ -42,24 +51,46 @@ spec:
 env:
   VLLM_DSPARK_ROUND_MS: "31.9,35.2,38.6,42.6,45.3,48.1,51.0"  # depth 0..6, MEASURED on TP2-drafter boots
   VLLM_DSPARK_DRAFT_MS: "0"
-  ENGRAM_DISK_THREADS: "256"
-  VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS: "1800"
+  VLLM_DSPARK_DEPTH_POLICY: conf
+  VLLM_DSPARK_LOCAL_ARGMAX: "1"
+  VLLM_EXL3_MOE_PARALLEL_GROUPS: "1"
+  EXL3_MOE_COOP_WIDE: "1"
+  EXL3_INT8_GEMV: "0"
+  EXL3_L2PF: "attn,moe,next"
+  EXL3_L2PF_HC: "1"
+  EXL3_RDMA_AR: "1"
+  EXL3_ROUTER: "1"
+  EXL3_MROW_GROUPED: "1"
+  EXL3_SMOE_FLAGS: "-DSMOE_RUNFLAGS=1"
+  VLLM_EXL3_MOE_TF_PROMPT: "1"
+  VLLM_DSV41_MHC_OVERLAP: "1"
+  VLLM_ENGRAM_DISK_SPIN_MS: "1000"
+  VLLM_SHORT_CTX_BOUNDS: "512,1025"
+  TORCH_EXTENSIONS_DIR: "/root/.cache/torch_extensions"
 
 benchmark:
-  framework: kit_bench (kit_bench.py in the serving repo)
-  decode: greedy, streaming, (tokens-1)/window
+  framework: sparkrun llama-benchy (arena profile)
   reference: "set b: code 93.8 / prose 52.4 / structured 126.8 tok/s"
 
+command: |
+  vllm serve LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw \
+    --host {host} \
+    --port {port} \
+    --tensor-parallel-size {tensor_parallel} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-model-len {max_model_len} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens 2048 \
+    --served-model-name {served_model_name} \
+    --speculative-config '{"method":"dspark","num_speculative_tokens":6,"draft_parallel_config":{"tensor_parallel_size":2}}' \
+    --kv-cache-memory-bytes 2684354560 \
+    --engram-config '{"cpu_offload":true,"dp_shared_memory":false,"disk_offload":true,"disk_threads":256}' \
+    --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY"}' \
+    --kernel-config '{"enable_flashinfer_autotune":false}' \
+    --enable-auto-tool-choice \
+    --tool-call-parser deepseek_v41 \
+    --reasoning-parser deepseek_v41
+
 # Re-measure the depth table on YOUR boot after any hardware/drafter change:
-#   DOCKER_ENV="VLLM_DSPARK_DEPTH_POLICY=fixed:5 VLLM_DSPARK_DEPTH_FILE=/root/.cache/dspark_depth VLLM_DSPARK_DEPTH_LOG=200" \
-#   ... dsv41_tp2.sh up ; scripts/bench/depth_sweep.sh
+#   scripts/bench/depth_sweep.sh (fixed depths) — launcher default = the measured TP2-drafter table.
 # A stale table = the policy under-speculates = ~10% slower structured. See the runbook.
-
-launch: |
-  MODEL_DIR=~/models/dsv41-1017-ours TEXT_ONLY=0 \
-  SPEC='{"method":"dspark","num_speculative_tokens":6,"draft_parallel_config":{"tensor_parallel_size":2}}' \
-  HEAD=10.200.0.1 WORKER=10.200.0.2 \
-  CONTAINER=ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v1 \
-  scripts/launch/dsv41_tp2.sh up
-
-stop: scripts/launch/dsv41_tp2.sh down
