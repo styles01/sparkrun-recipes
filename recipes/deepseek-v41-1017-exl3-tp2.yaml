@@ -7,6 +7,10 @@
 # Role: hardest-reasoning + long-context + VISION lane on two Sparks, TP2 RoCE.
 # Numbers (kit_bench.py, greedy, streaming): set b code 93.8 / prose 52.4 / structured 126.8 tok/s
 # (Sudosu 2.70bpw lane: 102.7/57.9/141.0 — delta = the 2.9bpw bitrate; per-byte parity. Mia stock: 41.6/25.1/40.4.)
+#
+# ARENA NOTE: model: is the pack's HF id (the arena hard-requires an HF id + served_name == that id;
+# llama-benchy 404s otherwise). The engine carries the 1017 loader overlay and serves a REPACKED tree
+# (~/models/dsv41-1017-ours) — repack via one-button.sh / repack/repack_ours.py first.
 
 recipe_version: "4"
 name: deepseek-v41-1017-exl3-tp2
@@ -18,30 +22,22 @@ description: >
 
 runtime: vllm-distributed
 container: ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v1
-
-model:
-  source: LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw
-  revision: latest
-  size_gb: 210.8
-  local_dir: ~/models/dsv41-1017-ours        # the REPACKED tree, not the raw HF dir
-  engram_source: deepseek-ai/DeepSeek-V4.1-Flash-1017   # shards 47+48 ONLY (fresh 1017 tables)
-
-reppack: repack/repack_ours.py               # one-button.sh runs this (hardlinks + union index + config/plan)
+model: LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw
 
 defaults:
   port: 8000
-  host: 0.0.0.0
-  tensor_parallel: 2
+  host: "0.0.0.0"
+  tensor_parallel: 2                        # 1 rank per Spark
   gpu_memory_utilization: 0.85
   max_model_len: 262144
   max_num_seqs: 2
-  served_model_name: dsv41
+  served_model_name: LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw
 
 spec:
   method: dspark
   num_speculative_tokens: 6
   draft_parallel_config:
-    tensor_parallel_size: 2                  # the drafter's 3 MoE stages split across both nodes
+    tensor_parallel_size: 2                 # the drafter's 3 MoE stages split across both nodes
 
 env:
   VLLM_DSPARK_ROUND_MS: "31.9,35.2,38.6,42.6,45.3,48.1,51.0"  # depth 0..6, MEASURED on TP2-drafter boots
