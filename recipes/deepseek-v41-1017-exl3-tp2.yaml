@@ -16,6 +16,7 @@ description: >
   compressor/indexer/drafter EXL3 support, TP2 drafter, measured per-round depth policy.
   262K context, vision on, DSpark k=6 adaptive.
 
+runtime: vllm-distributed
 container: ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v1
 
 model:
