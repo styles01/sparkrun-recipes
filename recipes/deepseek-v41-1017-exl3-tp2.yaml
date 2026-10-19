@@ -39,7 +39,7 @@ defaults:
   tensor_parallel: 2                        # 1 rank per Spark; native --nnodes 2
   gpu_memory_utilization: 0.85
   max_model_len: 262144
-  max_num_seqs: 2
+  max_num_seqs: 4                        # Mia-parity ceiling; pool is the real limit (1.06M tokens)
   served_model_name: LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw
 
 spec:
