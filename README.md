@@ -21,67 +21,72 @@ Production lanes, native Spark Arena recipes, benchmark evidence, and runbooks f
 
 ---
 
-## Current best recipes by model
+## The canonical lanes
 
-The one recipe to run per model on this box today, per the paired runbook. "Best" is only
-claimed where runbook + recipe history supports it; everything else is listed neutrally as
-available. Alternates and staged lanes stay under [The flavors](#the-flavors) and the
-[recipe catalog](#recipe-catalog).
+The four lanes we run as estate canon right now, in crown order. Full names, quants, and the
+paired runbook for each — read the runbook before switching anything.
 
-| Model | Current best recipe | Notes / when to use |
-|---|---|---|
-| **Qwen3.8-Flash-Next (125B-A6B)** | [`recipes/qwen38-flash-next-exl3-native.yaml`](recipes/qwen38-flash-next-exl3-native.yaml) | **CURRENT production daily driver** — plain EXL3 via native ExLlamaV3 (vcruz305 fork, bare-venv, no container), native MTP, 262K single-stream, ~54+ tok/s decode. Runbook: [`runbooks/qwen38-flash-next-exl3-daily-driver.md`](runbooks/qwen38-flash-next-exl3-daily-driver.md) · launcher: [`scripts/switch-to-qwen38-exl3.sh`](scripts/switch-to-qwen38-exl3.sh). **NOT the TensorFold variant** — [`recipes/qwen38-flash-next-tensorfold.yaml`](recipes/qwen38-flash-next-tensorfold.yaml) is the **arena/experimental submission path**, not the daily driver. Other Flash-Next lanes (MTP3 + draft vocab, DwarfStar ds4, llama.cpp Q3/Q4, vLLM NVFP4, Mia NVFP4) remain available as alternates — see the catalog. |
-| **Ling 3.0 Flash** | [`recipes/ling-3.0-flash-int4.yaml`](recipes/ling-3.0-flash-int4.yaml) | Production balanced long-context agent lane (124B MoE, 5.1B active, 256K, 2 lanes). Runbook contract: [`runbooks/ling-3.0-flash-int4.md`](runbooks/ling-3.0-flash-int4.md). Arena-pinned vLLM variant: [`recipes/ling-3.0-flash-vllm.yaml`](recipes/ling-3.0-flash-vllm.yaml) · SGLang+DSPARK variant: [`recipes/ling-3.0-flash-sglang-dspark.yaml`](recipes/ling-3.0-flash-sglang-dspark.yaml). |
-| **DeepSeek-V4.1-Flash 1017 EXL3 (TP2×2 Sparks)** | [`recipes/deepseek-v41-1017-exl3-tp2.yaml`](recipes/deepseek-v41-1017-exl3-tp2.yaml) | **NEW production two-node lane (Oct 18)** — the 1017 refresh at 2.9bpw on Sudosu's tuned engine, DSpark k=6 adaptive with a **TP2 drafter** and a measured depth table, 262K, vision on. Measured set b: code **93.8** / prose **52.4** / structured **126.8** tok/s (2–3× Mia-AI-Lab's stock kit on the same box; −9-10 % vs Sudosu's own 2.70bpw lane = the 2.9 bitrate, per-byte parity). Runbook: [`runbooks/deepseek-v41-1017-exl3-tp2.md`](runbooks/deepseek-v41-1017-exl3-tp2.md) · image: `ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v1` · one-button + full method: [styles01/deepseek-v41-1017-exl3-2x-dgx-sparks](https://github.com/styles01/deepseek-v41-1017-exl3-2x-dgx-sparks). |
-| **DeepSeek-V4-Flash 0731** | [`recipes/deepseek-v4-flash-0731-ds4.yaml`](recipes/deepseek-v4-flash-0731-ds4.yaml) | Production DS4 CUDA route — hardest reasoning, 196K-1M configurations. Runbook: [`runbooks/deepseek-v4-flash-ds4.md`](runbooks/deepseek-v4-flash-ds4.md). Base vLLM recipe [`recipes/deepseek-v4-flash-0731.yaml`](recipes/deepseek-v4-flash-0731.yaml) available; vision-exp lane is experimental-only. |
-| **Qwen 3.8 27B (NVFP4)** | [`recipes/qwen-38-27b.yaml`](recipes/qwen-38-27b.yaml) | Fast general agent traffic — GB10-specific vLLM kernel path, 256K, native MTP. Runbook: [`runbooks/qwen-38-27b.md`](runbooks/qwen-38-27b.md). Variant lanes (eagle-sglang, dspark, fp8, 3D workbench) are alternates/staged. |
-| **Qwen 3.5 122B (DFlash)** | [`recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml`](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) | Marked "BREAKTHROUGH — Production Ready" by its runbook (fp8 KV + DFlash n=7 + int8 lm-head). Runbook: [`runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md`](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md). The aeon v0.23 contract [`recipes/qwen-122b.yaml`](recipes/qwen-122b.yaml) stays valid per [`runbooks/qwen-122b.md`](runbooks/qwen-122b.md). |
-| **Qwen 35B (NVFP4)** | [`recipes/qwen-35b.yaml`](recipes/qwen-35b.yaml) | High-concurrency, lower-stakes work. Runbook: [`runbooks/qwen-35b.md`](runbooks/qwen-35b.md). |
-| **Laguna S 2.1** | [`recipes/laguna-s-2.1.yaml`](recipes/laguna-s-2.1.yaml) | Long-context code lane. Runbook: [`runbooks/laguna-s-2.1.md`](runbooks/laguna-s-2.1.md). |
-| **Muse-Glimmer 30B** | [`recipes/muse-glimmer-30b.yaml`](recipes/muse-glimmer-30b.yaml) | SGLang, 131K-class. Runbook: [`runbooks/muse-glimmer-30b.md`](runbooks/muse-glimmer-30b.md). |
-| **Nemotron 3.5 Lightning 30B (A3B NVFP4)** | [`recipes/nemotron-3.5-lightning-30b-a3b-nvfp4.yaml`](recipes/nemotron-3.5-lightning-30b-a3b-nvfp4.yaml) | 100K multi-agent lane. Runbook: [`runbooks/nemotron-3.5-lightning-30b-a3b-nvfp4.md`](runbooks/nemotron-3.5-lightning-30b-a3b-nvfp4.md). |
-| **Nemotron Super 120B (NVFP4)** | [`recipes/nemotron-super-120b-nvfp4.yaml`](recipes/nemotron-super-120b-nvfp4.yaml) | Available (single recipe; no documented best-vs-alternate history). Runbook: [`runbooks/nemotron-super-120b-nvfp4.md`](runbooks/nemotron-super-120b-nvfp4.md). |
-| **MedGemma 27B** | — both available | [`recipes/medgemma-27b.yaml`](recipes/medgemma-27b.yaml) · [`recipes/medgemma-27b-medicomp.yaml`](recipes/medgemma-27b-medicomp.yaml) — sibling recipes, no documented ranking; see [`runbooks/medgemma-27b.md`](runbooks/medgemma-27b.md) and [`runbooks/medgemma-27b-medicomp.md`](runbooks/medgemma-27b-medicomp.md). |
-| **Puzzle 75B** | [`recipes/puzzle-75b.yaml`](recipes/puzzle-75b.yaml) | Available. Runbook: [`runbooks/puzzle-75b.md`](runbooks/puzzle-75b.md). |
-| **PinkCherry H3 Aurore (video)** | [`recipes/pinkcherry-h3-aurore.yaml`](recipes/pinkcherry-h3-aurore.yaml) | Verified end-to-end 2026-09-07. Runbook: [`runbooks/pinkcherry-h3-aurore-nsfw-video-gen.md`](runbooks/pinkcherry-h3-aurore-nsfw-video-gen.md). |
+| # | Model (exact pack) | Canonical lane | Evidence |
+|---|---|---|---|
+| 1 | **DeepSeek-V4.1-Flash-1017** · `LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw` (EXL3 2.9 bpw) | **TP2 across 2× DGX Spark** on Sudosu's tuned vLLM + `vllm_exl3_moe` 1017 overlay, DSpark **k=6 adaptive with a TP2 drafter**, measured per-round depth table, 262K context, vision on. Recipe: [`recipes/deepseek-v41-1017-exl3-tp2.yaml`](recipes/deepseek-v41-1017-exl3-tp2.yaml) · Runbook: [`runbooks/deepseek-v41-1017-exl3-tp2.md`](runbooks/deepseek-v41-1017-exl3-tp2.md) · One-button + method: [styles01/deepseek-v41-1017-exl3-2x-dgx-sparks](https://github.com/styles01/deepseek-v41-1017-exl3-2x-dgx-sparks) | **Crowned canonical Oct 18.** kit_bench set b: code **93.8** / prose **52.4** / structured **126.8** tok/s (2-3× Mia-AI-Lab stock same-box). Full 28-cell Spark Arena llama-benchy run (submission `sub1792364281474`): single-stream decode 47.5-54.1, prefill up to **1,620 tok/s**, ~50 tok/s held at **100K context**, c10 aggregate ~**17.5K tok/s**, zero errors. |
+| 2 | **GLM-5.3-Flash** · `Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold` (EXL3 4 bpw) | TP2 across 2× DGX Spark, TensorFold stack with coop-MoE + DFlash2 + InstantTensor. Recipe: [`recipes/glm-5.3-flash-exl3-k2.yaml`](recipes/glm-5.3-flash-exl3-k2.yaml) | The mixed general + visual/motion work lane. Recipe/runbook pair per the registry; re-verify on your workload. |
+| 3 | **Qwen3.8-Flash-Next (125B-A6B)** · plain **EXL3 native MTP** | Native ExLlamaV3 (vcruz305 fork, bare-venv, no container), native MTP dynamic draft, 262K single-stream. Recipe: [`recipes/qwen38-flash-next-exl3-native.yaml`](recipes/qwen38-flash-next-exl3-native.yaml) · Launcher: [`scripts/switch-to-qwen38-exl3.sh`](scripts/switch-to-qwen38-exl3.sh) | ~54.3 tok/s live decode, 0.70 cumulative draft acceptance (2026-09-23), full telemetry parity. The long-serving prior daily driver — still the fastest single-Stream EXL3 route we measured. **NOT the TensorFold variant** (that stays arena/experimental). |
+| 4 | **NVIDIA Nemotron-3.5-Super-VL-120B (A12B)** | NVFP4 recipe: [`recipes/nemotron-super-120b-nvfp4.yaml`](recipes/nemotron-super-120b-nvfp4.yaml) + our own **EXL3 3.5 bpw HQ community pack** (`aitamedia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-EXL3-3.5bpw`, 57.8 GB — listed in TandemLLM Community via PR #63). Runbook: [`runbooks/nemotron-super-120b-nvfp4.md`](runbooks/nemotron-super-120b-nvfp4.md) | Freshly benchmarked (Oct); numbers land in the runbook as reps accrue. |
 
-**No runbook-to-recipe pairing exists (gaps — do not infer one):** [`runbooks/qwen-image-2.1-nsfw-image-gen.md`](runbooks/qwen-image-2.1-nsfw-image-gen.md) (ComfyUI image lane, no sparkrun recipe in this repo yet), [`runbooks/nvme-interrupt-coalescing.md`](runbooks/nvme-interrupt-coalescing.md) (host-NVMe tuning, no model), and [`runbooks/gannotti-h3-chaining/`](runbooks/gannotti-h3-chaining/) (video-chaining workflow docs, no recipe).
+Everything else we have ever tested — engine swaps, draft stacks, quant variants, video lanes,
+the whole long tail — lives under [The flavors](#the-flavors) and the
+[recipe catalog](#recipe-catalog). Our runbooks and recipes have many other variants tested;
+that tree is the honest archive of every lane we tried, including the ones we retired.
 
 ---
 
 ## The flavors
 
-This is the decision surface—not a wall of YAML. Pick the lane that matches the work, then follow its runbook exactly.
+The decision surface — every alternate lane we tested across the estate. Pick the lane that
+matches the work, then follow its runbook exactly. Canon order lives in the
+[canonical lanes](#the-canonical-lanes) above.
 
 | Flavor | Best for | Shape | Evidence boundary | Start here |
 |---|---|---|---|---|
-| **⭐ Qwen 3.8 Flash-Next — EXL3 Native MTP** | **CURRENT DAILY DRIVER — production agent traffic on this box** | 125B-A6B EXL3 · 262K · native MTP (dynamic draft, 5 deep) · single-stream · exllamav3 fork + OpenAI shim | Live serving agent traffic: 54.3 tok/s decode, 0.70 cumulative draft acceptance (2026-09-23); full telemetry parity | [Runbook](runbooks/qwen38-flash-next-exl3-daily-driver.md) · [Launcher](scripts/switch-to-qwen38-exl3.sh) |
-| Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K | Alternate agent lane (vLLM) | 125B-A6B NVFP4 · 262K · MTP k=3 + 47k draft vocab · FP8 KV · qwen3_coder tools | Bench v27: 28/28 cells passed (Arena `sub1789171536939`); previous daily driver | [Runbook](runbooks/qwen38-flash-next-mtp3-draftvocab47k.md) · [Recipe](recipes/qwen38-flash-next-mtp3-draftvocab47k.yaml) |
-| **Qwen 3.8 Flash-Next — DwarfStar (ds4 engine)** | Short-context single-stream speed | ~36.7 tok/s decode @ ≤32K · single lane | Measured locally; alternate lane, not the default | [Runbook](runbooks/qwen38-flash-next-ds4.md) · [Recipe](recipes/qwen38-flash-next-ds4.yaml) |
-| **Ling 3.0 Flash INT4** | Balanced long-context agent work | 124B MoE / 5.1B active · 256K · 2 lanes | Native Arena route; source-pinned Ling fork, FP8 KV, MTP k=1 | [Runbook](runbooks/ling-3.0-flash-int4.md) · [Arena recipe](recipes/ling-3.0-flash-vllm.yaml) |
-| **Qwen 3.8 Flash-Next Q3** | Deep concurrent coding agents + vision | 3 × 220K lanes · ~57 aggregate tok/s observed | Requires the documented qwen4exp build and regression gates | [Runbook](runbooks/qwen38-flash-next-q3-3lane.md) · [Recipe](recipes/qwen3.8-flash-next-q3-3lane.yaml) |
-| **DeepSeek-V4.1-Flash 1017 EXL3 (TP2×2)** | Hardest reasoning + long context + vision | set b 93.8 / 52.4 / 126.8 tok/s · 262K · 2-node TP2 + DSpark k=6 TP2-drafter | Production two-node lane (Oct 18); 2–3× Mia stock same-box; measured depth table; superseded the 2.70bpw v1.1 lane | [Runbook](runbooks/deepseek-v41-1017-exl3-tp2.md) · [Recipe](recipes/deepseek-v41-1017-exl3-tp2.yaml) |
-| **DeepSeek-V4-Flash 0731 / DS4** | Hardest reasoning and very deep context | 20 tok/s single stream · 196K–1M configurations | Production DS4 CUDA route; DSpark k=2 | [Runbook](runbooks/deepseek-v4-flash-ds4.md) · [Recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) |
-| **Qwen 3.8 27B NVFP4** | Fast general agent traffic | 256K · native MTP · multi-request focus | GB10-specific vLLM kernel path; validate tool behavior on your workload | [Runbook](runbooks/qwen-38-27b.md) · [Recipe](recipes/qwen-38-27b.yaml) |
-| **Qwen 122B DFlash** | Structured code and tool work | 3 lanes · 262K class | DFlash is workload-dependent; do not extrapolate code speed to prose | [Runbook](runbooks/qwen-122b.md) · [Recipe](recipes/qwen-122b.yaml) |
-| **Qwen 35B NVFP4** | High-concurrency, lower-stakes work | 4+ lanes · 262K class | Fast, but do not substitute it for the deeper-reasoning lanes blindly | [Runbook](runbooks/qwen-35b.md) · [Recipe](recipes/qwen-35b.yaml) |
+| Qwen 3.8 Flash-Next MTP3 + Draft Vocab 47K | Alternate agent lane (vLLM) | 125B-A6B NVFP4 · 262K · MTP k=3 + 47k draft vocab · FP8 KV | Bench v27: 28/28 cells passed (Arena `sub1789171536939`) | [Runbook](runbooks/qwen38-flash-next-mtp3-draftvocab47k.md) · [Recipe](recipes/qwen38-flash-next-mtp3-draftvocab47k.yaml) |
+| Qwen 3.8 Flash-Next — DwarfStar (ds4 engine) | Short-context single-stream speed | ~36.7 tok/s decode @ ≤32K · single lane | Measured locally; alternate lane | [Runbook](runbooks/qwen38-flash-next-ds4.md) · [Recipe](recipes/qwen38-flash-next-ds4.yaml) |
+| Qwen 3.8 Flash-Next TensorFold | Arena/experimental submission path | NVFP4 · TF stack | Experimental — not the daily driver | [Recipe](recipes/qwen38-flash-next-tensorfold.yaml) |
+| Qwen 3.8 Flash-Next Q3 (3 lanes) | Deep concurrent coding agents + vision | 3 × 220K lanes · ~57 aggregate tok/s | Needs the documented qwen4exp build + regression gates | [Runbook](runbooks/qwen38-flash-next-q3-3lane.md) · [Recipe](recipes/qwen3.8-flash-next-q3-3lane.yaml) |
+| Qwen 3.8 Flash-Next — llama.cpp Q3/Q4 · Mia NVFP4 · plain NVFP4 | Compatibility variants | Various | Available as catalog alternates | [Catalog](#recipe-catalog) |
+| Ling 3.0 Flash INT4 | Balanced long-context agent work | 124B MoE / 5.1B active · 256K · 2 lanes | Native Arena route; FP8 KV, MTP k=1 | [Runbook](runbooks/ling-3.0-flash-int4.md) · [Recipe](recipes/ling-3.0-flash-int4.yaml) |
+| DeepSeek-V4-Flash 0731 / DS4 | Hardest reasoning and very deep context | 20 tok/s single stream · 196K-1M configurations | Production DS4 CUDA route; DSpark k=2; **the lane DeepSeek-V4.1-Flash-1017 superseded** | [Runbook](runbooks/deepseek-v4-flash-ds4.md) · [Recipe](recipes/deepseek-v4-flash-0731-ds4.yaml) |
+| Qwen 3.8 27B NVFP4 | Fast general agent traffic | 256K · native MTP · multi-request | GB10-specific vLLM kernel path | [Runbook](runbooks/qwen-38-27b.md) · [Recipe](recipes/qwen-38-27b.yaml) |
+| Qwen 122B DFlash v2.6 | Structured code and tool work | 3 lanes · 262K · FP8 KV + DFlash n=7 + int8 lm-head | "Production ready" per its runbook; DFlash = workload-dependent | [Runbook](runbooks/qwen-122b-v26-fp8-kv-dflash-int8.md) · [Recipe](recipes/qwen-122b-v26-fp8-kv-dflash-int8.yaml) |
+| Qwen 122B (aeon v0.23) | The 122B contract lane | 3 lanes | Stays valid per its runbook | [Runbook](runbooks/qwen-122b.md) · [Recipe](recipes/qwen-122b.yaml) |
+| Qwen 35B NVFP4 | High-concurrency, lower-stakes work | 4+ lanes · 262K | Fast; not for deep reasoning blindly | [Runbook](runbooks/qwen-35b.md) · [Recipe](recipes/qwen-35b.yaml) |
+| Laguna S 2.1 | Long-context code lane | 131K-class | Recipe/runbook pair | [Runbook](runbooks/laguna-s-2.1.md) · [Recipe](recipes/laguna-s-2.1.yaml) |
+| Muse-Glimmer 30B | SGLang creative lane | 131K-class | Recipe/runbook pair | [Runbook](runbooks/muse-glimmer-30b.md) · [Recipe](recipes/muse-glimmer-30b.yaml) |
+| Nemotron 3.5 Lightning 30B (A3B NVFP4) | 100K multi-agent lane | 30B A3B NVFP4 | Recipe/runbook pair | [Runbook](runbooks/nemotron-3.5-lightning-30b-a3b-nvfp4.md) · [Recipe](recipes/nemotron-3.5-lightning-30b-a3b-nvfp4.yaml) |
+| Nemotron 3.5 Bolt 74B (A9B) | Mid-size reasoning lane | EXL3 sizes 2.5-6.0·available | Available | [Recipe](recipes/nemotron-3.5-bolt-74b-a9b-24gb.yaml) |
+| MedGemma 27B (both variants) | Medical-domain lane | Sibling recipes, no documented ranking | Runbook pair | [Runbook](runbooks/medgemma-27b.md) |
+| Puzzle 75B | Available lane | — | Runbook pair | [Runbook](runbooks/puzzle-75b.md) |
+| PinkCherry H3 Aurore (video) | NSFW video generation | H3 video | Verified end-to-end 2026-09-07 | [Runbook](runbooks/pinkcherry-h3-aurore-nsfw-video-gen.md) |
+
+**Runbook pairings without a recipe (gaps — do not infer one):**
+[`qwen-image-2.1-nsfw-image-gen.md`](runbooks/qwen-image-2.1-nsfw-image-gen.md) (ComfyUI image lane),
+[`nvme-interrupt-coalescing.md`](runbooks/nvme-interrupt-coalescing.md) (host tuning),
+[`gannotti-h3-chaining/`](runbooks/gannotti-h3-chaining/) (video chaining).
 
 ### How to choose
 
 ```text
-Need the production daily driver (agent traffic on this box)?        → Qwen 3.8 Flash-Next EXL3 Native MTP
-Need an alternate vLLM agent lane with multi-cell bench evidence?     → Flash-Next MTP3 + Draft Vocab 47K
-Need short-context single-stream speed (alternate engine)?           → DwarfStar (ds4) Flash-Next
-Need the most dependable deep reasoning?             → DS4 Flash 0731
-Need the best all-around agentic balance?             → Ling 3.0 Flash INT4
-Need concurrent coding agents plus native vision?     → Qwen Flash-Next Q3
-Need the fastest lightweight general lane?            → Qwen 3.8 27B NVFP4
-Need structured code/tool throughput?                 → Qwen 122B DFlash
-Need cheap high-concurrency background work?          → Qwen 35B NVFP4
+Need the hardest reasoning + longest context + vision (the canon head)?  → DeepSeek-V4.1-Flash-1017 EXL3 2.9 TP2
+Need mixed general + visual/motion work?                                → GLM-5.3-Flash EXL3 4bpw
+Need the fastest single-stream EXL3 route on one box?                   → Qwen3.8-Flash-Next EXL3 native MTP
+Need a benchmarked mid-size multimodal lane?                            → Nemotron-3.5-Super-VL-120B (A12B)
+Need the dependable deep-context route the 1017 lane replaced?          → DS4 Flash 0731
+Need balanced agentic context?                                          → Ling 3.0 Flash INT4
+Need fast concurrent agent traffic?                                     → Qwen 3.8 27B NVFP4
+Need cheap high-concurrency background work?                            → Qwen 35B NVFP4
 ```
 
 > [!TIP]
-> “Faster” only matters when the model still clears the task’s intelligence threshold. The benchmark section records throughput, not a universal quality ranking.
+> "Faster" only matters when the model still clears the task's intelligence threshold. The benchmark section records throughput, not a universal quality ranking.
 
 ---
 
