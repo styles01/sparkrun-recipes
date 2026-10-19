@@ -4,7 +4,7 @@
 
 **Source-pinned inference recipes for the NVIDIA DGX Spark.**
 
-Production lanes, native Spark Arena recipes, benchmark evidence, and runbooks for getting serious long-context models onto one GB10 without pretending a social-media tok/s screenshot is a deployment.
+**Source-pinned inference recipes for the NVIDIA DGX Spark.** Native recipes, benchmark evidence, and runbooks for GB10.
 
 [![DGX Spark](https://img.shields.io/badge/hardware-DGX%20Spark%20GB10-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://www.nvidia.com/en-us/products/workstations/dgx-spark/)
 [![Spark Arena](https://img.shields.io/badge/Spark%20Arena-native%20recipes-181717?style=for-the-badge&logo=github&logoColor=white)](https://spark-arena.com)
@@ -12,7 +12,7 @@ Production lanes, native Spark Arena recipes, benchmark evidence, and runbooks f
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/aitamedia)
 [![Follow on X](https://img.shields.io/badge/Follow%20%40jaita%20on%20X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/jaita)
 
-[Best by model](#current-best-recipes-by-model) · [Flavors](#the-flavors) · [Start Here](#start-here) · [Arena](#native-spark-arena-benchmarking) · [Recipe Catalog](#recipe-catalog) · [Benchmarks](#benchmark-interpretation) · [Contributing](#contributing)
+[Canon](#the-canonical-lanes) · [Flavors](#the-flavors) · [Start Here](#start-here) · [Arena](#native-spark-arena-benchmarking) · [Recipe Catalog](#recipe-catalog) · [Benchmarks](#benchmark-interpretation) · [Contributing](#contributing)
 
 </div>
 
@@ -23,20 +23,16 @@ Production lanes, native Spark Arena recipes, benchmark evidence, and runbooks f
 
 ## The canonical lanes
 
-The four lanes we run as estate canon right now, in crown order. Full names, quants, and the
-paired runbook for each — read the runbook before switching anything.
+The four lanes we run as estate canon right now, in crown order. Full names, quants, and the paired runbook for each.
 
 | # | Model (exact pack) | Canonical lane | Evidence |
 |---|---|---|---|
-| 1 | **DeepSeek-V4.1-Flash-1017** · `LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw` (EXL3 2.9 bpw) | **TP2 across 2× DGX Spark** on Sudosu's tuned vLLM + `vllm_exl3_moe` 1017 overlay, DSpark **k=6 adaptive with a TP2 drafter**, measured per-round depth table, 262K context, vision on. Recipe: [`recipes/deepseek-v41-1017-exl3-tp2.yaml`](recipes/deepseek-v41-1017-exl3-tp2.yaml) · Runbook: [`runbooks/deepseek-v41-1017-exl3-tp2.md`](runbooks/deepseek-v41-1017-exl3-tp2.md) · One-button + method: [styles01/deepseek-v41-1017-exl3-2x-dgx-sparks](https://github.com/styles01/deepseek-v41-1017-exl3-2x-dgx-sparks) | **Crowned canonical Oct 18.** kit_bench set b: code **93.8** / prose **52.4** / structured **126.8** tok/s (2-3× Mia-AI-Lab stock same-box). Full 28-cell Spark Arena llama-benchy run (submission `sub1792364281474`): single-stream decode 47.5-54.1, prefill up to **1,620 tok/s**, ~50 tok/s held at **100K context**, c10 aggregate ~**17.5K tok/s**, zero errors. |
-| 2 | **GLM-5.3-Flash** · `Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold` (EXL3 4 bpw) | TP2 across 2× DGX Spark, TensorFold stack with coop-MoE + DFlash2 + InstantTensor. Recipe: [`recipes/glm-5.3-flash-exl3-k2.yaml`](recipes/glm-5.3-flash-exl3-k2.yaml) | The mixed general + visual/motion work lane. Recipe/runbook pair per the registry; re-verify on your workload. |
-| 3 | **Qwen3.8-Flash-Next (125B-A6B)** · plain **EXL3 native MTP** | Native ExLlamaV3 (vcruz305 fork, bare-venv, no container), native MTP dynamic draft, 262K single-stream. Recipe: [`recipes/qwen38-flash-next-exl3-native.yaml`](recipes/qwen38-flash-next-exl3-native.yaml) · Launcher: [`scripts/switch-to-qwen38-exl3.sh`](scripts/switch-to-qwen38-exl3.sh) | ~54.3 tok/s live decode, 0.70 cumulative draft acceptance (2026-09-23), full telemetry parity. The long-serving prior daily driver — still the fastest single-Stream EXL3 route we measured. **NOT the TensorFold variant** (that stays arena/experimental). |
-| 4 | **NVIDIA Nemotron-3.5-Super-VL-120B (A12B)** | NVFP4 recipe: [`recipes/nemotron-super-120b-nvfp4.yaml`](recipes/nemotron-super-120b-nvfp4.yaml) + our own **EXL3 3.5 bpw HQ community pack** (`aitamedia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-EXL3-3.5bpw`, 57.8 GB — listed in TandemLLM Community via PR #63). Runbook: [`runbooks/nemotron-super-120b-nvfp4.md`](runbooks/nemotron-super-120b-nvfp4.md) | Freshly benchmarked (Oct); numbers land in the runbook as reps accrue. |
+| 1 | **DeepSeek-V4.1-Flash-1017** · `LibertAIDAI/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw` (EXL3 2.9 bpw) | TP2 across 2× DGX Spark. Weights = LibertAIDAI's public quant; the serving container is ours — [`ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v2`](https://github.com/styles01/deepseek-v41-1017-exl3-2x-dgx-sparks) (Sudosu's tuned vLLM + our 1017 loader overlay + our patches) and our repack method, DSpark **k=6 adaptive with a TP2 drafter**, measured per-round depth table, 262K context, vision on. Recipe: [`recipes/deepseek-v41-1017-exl3-tp2.yaml`](recipes/deepseek-v41-1017-exl3-tp2.yaml) · Runbook: [`runbooks/deepseek-v41-1017-exl3-tp2.md`](runbooks/deepseek-v41-1017-exl3-tp2.md) · One-button + method: [styles01/deepseek-v41-1017-exl3-2x-dgx-sparks](https://github.com/styles01/deepseek-v41-1017-exl3-2x-dgx-sparks) | **Crowned canonical Oct 18.** kit_bench set b: code **93.8** / prose **52.4** / structured **126.8** tok/s (2-3× Mia-AiLab stock same-box). Full 28-cell Spark Arena llama-benchy run (submission `sub1792364281474`): single-stream decode 47.5-54.1, prefill up to **1,620 tok/s**, ~50 tok/s held at **100K context**, c10 aggregate ~**17.5K tok/s**, zero errors. |
+| 2 | **GLM-5.3-Flash** · `Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold` (EXL3 4 bpw) | TP2 across 2× DGX Spark via `src/GLM-5.3-Flash-EXL3-2x-DGX-Sparks` (TensorFold stack: coop-MoE + DFlash2 + InstantTensor); the k2 recipe is the one-Spark variant of the same weights. Recipe: [`recipes/glm-5.3-flash-exl3-k2.yaml`](recipes/glm-5.3-flash-exl3-k2.yaml) · Runbook: [`runbooks/glm-5.3-flash-exl3-k2.md`](runbooks/glm-5.3-flash-exl3-k2.md) | The mixed general + visual/motion work lane. Recipe/runbook pair per the registry; re-verify on your workload. |
+| 3 | **Qwen3.8-Flash-Next (125B-A6B)** · plain **EXL3 native MTP** | Native ExLlamaV3 (vcruz305 fork, bare-venv, no container), native MTP dynamic draft, 262K single-stream. Recipe: [`recipes/qwen38-flash-next-exl3-native.yaml`](recipes/qwen38-flash-next-exl3-native.yaml) · Launcher: [`scripts/switch-to-qwen38-exl3.sh`](scripts/switch-to-qwen38-exl3.sh) | ~54.3 tok/s live decode, 0.70 cumulative draft acceptance (2026-09-23), full telemetry parity. The long-serving prior daily driver — still the fastest single-stream EXL3 route we measured. **NOT the TensorFold variant** (that stays arena/experimental). |
+| 4 | **NVIDIA Nemotron-3.5-Super-VL-120B (A12B)** | NVFP4 recipe: [`recipes/nemotron-super-120b-nvfp4.yaml`](recipes/nemotron-super-120b-nvfp4.yaml) + our EXL3 3.5 bpw community pack (`aitamedia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-EXL3-3.5bpw`, 57.8 GB — listed in TandemLLM Community via PR #63). Runbook: [`runbooks/nemotron-super-120b-nvfp4.md`](runbooks/nemotron-super-120b-nvfp4.md) | Freshly benchmarked (Oct); numbers land in the runbook as repeated runs accrue. |
 
-Everything else we have ever tested — engine swaps, draft stacks, quant variants, video lanes,
-the whole long tail — lives under [The flavors](#the-flavors) and the
-[recipe catalog](#recipe-catalog). Our runbooks and recipes have many other variants tested;
-that tree is the honest archive of every lane we tried, including the ones we retired.
+Everything else we have ever tested — engine swaps, draft stacks, quant variants, video lanes, the whole long tail — lives under [The flavors](#the-flavors) and the [recipe catalog](#recipe-catalog), including the lanes we retired.
 
 ---
 
@@ -75,10 +71,7 @@ matches the work, then follow its runbook exactly. Canon order lives in the
 ### How to choose
 
 ```text
-Need the hardest reasoning + longest context + vision (the canon head)?  → DeepSeek-V4.1-Flash-1017 EXL3 2.9 TP2
-Need mixed general + visual/motion work?                                → GLM-5.3-Flash EXL3 4bpw
-Need the fastest single-stream EXL3 route on one box?                   → Qwen3.8-Flash-Next EXL3 native MTP
-Need a benchmarked mid-size multimodal lane?                            → Nemotron-3.5-Super-VL-120B (A12B)
+Canon picks live in the table above. For the alternates:
 Need the dependable deep-context route the 1017 lane replaced?          → DS4 Flash 0731
 Need balanced agentic context?                                          → Ling 3.0 Flash INT4
 Need fast concurrent agent traffic?                                     → Qwen 3.8 27B NVFP4
@@ -165,8 +158,8 @@ See [SPARKRUN-REFERENCE.md](SPARKRUN-REFERENCE.md) for the CLI reference and [be
 
 | Model / lane | Runtime | Context posture | Runbook | Recipe |
 |---|---|---|---|---|
-| **Qwen 3.8 Flash-Next EXL3 Native MTP (daily driver)** | exllamav3 fork + OpenAI shim | 262K / single stream / native MTP | [Open](runbooks/qwen38-flash-next-exl3-daily-driver.md) | [Launcher](scripts/switch-to-qwen38-exl3.sh) |
-| Ling 3.0 Flash INT4 | Ling vLLM fork | 256K / 2 lanes | [Open](runbooks/ling-3.0-flash-int4.md) | [Open](recipes/ling-3.0-flash-vllm.yaml) |
+| **Qwen 3.8 Flash-Next EXL3 Native MTP** | exllamav3 fork + OpenAI shim | 262K / single stream / native MTP | [Open](runbooks/qwen38-flash-next-exl3-daily-driver.md) | [Launcher](scripts/switch-to-qwen38-exl3.sh) |
+| Ling 3.0 Flash INT4 | Ling vLLM fork (the arena-vLLM variant of the INT4 lane) | 256K / 2 lanes | [Open](runbooks/ling-3.0-flash-int4.md) | [Open](recipes/ling-3.0-flash-vllm.yaml) |
 | Qwen 3.8 Flash-Next Q3 3-lane | llama.cpp qwen4exp | 3 × 220K | [Open](runbooks/qwen38-flash-next-q3-3lane.md) | [Open](recipes/qwen3.8-flash-next-q3-3lane.yaml) |
 | Qwen 3.8 Flash-Next Q4 | llama.cpp qwen4exp | 262K / one lane | [Open](runbooks/qwen38-flash-next-image.md) | [Open](recipes/qwen3.8-flash-next-image.yaml) |
 | DeepSeek-V4.1-Flash 1017 | ds41 (vLLM+exl3_moe, TP2) | 262K / 2×Spark TP2 | [Open](runbooks/deepseek-v41-1017-exl3-tp2.md) | [Open](recipes/deepseek-v41-1017-exl3-tp2.yaml) |
