@@ -1,0 +1,81 @@
+# Recipe: deepseek-v41-1017-ablit-tp2 (ds41 TP2 lane, 1017 abliterated build)
+#
+# Status: PRODUCTION TRIAL (Oct 20 2026) — kept over the canon DeepSeek-4.1-Flash-1017 lane
+# pending James's crown; canon rollback: LANE-REGISTRY.yaml retired: dsv41-1017-ours-canon.
+# Full writeup: runbooks/deepseek-v41-1017-ablit-tp2.md
+#
+# Base: dealignai/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw-UNCENSORED (the 1017 abliteration pack,
+# 45 shards, ~416GB). The pack ships 54 EXL3-quantized-but-bf16 modules (attn.wo_b x27 +
+# ffn.shared_experts.w2 x27, layers 10-36) that our stock v51/TensorFold-style engine rejects;
+# container dsv41-serve:v52rc = v51 (ghcr.io/styles01/dsv41-1017-exl3-2x-dgx-sparks:v2) +
+# the bf16-loader plugin (vllm_exl3_moe overlay, branch ablit-bf16-loader) that resolves those
+# 54 modules to UnquantizedLinearMethod at load time. Nothing in the weights tree is modified.
+#
+# Role: UNCENSORED hardest-reasoning + long-context + VISION lane on two Sparks, TP2 RoCE.
+# Numbers (kit_bench.py, greedy, streaming, through the k=6 DSpark drafter):
+#   decode  set-a: 68.3 / 42.1 / 97.4 tok/s   (canon set-a: 88.3 / 49.1 / 105.9)
+#   decode  set-b: 87.9 / 47.4 / 113.1 tok/s  (canon set-b: 93.8 / 52.4 / 126.8) = 0.94/0.90/0.89x
+#   prefill: ~1,486 tok/s @8K · ~1,613 tok/s @32K · ~1,508 tok/s @131K (86-87s TTFT @131K; flat scaling)
+#   DSpark spec: 43.7% accept but 2.62 tok/verify-step vs canon 2.46 (drafter healthier on the twin)
+#   Net decode ~1.0x within measured 5-6% run-to-run noise; ~9% raw-stream deficit is INTRINSIC
+#   to bf16 streaming of the 54 modules (FUSED=1 vs FUSED=0 measured equal).
+#   Quality note (from the dealignai card, MMLU-500): MMLU -4.2pp / STEM -7.6pp -- the real
+#   abliteration tax; judge by ear in real use before crowning.
+
+recipe_version: "4"
+name: deepseek-v41-1017-ablit-tp2
+description: >
+  DeepSeek-V4.1-Flash-1017 EXL3 2.9bpw UNCENSORED (dealignai abliteration pack) on two
+  DGX Sparks (TP2, RoCE), Sudosu engine v51 + our v52rc bf16-loader overlay (54 mixed
+  bf16/EXL3 modules resolved at load). 262K context, vision on, k=6 DSpark speculative
+  decoding, KV pool 1,060,858 tokens (KV_BYTES=4e9, MAX_SEQS=4, 4.05x concurrency).
+
+cluster_only: true
+runtime: vllm-distributed
+container: ghcr.io/styles01/dsv41-serve:v52rc  # digest sha256:7a0b244a96e80cfc2df68d40884358b828bdacc6cbe29aa05d078d605dabfe9d
+
+executor_config:
+  entrypoint: ""     # image ships ENTRYPOINT ["vllm","serve"]; sparkrun's launcher rides as CMD
+  user: "1000"
+  shm_size: 16gb
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 2
+  served_model_name: dealignai/DeepSeek-V4.1-Flash-1017-EXL3-2.9bpw-UNCENSORED
+  gpu_memory_utilization: 0.85
+  max_num_seqs: 4
+  max_num_batched_tokens: 2048
+  # NOTE: the live lane pins the KV pool via KV_BYTES=4000000000 (plain bytes) instead of
+  # trusting gpu_memory_utilization; on GB10 UTIL never sizes the pool -- the KV_BYTES pin does.
+
+env:
+  HF_HOME: /cache/huggingface
+  HF_HUB_OFFLINE: "1"               # hub cache primed by hardlink; see runbook Phase 1
+  TORCH_CUDA_ARCH_LIST: "12.1"
+  VLLM_EXL3_MOE_SMOE_SHARED: "1"    # measured no-op on decode, matches canon config
+  VLLM_EXL3_MOE_FUSED: "1"
+  # KV pin + draft + SERVED alias set are passed on the command line (launcher pattern below)
+  # because the window-runbook wraps vllm serve in the repo launcher scripts.
+
+command: |
+  bash /opt/dsv41/launch/tp2.sh \
+    --model {model} \
+    --served-name {served_model_name} \
+    --head {head} --worker {worker} \
+    --port {port} \
+    --kv-bytes 4000000000 \
+    --max-seqs {max_num_seqs} \
+    --spec '{"method":"dspark","num_speculative_tokens":6,"draft_parallel_config":{"tensor_parallel_size":2}}'
+# Live-lane reference launch (LANE-REGISTRY.yaml, exact bytes):
+# cd /home/jaita/dsv41_recipe_ablit && HEAD=10.200.0.1 WORKER=10.200.0.2 \
+#   MODEL_DIR=/home/jaita/models/dsv41-ablit-tree TEXT_ONLY=0 \
+#   SPEC='{"method":"dspark","num_speculative_tokens":6,"draft_parallel_config":{"tensor_parallel_size":2}}' \
+#   UTIL=0.85 MAX_SEQS=4 KV_BYTES=4000000000 \
+#   DOCKER_ENV='VLLM_EXL3_MOE_SMOE_SHARED=1 VLLM_EXL3_MOE_FUSED=1' \
+#   IMAGE=dsv41-serve:v52rc \
+#   SERVED='dsv41 DeepSeek-4.1-Flash DeepSeek-4.1-Flash-Ablit GLM-5.3-Flash-EXL3 vision' \
+#   bash scripts/launch/dsv41_tp2.sh up
+# SERVED LAW: the `vision` stable alias MUST be in the set on every vision-capable lane, and
+# the launcher passes SERVED verbatim (no auto-alias) -- count the names on first boot.
