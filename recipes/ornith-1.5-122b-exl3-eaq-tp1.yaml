@@ -15,7 +15,7 @@ min_nodes: 1
 max_nodes: 1
 cluster_only: true
 
-container: vllm/vllm-openai:glm53-flash-arm64-cu130
+container: vllm/vllm-openai@sha256:b0501f99fec5136f248f78d5850977a2ec32d55cd9a665f4a9ffef24cbdf7fe5  # pulled on controller 2026-10-20 = tag glm53-flash-arm64-cu130 (22.2GB)
 
 executor_config:
   entrypoint: ""   # image ENTRYPOINT is ["vllm","serve"] and would eat sparkrun's launcher
