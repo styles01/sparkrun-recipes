@@ -43,8 +43,8 @@ env:
   DO_NOT_TRACK: "1"
 
 pre_exec:
-  - pip install --no-build-isolation "cuda-exl3 @ https://github.com/Zeuss5/cuda-exl3/archive/refs/tags/v1.0.0.tar.gz"
-  - python3 -c "import cuda_exl3, torch, os; assert torch.cuda.get_device_capability()[0] >= 12; print('cuda_exl3 ok:', cuda_exl3.__version__)"
+  - "export CPATH=/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include:/usr/local/lib/python3.12/dist-packages/nvidia/cusparselt/include:$CPATH && pip install --no-build-isolation \"vllm-exl3 @ https://github.com/Zeuss5/cuda-exl3/archive/refs/tags/v1.0.0.tar.gz\""  # CPATH fix: cusparse.h lives in the cu13 wheel, not /usr/local/cuda/include (verified via in-image repro build 2026-10-21)
+  - python3 -c "import vllm_exl3, torch, os; assert torch.cuda.get_device_capability()[0] >= 12; print('vllm_exl3 import ok:', vllm_exl3.__file__)"
 
 command: |
   vllm serve {model} \
@@ -52,9 +52,13 @@ command: |
     --host {host} --port {port} \
     --tensor-parallel-size {tensor_parallel} \
     --quantization exl3 \
+    --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY"}' \
     --max-model-len {max_model_len} \
     --max-num-seqs {max_num_seqs} \
     --max-num-batched-tokens {max_num_batched_tokens} \
     --gpu-memory-utilization {gpu_memory_utilization}
+# cudagraph_mode FULL_DECODE_ONLY: PIECEWISE capture crashes with cudaErrorIllegalAddress
+# at profile_cudagraph_memory (qwen3_5 prefill graph, 10-21 05:24Z boot); FULL_DECODE_ONLY
+# is the proven graph mode for EXL3-plugin kernels on GB10 (dsv41 lane registry pin).
 # GQA+GDN hybrid: no --attention-backend override (the plugin's CUSTOM backend is GLM sparse-MLA only).
 # No drafter in the official vendor config; in-pack MTP (k=1..5 sweep) = the tuned follow-up submission.
