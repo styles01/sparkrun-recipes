@@ -1,0 +1,90 @@
+# Recipe: glm53-flare — NVIDIA GLM-5.3-Flash-FP4-Local via NVIDIA Flare, TP2 two-Spark RoCE ring
+#
+# Bench: 2026-10-23 05:00 UTC window (cron dc4a106da9d8), runbook plans/runbook-flare-glm53-2spark.md
+# served name = full HF id (llama-benchy resolves it; dev flare default "GLM-5.3-Flash" would 404 warmup).
+# The flare runtime is a sparkrun out-of-tree plugin: ~/sparkrun-recipes/runtime/sparkrun-flare/src
+# (registered in ~/.config/sparkrun/config.yaml plugins.paths). Per-node it emits flare manual ranks:
+# rank 0 rendezvous 0.0.0.0:29800; peers rendezvous head:29800 --gpus 0 (multi-host.md "Start ranks manually").
+# Package: ignite export glm-5.3-flash --ranks 2 --rendezvous 10.200.0.1:29630 --max-concurrency 8
+#   --prefill-chunk-size 4096 --roce-ring --cluster sparks (IN-WINDOW; GPU must be free of dsv41; ~190GB
+#   -> ~115G free spark1). TP2 concurrency stays <=8 (22887c1 fix validated TP2; TP4-c16 defect open).
+# Unattended dev-package acceptance: --dangerously-approve-key <FINGERPRINT> (read via flare inspect
+#   at the window) --dangerously-accept-publisher local-development. Override in-window with
+#   -o flare_key_fp=<fingerprint>.
+# Image: flare:local built CPU-only from the repo root Dockerfile (ARM64, no CUDA at build), pushed
+#   GHCR styles01/flare-serve:0.1.0, docker save|load to spark2. Runs as uid 10001 in-container but
+#   we pin user root (sage-night lesson) for the mounted trust store; entrypoint cleared because
+#   sparkrun appends the launcher command (image ships no vllm ENTRYPOINT but keep the control).
+
+recipe_version: "4"
+name: glm53-flare
+description: >
+  GLM-5.3-Flash-FP4-Local (zai MIT base, NVIDIA Open Model Agreement; QAD-distilled NVFP4, GPQA 91.3
+  vs bf16 92.1) on two DGX Sparks via NVIDIA Flare runtime package. Prepare = ignition export glm-5.3-flash,
+  TP2 ranks over RoCE ring (1 GPU/host), MTP draft 5, stream_overlap, concurrency 8, 1M ctx recipe,
+  FP8 E4M3 KV. GLM TP2 batched-spec defect fixed upstream at 22887c1 (in-tree).
+model: nvidia/GLM-5.3-Flash-FP4-Local
+runtime: flare
+container: ghcr.io/styles01/flare-serve:0.1.0
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-10-22"
+  updated: "2026-10-22"
+  tags:
+    - glm
+    - glm53
+    - flare
+    - nvfp4
+    - tp2
+    - roce-ring
+    - gb10
+    - mtp
+  runbook: plans/runbook-flare-glm53-2spark.md
+  checkpoint_revision: 76348ddb2be2e35e39ecfc00e75dc07703f4f3d5
+  flare_repo_rev: 5f37bd1
+  spec: mtp draft_tokens 5 (recipe default), adaptive verification default
+  kv: fp8 e4m3 (recipe default), 256-token logical pages
+  context: 1048576 (recipe 1M; James daily-driver ceiling 275K does NOT apply to a bench cell config)
+
+solo_only: false
+cluster_only: true
+
+min_nodes: 2
+max_nodes: 2
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 2
+  flare_package: /home/jaita/flare-runtime/glm53-spark-tp2-mtp5-c8.safetensors
+  flare_key_fp: ""            # override in-window: -o flare_key_fp=<fingerprint from flare inspect>
+  flare_rank_port: 29800
+  served_model_name: nvidia/GLM-5.3-Flash-FP4-Local
+
+executor_config:
+  entrypoint: ""
+  user: root
+  shm_size: 16gb
+  volumes:
+    - /home/jaita/flare-runtime:/models
+    - /home/jaita/flare-pub:/flare-pub
+    - /home/jaita/flare-trust:/flare-trust
+
+env: {}
+
+benchmark:
+  framework: llama-benchy
+  note: profile = official spark-arena-v2; verify gate exit 0 before fire; pre-fire box check = only our
+    container on the GPU
+
+command: |
+  flare run {flare_package} \
+    --publisher-keys /flare-pub/development-publisher.json \
+    --trust-store /flare-trust/trust.toml \
+    --dangerously-approve-key {flare_key_fp} \
+    --dangerously-accept-publisher local-development \
+    --host {host} \
+    --port {port} \
+    --served-model-name {served_model_name}

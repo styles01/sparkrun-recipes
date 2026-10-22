@@ -1,0 +1,140 @@
+# Recipe: glm53-b12x-fallback — GLM-5.3-Flash-FP4-Local on vLLM eugr/spark-vllm-b12x, TP2 two-Spark
+#
+# FALLBACK runway for the 2026-10-23 1am ET bench (cron dc4a106da9d8) if the arena whitelist refuses
+# runtime `flare` or the flare package/serve fails. Config is VERBATIM from the model card's
+# "2 x NVIDIA DGX Spark" section (card-validated); only HEAD_IP/ifaces/MASTER_PORT adapted to our estate
+# (HEAD_IP=10.200.0.1, ETH_IF=enp1s0f0np0, IB_IF=rocep1s0f0,roceP2p1s0f0 — both CX7 twins).
+# Card law: same CX7 port on every node; both port subinterfaces; cache primed on EVERY node (done 10/22);
+#   worker BEFORE head (--headless); docker privileged.
+# Checkpoint: nvidia/GLM-5.3-Flash-FP4-Local @76348ddb2be2e35e39ecfc00e75dc07703f4f3d5 primed in both
+#   hub caches (spark1 + spark2), HF_HUB_OFFLINE resolution verified.
+
+recipe_version: "4"
+name: glm53-b12x-fallback
+description: >
+  GLM-5.3-Flash-FP4-Local (ModelOpt QAD NVFP4, csf compressed scales — vLLM-only containers) on two
+  DGX Sparks via vLLM TP2 nnodes 2, quantization modelopt_mixed, B12X attention/moe/linear backends,
+  load-format b12x, kv fp8 block 256, mamba-cache-mode align, prefix caching, chunked prefill,
+  speculative mtp 5 (humming moe + B12X attention), max len 500,000, 4 seqs, gmu 0.87,
+  glm45 reasoning / glm47 tool-call parsers. Card-validated 2x DGX Spark 128GB (2M tok FP8 KV).
+model: nvidia/GLM-5.3-Flash-FP4-Local
+runtime: vllm-distributed
+container: eugr/spark-vllm-b12x:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-10-22"
+  updated: "2026-10-22"
+  tags:
+    - glm
+    - glm53
+    - nvfp4
+    - modelopt
+    - b12x
+    - eugr
+    - tp2
+    - roce
+    - gb10
+    - mtp
+  runbook: plans/runbook-flare-glm53-2spark.md
+  checkpoint_revision: 76348ddb2be2e35e39ecfc00e75dc07703f4f3d5
+  card: https://huggingface.co/nvidia/GLM-5.3-Flash-FP4-Local
+  env_source: model card env block, verbatim
+
+solo_only: false
+cluster_only: true
+
+min_nodes: 2
+max_nodes: 2
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 2
+  gpu_memory_utilization: 0.87
+  max_model_len: 500000
+  max_num_seqs: 4
+  max_num_batched_tokens: 4096
+  kv_cache_dtype: fp8
+  block_size: 256
+  dtype: bfloat16
+  quantization: modelopt_mixed
+  load_format: b12x
+  reasoning_parser: glm45
+  tool_call_parser: glm47
+  enable_auto_tool_choice: true
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
+  served_model_name: nvidia/GLM-5.3-Flash-FP4-Local
+  speculative_config: '{"method":"mtp","num_speculative_tokens":5,"moe_backend":"humming","attention_backend":"B12X"}'
+
+executor_config:
+  entrypoint: ""
+  user: root
+  shm_size: 16gb
+  privileged: true
+  ulimit:
+    - nofile=1048576:1048576
+    - memlock=-1
+    - stack=67108864
+
+env:
+  # card env block — verbatim
+  CUTE_DSL_ARCH: "sm_121a"
+  SAFETENSORS_FAST_GPU: "1"
+  VLLM_ENABLE_ROCE_ALLREDUCE: "1"
+  VLLM_ROCE_ALLREDUCE_MAX_SIZE: "2MB"
+  NCCL_BUFFSIZE: "1048576"
+  NCCL_MAX_CTAS: "8"
+  VLLM_WORKER_MULTIPROC_METHOD: "spawn"
+  VLLM_SSM_CONV_STATE_LAYOUT: "DS"
+  VLLM_USE_AOT_COMPILE: "1"
+  VLLM_USE_MEGA_AOT_ARTIFACT: "1"
+  VLLM_USE_V2_MODEL_RUNNER: "1"
+  VLLM_ENABLE_PCIE_ALLREDUCE: "0"
+  B12X_POLICY_MODE: "auto"
+  VLLM_B12X_MOE_FP4_FORCE_A16: "1"
+  B12X_W4A16_A4_PREFILL: "1"
+  # container network env — card docker-run block with estate values
+  MN_IF_NAME: "enp1s0f0np0"
+  UCX_NET_DEVICES: "enp1s0f0np0"
+  NCCL_SOCKET_IFNAME: "enp1s0f0np0"
+  NCCL_IB_HCA: "rocep1s0f0,roceP2p1s0f0"
+  NCCL_IB_DISABLE: "0"
+  OMPI_MCA_btl_tcp_if_include: "enp1s0f0np0"
+  GLOO_SOCKET_IFNAME: "enp1s0f0np0"
+  TP_SOCKET_IFNAME: "enp1s0f0np0"
+  NCCL_IGNORE_CPU_AFFINITY: "1"
+  HEAD_IP: "10.200.0.1"
+
+benchmark:
+  framework: llama-benchy
+  note: official spark-arena-v2 profile; verify gate exit 0 before fire; workers BEFORE head
+
+command: |
+  vllm serve nvidia/GLM-5.3-Flash-FP4-Local \
+    --host {host} \
+    --port {port} \
+    --tensor-parallel-size {tensor_parallel} \
+    --mamba-cache-mode align \
+    --enable-prefix-caching \
+    --enable-chunked-prefill \
+    --dtype {dtype} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --quantization {quantization} \
+    --attention-backend B12X \
+    --block-size {block_size} \
+    --moe-backend b12x \
+    --linear-backend b12x \
+    --no-enable-flashinfer-autotune \
+    --load-format {load_format} \
+    --max-model-len {max_model_len} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --speculative-config {speculative_config} \
+    --reasoning-parser {reasoning_parser} \
+    --tool-call-parser {tool_call_parser} \
+    --enable-auto-tool-choice \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --served-model-name {served_model_name}
