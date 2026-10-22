@@ -42,6 +42,9 @@ defaults:
   trust_remote_code: true
   enable_auto_tool_choice: true
 
+executor_config:
+  entrypoint: ""
+
 env:
   HF_HOME: /root/.cache/huggingface
   PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
