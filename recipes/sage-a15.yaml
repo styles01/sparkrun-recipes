@@ -3,7 +3,7 @@ name: sage-a15
 description: "Sage-A1.5 35B-A3B agentic MoE VLM (Qwen3.6-based, Apache-2.0) — bf16, single-node GB10, vLLM v26-patched, 262K context"
 model: InternScience/Sage-A1.5
 runtime: vllm
-container: ghcr.io/styles01/vllm-v26-patched:latest
+container: vllm/vllm-openai@sha256:b0501f99fec5136f248f78d5850977a2ec32d55cd9a665f4a9ffef24cbdf7fe5  # arm64-cu130 pin, arch test passed 10-22
 maintainer: styles01
 
 metadata:
@@ -44,6 +44,8 @@ defaults:
 
 executor_config:
   entrypoint: ""
+  user: root
+  shm_size: 16gb
 
 env:
   HF_HOME: /root/.cache/huggingface
