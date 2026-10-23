@@ -132,7 +132,7 @@ command: |
     --max-model-len {max_model_len} \
     --max-num-seqs {max_num_seqs} \
     --max-num-batched-tokens {max_num_batched_tokens} \
-    --speculative-config {speculative_config} \
+    --speculative-config '{speculative_config}' \
     --reasoning-parser {reasoning_parser} \
     --tool-call-parser {tool_call_parser} \
     --enable-auto-tool-choice \
