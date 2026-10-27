@@ -1,0 +1,104 @@
+\chapter{Kernels}\label{ch:kernels}
+
+Decode on this board is a memory-read problem. Every round must read the projection weights once, about 13.7~GB of the 15~GB at NVFP4, and the GB10 reads memory at about 235 to 240~GB/s in practice. A kernel is good here when it streams those bytes near that rate at the row counts a verify uses, 1 to 32 rows. This chapter covers the matrix products, the recurrent-layer kernels, the head and the norms, CUDA graphs, and the one property every kernel must keep.
+
+\section{Row invariance}\index{row invariance}
+
+Take a row of a 1-row product and the same row as row 5 of a 16-row product. Its result must be the same bits in both cases. The agreement gate compares speculative output against one-token-at-a-time output, and that comparison can hold only if the arithmetic of a row ignores its neighbours.
+
+The engine gets this by fixing the reduction order. Every tile table is keyed by the weight's shape $(N, K)$, never by the row count, so the sum over $K$ runs in the same order at 1 row and at 32. No kernel uses atomics, whose order would depend on the scheduler. Where $K$ is split across warps, the partial sums are added in warp order. \code{tools/fp8_probe.py --sweep} keeps only FP8 tile choices that are bit-identical to the default at 1 to 32 rows, and the NVFP4 tables follow the same rule.
+
+Row invariance keeps a tree verify close to the one-token decode, but it does not make them identical. The output head uses a different kernel for one row than for several, and the verify path of the recurrent and attention layers orders the one-token arithmetic differently. A near tie between the two best tokens can go the other way. Chapter~\ref{ch:exactness} has the full contract and its measured exception.
+
+\section{NVFP4 matrix products}\index{skinny kernel}
+
+The weights are 4-bit and the activations 16-bit. The engine never uses the FP4 tensor-core path: on this chip an FP4 operand still has to travel through shared memory and a decode step before a tensor core sees it, and the chip has 99~KB of shared memory per SM. A 4-bit activation path would also need its own quantiser and quality gate, to save at most the 8~\% of traffic the activations are.
+
+Three kernels share one stored format and pick by row count:
+
+\begin{table}[htbp]
+\centering\small
+\caption{The NVFP4 matrix-product kernels by row count.}\label{tab:nvfp4-kernels}
+\begin{tabularx}{\linewidth}{@{}L{.3\linewidth}L{.28\linewidth}Y@{}}
+\toprule
+\hd{rows} & \hd{kernel} & \hd{file} \\
+\midrule
+1 to 32 (decode, verify) & the skinny kernel, CUDA & \code{tools/nvfp4_skinny.py} \\
+33 to about 1,024 (prefill chunks) & Triton, v2 & \code{tools/nvfp4_linear_v2.py} \\
+above that & expand to BF16 once, then the library GEMM & \code{tools/nvfp4_linear.py} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The skinny kernel rests on one fact about the hardware. The instruction \code{cvt.rn.f16x2.e2m1x2} turns one packed byte into one register holding two 16-bit values, and that register is exactly the operand layout of an \code{mma.m16n8k16} tensor-core instruction. A thread loads 16 bytes of a weight row with one vector load and decodes each byte straight into an operand register, so nothing goes through shared memory. The group scale is decoded by \code{cvt.rn.f16x2.e4m3x2} and multiplied onto the weight in fp16. That product is exact: e2m1 times e4m3 needs six significant bits, and fp16 has eleven. The weights are the B operand (8 rows an instruction) and the activations the A operand (16 rows an instruction), so a 16-row verify costs one instruction per weight tile, and 17 to 32 rows cost two. That is the step in the verify cost at 17 rows that StairCut prices (Figure~\ref{fig:verify-cost}).
+
+It builds on first use with \code{torch.utils.cpp_extension} for \code{sm_121a}, because the e2m1 converter is specific to that chip. A tile table per shape (\code{ops/skinny-tiles.json} up to 16 rows, \code{ops/skinny-tiles-wide.json} for 17 to 32) holds the launch settings a sweep picked.
+
+\section{FP8 matrix products}
+
+\code{tools/fp8_linear.py} reads the checkpoint's block-scaled FP8 as stored. The tile is 128 wide along $K$, so each step covers one scale block and the scale is one number applied to the fp32 sum. For the FP8 profile, \code{ops/fp8-tiles.json} holds one launch setting per shape for every row count up to 32, so the profile decodes and verifies with a single program shape per weight.
+
+\section{The recurrent layers}\index{Gated DeltaNet}
+
+A Gated DeltaNet layer updates a 128 by 128 state per head at every token:
+\begin{align*}
+S &\leftarrow S \cdot e^{g}, &
+\delta &\leftarrow (v - S^\top k)\cdot\beta, &
+S &\leftarrow S + k \otimes \delta, &
+o &\leftarrow S^\top q.
+\end{align*}
+Each shape of this work has its own kernel:
+
+\begin{table}[htbp]
+\centering\small
+\caption{The recurrent-layer kernels.}\label{tab:gdn-kernels}
+\begin{tabularx}{\linewidth}{@{}L{.14\linewidth}L{.32\linewidth}Y@{}}
+\toprule
+\hd{work} & \hd{kernel} & \hd{what it does} \\
+\midrule
+one token & \code{tools/gdn_kernels.py} & loads a state tile once, applies the whole step in registers, stores once \\
+a chain & \code{tools/gdn_verify_kernels.py} & walks up to 16 tokens over one loaded tile and returns the factors a rollback needs \\
+a tree & \code{tools/gdn_tree_kernels.py}, \code{tools/gdn_verify_kernels.py} & walks the tree in depth-first order, rebuilding each node's parent state from a stack of factors along its path \\
+a commit & \code{tools/gdn_commit_kernels.py} & writes the accepted path's state as one low-rank update \\
+a prefill & \code{tools/gdn_prefill_kernels.py} & the chunked form, with the chunk-local work in registers \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Trees rely on depth-first order. When the walk reaches a node at depth $d$, the last node it visited at each shallower depth is that node's ancestor. A stack of one set of factors per depth therefore holds exactly the node's own path. In the served build the commit happens inside the next verify: the accepted rows are recorded, and the next verify applies them to each state tile as it loads it. That halves the state traffic of a round, from 604~MB to 302~MB (\arith).
+
+\section{Head, norms and attention}
+
+Two kernels serve the output head: \code{tools/head_gemv.py} for one row, a tensor-core GEMM for more. At one row a GEMV reads fastest. At eight rows the same GEMV does eight times the scalar work without a tensor core, and a verify once ran 2.5 times slower because of that. Both return fp32 logits.
+
+Each RMS norm is one kernel instead of eight small ones, written with the reference's own rounding points (\code{tools/norm_kernels.py}). The gated norm of the recurrent layers rounds to BF16 between the weight multiply and the gate, and doing that multiply in fp32 changes the answer. Attention uses the library's fused attention with a causal flag, a lower-right causal mask for chunks that start past position 0, and a decode kernel for short query counts.
+
+\section{CUDA graphs}\index{CUDA graphs}
+
+Every verify runs from CUDA graphs (\code{engine/verify_graph.py}), one per shape of round: chain or tree, row count, context class, flags. Positions and lengths live in device buffers, so one captured graph serves every round of that shape. Graphs took the launch gaps inside a verify from about 4.5~ms to about 1.5~ms. The drafter's forward runs from graphs too. Graphed and eager runs agree bit for bit, and the tests check that. Every graph capture holds a process-wide lock (\code{engine/capture_lock.py}), because a CUDA call from another thread during a capture fails the capture; the disk tier's writer holds the same lock around its own CUDA calls.
+
+\section{How a kernel gets in}
+
+Every kernel has a \code{check()} against the PyTorch function it replaces, and it answers to that before anyone times it. Only the engine's own round time decides whether it ships, measured with the flag flipped inside one process (Chapter~\ref{ch:measurement}). A standalone kernel timing is a ranking at best: the same NVFP4 configuration once read 0.254~ms in one process and 0.627~ms in another, which differed only in what they had allocated before. Time a kernel over a working set larger than the chip's caches; \code{tools/cold_bw.py} does. A warm probe once reported 97.6~\% of peak bandwidth on a GEMM, which is not possible.
+
+\section{Knobs}
+
+Each kernel path has a \code{QWEN38_*} switch, and \code{ops/serve.env}\index{ops/serve.env@\texttt{ops/serve.env}} sets the served combination. Table~\ref{tab:ref-knobs} lists every switch with its default and its served value. The main ones:
+
+\begin{table}[H]
+\centering\small
+\caption{The main kernel switches.}\label{tab:kernel-knobs}
+\begin{tabularx}{\linewidth}{@{}L{.52\linewidth}Y@{}}
+\toprule
+\hd{switch} & \hd{what} \\
+\midrule
+\code{QWEN38_NVFP4_SKINNY}, \code{QWEN38_SKINNY_TILES}, \code{_WIDE} & the skinny kernel and its tile tables \\
+\code{QWEN38_FP8_TILES} & the FP8 per-shape launch table \\
+\code{QWEN38_FUSED_GDNVERIFY}, \code{QWEN38_GDNV_WY*} & the fused verify recurrence and its variants \\
+\code{QWEN38_COMMIT_IN_VERIFY} & fold the commit into the next verify \\
+\code{QWEN38_VERIFY_GRAPH}, \code{QWEN38_DRAFT_GRAPH} & CUDA graphs for the verify and the drafter \\
+\code{QWEN38_FUSED_GDNPREFILL}, \code{QWEN38_NVFP4_PREFILL_V2} & the prefill paths \\
+\code{QWEN38_DECODE_ATTN} & decode and verify attention that reads the KV once \\
+\bottomrule
+\end{tabularx}
+\end{table}

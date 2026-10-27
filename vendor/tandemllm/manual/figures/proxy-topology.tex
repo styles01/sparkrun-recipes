@@ -1,0 +1,25 @@
+% The proxy in front of several backends, with the plugins, the collectors and the ledger.
+\begin{tikzpicture}[node distance=4mm and 9mm]
+  \node[quiet, minimum width=24mm] (c1) {opencode};
+  \node[quiet, below=of c1, minimum width=24mm] (c2) {OpenAI SDK};
+  \node[quiet, below=of c2, minimum width=24mm] (c3) {Open WebUI};
+  \node[quiet, below=of c3, minimum width=24mm] (c4) {a script};
+
+  \node[box, anchor=west, minimum width=30mm, minimum height=36mm, align=center] (px) at ($(c2.east)!0.5!(c3.east)+(14mm,0)$)
+    {\textbf{Proxy}\\[2pt]{\scriptsize keys, users}\\{\scriptsize route by model id}\\{\scriptsize fallbacks, max in flight}\\{\scriptsize harness (optional)}\\{\scriptsize one ledger, one dashboard}};
+
+  \node[hot, right=16mm of px.north east, anchor=west, yshift=2mm, minimum width=34mm] (b1) {TandemLLM engine\\[-1pt]{\scriptsize kind tandemllm}};
+  \node[box, below=of b1, minimum width=34mm] (b2) {vLLM + plugin\\[-1pt]{\scriptsize kind vllm}};
+  \node[box, below=of b2, minimum width=34mm] (b3) {SGLang + plugin\\[-1pt]{\scriptsize kind sglang}};
+  \node[quiet, below=of b3, minimum width=34mm] (b4) {llama.cpp, LM Studio\\[-1pt]{\scriptsize kind generic}};
+  \node[quiet, below=of b4, minimum width=34mm] (b5) {OpenAI, DeepSeek\\[-1pt]{\scriptsize kinds openai, deepseek}};
+
+  \node[quiet, right=8mm of b2, minimum width=20mm, font=\sffamily\scriptsize] (h2) {host\\collector};
+  \node[quiet, right=8mm of b3, minimum width=20mm, font=\sffamily\scriptsize] (h3) {node and\\DCGM exporters};
+
+  \foreach \c in {c1,c2,c3,c4} \draw[flow] (\c.east) -- (px.west |- \c.east);
+  \foreach \b in {b1,b2,b3,b4,b5} \draw[flow] (px.east) -- (\b.west);
+  \draw[dflow] (h2) -- (b2);
+  \draw[dflow] (h3) -- (b3);
+  \node[lbl, below=1mm of px, align=center] {reads each engine's \texttt{/metrics}\\every 15 s, and the plugins' posts};
+\end{tikzpicture}

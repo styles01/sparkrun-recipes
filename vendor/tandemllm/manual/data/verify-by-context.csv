@@ -1,0 +1,7 @@
+# source: ops/stair-tables-nvfp4.json (measured verify plus commit, ms, published NVFP4 set)
+context,tree16,chain16,tree32,chain32
+1024,74.36,74.35,87.76,85.46
+4096,75.93,75.14,90.02,87.08
+8192,77.49,77.33,92.05,89.74
+16384,81.48,80.30,99.60,95.44
+32768,88.07,87.54,111.56,108.46

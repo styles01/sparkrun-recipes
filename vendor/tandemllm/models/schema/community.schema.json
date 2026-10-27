@@ -1,0 +1,314 @@
+{
+  "$id": "https://github.com/0xBakeer/TandemLLM/models/schema/community.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "added": {
+      "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$",
+      "type": "string"
+    },
+    "author": {
+      "additionalProperties": false,
+      "properties": {
+        "github": {
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "pattern": "^[^\\x00-\\x1f<>]*$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "social": {
+          "additionalProperties": false,
+          "properties": {
+            "bluesky": {
+              "maxLength": 253,
+              "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z][a-z0-9-]{1,62}$",
+              "type": "string"
+            },
+            "huggingface": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$",
+              "type": "string"
+            },
+            "mastodon": {
+              "pattern": "^https://[a-z0-9.-]{1,253}/@[A-Za-z0-9_]{1,30}$",
+              "type": "string"
+            },
+            "website": {
+              "pattern": "^https://[^\\s\\\"'<>`]{1,400}$",
+              "type": "string"
+            },
+            "x": {
+              "pattern": "^[A-Za-z0-9_]{1,15}$",
+              "type": "string"
+            }
+          },
+          "required": [],
+          "type": "object"
+        }
+      },
+      "required": [
+        "github"
+      ],
+      "type": "object"
+    },
+    "base_model": {
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$",
+      "type": "string"
+    },
+    "bpw": {
+      "maximum": 16,
+      "minimum": 1,
+      "type": "number"
+    },
+    "description": {
+      "maxLength": 500,
+      "pattern": "^[^\\x00-\\x08\\x0b-\\x1f<>]*$",
+      "type": "string"
+    },
+    "drafters": {
+      "enum": [
+        "tandem-exl3",
+        "dflash2",
+        "in-pack",
+        "none"
+      ]
+    },
+    "finetune_of": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "format": {
+      "enum": [
+        "exl3",
+        "nvfp4",
+        "fp8",
+        "gguf"
+      ]
+    },
+    "hf": {
+      "additionalProperties": false,
+      "properties": {
+        "repo": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}$",
+          "type": "string"
+        },
+        "revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repo",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "id": {
+      "maxLength": 80,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "license": {
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": "^[^\\x00-\\x1f<>]+$",
+      "type": "string"
+    },
+    "license_url": {
+      "pattern": "^https://[^\\s\\\"'<>`]{1,400}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "links": {
+      "additionalProperties": {
+        "pattern": "^https://[^\\s\\\"'<>`]{1,400}$",
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "load": {
+      "enum": [
+        "standalone",
+        "overlay"
+      ]
+    },
+    "modalities": {
+      "additionalProperties": false,
+      "properties": {
+        "audio": {
+          "type": "boolean"
+        },
+        "image": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "boolean"
+        },
+        "video": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "type": "object"
+    },
+    "modalities_in_pack": {
+      "items": {
+        "enum": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ]
+      },
+      "maxItems": 4,
+      "type": "array"
+    },
+    "name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": "^[^\\x00-\\x1f<>]+$",
+      "type": "string"
+    },
+    "profile": {
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "type": "string"
+    },
+    "schema": {
+      "const": 1
+    },
+    "size_gb": {
+      "maximum": 2000,
+      "minimum": 0.1,
+      "type": "number"
+    },
+    "status": {
+      "enum": [
+        "submitted",
+        "verified",
+        "broken"
+      ]
+    },
+    "tags": {
+      "items": {
+        "pattern": "^[a-z0-9][a-z0-9-]{0,31}$",
+        "type": "string"
+      },
+      "maxItems": 12,
+      "type": "array"
+    },
+    "verified": {
+      "additionalProperties": false,
+      "properties": {
+        "build": {
+          "pattern": "^[0-9][0-9A-Za-z.+-]{0,31}$",
+          "type": "string"
+        },
+        "date": {
+          "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$",
+          "type": "string"
+        },
+        "device": {
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$",
+          "type": "string"
+        },
+        "notes": {
+          "maxLength": 300,
+          "pattern": "^[^\\x00-\\x1f<>]*$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tok_s": {
+          "additionalProperties": false,
+          "properties": {
+            "chat": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "code": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "plain": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "prose": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "tokens_per_round": {
+          "additionalProperties": false,
+          "properties": {
+            "chat": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "code": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "plain": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "prose": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [],
+          "type": "object"
+        }
+      },
+      "required": [
+        "build",
+        "device",
+        "date"
+      ],
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "base_model",
+    "author",
+    "hf",
+    "format",
+    "bpw",
+    "size_gb",
+    "load",
+    "modalities",
+    "drafters",
+    "license",
+    "added",
+    "status"
+  ],
+  "title": "TandemLLM community weight pack, schema 1 (models/<model>/community/<id>.json)",
+  "type": "object"
+}

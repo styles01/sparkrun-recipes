@@ -1,0 +1,19 @@
+{
+  "package": "write-message",
+  "rubric": [
+    "The message is complete and ready to send; nothing is a fragment or a placeholder beyond names the user did not give.",
+    "The main sentence (the ask, the news, the apology) comes first; the next step and a date close it.",
+    "Tone matches the reader (formal for boss, landlord, authority; warm for friends); a subject line for emails only.",
+    "No invented facts, promises or deadlines; every fact the user gave is kept exactly.",
+    "Answer is in the user's language with a fitting greeting and sign-off; at most one short follow-up line."
+  ],
+  "prompts": [
+    {"id": "write-message-1", "lang": "en", "text": "Write an email to my boss saying I can't come in tomorrow, I have a dentist appointment at 10 and will work from home in the afternoon."},
+    {"id": "write-message-2", "lang": "de", "text": "Schreib meinem Vermieter, dass die Waschmaschine im Keller seit Freitag kaputt ist und er sie bitte diese Woche reparieren lassen soll."},
+    {"id": "write-message-3", "lang": "ar", "text": "اكتب رسالة واتساب لصديقي أعتذر فيها لأنني لن أستطيع الحضور إلى حفلة عيد ميلاده يوم السبت بسبب العمل."},
+    {"id": "write-message-4", "lang": "en", "text": "Reply to this: 'Hi, we noticed your invoice 2231 is still open. Please pay by Friday or let us know if there is an issue.' I paid it on Monday by bank transfer."},
+    {"id": "write-message-5", "lang": "de", "text": "Kurze Nachricht an die Kita: Lina kommt morgen nicht, sie hat Fieber. Ich melde mich, wenn sie wieder gesund ist."},
+    {"id": "write-message-6", "lang": "en", "text": "I need to decline a job offer politely, the company is TechNord, the role was junior designer, I accepted another offer."},
+    {"id": "write-message-7", "lang": "mixed", "text": "Email auf Englisch an den Kundenservice von meinem Internetanbieter: seit 3 Tagen kein Internet, Kundennummer 88-4412, ich will eine Gutschrift."}
+  ]
+}

@@ -1,0 +1,66 @@
+recipe_version: "4"
+name: qwen38-flash-next-ds4
+description: "Qwen3.8-Flash-Next-125B-A6B on the DwarfStar CUDA engine (Layr-Labs vendored ds4 fork with qwen4exp kernels) — unsloth UD-Q4_K_XL GGUF + Q8_0 MTP head, depth-1 MTP, greedy-fallback sampling, 47,149-token reduced draft vocab, SparkDash-visible"
+model: ~/src/cudafast-qwen38-125b-a6b-engine/reference_weights/Qwen3.8-Flash-Next-GGUF/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf
+runtime: ds4-cuda
+engine_source: git@github.com:Layr-Labs/cudafast-qwen38-125b-a6b-engine.git
+engine_dir: ~/src/cudafast-qwen38-125b-a6b-engine
+build: ./tools/ds4/build.sh   # needs PATH=$HOME/.cargo/bin:/usr/local/cuda/bin:$PATH
+context: 32768
+
+# Weights (fetched + sha256-verified by ./setup.sh, ~112 GiB total):
+#   Q4_K_XL shards: 10MB header + 46.4 + 46.0 + 11.26 GiB
+#   MTP head:       mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf (2.79 GiB, depth 1..3)
+
+env:
+  # Model id reported on /v1/models — matches Loca's provider config + SparkDash
+  # (patched in ds4_server.c: send_models() + server_model_id_from_engine()).
+  DS4_SERVER_MODEL_ID: qwen3.8-flash-next
+  # Reduced draft vocabulary: 47,149-token subset of the 248,320 target vocab.
+  # Row-gathered Q8_0 (lossless); correctness gates all pass; dv wins at depth 2/3,
+  # parity at depth 1 (stock shortlist ~98.9k ids already captures most of the win).
+  DS4_MTP_DRAFT_VOCAB: ~/src/arena-submission/draft_vocab_output_q8_0_47149.bin
+  # depth-1 MTP cycle commits the target's greedy argmax only. Sampled requests
+  # (temp>0) degrade to greedy commits with a warn-once (patched in ds4.c).
+  # Depth 2/3 support sampled commits: use --mtp-draft 4 (depth 3) + reduced vocab
+  # for the dv win (-0.38..-0.79 ms/tok vs stock), overall slower than depth 1.
+  DS4_MTP_DRAFT_TOKENS: "2"
+
+metadata:
+  author: styles01
+  tags: [qwen, qwen3.8, flash-next, dwarfstar, ds4, cuda, spark, gb10, mtp, draft-vocab]
+  runbook: runbooks/qwen38-flash-next-ds4.md
+  switch_script: scripts/switch-to-ds4-qwen38.sh
+  notes: >-
+    Engine: Layr-Labs vendored DwarfStar fork (only source with qwen4exp Qwen3.8
+    support; upstream antirez/ds4 has none). Verified local: correctness PASS
+    (public longcopy gate, zero verify/replay disagreements), decode 33.7 tok/s
+    depth-1 (stock shortlist parity), prefill ~1,190 tok/s. Greedy-only at
+    depth-1 (sampling falls back with warn-once). SparkDash: backend=ds4,
+    owned_by ds4.c, DS4_SERVER_MODEL_ID override in ds4_server.c.
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  context: 32768
+
+launch: |
+  cd ~/src/cudafast-qwen38-125b-a6b-engine && \\
+  DS4_SERVER_MODEL_ID=qwen3.8-flash-next \\
+  DS4_MTP_DRAFT_VOCAB=~/src/arena-submission/draft_vocab_output_q8_0_47149.bin \\
+  nohup setsid .build/ds4/src/ds4-server \\
+    -m reference_weights/Qwen3.8-Flash-Next-GGUF/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf \\
+    --mtp-model reference_weights/Qwen3.8-Flash-Next-GGUF/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf \\
+    --mtp-draft 2 \\
+    --host 0.0.0.0 --port 8000 \\
+    > /tmp/ds4-server.log 2>&1 < /dev/null &
+  # boot ~90s; verify: curl http://127.0.0.1:8000/v1/models -> id=qwen3.8-flash-next, owned_by=ds4.c
+  # log markers: "draft vocabulary resident: 122.48 MiB on device", "listening on http://0.0.0.0:8000"
+
+stop: |
+  pkill -f ds4-server
+  # verify GPU free: cuInit test, not nvidia-smi
+
+# Switch discipline (per house rules):
+#   1. kill running lane, verify GPU free  2. occupy  3. update canonical scripts
+# Never run concurrent with the vLLM lane. Loca config: default_model stays ''.

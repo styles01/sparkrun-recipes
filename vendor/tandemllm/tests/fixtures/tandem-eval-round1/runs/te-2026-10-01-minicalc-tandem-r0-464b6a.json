@@ -1,0 +1,79 @@
+{
+ "suite": "minicalc",
+ "arm": "tandem",
+ "rep": 0,
+ "tag": "te-2026-10-01-minicalc-tandem-r0-464b6a",
+ "started_at": "2026-10-01T12:32:39Z",
+ "error": null,
+ "store_clear": {
+  "at": "2026-10-01T12:32:39Z",
+  "status": 200,
+  "error": null
+ },
+ "dir": "{run}/te-2026-10-01-minicalc-tandem-r0-464b6a",
+ "session_id": "ses_f088c2519ffe0A5F1RXuZTNgQk",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_minutes": 7.5,
+ "gates": {
+  "total": 1,
+  "passed": 1,
+  "by_gate": [
+   {
+    "id": "pass",
+    "passed": true,
+    "minutes": 7.5
+   }
+  ]
+ },
+ "passed": true,
+ "minutes_to_pass": 7.5,
+ "final_check": {
+  "verdict": "PASS",
+  "readings": [],
+  "tail": "calccheck minicalc\nRESULT: PASS\n"
+ },
+ "tokens": {
+  "input": 0,
+  "output": 0,
+  "reasoning": 0,
+  "cache_read": 0
+ },
+ "cache_hit": null,
+ "gen_tps": null,
+ "turns": 0,
+ "tool_calls": 0,
+ "tool_errors": 0,
+ "empty_stops": 0,
+ "last_finish": null,
+ "continuations": {
+  "needed": 1,
+  "sent": 0,
+  "driver": "watch"
+ },
+ "engine": {
+  "requests": 7,
+  "finish": {
+   "stop": 1,
+   "tool_calls": 6
+  },
+  "decode_tps_median": 98.07,
+  "prefill_tps_median": 674.12,
+  "completion_tokens": 23435,
+  "reasoning_tokens": 17802,
+  "prompt_tokens": 292865,
+  "cached_tokens": 250880
+ },
+ "conductor": {
+  "acts": 0,
+  "by_task": {},
+  "gave_ups": 0,
+  "shadow": 0
+ },
+ "pristine": {
+  "ok": true,
+  "changed": [],
+  "restored": []
+ },
+ "ended_at": "2026-10-01T12:40:09Z"
+}

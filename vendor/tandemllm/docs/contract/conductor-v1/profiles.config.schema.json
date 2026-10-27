@@ -1,0 +1,1322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor profiles document",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "mode": {
+      "enum": [
+        "raw",
+        "shadow",
+        "on"
+      ]
+    },
+    "clients": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "open-webui",
+          "openai-sdk",
+          "opencode",
+          "hermes",
+          "curl",
+          "dashboard",
+          "chat-app",
+          "other"
+        ]
+      },
+      "maxItems": 8
+    },
+    "default_class": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+    },
+    "decisions": {
+      "type": "object",
+      "properties": {
+        "classify": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        },
+        "effort": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        },
+        "packages": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        },
+        "rules": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        }
+      },
+      "required": [
+        "classify",
+        "effort",
+        "packages",
+        "rules"
+      ],
+      "additionalProperties": false
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "effort": {
+            "enum": [
+              "off",
+              "low",
+              "medium",
+              "high",
+              "xhigh"
+            ]
+          },
+          "effort_by_size": {
+            "type": "object",
+            "properties": {
+              "small": {
+                "enum": [
+                  "off",
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh"
+                ]
+              },
+              "medium": {
+                "enum": [
+                  "off",
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh"
+                ]
+              },
+              "large": {
+                "enum": [
+                  "off",
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh"
+                ]
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+            },
+            "maxItems": 48
+          },
+          "package_sticky": {
+            "enum": [
+              "class",
+              "message"
+            ]
+          },
+          "core": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+            },
+            "maxItems": 4
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "maxItems": 16
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 4000
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    "thinking": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "enum": [
+            "off",
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        },
+        "hints": {
+          "type": "boolean"
+        },
+        "client_override": {
+          "const": true
+        },
+        "by_size": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        },
+        "tool_turn_effort": {
+          "enum": [
+            "inherit",
+            "off",
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        },
+        "client_word": {
+          "enum": [
+            "ceiling",
+            "ignore"
+          ]
+        },
+        "budgets": {
+          "type": "object",
+          "properties": {
+            "low": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 262144
+            },
+            "medium": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 262144
+            },
+            "high": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 262144
+            },
+            "xhigh": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 262144
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "default",
+        "hints",
+        "client_override"
+      ],
+      "additionalProperties": false
+    },
+    "tasks": {
+      "type": "object",
+      "properties": {
+        "D1": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "repeat_share": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "grey_low": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "min_tokens": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "every_tokens": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "repeat_share",
+                "grey_low",
+                "min_tokens",
+                "every_tokens"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "D1b": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "min_span": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min_span"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "D2": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "backstop": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "answer_room": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "backstop",
+                "answer_room"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "D3": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "act_at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "every_tokens": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "act_at",
+                "every_tokens"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "D4": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "E1": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "tries": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "tries"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "E2": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "claim_at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "admit_at": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "claim_at",
+                "admit_at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "C1": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "act_at": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "act_at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "C2": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "max_file_lines": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "max_file_lines"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "C3": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "repeats": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "repeats"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "C4": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "repairs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "repairs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "C5": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "regenerations": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "regenerations"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "S1": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "fails": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "fails"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "S2": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "S3": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "act_at": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "act_at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "S4": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {
+                "minutes": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "minutes"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "HINT": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "cap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "thresholds": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "cap",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "D1",
+        "D1b",
+        "D2",
+        "D3",
+        "D4",
+        "E1",
+        "E2",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "HINT"
+      ],
+      "additionalProperties": false
+    },
+    "caps": {
+      "type": "object",
+      "properties": {
+        "acts_per_request": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "acts_per_session_hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "acts_per_request",
+        "acts_per_session_hour"
+      ],
+      "additionalProperties": false
+    },
+    "toolgate": {
+      "type": "object",
+      "properties": {
+        "risk": {
+          "type": "boolean"
+        },
+        "project": {
+          "type": "boolean"
+        },
+        "same_call": {
+          "type": "boolean"
+        },
+        "malformed": {
+          "type": "boolean"
+        },
+        "sequence": {
+          "type": "boolean"
+        },
+        "tier1_timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120000
+        }
+      },
+      "required": [
+        "risk",
+        "project",
+        "same_call",
+        "malformed",
+        "tier1_timeout_ms"
+      ],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "s1_runs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "s4_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600
+        },
+        "notify": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "s1_runs",
+        "s4_minutes",
+        "notify"
+      ],
+      "additionalProperties": false
+    },
+    "hints": {
+      "type": "object",
+      "properties": {
+        "stair_width": {
+          "type": "boolean"
+        },
+        "prefix_retention": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stair_width",
+        "prefix_retention"
+      ],
+      "additionalProperties": false
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "states": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        },
+        "kinds": {
+          "type": "object",
+          "properties": {
+            "route": {
+              "type": "boolean"
+            },
+            "compaction": {
+              "type": "boolean"
+            },
+            "package": {
+              "type": "boolean"
+            },
+            "memory": {
+              "type": "boolean"
+            },
+            "remembered": {
+              "type": "boolean"
+            },
+            "forgot": {
+              "type": "boolean"
+            },
+            "proposed": {
+              "type": "boolean"
+            },
+            "steer": {
+              "type": "boolean"
+            },
+            "cap": {
+              "type": "boolean"
+            },
+            "backstop": {
+              "type": "boolean"
+            },
+            "loop": {
+              "type": "boolean"
+            },
+            "close": {
+              "type": "boolean"
+            },
+            "continue": {
+              "type": "boolean"
+            },
+            "check": {
+              "type": "boolean"
+            },
+            "repair": {
+              "type": "boolean"
+            },
+            "regenerate": {
+              "type": "boolean"
+            },
+            "give_up": {
+              "type": "boolean"
+            },
+            "queue": {
+              "type": "boolean"
+            },
+            "prefill": {
+              "type": "boolean"
+            },
+            "thinking": {
+              "type": "boolean"
+            },
+            "thought": {
+              "type": "boolean"
+            },
+            "tool": {
+              "type": "boolean"
+            },
+            "plan": {
+              "type": "boolean"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "narrator": {
+          "enum": [
+            "off",
+            "on",
+            "thoughts",
+            "live"
+          ]
+        },
+        "states_channel": {
+          "enum": [
+            "reasoning",
+            "content",
+            "inline"
+          ]
+        },
+        "live": {
+          "type": "object",
+          "properties": {
+            "first_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "every_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "min_gap_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "fallback_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "thought_min_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "tool_after_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "why_wait_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "write_every_s": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "share": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1.0
+            },
+            "end_ms": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10000
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "progress": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "on"
+              ]
+            },
+            "prefill_every_s": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 600
+            },
+            "thinking_every_s": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 3600
+            },
+            "thinking_every_tokens": {
+              "type": "integer",
+              "minimum": 256,
+              "maximum": 262144
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "states"
+      ],
+      "additionalProperties": false
+    },
+    "outcomes": {
+      "type": "object",
+      "properties": {
+        "snapshots": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "off",
+            "shadow",
+            "act"
+          ]
+        },
+        "cards": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        },
+        "evaluate": {
+          "enum": [
+            "off",
+            "shadow",
+            "act"
+          ]
+        },
+        "judge": {
+          "enum": [
+            "off",
+            "shadow"
+          ]
+        },
+        "retrieve": {
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "library": {
+      "enum": [
+        "off",
+        "shadow",
+        "on"
+      ]
+    },
+    "memory": {
+      "enum": [
+        "off",
+        "shadow",
+        "on"
+      ]
+    },
+    "prompt": {
+      "enum": [
+        "conductor",
+        "client"
+      ]
+    },
+    "transcripts": {
+      "enum": [
+        "settings",
+        "off"
+      ]
+    },
+    "secret_mask": {
+      "enum": [
+        "off",
+        "shadow",
+        "on"
+      ]
+    },
+    "sampling": {
+      "type": "object",
+      "properties": {
+        "agentic_default": {
+          "enum": [
+            "greedy",
+            "card"
+          ]
+        },
+        "loop_escape": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "shadow": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        },
+        "narrator": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        },
+        "router": {
+          "enum": [
+            "off",
+            "shadow"
+          ]
+        },
+        "router_min_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 262144
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "locked": {
+      "type": "string",
+      "maxLength": 200
+    }
+  },
+  "required": [
+    "description",
+    "mode",
+    "clients",
+    "default_class",
+    "decisions",
+    "routing",
+    "thinking",
+    "tasks",
+    "caps",
+    "toolgate",
+    "context",
+    "hints"
+  ],
+  "additionalProperties": false
+}

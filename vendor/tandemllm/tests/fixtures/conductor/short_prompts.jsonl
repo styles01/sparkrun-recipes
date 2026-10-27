@@ -1,0 +1,20 @@
+{"text": "Reply with just: OK. Do not use any tools.", "label": "chat"}
+{"text": "Just answer yes or no: did the tests pass?", "label": "chat"}
+{"text": "Thanks, that's all for now.", "label": "chat"}
+{"text": "Stop here, don't change anything else.", "label": "chat"}
+{"text": "ok", "label": "chat"}
+{"text": "Say ready when you are ready.", "label": "chat"}
+{"text": "What did you change? One sentence.", "label": "chat"}
+{"text": "Answer in one word: which file did you edit?", "label": "chat"}
+{"text": "Never mind, leave it as it is.", "label": "chat"}
+{"text": "Good job, thank you!", "label": "chat"}
+{"text": "fix the failing test in textstats.py", "label": "debug"}
+{"text": "Rename the function parse to parse_args everywhere.", "label": "code_edit"}
+{"text": "Add a --verbose flag to cli.py.", "label": "code_edit"}
+{"text": "The build fails with ModuleNotFoundError: No module named 'yaml'. Fix it.", "label": "debug"}
+{"text": "Make the submit button blue.", "label": "code_edit"}
+{"text": "Write a unit test for slugify.", "label": "code_edit"}
+{"text": "Delete the unused import in main.py.", "label": "code_edit"}
+{"text": "Run the tests and fix what fails.", "label": "debug"}
+{"text": "Add type hints to utils.py.", "label": "code_edit"}
+{"text": "Commit the changes with a short message.", "label": "code_edit"}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /v1/conductor/packages/item/{name}: one package's frontmatter, body, reference, the text that goes in, their tokens, and a library skill's BM25 neighbours (G2)",
+  "type": "object",
+  "required": ["contract_version", "name", "category", "path", "found", "frontmatter", "frontmatter_raw", "body", "reference", "injected", "error", "tokenizer", "tokens", "neighbours"],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {"type": "string", "enum": ["1.0"]},
+    "name": {"type": "string"},
+    "category": {"enum": ["package", "task_skill", "test_skill", "card", "library"]},
+    "path": {"type": ["string", "null"]},
+    "found": {"type": "boolean"},
+    "frontmatter": {"type": "object", "additionalProperties": {"type": "string"}},
+    "frontmatter_raw": {"type": "string"},
+    "body": {"type": "string"},
+    "reference": {"type": "string"},
+    "injected": {"type": ["string", "null"]},
+    "error": {"type": ["string", "null"]},
+    "tokenizer": {"enum": ["engine", "estimate"]},
+    "tokens": {
+      "type": "object",
+      "required": ["injected", "body", "reference"],
+      "additionalProperties": false,
+      "properties": {"injected": {"type": "integer"}, "body": {"type": "integer"}, "reference": {"type": "integer"}}
+    },
+    "neighbours": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "score"],
+        "additionalProperties": false,
+        "properties": {"name": {"type": "string"}, "description": {"type": "string"}, "score": {"type": "number"}}
+      }
+    }
+  }
+}

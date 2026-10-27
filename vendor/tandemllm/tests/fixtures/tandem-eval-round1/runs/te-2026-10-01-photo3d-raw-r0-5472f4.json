@@ -1,0 +1,95 @@
+{
+ "suite": "photo3d",
+ "arm": "raw",
+ "rep": 0,
+ "tag": "te-2026-10-01-photo3d-raw-r0-5472f4",
+ "started_at": "2026-10-01T14:01:34Z",
+ "error": null,
+ "store_clear": {
+  "at": "2026-10-01T14:01:34Z",
+  "status": 200,
+  "error": null
+ },
+ "dir": "{run}/te-2026-10-01-photo3d-raw-r0-5472f4",
+ "session_id": "ses_f083abeefffedl4TagkrKfvhf6",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_minutes": 66.48,
+ "gates": {
+  "total": 5,
+  "passed": 0,
+  "by_gate": [
+   {
+    "id": "sky",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "far",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "mid",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "fore",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "full",
+    "passed": false,
+    "minutes": null
+   }
+  ]
+ },
+ "passed": false,
+ "minutes_to_pass": null,
+ "final_check": null,
+ "tokens": {
+  "input": 0,
+  "output": 0,
+  "reasoning": 0,
+  "cache_read": 0
+ },
+ "cache_hit": null,
+ "gen_tps": null,
+ "turns": 0,
+ "tool_calls": 0,
+ "tool_errors": 0,
+ "empty_stops": 0,
+ "last_finish": null,
+ "continuations": {
+  "needed": 1,
+  "sent": 0,
+  "driver": "watch"
+ },
+ "engine": {
+  "requests": 144,
+  "finish": {
+   "stop": 2,
+   "tool_calls": 142
+  },
+  "decode_tps_median": 60.39,
+  "prefill_tps_median": 510.96,
+  "completion_tokens": 150118,
+  "reasoning_tokens": 104075,
+  "prompt_tokens": 16883058,
+  "cached_tokens": 16472064
+ },
+ "conductor": {
+  "acts": 0,
+  "by_task": {},
+  "gave_ups": 0,
+  "shadow": 0
+ },
+ "pristine": {
+  "ok": true,
+  "changed": [],
+  "restored": []
+ },
+ "ended_at": "2026-10-01T15:08:02Z"
+}

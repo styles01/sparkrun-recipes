@@ -1,0 +1,18 @@
+{
+  "package": "rewrite-text",
+  "rubric": [
+    "The rewritten text comes first and in full; the same language and format as the original.",
+    "Every fact, number, name and condition of the original is kept or named as cut; nothing new is added.",
+    "The target is met with numbers: shorter means about half, much shorter a third; simpler means short sentences and everyday words; formal means no slang or contractions.",
+    "Exactly one 'Changed:' line after the text, no explanations of writing rules.",
+    "One version unless options were asked for."
+  ],
+  "prompts": [
+    {"id": "rewrite-text-1", "lang": "en", "text": "Make this shorter: 'I just wanted to reach out and let you know that I have been thinking about the proposal that you sent over last week and I have some thoughts and ideas that I would like to share with you at some point when you have a free moment in your schedule.'"},
+    {"id": "rewrite-text-2", "lang": "de", "text": "Mach das freundlicher, es ist für einen Kunden: 'Ihre Bestellung kann nicht geliefert werden, weil Sie eine falsche Adresse angegeben haben. Schicken Sie uns die richtige.'"},
+    {"id": "rewrite-text-3", "lang": "ar", "text": "بسّط هذا النص لطفل عمره عشر سنوات: 'يحدث الكسوف الشمسي عندما يمر القمر بين الأرض والشمس فيحجب ضوءها جزئيًا أو كليًا عن منطقة معينة من سطح الأرض.'"},
+    {"id": "rewrite-text-4", "lang": "en", "text": "Turn these notes into one paragraph for a report: meeting 3 May; budget approved 12k; launch date moved to October; Sara leads testing; need 2 more testers by June."},
+    {"id": "rewrite-text-5", "lang": "de", "text": "Formuliere das formeller für eine Bewerbung: 'Ich bin echt gut mit Leuten und hab in meinem letzten Job viel mit Kunden gemacht, die waren immer zufrieden.'"},
+    {"id": "rewrite-text-6", "lang": "en", "text": "Less angry please, but keep the point: 'This is the third time your delivery is late. I am done waiting. Send my money back now or I will leave a review everyone will see.'"}
+  ]
+}

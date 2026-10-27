@@ -1,0 +1,21 @@
+% One speculative round: draft, merge and cut, verify, accept, commit.
+\begin{tikzpicture}
+  \node[quiet, minimum width=26mm] (anchor) at (0,0) {last committed\\[-1pt]{\scriptsize token and state}};
+  \node[box, minimum width=36mm] (block) at (4.1,0.85) {block drafter\\[-1pt]{\scriptsize 15 slots $\times$ 16 candidates}};
+  \node[box, minimum width=36mm] (look) at (4.1,-0.85) {lookup drafter\\[-1pt]{\scriptsize context, corpus, store}};
+  \node[hot, minimum width=26mm] (cut) at (8.1,0) {StairCut\\[-1pt]{\scriptsize merge and cut}};
+  \node[box, minimum width=26mm] (verify) at (12.0,0) {verify\\[-1pt]{\scriptsize one forward, 64 layers}};
+  \node[box, minimum width=30mm] (accept) at (12.0,-2.7) {accept\\[-1pt]{\scriptsize longest agreeing path}};
+  \node[box, minimum width=30mm] (commit) at (6.6,-2.7) {commit\\[-1pt]{\scriptsize KV rows and state}};
+  \draw[flow] (anchor.east) -- ++(3mm,0) |- (block.west);
+  \draw[flow] (anchor.east) -- ++(3mm,0) |- (look.west);
+  \draw[flow] (block.east) -- ++(3mm,0) |- (cut.west);
+  \draw[flow] (look.east) -- ++(3mm,0) |- (cut.west);
+  \draw[flow] (cut) -- (verify) node[midway, below, lbl] {8 to 32 rows};
+  \draw[flow] (verify) -- (accept) node[midway, left, lbl, align=right] {the model's token\\at every node};
+  \draw[flow] (accept) -- (commit) node[midway, above, lbl] {path + 1 token};
+  \draw[flow] (commit.west) -| (anchor.south) node[pos=0.25, above, lbl] {next round};
+  \draw[dflow] (accept.south) -- ++(0,-6mm) node[below, lbl] {tokens stream to the client};
+  \node[lbl, above=0mm of block] {about 25 ms};
+  \node[lbl, below=0mm of look] {about 0.2 ms};
+\end{tikzpicture}

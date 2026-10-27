@@ -1,0 +1,87 @@
+recipe_version: "2"
+name: puzzle-75b-nvfp4
+description: "Nemotron Puzzle 75B A9B NVFP4 — MTP k=3, 4 seqs, GMU 0.88, 256K context, NGC vLLM 26.06 image"
+model: nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4
+runtime: vllm
+container: nvcr.io/nvidia/vllm:26.06-py3
+maintainer: styles01
+
+metadata:
+  author: styles01
+  source: "https://github.com/joeynyc/Nemotron-Puzzle-75B-NVFP4-1x-DGX-Spark"
+  created: "2026-07-08"
+  updated: "2026-07-08"
+  tags:
+    - nemotron
+    - puzzle
+    - 75b
+    - nvfp4
+    - mtp
+    - ngc
+    - flashinfer-cutlass
+  runbook: runbooks/puzzle-75b.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.88
+  max_model_len: 262144
+  max_num_seqs: 4
+  max_num_batched_tokens: 8192
+  served_model_name: nemotron-puzzle-75b-nvfp4
+  tool_call_parser: qwen3_coder
+  reasoning_parser: nemotron_v3
+  mamba_backend: flashinfer
+  enable_prefix_caching: true
+  async_scheduling: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
+
+env:
+  HF_HOME: /root/.cache/huggingface
+  NVIDIA_TF32_OVERRIDE: "1"
+  TORCH_ALLOW_TF32_CUBLAS_OVERRIDE: "1"
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+
+volumes:
+  - ~/.cache/huggingface:/root/.cache/huggingface
+
+benchmark:
+  framework: community
+  source: "joeynyc benchmarks, 2026-07-08"
+  results:
+    solo_decode_mean: "35.9 tok/s"
+    c4_aggregate: "75.3 tok/s"
+    mtp_acceptance: "~74.7%"
+    prefix_cache_hit: "70.4%"
+    kv_cache_tokens: "~2.0M"
+    model_load: "~50 GiB"
+    available_kv: "~55 GiB"
+    ttft_warm: "~0.25s"
+  notes: "Community-validated by 3 independent DGX Spark users. NGC image avoids FlashInfer PR #3738 regression."
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --mamba-backend {mamba_backend} \
+    --async-scheduling \
+    --speculative-config '{speculative_config}' \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser {reasoning_parser} \
+    --enable-auto-tool-choice \
+    --enable-prefix-caching \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --max-num-seqs {max_num_seqs} \
+    --max-model-len {max_model_len} \
+    --gpu-memory-utilization {gpu_memory_utilization}

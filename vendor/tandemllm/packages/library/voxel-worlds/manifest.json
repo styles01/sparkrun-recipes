@@ -1,0 +1,43 @@
+{
+  "name": "voxel-worlds",
+  "version": "1.0.0",
+  "title": "Voxel worlds",
+  "kind": "skill",
+  "set": "first",
+  "description": "A Three.js voxel world - an island with a pagoda, gardens, lakes, bridges, creatures with state machines, a day-night cycle, ambient sound, quality presets - built one feature at a time with a render after each, a to-do file and the frame rate held at its baseline.",
+  "source": "skill:voxel-worlds",
+  "max_tokens": 500,
+  "house_body_tokens": 350,
+  "general": false,
+  "library": true,
+  "requires_tools": [],
+  "fallback": null,
+  "classes": ["three_d", "code_edit"],
+  "files": {
+    "body": "SKILL.md",
+    "references": ["references/module-layout.md", "references/voxel-builder.md", "references/day-night.md", "references/creature-state-machines.md", "references/ambient-audio.md", "references/quality-presets.md"],
+    "exemplars": ["exemplars/deer.md", "exemplars/shrine-bell.md"]
+  },
+  "provenance": "curated from a finished overnight voxel-island build (the module layout, the voxel store and column fill, the day-night function, the deer and bell features, the audio module, the quality presets); reviewed, trimmed, no paths, hosts or names of the original project",
+  "overlaps": {
+    "threejs-scene": "the general Three.js rules stay there and are the three_d class's core (in on every three_d turn); this package is the voxel build order, the frame-rate rule, the to-do file and the curated modules",
+    "voxel-seasons": "the seasons recipe is a special feature on top of this layout; it stays its own skill",
+    "web-audio": "the general WebAudio rules stay there; references/ambient-audio.md is the island's sound module"
+  },
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 20,
+    "thinking": false,
+    "max_tokens": 24000,
+    "seed": 42,
+    "render_calls_max": 3,
+    "sequence_prompt": "vw-20",
+    "checks": ["runs", "no_console_errors", "fps_min", "fps_baseline_held", "stable_60s", "audio_nonsilent", "prompt_terms", "seed_stable", "todo_file"],
+    "judge_extra": ["grounded", "lighting"],
+    "human_sample": ["vw-01", "vw-02", "vw-03", "vw-04", "vw-07", "vw-09", "vw-11", "vw-16", "vw-19", "vw-20"]
+  },
+  "calibration": {"fps_min": null, "box": null, "build": null, "date": null, "note": "median fps of a 64x64 flat-ground skeleton at 640x360 on the box's software WebGL, minus 20 %, written here once by the calibration run; vw-20 compares against the model's own baseline, not this number"},
+  "measured": null,
+  "signature": null
+}

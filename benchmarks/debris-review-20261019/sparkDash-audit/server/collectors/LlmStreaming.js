@@ -1,0 +1,777 @@
+/**
+ * Shared OpenAI-compatible SSE streaming helpers used by DecodeBench, PrefillBench, and Showcase.
+ *
+ * Decode tok/s uses the first visible token → last visible token window
+ * (not stream EOF), so trailing usage/[DONE] latency does not drag the rate down.
+ */
+
+import { Agent, fetch as undiciFetch } from "undici";
+
+/** Response headers worth keeping for request correlation / debugging. */
+const DEBUG_HEADER_RE =
+  /^(x-request-id|x-stainless-|server|date|content-type|openai-|x-envoy-|cf-ray|request-id)$/i;
+
+/** Truncate streamed content previews stored for debugging. */
+export const CONTENT_PREVIEW_CHARS = 160;
+
+/**
+ * Undici's default headersTimeout/bodyTimeout is 300s. A 256k prefill that has
+ * not produced a first token (or even response headers) by then is aborted
+ * even when PrefillBench's own timer is 30–45 minutes. 0 disables those idle
+ * cuts; the caller AbortSignal still bounds the request.
+ *
+ * Must use undici's own `fetch` with this Agent. Node 22's global fetch is a
+ * different undici build; passing an npm Agent as `dispatcher` fails immediately
+ * with UND_ERR_INVALID_ARG ("fetch failed").
+ */
+export const LLM_STREAM_AGENT = new Agent({
+  headersTimeout: 0,
+  bodyTimeout: 0,
+});
+
+let streamAgentClosePromise = null;
+
+/** Close the shared dispatcher once, destroying it if graceful close stalls. */
+export function closeLlmStreamAgent(timeoutMs = 2_000) {
+  if (streamAgentClosePromise) return streamAgentClosePromise;
+  streamAgentClosePromise = (async () => {
+    let timer;
+    try {
+      await Promise.race([
+        LLM_STREAM_AGENT.close(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error("dispatcher close timed out")), timeoutMs);
+        }),
+      ]);
+      return true;
+    } catch {
+      LLM_STREAM_AGENT.destroy();
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  })();
+  return streamAgentClosePromise;
+}
+
+/** Map fetch/undici failures to a short UI string. */
+export function describeStreamFetchError(err) {
+  if (!err) return "Request failed";
+  const code = err.code || err.cause?.code;
+  if (
+    code === "UND_ERR_HEADERS_TIMEOUT" ||
+    code === "UND_ERR_BODY_TIMEOUT" ||
+    err.name === "HeadersTimeoutError" ||
+    err.name === "BodyTimeoutError"
+  ) {
+    return `HTTP idle timeout (${code || err.name}): no data from the LLM for 5 minutes`;
+  }
+  if (err.name === "AbortError" || err.name === "TimeoutError") {
+    return "Request aborted or timed out";
+  }
+  return err.message || String(err);
+}
+
+export function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+export function mean(nums) {
+  if (!nums.length) return 0;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+export function median(nums) {
+  if (!nums.length) return 0;
+  const s = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
+}
+
+export function sleep(ms, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
+      return;
+    }
+    const cleanup = () => signal?.removeEventListener("abort", onAbort);
+    const t = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(t);
+      cleanup();
+      reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
+    };
+    if (signal) {
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+  });
+}
+
+/**
+ * Read cumulative generation (output) token counters from the server —
+ * same sources as LlmProbe live tok/s.
+ * @param {string} baseUrl
+ * @param {{ apiKey?: string | null }} [opts]
+ * @returns {Promise<number | null>}
+ */
+export async function readServerGenerationTokens(baseUrl, opts = {}) {
+  const headers = {};
+  const apiKey = opts?.apiKey != null ? String(opts.apiKey).trim() : "";
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+  // Prometheus (vLLM or ds4-server) — prefer whichever series is present
+  try {
+    const res = await fetch(`${baseUrl}/metrics`, {
+      signal: AbortSignal.timeout(5_000),
+      headers,
+    });
+    if (res.ok) {
+      const txt = await res.text();
+      const fromSeries = (re) => {
+        let sum = 0;
+        let found = false;
+        let m;
+        while ((m = re.exec(txt)) !== null) {
+          const v = parseFloat(m[1]);
+          if (Number.isFinite(v)) {
+            sum += v;
+            found = true;
+          }
+        }
+        return found ? sum : null;
+      };
+      const ds4 = fromSeries(
+        /^ds4_tokens_decoded_total(?:\{[^}]*\})?\s+([\d.eE+-]+)\s*$/gm
+      );
+      if (ds4 != null) return ds4;
+      const vllm = fromSeries(
+        /^vllm:generation_tokens_total(?:\{[^}]*\})?\s+([\d.eE+-]+)\s*$/gm
+      );
+      if (vllm != null) return vllm;
+      const sglang =
+        fromSeries(
+          /^sglang:generation_tokens_total(?:\{[^}]*\})?\s+([\d.eE+-]+)\s*$/gm
+        ) ??
+        fromSeries(
+          /^sglang_generation_tokens_total(?:\{[^}]*\})?\s+([\d.eE+-]+)\s*$/gm
+        );
+      if (sglang != null) return sglang;
+      // q27 (signalnine/q27 engine) — live processed counter first, then the
+      // completion-based per-api total (same preference as LlmProbe).
+      const q27 =
+        fromSeries(
+          /^q27_decode_tokens_processed_total(?:\{[^}]*\})?\s+([\d.eE+-]+)\s*$/gm
+        ) ??
+        fromSeries(
+          /^q27_decode_tokens_total(?:\{[^}]*\})?\s+([\d.eE+-]+)\s*$/gm
+        );
+      if (q27 != null) return q27;
+    }
+  } catch {
+    /* try next */
+  }
+
+  // EXL3 serve_openai.py / TensorFold — cumulative completion tokens on /health
+  try {
+    const res = await fetch(`${baseUrl}/health`, {
+      signal: AbortSignal.timeout(5_000),
+      headers,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const v = Number(data?.completion_tokens_total);
+      if (Number.isFinite(v) && data?.backend === "exl3") return v;
+      if (Number.isFinite(v) && data?.backend === "tensorfold") return v;
+      if (Number.isFinite(v) && typeof data?.busy === "boolean") return v;
+    }
+  } catch {
+    /* try next */
+  }
+
+  // SGLang — current /server_info first; /get_server_info is a deprecated alias.
+  for (const path of ["/server_info", "/get_server_info"]) {
+    try {
+      const res = await fetch(`${baseUrl}${path}`, {
+        signal: AbortSignal.timeout(5_000),
+        headers,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.total_output_tokens != null) {
+          const v = Number(data.total_output_tokens);
+          if (Number.isFinite(v)) return v;
+        }
+      }
+    } catch {
+      /* try next */
+    }
+  }
+
+  return null;
+}
+
+/** Pick correlatable response headers for the debug trace. */
+export function pickDebugHeaders(headers) {
+  /** @type {Record<string, string>} */
+  const out = {};
+  if (!headers || typeof headers.forEach !== "function") return out;
+  headers.forEach((value, key) => {
+    if (DEBUG_HEADER_RE.test(key) || String(key).toLowerCase().startsWith("x-")) {
+      out[String(key).toLowerCase()] = String(value);
+    }
+  });
+  return out;
+}
+
+/**
+ * Rough completion-token estimate from visible text.
+ * SSE deltas often carry multiple tokens; counting events under-reports live tok/s.
+ * Final metrics still prefer server `usage.completion_tokens` when present.
+ * @param {string} text
+ */
+export function estimateTokenCount(text) {
+  if (!text || typeof text !== "string" || text.length === 0) return 0;
+  // ~4 chars/token for Latin / code; never less than 1 for non-empty text
+  return Math.max(1, Math.round(text.length / 4));
+}
+
+/** Concatenate string message contents from an OpenAI chat body (prefill fallback). */
+/** vLLM-oriented fields that some OpenAI-compat servers reject with HTTP 400. */
+export function stripFillForceFields(body) {
+  if (!body || typeof body !== "object") return body;
+  const next = { ...body };
+  delete next.min_tokens;
+  delete next.ignore_eos;
+  delete next.stop;
+  return next;
+}
+
+export function promptTextFromBody(body) {
+  const msgs = body?.messages;
+  if (!Array.isArray(msgs)) return "";
+  const parts = [];
+  for (const m of msgs) {
+    if (typeof m?.content === "string" && m.content) parts.push(m.content);
+  }
+  return parts.join("\n");
+}
+
+/**
+ * Extract visible text pieces from an OpenAI-compatible delta (or choice.text).
+ * Counts content + reasoning / reasoning_content so thinking models stay "alive".
+ * Separates answer (`content`/`text`) from reasoning for display styling.
+ * @returns {{ answer: string, reasoning: string, tokenChunks: number }}
+ */
+function extractDeltaPieces(choice) {
+  let answer = "";
+  let reasoning = "";
+  let tokenChunks = 0;
+
+  const delta = choice?.delta;
+  if (delta && typeof delta === "object") {
+    if (typeof delta.content === "string" && delta.content.length > 0) {
+      answer = delta.content;
+      tokenChunks += estimateTokenCount(delta.content);
+    }
+    // Prefer delta.reasoning; fall back to reasoning_content (don't double-count)
+    if (typeof delta.reasoning === "string" && delta.reasoning.length > 0) {
+      reasoning = delta.reasoning;
+      tokenChunks += estimateTokenCount(delta.reasoning);
+    } else if (
+      typeof delta.reasoning_content === "string" &&
+      delta.reasoning_content.length > 0
+    ) {
+      reasoning = delta.reasoning_content;
+      tokenChunks += estimateTokenCount(delta.reasoning_content);
+    }
+  }
+
+  // Non-delta fallbacks (some backends)
+  if (!answer && !reasoning && typeof choice?.text === "string" && choice.text.length > 0) {
+    answer = choice.text;
+    tokenChunks = estimateTokenCount(choice.text);
+  }
+
+  return { answer, reasoning, tokenChunks };
+}
+
+/** Coerce a request/session thinking flag. Default is off (matches Showcase UI). */
+export function coerceThinkingFlag(raw) {
+  return raw === true || raw === "true" || raw === 1 || raw === "1";
+}
+
+function hasThinkingRequestFields(body) {
+  if (!body || typeof body !== "object") return false;
+  if (body.chat_template_kwargs && typeof body.chat_template_kwargs === "object") return true;
+  if ("enable_thinking" in body || "thinking" in body || "thinking_mode" in body) return true;
+  if ("reasoning_effort" in body || "reasoning_budget" in body) return true;
+  return false;
+}
+
+/**
+ * Apply per-model thinking flags so reasoning models don't 400.
+ * Hybrid models (Qwen3, GLM, MiniMax, …) default thinking ON unless we send
+ * disable flags — `enable_thinking` alone is ignored by MiniMax (`thinking_mode`).
+ *
+ * @param {Record<string, unknown>} body
+ * @param {string | null | undefined} modelId
+ * @param {boolean} [think=false]
+ */
+export function applyThinkingFlags(body, modelId, think = false) {
+  if (!body || typeof body !== "object") return body;
+  const on = Boolean(think);
+  void modelId;
+  /** @type {Record<string, unknown>} */
+  const ctk = {
+    ...(body.chat_template_kwargs && typeof body.chat_template_kwargs === "object"
+      ? body.chat_template_kwargs
+      : {}),
+    enable_thinking: on,
+    // SGLang / some Qwen templates read `thinking` rather than `enable_thinking`.
+    thinking: on,
+    // MiniMax (M2 / M2.5 / M3) ignores enable_thinking; always send thinking_mode
+    // so a missing model id still disables reasoning.
+    thinking_mode: on ? "enabled" : "disabled",
+  };
+  body.chat_template_kwargs = ctk;
+  return body;
+}
+
+/**
+ * Strip thinking-related request fields (for 400 retry when *enabling* thinking
+ * on a model that does not accept those fields). Do not use this as a fallback
+ * when the user asked for thinking off — stripping lets the model default ON.
+ * @param {Record<string, unknown>} body
+ */
+export function stripThinkingFlags(body) {
+  if (!body || typeof body !== "object") return body;
+  if (body.chat_template_kwargs && typeof body.chat_template_kwargs === "object") {
+    const ctk = { ...body.chat_template_kwargs };
+    delete ctk.enable_thinking;
+    delete ctk.thinking_mode;
+    delete ctk.thinking;
+    if (Object.keys(ctk).length) body.chat_template_kwargs = ctk;
+    else delete body.chat_template_kwargs;
+  }
+  delete body.enable_thinking;
+  delete body.thinking;
+  delete body.thinking_mode;
+  delete body.reasoning_effort;
+  delete body.reasoning_budget;
+  return body;
+}
+
+/**
+ * Alternate disable-only payload after HTTP 400 on the full thinking-flag set.
+ * Keeps an explicit off switch instead of stripping (which re-enables default thinking).
+ * @param {Record<string, unknown>} body
+ */
+export function thinkingOffFallbackBody(body) {
+  const next = stripThinkingFlags({ ...body });
+  next.chat_template_kwargs = { enable_thinking: false, thinking: false, thinking_mode: "disabled" };
+  next.thinking = { type: "disabled" };
+  next.enable_thinking = false;
+  return next;
+}
+
+/**
+ * Poll server generation counters the same way live LlmProbe does (Δtokens / Δt).
+ * Returns the median of positive samples while generation is active.
+ *
+ * @param {string} baseUrl
+ * @param {AbortSignal} signal
+ * @param {number} [intervalMs=400]
+ * @param {{ onSample?: (info: { rate: number, median: number | null, max: number | null, samples: number }) => void, apiKey?: string | null }} [opts]
+ * @returns {Promise<{ median: number | null, mean: number | null, max: number | null, samples: number }>}
+ */
+export async function pollServerGenerationRates(
+  baseUrl,
+  signal,
+  intervalMs = 400,
+  opts = {}
+) {
+  /** @type {number[]} */
+  const rates = [];
+  const apiKey = opts?.apiKey != null ? String(opts.apiKey).trim() : "";
+  let lastTokens = await readServerGenerationTokens(baseUrl, { apiKey: apiKey || null });
+  let lastT = performance.now();
+  const onSample = typeof opts.onSample === "function" ? opts.onSample : null;
+
+  while (!signal.aborted) {
+    try {
+      await sleep(intervalMs, signal);
+    } catch {
+      break;
+    }
+    const now = performance.now();
+    const tokens = await readServerGenerationTokens(baseUrl, { apiKey: apiKey || null });
+    if (tokens == null || lastTokens == null) {
+      if (tokens != null) {
+        lastTokens = tokens;
+        lastT = now;
+      }
+      continue;
+    }
+    const dtSec = (now - lastT) / 1000;
+    const dTok = tokens - lastTokens;
+    lastTokens = tokens;
+    lastT = now;
+    // Ignore idle / counter reset samples (same guards as LlmProbe dt window)
+    if (dtSec > 0 && dtSec < 10 && dTok > 0) {
+      const rate = dTok / dtSec;
+      rates.push(rate);
+      if (onSample) {
+        try {
+          onSample({
+            rate: round2(rate),
+            median: rates.length ? round2(median(rates)) : null,
+            max: rates.length ? round2(Math.max(...rates)) : null,
+            samples: rates.length,
+          });
+        } catch {
+          /* non-fatal */
+        }
+      }
+    }
+  }
+
+  if (!rates.length) {
+    return { median: null, mean: null, max: null, samples: 0 };
+  }
+  return {
+    median: round2(median(rates)),
+    mean: round2(mean(rates)),
+    max: round2(Math.max(...rates)),
+    samples: rates.length,
+  };
+}
+
+/**
+ * Parse one OpenAI-compatible SSE stream for a single completion request.
+ *
+ * Options:
+ * - debug: capture compact HTTP/SSE debug trace
+ * - collectContent: accumulate full visible text (showcase)
+ * - onDelta: live callback `{ text?, answer?, reasoning?, tokenCount, tFirst, tLast, … }`
+ * - retryOnThinking400: if HTTP 400 and thinking was *enabled*, retry once stripped
+ *   (non-reasoning models). When thinking is off, retry with a smaller disable
+ *   payload instead of stripping — stripping lets hybrid models think by default.
+ * - thinking: whether the request intended reasoning on (default false)
+ * - apiKey: optional Bearer token for OpenAI-compatible gateways
+ */
+export async function runStreamingRequest(
+  url,
+  body,
+  signal,
+  {
+    debug = false,
+    collectContent = false,
+    onDelta = null,
+    retryOnThinking400 = false,
+    thinking = false,
+    apiKey = null,
+  } = {}
+) {
+  const result = await runStreamingRequestOnce(url, body, signal, {
+    debug,
+    collectContent,
+    onDelta,
+    apiKey,
+  });
+
+  if (
+    retryOnThinking400 &&
+    result.error &&
+    /^HTTP 400\b/.test(result.error) &&
+    hasThinkingRequestFields(body)
+  ) {
+    const retryBody = coerceThinkingFlag(thinking)
+      ? stripThinkingFlags({
+          ...body,
+          chat_template_kwargs:
+            body.chat_template_kwargs && typeof body.chat_template_kwargs === "object"
+              ? { ...body.chat_template_kwargs }
+              : {},
+        })
+      : thinkingOffFallbackBody(body);
+    return runStreamingRequestOnce(url, retryBody, signal, {
+      debug,
+      collectContent,
+      onDelta,
+      apiKey,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * @param {string} url
+ * @param {Record<string, unknown>} body
+ * @param {AbortSignal} signal
+ * @param {{ debug?: boolean, collectContent?: boolean, onDelta?: Function | null, apiKey?: string | null }} opts
+ */
+async function runStreamingRequestOnce(
+  url,
+  body,
+  signal,
+  { debug = false, collectContent = false, onDelta = null, apiKey = null } = {}
+) {
+  const t0 = performance.now();
+  /** @type {number | null} */
+  let tFirst = null;
+  /** @type {number | null} */
+  let tLast = null;
+  /** First answer (non-reasoning) token, for ttftContentMs. Stays null when a reply never leaves the reasoning phase. */
+  /** @type {number | null} */
+  let tFirstContent = null;
+  let reasoningChunkCount = 0;
+  let chunkTokenCount = 0;
+  let usageCompletionTokens = null;
+  let usagePromptTokens = null;
+  /** Prompt tokens served from the prefix cache (usage.prompt_tokens_details / llama.cpp timings). */
+  let cachedPromptTokens = 0;
+  /** Server-measured prompt-processing time, when the backend reports it (llama.cpp `timings`). */
+  let serverPromptMs = null;
+  let serverPromptN = null;
+  /** @type {Record<string, number> | null} */
+  let usage = null;
+  let model = null;
+  let error = null;
+  /** @type {number | null} */
+  let httpStatus = null;
+  /** @type {Record<string, string>} */
+  let responseHeaders = {};
+  /** @type {string | null} */
+  let completionId = null;
+  /** @type {string | null} */
+  let finishReason = null;
+  let content = "";
+  let reasoningContent = "";
+  let answerContent = "";
+  let sseEventCount = 0;
+  let firstSseDataPreview = null;
+  const keepContent = Boolean(debug || collectContent);
+  const deltaCb = typeof onDelta === "function" ? onDelta : null;
+
+  try {
+    /** @type {Record<string, string>} */
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+    };
+    const key = apiKey != null ? String(apiKey).trim() : "";
+    if (key) headers.Authorization = `Bearer ${key}`;
+
+    const response = await undiciFetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal,
+      dispatcher: LLM_STREAM_AGENT,
+    });
+
+    httpStatus = response.status;
+    if (debug) responseHeaders = pickDebugHeaders(response.headers);
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(`HTTP ${response.status}: ${text.slice(0, 200)}`);
+    }
+    if (!response.body) {
+      throw new Error("Empty response body (streaming unsupported?)");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      // Normalize the accumulated buffer so CRLF split across chunks also works.
+      buffer = buffer.replace(/\r\n/g, "\n");
+
+      // SSE events are separated by blank lines
+      let sep;
+      while ((sep = buffer.indexOf("\n\n")) !== -1) {
+        const rawEvent = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+
+        for (const line of rawEvent.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const data = trimmed.slice(5).trim();
+          if (!data || data === "[DONE]") continue;
+
+          if (debug) {
+            sseEventCount += 1;
+            if (firstSseDataPreview == null) {
+              firstSseDataPreview = data.slice(0, 240);
+            }
+          }
+
+          let json;
+          try {
+            json = JSON.parse(data);
+          } catch {
+            continue;
+          }
+
+          if (debug && json.id && !completionId) completionId = String(json.id);
+          if (json.model) model = json.model;
+          if (json.usage && typeof json.usage === "object") {
+            usage = {
+              promptTokens: Number(json.usage.prompt_tokens) || 0,
+              completionTokens: Number(json.usage.completion_tokens) || 0,
+              totalTokens: Number(json.usage.total_tokens) || 0,
+            };
+            if (json.usage.completion_tokens != null) {
+              usageCompletionTokens = Number(json.usage.completion_tokens);
+            }
+            if (json.usage.prompt_tokens != null) {
+              usagePromptTokens = Number(json.usage.prompt_tokens);
+            }
+            const cached = Number(json.usage.prompt_tokens_details?.cached_tokens);
+            if (Number.isFinite(cached) && cached > 0) cachedPromptTokens = Math.max(cachedPromptTokens, cached);
+          }
+          if (json.timings && typeof json.timings === "object") {
+            const ms = Number(json.timings.prompt_ms);
+            const n = Number(json.timings.prompt_n);
+            if (Number.isFinite(ms) && ms > 0 && Number.isFinite(n) && n > 0) {
+              serverPromptMs = ms;
+              serverPromptN = n;
+            }
+            const cacheN = Number(json.timings.cache_n);
+            if (Number.isFinite(cacheN) && cacheN > 0) {
+              cachedPromptTokens = Math.max(cachedPromptTokens, cacheN);
+            }
+          }
+
+          const choice = json.choices?.[0];
+          if (debug && choice?.finish_reason) finishReason = String(choice.finish_reason);
+
+          const { answer, reasoning, tokenChunks } = extractDeltaPieces(choice);
+          if (tokenChunks > 0) {
+            const now = performance.now();
+            if (tFirst == null) tFirst = now;
+            tLast = now;
+            if (reasoning) {
+              reasoningChunkCount += 1;
+            } else if (tFirstContent == null) {
+              tFirstContent = now;
+            }
+            chunkTokenCount += tokenChunks;
+            const text = `${reasoning}${answer}`;
+            if (keepContent) {
+              if (reasoning) reasoningContent += reasoning;
+              if (answer) answerContent += answer;
+              content += text;
+            }
+            if (deltaCb) {
+              try {
+                deltaCb({
+                  text: text || undefined,
+                  answer: answer || undefined,
+                  reasoning: reasoning || undefined,
+                  tokenCount: chunkTokenCount,
+                  tFirst,
+                  tLast,
+                  model,
+                });
+              } catch {
+                /* non-fatal */
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    error = describeStreamFetchError(err);
+  }
+
+  const tEnd = performance.now();
+  const totalMs = tEnd - t0;
+  const ttftMs = tFirst != null ? tFirst - t0 : 0;
+
+  // Prefer usage.completion_tokens when the server reports it (accurate).
+  const completionTokens =
+    usageCompletionTokens != null && usageCompletionTokens > 0
+      ? usageCompletionTokens
+      : chunkTokenCount;
+
+  // Post-first-token tokens. With usage: all but the first generated token.
+  const decodeTokens = Math.max(0, completionTokens - (completionTokens > 0 ? 1 : 0));
+
+  // Decode window: first content token → last content token (excludes prefill + teardown).
+  const decodeMs =
+    tFirst != null && tLast != null && tLast > tFirst ? tLast - tFirst : 0;
+  const decodeTps =
+    decodeMs > 0 && decodeTokens > 0 ? (decodeTokens / decodeMs) * 1000 : 0;
+
+  const promptEstimate = estimateTokenCount(promptTextFromBody(body));
+  const prefillTokens =
+    usagePromptTokens != null && usagePromptTokens > 0
+      ? usagePromptTokens
+      : promptEstimate;
+  const prefillTps =
+    ttftMs > 0 && prefillTokens > 0 ? (prefillTokens / ttftMs) * 1000 : 0;
+
+  /** @type {Record<string, unknown>} */
+  const out = {
+    ttftMs: round2(ttftMs),
+    /** Time-to-first-answer-token (post-reasoning) in ms from request start. Null when the reply never leaves the reasoning phase. */
+    ttftContentMs: tFirstContent != null ? round2(tFirstContent - t0) : null,
+    reasoningChunks: reasoningChunkCount,
+    decodeMs: round2(decodeMs),
+    completionTokens,
+    decodeTokens,
+    decodeTps: round2(decodeTps),
+    prefillTokens,
+    prefillTps: round2(prefillTps),
+    /** Prompt tokens the server reused from its prefix cache (0 when unknown/none). */
+    cachedPromptTokens,
+    /** Server-measured prompt processing (ms / tokens actually computed); null when not reported. */
+    serverPromptMs,
+    serverPromptN,
+    totalMs: round2(totalMs),
+    /** Absolute performance.now() marks for wave-level aggregation */
+    t0,
+    tFirst,
+    tLast,
+    model,
+    error,
+  };
+
+  if (collectContent) {
+    out.content = content;
+    out.answer = answerContent;
+    out.reasoning = reasoningContent;
+  }
+
+  if (debug) {
+    out.httpStatus = httpStatus;
+    out.responseHeaders = responseHeaders;
+    out.completionId = completionId;
+    out.finishReason = finishReason;
+    out.usage = usage;
+    out.sseEventCount = sseEventCount;
+    out.firstSseDataPreview = firstSseDataPreview;
+    out.contentPreview = {
+      first: content.slice(0, CONTENT_PREVIEW_CHARS),
+      last:
+        content.length > CONTENT_PREVIEW_CHARS
+          ? content.slice(-CONTENT_PREVIEW_CHARS)
+          : content,
+      chars: content.length,
+    };
+  }
+
+  return out;
+}
+

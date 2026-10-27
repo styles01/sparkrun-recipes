@@ -1,0 +1,19 @@
+{
+  "package": "explain-simply",
+  "rubric": [
+    "The first sentence answers the question in plain words; one everyday comparison, not several.",
+    "How it works in 3 to 6 ordered steps; 2 or 3 terms with short meanings; one example with a number where the topic has numbers.",
+    "Length fits: a word 3 to 5 lines, a how-does-it-work 10 to 15 lines, 'like I'm five' under 12 words a sentence.",
+    "Uncertainty and disputes named in one line; no invented numbers, dates or laws.",
+    "Ends with the common mistake or the next question; no history lesson, no dictionary opening."
+  ],
+  "prompts": [
+    {"id": "explain-simply-1", "lang": "en", "text": "What is inflation and why does it matter for my savings?"},
+    {"id": "explain-simply-2", "lang": "de", "text": "Erklär mir wie eine Wärmepumpe funktioniert, so dass ich es meinem Vater erklären kann."},
+    {"id": "explain-simply-3", "lang": "ar", "text": "ما هو الذكاء الاصطناعي؟ اشرح لي كأنني طفل في العاشرة."},
+    {"id": "explain-simply-4", "lang": "en", "text": "My doctor said my blood pressure is 145 over 92. What do those numbers mean?"},
+    {"id": "explain-simply-5", "lang": "de", "text": "Was bedeutet 'Schufa-Score' und warum fragt mein Vermieter danach?"},
+    {"id": "explain-simply-6", "lang": "en", "text": "Explain how a mortgage works, I'm 24 and have never had one. Keep it short."},
+    {"id": "explain-simply-7", "lang": "en", "text": "What's the difference between a virus and a bacteria, and why don't antibiotics work on a cold?"}
+  ]
+}

@@ -1,0 +1,6395 @@
+{
+ "_note": "Real `event: live` messages of contract 1.1 recorded on the box on 2026-09-27 03:00-03:11 CEST against the live2 candidate on :8011 (Qwen3.8-27B, the served configuration): by tools/activity_check.py (an opencode-shaped agent turn, a client closing a 60k-token prefill, stop cases) and by a real opencode 1.18.32 run through an ssh tunnel (keys opencode_*: a 29,200-token prefill with progress, thinking, a `write` call, the next turn continuing it). One message per moment, `history` dropped. No prompt text is ever in the stream.",
+ "messages": {
+  "prefilling": {
+   "contract_version": "1.1",
+   "seq": 755,
+   "generated_at": "2026-09-27T01:10:12.668Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Prefilling 1,024 of 2,621 (39 %)",
+    "since_ms": 1003.7,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 1024,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 42.6,
+     "rss_gib": 3.0
+    },
+    "store": {
+     "entries": 7,
+     "bytes_gib": 7.5
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 1,
+    "decoding": 0,
+    "completed_1m": 1,
+    "served": 6,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": null,
+    "prefill_tps": 694.83,
+    "prefilling": true,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 7444.6
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "prefill",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 0,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 1003.87,
+     "queue_ms": 0.2,
+     "prompt_ms": null,
+     "ttft_ms": null,
+     "decode_ms": null,
+     "prefill_tps": null,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "prefilling",
+      "label": "Prefilling 1,024 of 2,621 (39 %)",
+      "since_ms": 1003.7,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 1024,
+       "total": 2621,
+       "cached": 0,
+       "pct": 39.1,
+       "tps_now": null,
+       "tps_avg": 1200.18,
+       "eta_ms": 1330.6,
+       "progress": "chunked",
+       "at_ms": 901.6
+      },
+      "decode": null,
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1003.7,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 7330.2,
+     "activity": {
+      "since_ms": 7330.2,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471412.166,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 78
+   },
+   "sampler": {
+    "ticks": 905,
+    "encodes": 754,
+    "tick_us_last": 770.2,
+    "tick_us_mean": 206.6,
+    "tick_us_max": 1747.9,
+    "tick_cpu_us_mean": 200.7,
+    "tick_cpu_us_max": 969.9
+   }
+  },
+  "thinking": {
+   "contract_version": "1.1",
+   "seq": 767,
+   "generated_at": "2026-09-27T01:10:15.678Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Thinking",
+    "since_ms": 35.4,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 2637,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.7,
+     "rss_gib": 2.9
+    },
+    "store": {
+     "entries": 8,
+     "bytes_gib": 7.85
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 1,
+    "completed_1m": 1,
+    "served": 6,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": null,
+    "prefill_tps": 694.83,
+    "prefilling": false,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 10454.9
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "decode",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 1,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 4014.22,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 35.36,
+     "prefill_tps": 658.76,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "thinking",
+      "label": "Thinking",
+      "since_ms": 35.4,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 1,
+       "thinking_tokens": 0,
+       "content_tokens": 1,
+       "tool_tokens": 0,
+       "tps_now": 1.0,
+       "tps_avg": null,
+       "rounds": null,
+       "tokens_per_round": null,
+       "tokens_per_round_now": null,
+       "ms_per_round": null,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 35.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 10340.5,
+     "activity": {
+      "since_ms": 10340.5,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471415.177,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 78
+   },
+   "sampler": {
+    "ticks": 917,
+    "encodes": 766,
+    "tick_us_last": 276.2,
+    "tick_us_mean": 209.9,
+    "tick_us_max": 1747.9,
+    "tick_cpu_us_mean": 204.0,
+    "tick_cpu_us_max": 969.9
+   }
+  },
+  "writing": {
+   "contract_version": "1.1",
+   "seq": 777,
+   "generated_at": "2026-09-27T01:10:19.688Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Writing",
+    "since_ms": 167.2,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 2709,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.7,
+     "rss_gib": 2.9
+    },
+    "store": {
+     "entries": 8,
+     "bytes_gib": 7.25
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 1,
+    "completed_1m": 2,
+    "served": 7,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": 4.48,
+    "prefill_tps": 756.96,
+    "prefilling": false,
+    "tokens_per_block": 4.0,
+    "last_prefill_ms_ago": 259.3
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "phase": "decode",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2685,
+     "cached_tokens": 2048,
+     "forwarded_tokens": 637,
+     "tokens": 9,
+     "blocks": 2,
+     "tokens_per_block": 4.0,
+     "elapsed_ms": 1100.98,
+     "queue_ms": 0.19,
+     "prompt_ms": 841.52,
+     "ttft_ms": 841.72,
+     "decode_ms": 259.26,
+     "prefill_tps": 756.96,
+     "decode_tps": 30.86,
+     "decode_tps_now": null,
+     "cache_source": "prefix",
+     "max_tokens": 256,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "writing",
+      "label": "Writing",
+      "since_ms": 167.2,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2685,
+       "total": 2685,
+       "cached": 2048,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 756.96,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 841.7
+      },
+      "decode": {
+       "tokens": 9,
+       "thinking_tokens": 2,
+       "content_tokens": 7,
+       "tool_tokens": 0,
+       "tps_now": 8.94,
+       "tps_avg": 30.86,
+       "rounds": 2,
+       "tokens_per_round": 4.0,
+       "tokens_per_round_now": 4.5,
+       "ms_per_round": 91.7,
+       "ms_per_round_now": 503.13,
+       "accept_mean": 3.0
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 2
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 75.8,
+       "gone_ms": null
+      },
+      "continues": {
+       "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+       "gap_ms": 2001.8,
+       "tool_names": [
+        "write"
+       ],
+       "inferred": false
+      },
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling",
+       "detail": "2048 cached"
+      },
+      {
+       "t_ms": 841.7,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 933.8,
+       "state": "writing"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 3102.7,
+     "activity": {
+      "since_ms": 3102.7,
+      "state": "done",
+      "label": "tool call: write after 4.9 s",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 59,
+       "thinking_tokens": 14,
+       "content_tokens": 4,
+       "tool_tokens": 41,
+       "tps_now": null,
+       "tps_avg": 61.63,
+       "rounds": 9,
+       "tokens_per_round": 6.44,
+       "tokens_per_round_now": null,
+       "ms_per_round": 104.58,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 14
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "tool_calls",
+       "detail": null,
+       "state": "tool_call",
+       "tokens_sent": 59,
+       "silent_ms": 1.4,
+       "client_gone_ms": null,
+       "sentence": "tool call: write after 4.9 s"
+      }
+     },
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "done",
+     "finish_reason": "tool_calls",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 59,
+     "blocks": 9,
+     "tokens_per_block": 6.44,
+     "elapsed_ms": 4921.43,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 941.18,
+     "prefill_tps": 658.76,
+     "decode_tps": 61.63,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4518.5,
+       "state": "tool_call",
+       "detail": "write"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 4921.4,
+       "state": "done",
+       "detail": "tool_calls"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 14350.8,
+     "activity": {
+      "since_ms": 14350.8,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471419.689,
+    "decode_tps": 8.94,
+    "prefill_tps": 756.96,
+    "running": 1,
+    "waiting": 0,
+    "tokens": 146
+   },
+   "sampler": {
+    "ticks": 927,
+    "encodes": 776,
+    "tick_us_last": 496.1,
+    "tick_us_mean": 213.3,
+    "tick_us_max": 1747.9,
+    "tick_cpu_us_mean": 207.4,
+    "tick_cpu_us_max": 1038.3
+   }
+  },
+  "tool_call": {
+   "contract_version": "1.1",
+   "seq": 770,
+   "generated_at": "2026-09-27T01:10:16.430Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Calling tool write",
+    "since_ms": 247.7,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 2688,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.7,
+     "rss_gib": 2.9
+    },
+    "store": {
+     "entries": 8,
+     "bytes_gib": 7.85
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 1,
+    "completed_1m": 1,
+    "served": 6,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": 8.97,
+    "prefill_tps": 658.76,
+    "prefilling": false,
+    "tokens_per_block": 6.14,
+    "last_prefill_ms_ago": 787.4
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "decode",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 44,
+     "blocks": 7,
+     "tokens_per_block": 6.14,
+     "elapsed_ms": 4766.29,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 787.42,
+     "prefill_tps": 658.76,
+     "decode_tps": 54.61,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "tool_call",
+      "label": "Calling tool write",
+      "since_ms": 247.7,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 44,
+       "thinking_tokens": 14,
+       "content_tokens": 4,
+       "tool_tokens": 26,
+       "tps_now": 43.89,
+       "tps_avg": 54.61,
+       "rounds": 7,
+       "tokens_per_round": 6.14,
+       "tokens_per_round_now": 6.29,
+       "ms_per_round": 105.02,
+       "ms_per_round_now": 143.21,
+       "accept_mean": 5.14
+      },
+      "tool": {
+       "index": 0,
+       "name": "write",
+       "arg_bytes": 35,
+       "calls_done": 0
+      },
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 14
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 52.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4518.5,
+       "state": "tool_call",
+       "detail": "write"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 11092.6,
+     "activity": {
+      "since_ms": 11092.6,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471416.18,
+    "decode_tps": 17.96,
+    "prefill_tps": 658.76,
+    "running": 1,
+    "waiting": 0,
+    "tokens": 96
+   },
+   "sampler": {
+    "ticks": 920,
+    "encodes": 769,
+    "tick_us_last": 473.5,
+    "tick_us_mean": 210.7,
+    "tick_us_max": 1747.9,
+    "tick_cpu_us_mean": 204.8,
+    "tick_cpu_us_max": 969.9
+   }
+  },
+  "waiting_for_client": {
+   "contract_version": "1.1",
+   "seq": 771,
+   "generated_at": "2026-09-27T01:10:16.681Z",
+   "interval_s": 1.0,
+   "engine": {
+    "state": "waiting_for_client",
+    "label": "Waiting for client: running tool write",
+    "since_ms": 95.4,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 2680,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.7,
+     "rss_gib": 2.9
+    },
+    "store": {
+     "entries": 8,
+     "bytes_gib": 7.25
+    },
+    "waiting_for_client": {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "tool_names": [
+      "write"
+     ],
+     "since_ms": 95.4,
+     "client_kind": "opencode"
+    }
+   },
+   "counts": {
+    "in_flight": 0,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 0,
+    "completed_1m": 2,
+    "served": 7,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": 8.97,
+    "prefill_tps": 658.76,
+    "prefilling": false,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 1038.4
+   },
+   "requests": [
+    {
+     "ended_ms_ago": 95.4,
+     "activity": {
+      "since_ms": 95.4,
+      "state": "done",
+      "label": "tool call: write after 4.9 s",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 59,
+       "thinking_tokens": 14,
+       "content_tokens": 4,
+       "tool_tokens": 41,
+       "tps_now": null,
+       "tps_avg": 61.63,
+       "rounds": 9,
+       "tokens_per_round": 6.44,
+       "tokens_per_round_now": null,
+       "ms_per_round": 104.58,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 14
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "tool_calls",
+       "detail": null,
+       "state": "tool_call",
+       "tokens_sent": 59,
+       "silent_ms": 1.4,
+       "client_gone_ms": null,
+       "sentence": "tool call: write after 4.9 s"
+      }
+     },
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "done",
+     "finish_reason": "tool_calls",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 59,
+     "blocks": 9,
+     "tokens_per_block": 6.44,
+     "elapsed_ms": 4921.43,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 941.18,
+     "prefill_tps": 658.76,
+     "decode_tps": 61.63,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4518.5,
+       "state": "tool_call",
+       "detail": "write"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 4921.4,
+       "state": "done",
+       "detail": "tool_calls"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 11343.6,
+     "activity": {
+      "since_ms": 11343.6,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471416.18,
+    "decode_tps": 17.96,
+    "prefill_tps": 658.76,
+    "running": 1,
+    "waiting": 0,
+    "tokens": 96
+   },
+   "sampler": {
+    "ticks": 921,
+    "encodes": 770,
+    "tick_us_last": 423.6,
+    "tick_us_mean": 210.9,
+    "tick_us_max": 1747.9,
+    "tick_cpu_us_mean": 205.0,
+    "tick_cpu_us_max": 969.9
+   }
+  },
+  "continues": {
+   "contract_version": "1.1",
+   "seq": 773,
+   "generated_at": "2026-09-27T01:10:18.682Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Prefilling 2,685 tokens",
+    "since_ms": 94.5,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 2048,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.7,
+     "rss_gib": 2.9
+    },
+    "store": {
+     "entries": 8,
+     "bytes_gib": 7.25
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 1,
+    "decoding": 0,
+    "completed_1m": 2,
+    "served": 7,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": 16.38,
+    "prefill_tps": 658.76,
+    "prefilling": true,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 3039.4
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "phase": "prefill",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2685,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2685,
+     "tokens": 0,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 94.72,
+     "queue_ms": 0.19,
+     "prompt_ms": null,
+     "ttft_ms": null,
+     "decode_ms": null,
+     "prefill_tps": null,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 256,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "prefilling",
+      "label": "Prefilling 2,685 tokens",
+      "since_ms": 94.5,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2048,
+       "total": 2685,
+       "cached": 2048,
+       "pct": null,
+       "tps_now": null,
+       "tps_avg": null,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": null
+      },
+      "decode": null,
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 94.5,
+       "gone_ms": null
+      },
+      "continues": {
+       "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+       "gap_ms": 2001.8,
+       "tool_names": [
+        "write"
+       ],
+       "inferred": false
+      },
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling",
+       "detail": "2048 cached"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 2096.4,
+     "activity": {
+      "since_ms": 2096.4,
+      "state": "done",
+      "label": "tool call: write after 4.9 s",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 59,
+       "thinking_tokens": 14,
+       "content_tokens": 4,
+       "tool_tokens": 41,
+       "tps_now": null,
+       "tps_avg": 61.63,
+       "rounds": 9,
+       "tokens_per_round": 6.44,
+       "tokens_per_round_now": null,
+       "ms_per_round": 104.58,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 14
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "tool_calls",
+       "detail": null,
+       "state": "tool_call",
+       "tokens_sent": 59,
+       "silent_ms": 1.4,
+       "client_gone_ms": null,
+       "sentence": "tool call: write after 4.9 s"
+      }
+     },
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "done",
+     "finish_reason": "tool_calls",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 59,
+     "blocks": 9,
+     "tokens_per_block": 6.44,
+     "elapsed_ms": 4921.43,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 941.18,
+     "prefill_tps": 658.76,
+     "decode_tps": 61.63,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4518.5,
+       "state": "tool_call",
+       "detail": "write"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 4921.4,
+       "state": "done",
+       "detail": "tool_calls"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 13344.6,
+     "activity": {
+      "since_ms": 13344.6,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471418.683,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 137
+   },
+   "sampler": {
+    "ticks": 923,
+    "encodes": 772,
+    "tick_us_last": 179.6,
+    "tick_us_mean": 211.1,
+    "tick_us_max": 1747.9,
+    "tick_cpu_us_mean": 205.3,
+    "tick_cpu_us_max": 969.9
+   }
+  },
+  "client_gone": {
+   "contract_version": "1.1",
+   "seq": 792,
+   "generated_at": "2026-09-27T01:10:24.349Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Prefilling 2,048 of 60,014 (3 %)",
+    "since_ms": 3632.2,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 2048,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.7,
+     "rss_gib": 3.0
+    },
+    "store": {
+     "entries": 10,
+     "bytes_gib": 7.2
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 1,
+    "decoding": 0,
+    "completed_1m": 3,
+    "served": 8,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": null,
+    "prefill_tps": 756.96,
+    "prefilling": true,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 4919.8
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "phase": "prefill",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 60014,
+     "cached_tokens": 0,
+     "forwarded_tokens": 60014,
+     "tokens": 0,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 3632.26,
+     "queue_ms": 0.07,
+     "prompt_ms": null,
+     "ttft_ms": null,
+     "decode_ms": null,
+     "prefill_tps": null,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 64,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "prefilling",
+      "label": "Prefilling 2,048 of 60,014 (3 %)",
+      "since_ms": 3632.2,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2048,
+       "total": 60014,
+       "cached": 0,
+       "pct": 3.4,
+       "tps_now": 796.52,
+       "tps_avg": 959.34,
+       "eta_ms": 60423.1,
+       "progress": "chunked",
+       "at_ms": 2544.4
+      },
+      "decode": null,
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": false,
+       "silent_ms": 3632.2,
+       "gone_ms": 0.0
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 4644.1,
+     "activity": {
+      "since_ms": 4644.1,
+      "state": "done",
+      "label": "finished at the end of the answer after 1.1 s, 13 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2685,
+       "total": 2685,
+       "cached": 2048,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 756.96,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 841.7
+      },
+      "decode": {
+       "tokens": 13,
+       "thinking_tokens": 2,
+       "content_tokens": 11,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 43.78,
+       "rounds": 3,
+       "tokens_per_round": 4.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 91.36,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 2
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.1,
+       "gone_ms": null
+      },
+      "continues": {
+       "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+       "gap_ms": 2001.8,
+       "tool_names": [
+        "write"
+       ],
+       "inferred": false
+      },
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 13,
+       "silent_ms": 1.1,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2685,
+     "cached_tokens": 2048,
+     "forwarded_tokens": 637,
+     "tokens": 13,
+     "blocks": 3,
+     "tokens_per_block": 4.0,
+     "elapsed_ms": 1116.86,
+     "queue_ms": 0.19,
+     "prompt_ms": 841.52,
+     "ttft_ms": 841.72,
+     "decode_ms": 274.09,
+     "prefill_tps": 756.96,
+     "decode_tps": 43.78,
+     "decode_tps_now": null,
+     "cache_source": "prefix",
+     "max_tokens": 256,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling",
+       "detail": "2048 cached"
+      },
+      {
+       "t_ms": 841.7,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 933.8,
+       "state": "writing"
+      },
+      {
+       "t_ms": 1115.8,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 1116.9,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 7763.2,
+     "activity": {
+      "since_ms": 7763.2,
+      "state": "done",
+      "label": "tool call: write after 4.9 s",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 59,
+       "thinking_tokens": 14,
+       "content_tokens": 4,
+       "tool_tokens": 41,
+       "tps_now": null,
+       "tps_avg": 61.63,
+       "rounds": 9,
+       "tokens_per_round": 6.44,
+       "tokens_per_round_now": null,
+       "ms_per_round": 104.58,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 14
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "tool_calls",
+       "detail": null,
+       "state": "tool_call",
+       "tokens_sent": 59,
+       "silent_ms": 1.4,
+       "client_gone_ms": null,
+       "sentence": "tool call: write after 4.9 s"
+      }
+     },
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "done",
+     "finish_reason": "tool_calls",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 59,
+     "blocks": 9,
+     "tokens_per_block": 6.44,
+     "elapsed_ms": 4921.43,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 941.18,
+     "prefill_tps": 658.76,
+     "decode_tps": 61.63,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4518.5,
+       "state": "tool_call",
+       "detail": "write"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 4921.4,
+       "state": "done",
+       "detail": "tool_calls"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 19011.4,
+     "activity": {
+      "since_ms": 19011.4,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "ended_at": "2026-09-27T01:10:19Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1116.9,
+     "ttft_ms": 841.72,
+     "decode_tps": 43.78,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 1.1,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471424.099,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 150
+   },
+   "sampler": {
+    "ticks": 942,
+    "encodes": 791,
+    "tick_us_last": 206.1,
+    "tick_us_mean": 366.5,
+    "tick_us_max": 142980.9,
+    "tick_cpu_us_mean": 210.9,
+    "tick_cpu_us_max": 1834.6
+   }
+  },
+  "idle_with_recent": {
+   "contract_version": "1.1",
+   "seq": 797,
+   "generated_at": "2026-09-27T01:10:28.604Z",
+   "interval_s": 1.0,
+   "engine": {
+    "state": "idle",
+    "label": "Idle",
+    "since_ms": 1738.0,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 30,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 42.8,
+     "rss_gib": 3.0
+    },
+    "store": {
+     "entries": 12,
+     "bytes_gib": 7.79
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 0,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 0,
+    "completed_1m": 6,
+    "served": 11,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": null,
+    "prefill_tps": 180.7,
+    "prefilling": false,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 1827.2
+   },
+   "requests": [
+    {
+     "ended_ms_ago": 1738.0,
+     "activity": {
+      "since_ms": 1738.0,
+      "state": "done",
+      "label": "finished at a stop string after 0.2 s, 3 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 27,
+       "total": 27,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 180.7,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 149.5
+      },
+      "decode": {
+       "tokens": 3,
+       "thinking_tokens": 0,
+       "content_tokens": 3,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 22.56,
+       "rounds": 1,
+       "tokens_per_round": 2.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 88.64,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.3,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "stop_string",
+       "state": "writing",
+       "tokens_sent": 3,
+       "silent_ms": 0.3,
+       "client_gone_ms": null,
+       "sentence": "finished at a stop string after 0.2 s, 3 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-e48e394b59274692b8ffe02f",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 27,
+     "cached_tokens": 0,
+     "forwarded_tokens": 27,
+     "tokens": 3,
+     "blocks": 1,
+     "tokens_per_block": 2.0,
+     "elapsed_ms": 238.43,
+     "queue_ms": 0.09,
+     "prompt_ms": 149.42,
+     "ttft_ms": 149.51,
+     "decode_ms": 88.64,
+     "prefill_tps": 180.7,
+     "decode_tps": 22.56,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 200,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 149.5,
+       "state": "writing"
+      },
+      {
+       "t_ms": 238.2,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 238.4,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 3179.0,
+     "activity": {
+      "since_ms": 3179.0,
+      "state": "done",
+      "label": "stopped at the length limit (16 tokens)",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 20,
+       "total": 20,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 43.99,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 455.0
+      },
+      "decode": {
+       "tokens": 16,
+       "thinking_tokens": 0,
+       "content_tokens": 16,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 63.74,
+       "rounds": 2,
+       "tokens_per_round": 7.5,
+       "tokens_per_round_now": null,
+       "ms_per_round": 117.67,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.7,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "length",
+       "detail": null,
+       "state": "writing",
+       "tokens_sent": 16,
+       "silent_ms": 0.7,
+       "client_gone_ms": null,
+       "sentence": "stopped at the length limit (16 tokens)"
+      }
+     },
+     "request_id": "chatcmpl-93cb39b6633d40ed9c1c1c6d",
+     "phase": "done",
+     "finish_reason": "length",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 20,
+     "cached_tokens": 0,
+     "forwarded_tokens": 20,
+     "tokens": 16,
+     "blocks": 2,
+     "tokens_per_block": 7.5,
+     "elapsed_ms": 691.11,
+     "queue_ms": 0.4,
+     "prompt_ms": 454.64,
+     "ttft_ms": 455.05,
+     "decode_ms": 235.34,
+     "prefill_tps": 43.99,
+     "decode_tps": 63.74,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 16,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.4,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 455.0,
+       "state": "writing"
+      },
+      {
+       "t_ms": 690.4,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 691.1,
+       "state": "done",
+       "detail": "length"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 4037.3,
+     "activity": {
+      "since_ms": 4037.3,
+      "state": "done",
+      "label": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2048,
+       "total": 60014,
+       "cached": 0,
+       "pct": 3.4,
+       "tps_now": 796.52,
+       "tps_avg": 959.34,
+       "eta_ms": 60423.1,
+       "progress": "chunked",
+       "at_ms": 2544.4
+      },
+      "decode": null,
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": false,
+       "silent_ms": 3850.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "abandoned",
+       "detail": "left_during_prefill",
+       "state": "prefilling",
+       "tokens_sent": 0,
+       "silent_ms": 3850.2,
+       "client_gone_ms": 218.0,
+       "sentence": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "phase": "done",
+     "finish_reason": "abandoned",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 60014,
+     "cached_tokens": 0,
+     "forwarded_tokens": 60014,
+     "tokens": 0,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 3850.29,
+     "queue_ms": 0.07,
+     "prompt_ms": null,
+     "ttft_ms": null,
+     "decode_ms": null,
+     "prefill_tps": null,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 64,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3850.3,
+       "state": "done",
+       "detail": "abandoned"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 8899.5,
+     "activity": {
+      "since_ms": 8899.5,
+      "state": "done",
+      "label": "finished at the end of the answer after 1.1 s, 13 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2685,
+       "total": 2685,
+       "cached": 2048,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 756.96,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 841.7
+      },
+      "decode": {
+       "tokens": 13,
+       "thinking_tokens": 2,
+       "content_tokens": 11,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 43.78,
+       "rounds": 3,
+       "tokens_per_round": 4.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 91.36,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 2
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.1,
+       "gone_ms": null
+      },
+      "continues": {
+       "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+       "gap_ms": 2001.8,
+       "tool_names": [
+        "write"
+       ],
+       "inferred": false
+      },
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 13,
+       "silent_ms": 1.1,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2685,
+     "cached_tokens": 2048,
+     "forwarded_tokens": 637,
+     "tokens": 13,
+     "blocks": 3,
+     "tokens_per_block": 4.0,
+     "elapsed_ms": 1116.86,
+     "queue_ms": 0.19,
+     "prompt_ms": 841.52,
+     "ttft_ms": 841.72,
+     "decode_ms": 274.09,
+     "prefill_tps": 756.96,
+     "decode_tps": 43.78,
+     "decode_tps_now": null,
+     "cache_source": "prefix",
+     "max_tokens": 256,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling",
+       "detail": "2048 cached"
+      },
+      {
+       "t_ms": 841.7,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 933.8,
+       "state": "writing"
+      },
+      {
+       "t_ms": 1115.8,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 1116.9,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 12018.7,
+     "activity": {
+      "since_ms": 12018.7,
+      "state": "done",
+      "label": "tool call: write after 4.9 s",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 2621,
+       "total": 2621,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 658.76,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 3978.9
+      },
+      "decode": {
+       "tokens": 59,
+       "thinking_tokens": 14,
+       "content_tokens": 4,
+       "tool_tokens": 41,
+       "tps_now": null,
+       "tps_avg": 61.63,
+       "rounds": 9,
+       "tokens_per_round": 6.44,
+       "tokens_per_round_now": null,
+       "ms_per_round": 104.58,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 14
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 1.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "tool_calls",
+       "detail": null,
+       "state": "tool_call",
+       "tokens_sent": 59,
+       "silent_ms": 1.4,
+       "client_gone_ms": null,
+       "sentence": "tool call: write after 4.9 s"
+      }
+     },
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "phase": "done",
+     "finish_reason": "tool_calls",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 2621,
+     "cached_tokens": 0,
+     "forwarded_tokens": 2621,
+     "tokens": 59,
+     "blocks": 9,
+     "tokens_per_block": 6.44,
+     "elapsed_ms": 4921.43,
+     "queue_ms": 0.2,
+     "prompt_ms": 3978.67,
+     "ttft_ms": 3978.86,
+     "decode_ms": 941.18,
+     "prefill_tps": 658.76,
+     "decode_tps": 61.63,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 2048,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.2,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 3978.9,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 4424.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4518.5,
+       "state": "tool_call",
+       "detail": "write"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "writing"
+      },
+      {
+       "t_ms": 4920.0,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 4921.4,
+       "state": "done",
+       "detail": "tool_calls"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 23266.8,
+     "activity": {
+      "since_ms": 23266.8,
+      "state": "done",
+      "label": "finished at the end of the answer after 94 s, 2 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 65552,
+       "total": 65552,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 694.83,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 94342.2
+      },
+      "decode": {
+       "tokens": 2,
+       "thinking_tokens": 0,
+       "content_tokens": 2,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 8.79,
+       "rounds": 1,
+       "tokens_per_round": 1.0,
+       "tokens_per_round_now": null,
+       "ms_per_round": 113.75,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": null,
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 2,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "anon",
+      "kind": "other"
+     },
+     "endpoint": "chat",
+     "stream": false,
+     "thinking": false,
+     "temperature": 0.0,
+     "prompt_tokens": 65552,
+     "cached_tokens": 0,
+     "forwarded_tokens": 65552,
+     "tokens": 2,
+     "blocks": 1,
+     "tokens_per_block": 1.0,
+     "elapsed_ms": 94456.1,
+     "queue_ms": 0.11,
+     "prompt_ms": 94342.07,
+     "ttft_ms": 94342.18,
+     "decode_ms": 113.75,
+     "prefill_tps": 694.83,
+     "decode_tps": 8.79,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 4,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 94342.2,
+       "state": "writing"
+      },
+      {
+       "t_ms": 94455.9,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 94456.1,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-e48e394b59274692b8ffe02f",
+     "ended_at": "2026-09-27T01:10:26Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 3,
+     "elapsed_ms": 238.4,
+     "ttft_ms": 149.51,
+     "decode_tps": 22.56,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "stop_string",
+      "state": "writing",
+      "tokens_sent": 3,
+      "silent_ms": 0.3,
+      "client_gone_ms": null,
+      "sentence": "finished at a stop string after 0.2 s, 3 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-93cb39b6633d40ed9c1c1c6d",
+     "ended_at": "2026-09-27T01:10:25Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 16,
+     "elapsed_ms": 691.1,
+     "ttft_ms": 455.05,
+     "decode_tps": 63.74,
+     "tool_names": [],
+     "stop": {
+      "reason": "length",
+      "detail": null,
+      "state": "writing",
+      "tokens_sent": 16,
+      "silent_ms": 0.7,
+      "client_gone_ms": null,
+      "sentence": "stopped at the length limit (16 tokens)"
+     }
+    },
+    {
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "ended_at": "2026-09-27T01:10:24Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 3850.3,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "abandoned",
+      "detail": "left_during_prefill",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 3850.2,
+      "client_gone_ms": 218.0,
+      "sentence": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "ended_at": "2026-09-27T01:10:19Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1116.9,
+     "ttft_ms": 841.72,
+     "decode_tps": 43.78,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 1.1,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-2088f5b258994bd9b27c0460",
+     "ended_at": "2026-09-27T00:55:35Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 568.2,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "rejected",
+      "detail": "prompt_too_long",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 568.1,
+      "client_gone_ms": null,
+      "sentence": "rejected: the prompt is longer than the context window"
+     }
+    },
+    {
+     "request_id": "chatcmpl-9d756f8d69224807ac18033f",
+     "ended_at": "2026-09-27T00:55:34Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1089.3,
+     "ttft_ms": 794.42,
+     "decode_tps": 42.8,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 14.5,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-134cf0b9f68d4cdebf35f49b",
+     "ended_at": "2026-09-27T00:55:30Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4906.3,
+     "ttft_ms": 3417.99,
+     "decode_tps": 39.0,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.3,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471428.605,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 169
+   },
+   "sampler": {
+    "ticks": 947,
+    "encodes": 796,
+    "tick_us_last": 455.5,
+    "tick_us_mean": 366.8,
+    "tick_us_max": 142980.9,
+    "tick_cpu_us_mean": 211.9,
+    "tick_cpu_us_max": 1834.6
+   }
+  },
+  "opencode_prefilling": {
+   "contract_version": "1.1",
+   "seq": 871,
+   "generated_at": "2026-09-27T01:10:57.020Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Prefilling 12,288 of 29,200 (42 %)",
+    "since_ms": 15893.7,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 12288,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 40.6,
+     "rss_gib": 3.1
+    },
+    "store": {
+     "entries": 7,
+     "bytes_gib": 7.4
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 1,
+    "decoding": 0,
+    "completed_1m": 7,
+    "served": 12,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": null,
+    "prefill_tps": 756.42,
+    "prefilling": true,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 17408.7
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-36ee217c26b34486bafb4f08",
+     "phase": "prefill",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "k:140bedbf9c3f",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 29200,
+     "cached_tokens": 0,
+     "forwarded_tokens": 29200,
+     "tokens": 0,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 16634.08,
+     "queue_ms": 740.41,
+     "prompt_ms": null,
+     "ttft_ms": null,
+     "decode_ms": null,
+     "prefill_tps": null,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 8192,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "prefilling",
+      "label": "Prefilling 12,288 of 29,200 (42 %)",
+      "since_ms": 15893.7,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 12288,
+       "total": 29200,
+       "cached": 0,
+       "pct": 42.1,
+       "tps_now": 750.84,
+       "tps_avg": 792.57,
+       "eta_ms": 21338.1,
+       "progress": "chunked",
+       "at_ms": 16439.7
+      },
+      "decode": null,
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 15893.7,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 740.4,
+       "state": "prefilling"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 15894.3,
+     "activity": {
+      "since_ms": 15894.3,
+      "state": "done",
+      "label": "finished at the end of the answer after 2.3 s, 57 tokens sent",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 573,
+       "total": 573,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 756.42,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 757.6
+      },
+      "decode": {
+       "tokens": 57,
+       "thinking_tokens": 49,
+       "content_tokens": 8,
+       "tool_tokens": 0,
+       "tps_now": null,
+       "tps_avg": 36.99,
+       "rounds": 13,
+       "tokens_per_round": 4.31,
+       "tokens_per_round_now": null,
+       "ms_per_round": 116.44,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 49
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 0.4,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "stop",
+       "detail": "eos",
+       "state": "writing",
+       "tokens_sent": 57,
+       "silent_ms": 0.4,
+       "client_gone_ms": null,
+       "sentence": "finished at the end of the answer after 2.3 s, 57 tokens sent"
+      }
+     },
+     "request_id": "chatcmpl-1206086953cd492e8d134c23",
+     "phase": "done",
+     "finish_reason": "stop",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "k:140bedbf9c3f",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 573,
+     "cached_tokens": 0,
+     "forwarded_tokens": 573,
+     "tokens": 57,
+     "blocks": 13,
+     "tokens_per_block": 4.31,
+     "elapsed_ms": 2271.76,
+     "queue_ms": 0.12,
+     "prompt_ms": 757.51,
+     "ttft_ms": 757.63,
+     "decode_ms": 1513.77,
+     "prefill_tps": 756.42,
+     "decode_tps": 36.99,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 8192,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.1,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 757.6,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 2080.9,
+       "state": "writing"
+      },
+      {
+       "t_ms": 2271.4,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 2271.8,
+       "state": "done",
+       "detail": "stop"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-1206086953cd492e8d134c23",
+     "ended_at": "2026-09-27T01:10:41Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 57,
+     "elapsed_ms": 2271.8,
+     "ttft_ms": 757.63,
+     "decode_tps": 36.99,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 57,
+      "silent_ms": 0.4,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 2.3 s, 57 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-e48e394b59274692b8ffe02f",
+     "ended_at": "2026-09-27T01:10:26Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 3,
+     "elapsed_ms": 238.4,
+     "ttft_ms": 149.51,
+     "decode_tps": 22.56,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "stop_string",
+      "state": "writing",
+      "tokens_sent": 3,
+      "silent_ms": 0.3,
+      "client_gone_ms": null,
+      "sentence": "finished at a stop string after 0.2 s, 3 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-93cb39b6633d40ed9c1c1c6d",
+     "ended_at": "2026-09-27T01:10:25Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 16,
+     "elapsed_ms": 691.1,
+     "ttft_ms": 455.05,
+     "decode_tps": 63.74,
+     "tool_names": [],
+     "stop": {
+      "reason": "length",
+      "detail": null,
+      "state": "writing",
+      "tokens_sent": 16,
+      "silent_ms": 0.7,
+      "client_gone_ms": null,
+      "sentence": "stopped at the length limit (16 tokens)"
+     }
+    },
+    {
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "ended_at": "2026-09-27T01:10:24Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 3850.3,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "abandoned",
+      "detail": "left_during_prefill",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 3850.2,
+      "client_gone_ms": 218.0,
+      "sentence": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "ended_at": "2026-09-27T01:10:19Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1116.9,
+     "ttft_ms": 841.72,
+     "decode_tps": 43.78,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 1.1,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471456.267,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 226
+   },
+   "sampler": {
+    "ticks": 1021,
+    "encodes": 870,
+    "tick_us_last": 848.5,
+    "tick_us_mean": 382.9,
+    "tick_us_max": 142980.9,
+    "tick_cpu_us_mean": 235.0,
+    "tick_cpu_us_max": 1834.6
+   }
+  },
+  "opencode_thinking": {
+   "contract_version": "1.1",
+   "seq": 965,
+   "generated_at": "2026-09-27T01:11:20.632Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Thinking",
+    "since_ms": 218.1,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 29216,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 39.7,
+     "rss_gib": 3.1
+    },
+    "store": {
+     "entries": 6,
+     "bytes_gib": 7.26
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 1,
+    "completed_1m": 4,
+    "served": 12,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": null,
+    "prefill_tps": 756.42,
+    "prefilling": false,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 41021.5
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-36ee217c26b34486bafb4f08",
+     "phase": "decode",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "k:140bedbf9c3f",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 29200,
+     "cached_tokens": 0,
+     "forwarded_tokens": 29200,
+     "tokens": 1,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 40246.88,
+     "queue_ms": 740.41,
+     "prompt_ms": 39288.34,
+     "ttft_ms": 40028.75,
+     "decode_ms": 218.13,
+     "prefill_tps": 743.22,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 8192,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "thinking",
+      "label": "Thinking",
+      "since_ms": 218.1,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 29200,
+       "total": 29200,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 743.22,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 40028.8
+      },
+      "decode": {
+       "tokens": 1,
+       "thinking_tokens": 0,
+       "content_tokens": 1,
+       "tool_tokens": 0,
+       "tps_now": 1.0,
+       "tps_avg": null,
+       "rounds": null,
+       "tokens_per_round": null,
+       "tokens_per_round_now": null,
+       "ms_per_round": null,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 218.1,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 740.4,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 40028.8,
+       "state": "thinking"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-1206086953cd492e8d134c23",
+     "ended_at": "2026-09-27T01:10:41Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 57,
+     "elapsed_ms": 2271.8,
+     "ttft_ms": 757.63,
+     "decode_tps": 36.99,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 57,
+      "silent_ms": 0.4,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 2.3 s, 57 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-e48e394b59274692b8ffe02f",
+     "ended_at": "2026-09-27T01:10:26Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 3,
+     "elapsed_ms": 238.4,
+     "ttft_ms": 149.51,
+     "decode_tps": 22.56,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "stop_string",
+      "state": "writing",
+      "tokens_sent": 3,
+      "silent_ms": 0.3,
+      "client_gone_ms": null,
+      "sentence": "finished at a stop string after 0.2 s, 3 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-93cb39b6633d40ed9c1c1c6d",
+     "ended_at": "2026-09-27T01:10:25Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 16,
+     "elapsed_ms": 691.1,
+     "ttft_ms": 455.05,
+     "decode_tps": 63.74,
+     "tool_names": [],
+     "stop": {
+      "reason": "length",
+      "detail": null,
+      "state": "writing",
+      "tokens_sent": 16,
+      "silent_ms": 0.7,
+      "client_gone_ms": null,
+      "sentence": "stopped at the length limit (16 tokens)"
+     }
+    },
+    {
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "ended_at": "2026-09-27T01:10:24Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 3850.3,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "abandoned",
+      "detail": "left_during_prefill",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 3850.2,
+      "client_gone_ms": 218.0,
+      "sentence": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "ended_at": "2026-09-27T01:10:19Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1116.9,
+     "ttft_ms": 841.72,
+     "decode_tps": 43.78,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 1.1,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471480.382,
+    "decode_tps": null,
+    "prefill_tps": null,
+    "running": 0,
+    "waiting": 0,
+    "tokens": 226
+   },
+   "sampler": {
+    "ticks": 1115,
+    "encodes": 964,
+    "tick_us_last": 412.6,
+    "tick_us_mean": 397.5,
+    "tick_us_max": 142980.9,
+    "tick_cpu_us_mean": 256.9,
+    "tick_cpu_us_max": 1834.6
+   }
+  },
+  "opencode_tool_call": {
+   "contract_version": "1.1",
+   "seq": 970,
+   "generated_at": "2026-09-27T01:11:21.890Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Calling tool write",
+    "since_ms": 34.0,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 29280,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 39.7,
+     "rss_gib": 3.1
+    },
+    "store": {
+     "entries": 6,
+     "bytes_gib": 7.26
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 0,
+    "decoding": 1,
+    "completed_1m": 4,
+    "served": 12,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": 15.94,
+    "prefill_tps": 743.22,
+    "prefilling": false,
+    "tokens_per_block": 7.0,
+    "last_prefill_ms_ago": 1475.6
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-36ee217c26b34486bafb4f08",
+     "phase": "decode",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "k:140bedbf9c3f",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 29200,
+     "cached_tokens": 0,
+     "forwarded_tokens": 29200,
+     "tokens": 57,
+     "blocks": 8,
+     "tokens_per_block": 7.0,
+     "elapsed_ms": 41504.34,
+     "queue_ms": 740.41,
+     "prompt_ms": 39288.34,
+     "ttft_ms": 40028.75,
+     "decode_ms": 1475.59,
+     "prefill_tps": 743.22,
+     "decode_tps": 37.95,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 8192,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "tool_call",
+      "label": "Calling tool write",
+      "since_ms": 34.0,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 29200,
+       "total": 29200,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 743.22,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 40028.8
+      },
+      "decode": {
+       "tokens": 57,
+       "thinking_tokens": 42,
+       "content_tokens": 15,
+       "tool_tokens": 0,
+       "tps_now": 44.73,
+       "tps_avg": 37.95,
+       "rounds": 8,
+       "tokens_per_round": 7.0,
+       "tokens_per_round_now": 6.43,
+       "ms_per_round": 180.19,
+       "ms_per_round_now": 143.7,
+       "accept_mean": 6.0
+      },
+      "tool": {
+       "index": 0,
+       "name": "write",
+       "arg_bytes": 0,
+       "calls_done": 0
+      },
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 42
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 33.9,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 740.4,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 40028.8,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 41349.0,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 41349.1,
+       "state": "writing"
+      },
+      {
+       "t_ms": 41470.3,
+       "state": "tool_call",
+       "detail": "write"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-1206086953cd492e8d134c23",
+     "ended_at": "2026-09-27T01:10:41Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 57,
+     "elapsed_ms": 2271.8,
+     "ttft_ms": 757.63,
+     "decode_tps": 36.99,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 57,
+      "silent_ms": 0.4,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 2.3 s, 57 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-e48e394b59274692b8ffe02f",
+     "ended_at": "2026-09-27T01:10:26Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 3,
+     "elapsed_ms": 238.4,
+     "ttft_ms": 149.51,
+     "decode_tps": 22.56,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "stop_string",
+      "state": "writing",
+      "tokens_sent": 3,
+      "silent_ms": 0.3,
+      "client_gone_ms": null,
+      "sentence": "finished at a stop string after 0.2 s, 3 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-93cb39b6633d40ed9c1c1c6d",
+     "ended_at": "2026-09-27T01:10:25Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 16,
+     "elapsed_ms": 691.1,
+     "ttft_ms": 455.05,
+     "decode_tps": 63.74,
+     "tool_names": [],
+     "stop": {
+      "reason": "length",
+      "detail": null,
+      "state": "writing",
+      "tokens_sent": 16,
+      "silent_ms": 0.7,
+      "client_gone_ms": null,
+      "sentence": "stopped at the length limit (16 tokens)"
+     }
+    },
+    {
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "ended_at": "2026-09-27T01:10:24Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 3850.3,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "abandoned",
+      "detail": "left_during_prefill",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 3850.2,
+      "client_gone_ms": 218.0,
+      "sentence": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "ended_at": "2026-09-27T01:10:19Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1116.9,
+     "ttft_ms": 841.72,
+     "decode_tps": 43.78,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 1.1,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471481.387,
+    "decode_tps": 31.82,
+    "prefill_tps": 743.22,
+    "running": 1,
+    "waiting": 0,
+    "tokens": 258
+   },
+   "sampler": {
+    "ticks": 1120,
+    "encodes": 969,
+    "tick_us_last": 759.4,
+    "tick_us_mean": 399.0,
+    "tick_us_max": 142980.9,
+    "tick_cpu_us_mean": 258.6,
+    "tick_cpu_us_max": 1834.6
+   }
+  },
+  "opencode_next_turn": {
+   "contract_version": "1.1",
+   "seq": 977,
+   "generated_at": "2026-09-27T01:11:23.650Z",
+   "interval_s": 0.25,
+   "engine": {
+    "state": "busy",
+    "label": "Prefilling 29,363 tokens",
+    "since_ms": 136.3,
+    "model": "qwen38-spark-engine",
+    "version": "0.1.0-rc7",
+    "draining": false,
+    "kv": {
+     "length": 28672,
+     "max_len": 262144
+    },
+    "memory": {
+     "mem_available_gib": 41.9,
+     "rss_gib": 3.1
+    },
+    "store": {
+     "entries": 6,
+     "bytes_gib": 7.26
+    },
+    "waiting_for_client": null
+   },
+   "counts": {
+    "in_flight": 1,
+    "queued": 0,
+    "prefilling": 1,
+    "decoding": 0,
+    "completed_1m": 5,
+    "served": 13,
+    "errors": 0,
+    "refused": 0
+   },
+   "now": {
+    "decode_tps": 52.68,
+    "prefill_tps": 743.22,
+    "prefilling": true,
+    "tokens_per_block": null,
+    "last_prefill_ms_ago": 3235.7
+   },
+   "requests": [
+    {
+     "request_id": "chatcmpl-6d63383bcc074afe9355e496",
+     "phase": "prefill",
+     "finish_reason": null,
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "k:140bedbf9c3f",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 29363,
+     "cached_tokens": 0,
+     "forwarded_tokens": 29363,
+     "tokens": 0,
+     "blocks": null,
+     "tokens_per_block": null,
+     "elapsed_ms": 136.87,
+     "queue_ms": 0.59,
+     "prompt_ms": null,
+     "ttft_ms": null,
+     "decode_ms": null,
+     "prefill_tps": null,
+     "decode_tps": null,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 8192,
+     "ended_ms_ago": null,
+     "activity": {
+      "state": "prefilling",
+      "label": "Prefilling 29,363 tokens",
+      "since_ms": 136.3,
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 28672,
+       "total": 29363,
+       "cached": 28672,
+       "pct": null,
+       "tps_now": null,
+       "tps_avg": null,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": null
+      },
+      "decode": null,
+      "tool": null,
+      "reasoning": {
+       "closed_by": null,
+       "tokens": 0
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 136.3,
+       "gone_ms": null
+      },
+      "continues": {
+       "request_id": "chatcmpl-36ee217c26b34486bafb4f08",
+       "gap_ms": 45.2,
+       "tool_names": [
+        "write"
+       ],
+       "inferred": false
+      },
+      "step": null,
+      "stop": null
+     },
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 0.6,
+       "state": "prefilling",
+       "detail": "28672 cached"
+      }
+     ]
+    },
+    {
+     "ended_ms_ago": 181.9,
+     "activity": {
+      "since_ms": 181.9,
+      "state": "done",
+      "label": "tool call: write after 43.1 s",
+      "constrained": null,
+      "queue": null,
+      "prefill": {
+       "done": 29200,
+       "total": 29200,
+       "cached": 0,
+       "pct": 100.0,
+       "tps_now": null,
+       "tps_avg": 743.22,
+       "eta_ms": null,
+       "progress": "chunked",
+       "at_ms": 40028.8
+      },
+      "decode": {
+       "tokens": 139,
+       "thinking_tokens": 42,
+       "content_tokens": 16,
+       "tool_tokens": 81,
+       "tps_now": null,
+       "tps_avg": 45.2,
+       "rounds": 20,
+       "tokens_per_round": 6.9,
+       "tokens_per_round_now": null,
+       "ms_per_round": 152.67,
+       "ms_per_round_now": null,
+       "accept_mean": null
+      },
+      "tool": null,
+      "reasoning": {
+       "closed_by": "model",
+       "tokens": 42
+      },
+      "client": {
+       "connected": true,
+       "silent_ms": 0.2,
+       "gone_ms": null
+      },
+      "continues": null,
+      "step": null,
+      "stop": {
+       "reason": "tool_calls",
+       "detail": null,
+       "state": "tool_call",
+       "tokens_sent": 139,
+       "silent_ms": 0.2,
+       "client_gone_ms": null,
+       "sentence": "tool call: write after 43.1 s"
+      }
+     },
+     "request_id": "chatcmpl-36ee217c26b34486bafb4f08",
+     "phase": "done",
+     "finish_reason": "tool_calls",
+     "status": 200,
+     "model": "qwen38-spark-engine",
+     "client": {
+      "id": "k:140bedbf9c3f",
+      "kind": "opencode"
+     },
+     "endpoint": "chat",
+     "stream": true,
+     "thinking": true,
+     "temperature": 0.0,
+     "prompt_tokens": 29200,
+     "cached_tokens": 0,
+     "forwarded_tokens": 29200,
+     "tokens": 139,
+     "blocks": 20,
+     "tokens_per_block": 6.9,
+     "elapsed_ms": 43082.28,
+     "queue_ms": 740.41,
+     "prompt_ms": 39288.34,
+     "ttft_ms": 40028.75,
+     "decode_ms": 3053.34,
+     "prefill_tps": 743.22,
+     "decode_tps": 45.2,
+     "decode_tps_now": null,
+     "cache_source": "none",
+     "max_tokens": 8192,
+     "timeline": [
+      {
+       "t_ms": 0.0,
+       "state": "queued"
+      },
+      {
+       "t_ms": 740.4,
+       "state": "prefilling"
+      },
+      {
+       "t_ms": 40028.8,
+       "state": "thinking"
+      },
+      {
+       "t_ms": 41349.0,
+       "state": "tool_call"
+      },
+      {
+       "t_ms": 41349.1,
+       "state": "writing"
+      },
+      {
+       "t_ms": 41470.3,
+       "state": "tool_call",
+       "detail": "write"
+      },
+      {
+       "t_ms": 42994.6,
+       "state": "writing"
+      },
+      {
+       "t_ms": 43082.1,
+       "state": "finishing"
+      },
+      {
+       "t_ms": 43082.3,
+       "state": "done",
+       "detail": "tool_calls"
+      }
+     ]
+    }
+   ],
+   "recent": [
+    {
+     "request_id": "chatcmpl-36ee217c26b34486bafb4f08",
+     "ended_at": "2026-09-27T01:11:23Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 139,
+     "elapsed_ms": 43082.3,
+     "ttft_ms": 40028.75,
+     "decode_tps": 45.2,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 139,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 43.1 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-1206086953cd492e8d134c23",
+     "ended_at": "2026-09-27T01:10:41Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 57,
+     "elapsed_ms": 2271.8,
+     "ttft_ms": 757.63,
+     "decode_tps": 36.99,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 57,
+      "silent_ms": 0.4,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 2.3 s, 57 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-e48e394b59274692b8ffe02f",
+     "ended_at": "2026-09-27T01:10:26Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 3,
+     "elapsed_ms": 238.4,
+     "ttft_ms": 149.51,
+     "decode_tps": 22.56,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "stop_string",
+      "state": "writing",
+      "tokens_sent": 3,
+      "silent_ms": 0.3,
+      "client_gone_ms": null,
+      "sentence": "finished at a stop string after 0.2 s, 3 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-93cb39b6633d40ed9c1c1c6d",
+     "ended_at": "2026-09-27T01:10:25Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 16,
+     "elapsed_ms": 691.1,
+     "ttft_ms": 455.05,
+     "decode_tps": 63.74,
+     "tool_names": [],
+     "stop": {
+      "reason": "length",
+      "detail": null,
+      "state": "writing",
+      "tokens_sent": 16,
+      "silent_ms": 0.7,
+      "client_gone_ms": null,
+      "sentence": "stopped at the length limit (16 tokens)"
+     }
+    },
+    {
+     "request_id": "chatcmpl-d9220271b5524d5daf0798f3",
+     "ended_at": "2026-09-27T01:10:24Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling"
+     ],
+     "tokens": 0,
+     "elapsed_ms": 3850.3,
+     "ttft_ms": null,
+     "decode_tps": null,
+     "tool_names": [],
+     "stop": {
+      "reason": "abandoned",
+      "detail": "left_during_prefill",
+      "state": "prefilling",
+      "tokens_sent": 0,
+      "silent_ms": 3850.2,
+      "client_gone_ms": 218.0,
+      "sentence": "abandoned by the client after 3.9 s of silent prefill, 0 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-47456afe310e47708fd34e11",
+     "ended_at": "2026-09-27T01:10:19Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 13,
+     "elapsed_ms": 1116.9,
+     "ttft_ms": 841.72,
+     "decode_tps": 43.78,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 13,
+      "silent_ms": 1.1,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 1.1 s, 13 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-96d6fc52dee74c52abab732a",
+     "ended_at": "2026-09-27T01:10:16Z",
+     "client_kind": "opencode",
+     "path": [
+      "queued",
+      "prefilling",
+      "thinking",
+      "tool_call",
+      "writing",
+      "tool_call",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 59,
+     "elapsed_ms": 4921.4,
+     "ttft_ms": 3978.86,
+     "decode_tps": 61.63,
+     "tool_names": [
+      "write"
+     ],
+     "stop": {
+      "reason": "tool_calls",
+      "detail": null,
+      "state": "tool_call",
+      "tokens_sent": 59,
+      "silent_ms": 1.4,
+      "client_gone_ms": null,
+      "sentence": "tool call: write after 4.9 s"
+     }
+    },
+    {
+     "request_id": "chatcmpl-bd9cda00a87347ee8181d069",
+     "ended_at": "2026-09-27T01:10:05Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 94456.1,
+     "ttft_ms": 94342.18,
+     "decode_tps": 8.79,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 94 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-cbc9104cb2ed4f71a5c0abb5",
+     "ended_at": "2026-09-27T01:08:30Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 44334.8,
+     "ttft_ms": 44228.09,
+     "decode_tps": 9.39,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 0.2,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 44.3 s, 2 tokens sent"
+     }
+    },
+    {
+     "request_id": "chatcmpl-3d948fd61e42462ca0f18812",
+     "ended_at": "2026-09-27T01:07:46Z",
+     "client_kind": "other",
+     "path": [
+      "queued",
+      "prefilling",
+      "writing",
+      "finishing"
+     ],
+     "tokens": 2,
+     "elapsed_ms": 11010.0,
+     "ttft_ms": 10725.81,
+     "decode_tps": 4.02,
+     "tool_names": [],
+     "stop": {
+      "reason": "stop",
+      "detail": "eos",
+      "state": "writing",
+      "tokens_sent": 2,
+      "silent_ms": 35.7,
+      "client_gone_ms": null,
+      "sentence": "finished at the end of the answer after 11.0 s, 2 tokens sent"
+     }
+    }
+   ],
+   "sample": {
+    "t": 1790471483.399,
+    "decode_tps": 73.57,
+    "prefill_tps": null,
+    "running": 1,
+    "waiting": 0,
+    "tokens": 364
+   },
+   "sampler": {
+    "ticks": 1127,
+    "encodes": 976,
+    "tick_us_last": 779.5,
+    "tick_us_mean": 400.3,
+    "tick_us_max": 142980.9,
+    "tick_cpu_us_mean": 260.4,
+    "tick_cpu_us_max": 1834.6
+   }
+  }
+ }
+}

@@ -1,0 +1,75 @@
+% The cover, drawn with TikZ on a full-bleed ink page.
+% The hero is the verify-cost staircase from data/verify-cost.csv, the measured table StairCut
+% prices its cuts on: the one chart the whole engine is built around.
+%
+% Logo hook: define \coverlogo before this file is read and it is placed in the top-right
+% corner; the title block does not move. tandemllm-manual.tex sets it to the mark (\tandemmark,
+% preamble.tex); without a definition the corner stays empty.
+\providecommand{\coverlogo}{}
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[ink] (current page.south west) rectangle (current page.north east);
+  % a faint instrument grid behind the chart
+  \begin{scope}
+    \clip ([yshift=-11.2cm]current page.north west) rectangle ([yshift=7.2cm]current page.south east);
+    \foreach \y in {0,1,...,11} \draw[ink!94!white, line width=.3pt]
+      ([yshift=-11.2cm-\y cm]current page.north west) -- ([yshift=-11.2cm-\y cm]current page.north east);
+  \end{scope}
+  % the staircase: tree verify plus commit, ms, by rows, at five context lengths (measured)
+  \pgfplotstableread[col sep=comma, comment chars={\#}]{data/verify-cost.csv}\covercost
+  \begin{axis}[at={($(current page.west)+(2.4cm,-0.4cm)$)}, anchor=west,
+      width=16.8cm, height=10.4cm, axis lines=none, clip=false,
+      xmin=0, xmax=34, ymin=68, ymax=116,
+      every axis plot/.append style={line cap=round, line join=round}]
+    % glow, then line, for each context
+    \addplot[color=sky!45!ink, line width=4pt, opacity=.22] table[x=rows, y=tree1024] {\covercost};
+    \addplot[color=sky!45!ink, line width=1.1pt] table[x=rows, y=tree1024] {\covercost};
+    \addplot[color=sky!60!ink, line width=4pt, opacity=.22] table[x=rows, y=tree4096] {\covercost};
+    \addplot[color=sky!60!ink, line width=1.1pt] table[x=rows, y=tree4096] {\covercost};
+    \addplot[color=sky!78!ink, line width=4pt, opacity=.22] table[x=rows, y=tree8192] {\covercost};
+    \addplot[color=sky!78!ink, line width=1.1pt] table[x=rows, y=tree8192] {\covercost};
+    \addplot[color=sky, line width=4.5pt, opacity=.25] table[x=rows, y=tree16384] {\covercost};
+    \addplot[color=sky, line width=1.2pt] table[x=rows, y=tree16384] {\covercost};
+    \addplot[color=signal, line width=6pt, opacity=.28] table[x=rows, y=tree32768] {\covercost};
+    \addplot[color=signal, line width=1.5pt, mark=*, mark size=1.5pt] table[x=rows, y=tree32768] {\covercost};
+    % the step
+    \draw[sky!50!ink, dashed, line width=.5pt] (axis cs:16.5,70) -- (axis cs:16.5,114);
+    \node[font=\sffamily\scriptsize, text=sky!70!ink, anchor=south west, align=left] at (axis cs:16.9,108)
+      {17 rows need a second\\tensor-core tile};
+    % context labels at the right end of each line
+    \node[font=\sffamily\scriptsize, text=sky!45!ink, anchor=west] at (axis cs:32.6,87.76) {1k context};
+    \node[font=\sffamily\scriptsize, text=sky!78!ink, anchor=west] at (axis cs:32.6,92.05) {8k};
+    \node[font=\sffamily\scriptsize, text=sky, anchor=west] at (axis cs:32.6,99.60) {16k};
+    \node[font=\sffamily\scriptsize, text=signal, anchor=west] at (axis cs:32.6,111.56) {32k};
+    % a bare scale
+    \node[font=\sffamily\scriptsize, text=slate, anchor=north] at (axis cs:8,69.5) {8};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=north] at (axis cs:16,69.5) {16};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=north] at (axis cs:24,69.5) {24};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=north] at (axis cs:32,69.5) {32};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=east] at (axis cs:-0.6,75) {75};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=east] at (axis cs:-0.6,90) {90};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=east] at (axis cs:-0.6,105) {105};
+    \node[font=\sffamily\scriptsize, text=slate, anchor=north west] at (axis cs:0,66.2)
+      {rows in the verified tree \quad $\cdot$ \quad verify + commit, ms, published NVFP4 weights (measured)};
+  \end{axis}
+  % the title block
+  \node[anchor=north west, text width=15cm, align=left, text=white]
+    at ([xshift=2.4cm,yshift=-2.5cm]current page.north west)
+    {{\sffamily\fontsize{46}{50}\selectfont\bfseries TandemLLM}\\[5mm]
+     {\sffamily\fontsize{17}{20}\selectfont\color{sky} The manual}\\[9mm]
+     {\fontsize{12.5}{16}\selectfont\color{white!85!ink} An environment for the agents you run on your own machine:\\
+      several models working on one request, caches that survive a restart,\\
+      memory notes, parallel requests, and one dashboard for this engine,\\
+      other engines and cloud APIs}};
+  % the logo hook, top right: the mark
+  \node[anchor=north east] at ([xshift=-2.4cm,yshift=-2.5cm]current page.north east) {\coverlogo};
+  % the foot: version, date, where the code is
+  \draw[signal, line width=1.2pt] ([xshift=2.4cm,yshift=4.2cm]current page.south west) -- ++(3cm,0);
+  \node[anchor=north west, text width=15cm, align=left, text=white]
+    at ([xshift=2.4cm,yshift=3.7cm]current page.south west)
+    {{\sffamily\large Version \version}\quad{\sffamily\color{sky}\manualdate}\\[3mm]
+     {\small\color{white!75!ink} The text of this manual is CC BY 4.0; the code it describes is AGPL-3.0-only or a commercial license.}\\[1.5mm]
+     {\ttfamily\small\color{sky} github.com/0xBakeer/TandemLLM}};
+\end{tikzpicture}
+\end{titlepage}

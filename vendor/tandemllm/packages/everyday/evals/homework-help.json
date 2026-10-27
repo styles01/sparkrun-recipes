@@ -1,0 +1,19 @@
+{
+  "package": "homework-help",
+  "rubric": [
+    "The task is restated in one line; a given attempt is checked first and the first mistake is named and explained, not all at once.",
+    "Numbered steps with this exercise's numbers and a reason per step; intermediate results shown; the answer marked with its unit.",
+    "A check by a second way (substitution, size estimate, units) in one line; the reusable rule in one sentence; a similar practice item when learning.",
+    "Essays get a structure, a thesis sentence and the two strongest points, not a finished essay by default.",
+    "Level-fitting language; no invented facts or formulas; uncertainty named with where to check."
+  ],
+  "prompts": [
+    {"id": "homework-help-1", "lang": "en", "text": "Solve 3x + 7 = 2x - 5. I got x = 12 but my teacher marked it wrong."},
+    {"id": "homework-help-2", "lang": "de", "text": "Ein Rechteck hat einen Umfang von 36 cm und ist doppelt so lang wie breit. Wie lang sind die Seiten? Bitte Schritt für Schritt, ich bin in der 7. Klasse."},
+    {"id": "homework-help-3", "lang": "ar", "text": "ساعدني في واجب الفيزياء: سيارة تتسارع من السكون بمعدل 2 م/ث² لمدة 10 ثوانٍ. ما سرعتها النهائية والمسافة المقطوعة؟"},
+    {"id": "homework-help-4", "lang": "en", "text": "I have to write a 500-word essay on 'Should school uniforms be compulsory?' Help me plan it, I'm 15."},
+    {"id": "homework-help-5", "lang": "en", "text": "Why did the Roman Empire fall? I need 3 main reasons for a history test, explained simply."},
+    {"id": "homework-help-6", "lang": "de", "text": "Chemie: Wie gleiche ich die Gleichung Fe + O2 -> Fe2O3 aus? Ich verstehe nicht, wie man die Zahlen findet."},
+    {"id": "homework-help-7", "lang": "en", "text": "My son (9) has this: 'A baker makes 48 muffins and puts them equally into 6 boxes. 2 boxes are sold. How many muffins are left?' He said 40. Help me explain it to him."}
+  ]
+}

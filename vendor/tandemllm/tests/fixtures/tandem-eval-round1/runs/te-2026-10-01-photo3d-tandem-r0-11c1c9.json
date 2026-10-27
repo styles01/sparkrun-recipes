@@ -1,0 +1,95 @@
+{
+ "suite": "photo3d",
+ "arm": "tandem",
+ "rep": 0,
+ "tag": "te-2026-10-01-photo3d-tandem-r0-11c1c9",
+ "started_at": "2026-10-01T15:08:02Z",
+ "error": null,
+ "store_clear": {
+  "at": "2026-10-01T15:08:02Z",
+  "status": 200,
+  "error": null
+ },
+ "dir": "{run}/te-2026-10-01-photo3d-tandem-r0-11c1c9",
+ "session_id": "ses_f07fde24dffe0kJltOayJObuZQ",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_minutes": 41.91,
+ "gates": {
+  "total": 5,
+  "passed": 0,
+  "by_gate": [
+   {
+    "id": "sky",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "far",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "mid",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "fore",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "full",
+    "passed": false,
+    "minutes": null
+   }
+  ]
+ },
+ "passed": false,
+ "minutes_to_pass": null,
+ "final_check": null,
+ "tokens": {
+  "input": 0,
+  "output": 0,
+  "reasoning": 0,
+  "cache_read": 0
+ },
+ "cache_hit": null,
+ "gen_tps": null,
+ "turns": 0,
+ "tool_calls": 0,
+ "tool_errors": 0,
+ "empty_stops": 0,
+ "last_finish": null,
+ "continuations": {
+  "needed": 1,
+  "sent": 0,
+  "driver": "watch"
+ },
+ "engine": {
+  "requests": 192,
+  "finish": {
+   "stop": 1,
+   "tool_calls": 191
+  },
+  "decode_tps_median": 61.8,
+  "prefill_tps_median": 522.31,
+  "completion_tokens": 91978,
+  "reasoning_tokens": 47416,
+  "prompt_tokens": 21966908,
+  "cached_tokens": 21703680
+ },
+ "conductor": {
+  "acts": 0,
+  "by_task": {},
+  "gave_ups": 0,
+  "shadow": 0
+ },
+ "pristine": {
+  "ok": true,
+  "changed": [],
+  "restored": []
+ },
+ "ended_at": "2026-10-01T15:49:57Z"
+}

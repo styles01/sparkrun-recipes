@@ -1,0 +1,18 @@
+{
+  "package": "formal-letter",
+  "rubric": [
+    "Formal layout of the user's country and language: sender, receiver, date, subject with the reference, greeting, closing, attachments.",
+    "Facts, the single demand with a deadline, and the consequence each in their own paragraph; written confirmation requested.",
+    "Every fact the user did not give is a bracketed placeholder; no invented law, paragraph, fee or right.",
+    "After the letter: 2 to 4 practical lines (proof of delivery, keep a copy, what to do after the deadline).",
+    "150 to 300 words, plain, no emotion or threats beyond what the user can really do."
+  ],
+  "prompts": [
+    {"id": "formal-letter-1", "lang": "de", "text": "Kündigung meines Handyvertrags bei Telko GmbH, Kundennummer 5521-88, zum Ende der Mindestlaufzeit am 30.11."},
+    {"id": "formal-letter-2", "lang": "en", "text": "A letter to my insurance company: they refused to pay for my water damage claim (claim no. WD-2024-771) saying it was reported late, but I reported it the next day by phone. I want them to review it."},
+    {"id": "formal-letter-3", "lang": "ar", "text": "أريد رسالة رسمية إلى شركة الكهرباء أعترض فيها على فاتورة شهر مارس لأن المبلغ ضعف المعتاد، ورقم العميل 102233."},
+    {"id": "formal-letter-4", "lang": "de", "text": "Widerspruch gegen einen Bußgeldbescheid: Aktenzeichen 77/2026, Parken im Halteverbot am 3. März. Das Schild war von einem Baum verdeckt, ich habe Fotos."},
+    {"id": "formal-letter-5", "lang": "en", "text": "Write to my landlord giving notice on my flat at Rosenweg 4, Berlin, moving out end of September. 3 months notice period in the contract."},
+    {"id": "formal-letter-6", "lang": "en", "text": "I bought a washing machine 5 months ago, it broke, the shop says the warranty is only 3 months. Letter demanding repair or refund, order number 44-A-901."}
+  ]
+}

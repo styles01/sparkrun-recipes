@@ -1,0 +1,18 @@
+{
+  "package": "fitness-sleep",
+  "rubric": [
+    "Frame and assumptions stated; the safety screen applied (doctor's go-ahead for chest pain, operations, pregnancy, uncontrolled conditions) before a plan.",
+    "Four weeks laid out by day with exact sets x reps or minutes and an effort cue; rest days; week 1 easy, about 10 % more each week, week 4 like week 3.",
+    "Weight goals use a moderate deficit, 0.25 to 0.5 kg a week, and say what to measure; no crash diet, no result promised by a date.",
+    "Sleep advice as a routine with clock times (fixed wake time, caffeine cut-off, screens off, room temperature, the 20-minute rule) and the signs needing a doctor.",
+    "Stop signs and the one habit to start this week; a beginner never gets 6 days a week."
+  ],
+  "prompts": [
+    {"id": "fitness-sleep-1", "lang": "en", "text": "I'm 35, overweight, haven't done sport since school. I can do 3 x 30 min a week at home, no equipment. Where do I start?"},
+    {"id": "fitness-sleep-2", "lang": "de", "text": "Ich will in 10 Wochen 5 km am Stück laufen können. Ich kann jetzt etwa 2 Minuten laufen, dann bin ich außer Atem. Trainingsplan bitte."},
+    {"id": "fitness-sleep-3", "lang": "ar", "text": "أنام متأخرًا جدًا وأستيقظ متعبًا كل يوم، أعمل من البيت وأشرب قهوة كثيرة. كيف أنظم نومي؟"},
+    {"id": "fitness-sleep-4", "lang": "en", "text": "I sit at a desk all day and my neck and lower back hurt. A 10-minute daily routine?"},
+    {"id": "fitness-sleep-5", "lang": "en", "text": "I'm 58, had a knee replacement 4 months ago, physio is finished. How do I get back to walking and some strength safely?"},
+    {"id": "fitness-sleep-6", "lang": "de", "text": "Ich habe eine Hantelbank und Kurzhanteln bis 20 kg. Vier Wochen Plan für Muskelaufbau, 4 Tage die Woche, ich trainiere seit einem Jahr."}
+  ]
+}

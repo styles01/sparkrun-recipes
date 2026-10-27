@@ -1,0 +1,182 @@
+{
+ "build": "0.12.1",
+ "device": "dgx-spark",
+ "pack": {
+  "id": "nemotron-super-vl-exl3-3.5bpw",
+  "hf": "aitamedia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-EXL3-3.5bpw",
+  "revision": "358667cf420fc2869dff43d9ff64bafe31aef03b",
+  "author": "styles01",
+  "pull_request": 63
+ },
+ "tree": "the 0.12.1 release line before its version bump (its /health reads 0.12.0+<profile>): 0.12.0 with ENG-377; engine/, server/ and tools/ byte for byte the release's",
+ "server": "server/app.py --model <pack> --max-len 32768 --conductor raw --suffix-store '', one fresh server a run, the GPU to itself; plain: --drafter none (1 slot); drafted: --drafter mtp --draft-head lilicorr --parallel 3 (LiLiCorr and the lookup, 3 slots, the price file the release ships)",
+ "client": "tools/fn_lookup_ab.py, 512 greedy tokens, thinking off, one request at a time, n = 1; tok_s the server's predicted_per_second, tok_round its tokens a block, ms_round = 1000 x tok_round / tok_s; prompt the request's prompt tokens",
+ "profiles": {
+  "community/nemotron-super-vl-exl3-3.5bpw": {
+   "date": "2026-10-20",
+   "plain_runs": [
+    {
+     "version": "0.12.0+community/nemotron-super-vl-exl3-3.5bpw",
+     "classes": {
+      "prose": {
+       "tok_s": 25.94,
+       "tok_round": 1.0,
+       "ms_round": 38.55,
+       "tokens": 476,
+       "prompt": 46
+      },
+      "code": {
+       "tok_s": 25.88,
+       "tok_round": 1.0,
+       "ms_round": 38.64,
+       "tokens": 512,
+       "prompt": 67
+      },
+      "chat": {
+       "tok_s": 25.86,
+       "tok_round": 1.0,
+       "ms_round": 38.67,
+       "tokens": 512,
+       "prompt": 59
+      },
+      "edit": {
+       "tok_s": 25.75,
+       "tok_round": 1.0,
+       "ms_round": 38.83,
+       "tokens": 512,
+       "prompt": 1112
+      },
+      "copy": {
+       "tok_s": 25.74,
+       "tok_round": 1.0,
+       "ms_round": 38.85,
+       "tokens": 512,
+       "prompt": 689
+      }
+     }
+    }
+   ],
+   "runs": [
+    {
+     "version": "0.12.0+community/nemotron-super-vl-exl3-3.5bpw",
+     "classes": {
+      "prose": {
+       "tok_s": 33.17,
+       "tok_round": 2.97,
+       "ms_round": 89.54,
+       "tokens": 476,
+       "prompt": 46,
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 53.92,
+       "tok_round": 5.38,
+       "ms_round": 99.78,
+       "tokens": 512,
+       "prompt": 67,
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 37.42,
+       "tok_round": 3.41,
+       "ms_round": 91.13,
+       "tokens": 512,
+       "prompt": 59,
+       "same_text_as_plain": true
+      },
+      "edit": {
+       "tok_s": 98.95,
+       "tok_round": 15.48,
+       "ms_round": 156.44,
+       "tokens": 512,
+       "prompt": 1112,
+       "same_text_as_plain": true
+      },
+      "copy": {
+       "tok_s": 112.31,
+       "tok_round": 15.97,
+       "ms_round": 142.2,
+       "tokens": 512,
+       "prompt": 689,
+       "same_text_as_plain": true
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "prefill": {
+    "prompt_tokens": 7507,
+    "cached_tokens": 0,
+    "tok_s": 528.8,
+    "ttft_ms": 14210.07
+   },
+   "load": {
+    "weights_gib": 53.58,
+    "load_s": {
+     "nh_check": [
+      47.2,
+      49.5,
+      53.9,
+      54.4
+     ],
+     "served_profile": 57.97
+    },
+    "served_profile": {
+     "command": "ops/use-profile.sh community/nemotron-super-vl-exl3-3.5bpw",
+     "max_len": 262144,
+     "slots": 3,
+     "start_and_smoke_s": 110,
+     "gpu_process_gib": 61.7,
+     "memavailable_gib": {
+      "before": 118,
+      "after": 52
+     }
+    }
+   },
+   "plain_bench": {
+    "tool": "tools/nh_check.py bench, CUDA graph, 1 row",
+    "tok_s_graph": 26.0,
+    "tok_s_eager": 24.93,
+    "decode_bytes": 7956307968,
+    "GBps_graph": 206.9
+   },
+   "agreement": {
+    "reference": "exllamav3 1.6.0 forward (flash_attn_nc), teacher-forced on the engine's greedy tokens",
+    "tool": "tools/nh_check.py engine, 8 prompts x 64 tokens, thinking on",
+    "positions": 512,
+    "top1_agree": 510,
+    "top1_pct": 99.61,
+    "near_tie_disagreements": 2,
+    "other_disagreements": 0,
+    "abs_mean_diff": 0.23225,
+    "abs_max_diff": 6.0566,
+    "kl_ref_to_engine_mean": 0.00186,
+    "top10_abs_diff_mean": 0.2653
+   },
+   "mtp": {
+    "depth": 3,
+    "positions": 500,
+    "agree_at_depth": [
+     0.926,
+     0.844,
+     0.736
+    ],
+    "mean_accepted_run": 2.454
+   },
+   "lilicorr_offline": {
+    "prompts": 8,
+    "tokens": 256,
+    "thinking": true,
+    "accepted_length_mean": 4.794,
+    "draft_ms_median": 21.93
+   }
+  }
+ },
+ "not_measured": "images (the pack holds no tower); more than one run a class; requests at once"
+}

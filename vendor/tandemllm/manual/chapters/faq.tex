@@ -1,0 +1,23 @@
+\chapter{Questions and answers}\label{ch:faq}
+
+\paragraph{Does speculation change the text?} Under greedy decoding the engine writes what plain decoding on the same weights writes, up to the first near tie of at most one ulp between the two best tokens, where the batched verify can round the other way. The paper measured 17 of 30 outputs identical to the end of the answer and 13 that diverged at such a near tie. Chapter~\ref{ch:exactness} states it exactly.
+
+\paragraph{Does the conductor change the text?} It changes what the model reads (a hidden note, a thinking cap, a hidden close) and so what it writes, by design; the arithmetic is the same greedy decoding. \code{X-Tandem: raw} gives the release's raw path. Even there, two runs of one request can part at a near tie, because the length router sizes blocks from timings (Section~\ref{sec:two-runs}).
+
+\paragraph{Does it serve several requests at once?} Yes. With \code{--parallel N} the engine decodes up to N requests in the same rounds: two at once gave 1.38$\times$ the total of one, four 1.42$\times$, in single measured runs (Section~\ref{sec:parallel-requests}). The shipped profile keeps one sequence, and the headline numbers in this manual are single-request numbers. With one sequence a short request still goes through the side lane, and the proxy serves other backends in parallel either way.
+
+\paragraph{Will it run on another GPU?} Best effort. The installer turns off the skinny kernel that is built for the GB10 only, and StairCut's prices were measured on the Spark, so the router starts from the wrong staircase and corrects its level online. Nothing about another GPU's speed is measured.
+
+\paragraph{Why NVFP4 weights but 16-bit arithmetic?} On this board the FP4 tensor-core path still has to move operands through shared memory, and a 4-bit activation path would need its own quantiser and gate to save at most the 8~\% of traffic the activations are. NVFP4 saves bytes, and bytes are time on a memory-bound decode (Chapter~\ref{ch:kernels}).
+
+\paragraph{Why are my speeds below the paper's?} Check four things: the raw path (\code{X-Tandem: raw}), the lookup corpus (the paper's is not published), the store view (a store with the benchmark's text inflates it, a clean one does not), and the board's lock (another engine on the board halves the bandwidth).
+
+\paragraph{Can I use the dashboard without the engine?} Yes. \code{pip install '.[host]'} and \code{tandem-dash} run the dashboard and the proxy on any machine with Python 3.11, in front of vLLM, SGLang, llama.cpp, LM Studio, Ollama, OpenAI, DeepSeek or another TandemLLM (Chapter~\ref{ch:install-dash}).
+
+\paragraph{Does the proxy add latency?} 0.33~ms to the time to first token at the median against a fake backend on one machine, and a decode rate within 0.8~\% of the engine's own over the local network (\measured, the 0.4.0 series).
+
+\paragraph{Are my prompts stored anywhere?} No log line, ledger row or metric holds a prompt or an answer. The suffix store holds token ids, never text. The conductor's transcripts keep a session's tool turns under the engine's home, mode 0600, secrets redacted, 30 days; memory notes are files you can read, edit and delete. Probe snapshots, off by default, hold activations, never text.
+
+\paragraph{Is the dashboard safe to expose?} No. It is meant for a trusted local network. No admin password is set by default, so anyone who reaches the port can read and change the configuration and the memory notes. This release has no sign-in screen: with a password set, the dashboard's edits and its Memory screen answer 401. If other people can reach the machine, keep the port on loopback and put a reverse proxy with its own sign-in, or a VPN, in front (Section~\ref{sec:access}).
+
+\paragraph{Where are the docs this book draws on?} In \code{docs/} of the repository, one page per part, under CC BY 4.0. This book adds the diagrams, the charts and the generated reference.

@@ -1,0 +1,120 @@
+{
+  "name": "render-tools",
+  "version": "1.0.0",
+  "title": "Render tools",
+  "kind": "package",
+  "set": "system",
+  "description": "How to use the render tool server of SRV-105 (render, audio_probe, package_read, package_search, the render_video interface): when to render, what to fix first, the renders per answer, the CDN allowlist. Goes in whole on every turn of a visual class whose chat offers a render tool.",
+  "source": "system/render-tools/PACKAGE.md",
+  "max_tokens": 750,
+  "general": true,
+  "library": false,
+  "requires_tools": [
+    "render"
+  ],
+  "fallback": null,
+  "classes": [
+    "code_edit",
+    "debug",
+    "design_ui",
+    "drawing",
+    "three_d"
+  ],
+  "files": {
+    "body": "PACKAGE.md",
+    "references": [
+      "references/tool-interface.md"
+    ],
+    "exemplars": []
+  },
+  "tools": {
+    "render": {
+      "args": {
+        "html": "string",
+        "frames_at": "number[] (seconds, default [0.5, 2, 5])",
+        "size": "\"640x360\" | \"1280x720\""
+      },
+      "returns": [
+        "frames (data:image/png;base64 parts)",
+        "console {errors, warnings, counts}",
+        "fps",
+        "stalled",
+        "bytes",
+        "external_urls"
+      ]
+    },
+    "audio_probe": {
+      "args": {
+        "html": "string",
+        "seconds": "number (default 10)"
+      },
+      "returns": [
+        "has_audio_context",
+        "rms_dbfs",
+        "peak_dbfs",
+        "single_tone",
+        "seconds"
+      ]
+    },
+    "package_read": {
+      "args": {
+        "path": "string"
+      },
+      "returns": [
+        "text"
+      ]
+    },
+    "package_search": {
+      "args": {
+        "query": "string"
+      },
+      "returns": [
+        "passages[5]"
+      ]
+    },
+    "render_video": {
+      "args": {
+        "scenes": "object[]",
+        "cues": "object"
+      },
+      "returns": [
+        "path",
+        "seconds",
+        "lufs",
+        "true_peak_dbtp",
+        "black_max_s"
+      ],
+      "package": "explainer-video"
+    }
+  },
+  "allowlist": [
+    "unpkg.com",
+    "cdn.jsdelivr.net",
+    "cdnjs.cloudflare.com",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com"
+  ],
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 6,
+    "thinking": false,
+    "max_tokens": 24000,
+    "seed": 42,
+    "render_calls_max": 3,
+    "checks": [
+      "render_called",
+      "renders_max_3",
+      "audio_probe_called",
+      "fix_after_error",
+      "no_console_errors",
+      "allowlist_only",
+      "plain_final_answer"
+    ]
+  },
+  "calibration": null,
+  "measured": null,
+  "signature": null,
+  "signing": "OPS-31: the system set is signed at install; the catalog key is not in the repository",
+  "blocked_on": "SRV-105 (the tool server). Until it exists no chat offers a tool with an `html` argument, so the tool fit (SRV-243) leaves this package out of every turn."
+}

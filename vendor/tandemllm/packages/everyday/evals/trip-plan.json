@@ -1,0 +1,18 @@
+{
+  "package": "trip-plan",
+  "rubric": [
+    "Frame and assumptions stated (place, days, travellers, budget level); days grouped by area with 2 to 4 stops, times and the transfer between stops.",
+    "Rest built in (a slow afternoon, naps for small children, an easy first day); the must-see on day 1 or 2.",
+    "Book-before, costs as ranges, and check lines (opening days, holidays, documents, safety source) present.",
+    "No invented opening hours, prices, train times or restaurant names; dishes or neighbourhoods instead of unsure names.",
+    "Rainy-day and tired-day alternatives in one line each."
+  ],
+  "prompts": [
+    {"id": "trip-plan-1", "lang": "en", "text": "Plan 4 days in Istanbul in October for two adults, we like history, markets and food, middle budget, staying near Sultanahmet."},
+    {"id": "trip-plan-2", "lang": "de", "text": "Wochenende in Wien mit zwei Kindern (4 und 8), Anreise Freitagabend, Abreise Sonntag 18 Uhr. Was machen wir?"},
+    {"id": "trip-plan-3", "lang": "ar", "text": "خطط لي رحلة 5 أيام إلى ماليزيا في ديسمبر، عائلة من 4 أشخاص، أطفال 6 و10 سنوات، ميزانية متوسطة، نحب الطبيعة والشواطئ."},
+    {"id": "trip-plan-4", "lang": "en", "text": "Road trip from Munich to the Italian lakes, 6 days, one car, two adults, we like hiking and small towns. Suggest a route with overnight stops."},
+    {"id": "trip-plan-5", "lang": "en", "text": "One day in Amsterdam between two flights, 8 hours in the city, solo, low budget, no museums."},
+    {"id": "trip-plan-6", "lang": "de", "text": "Was muss ich für eine Woche Ägypten im Februar beachten und wie plane ich 3 Tage Kairo plus 4 Tage am Roten Meer?"}
+  ]
+}

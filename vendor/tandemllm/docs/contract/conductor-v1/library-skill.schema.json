@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /v1/library/{name}: one skill, the text the router injects and the reference only a read gets (R1)",
+  "type": "object",
+  "required": ["name", "description", "classes", "body", "reference"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$"},
+    "description": {"type": "string"},
+    "classes": {"type": ["array", "null"], "items": {"type": "string"}},
+    "body": {"type": "string", "minLength": 1},
+    "reference": {"type": "string"}
+  }
+}

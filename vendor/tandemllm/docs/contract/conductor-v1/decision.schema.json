@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor decision",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "decision": {
+      "$ref": "decisions.schema.json#/$defs/decision"
+    }
+  },
+  "required": [
+    "contract_version",
+    "decision"
+  ],
+  "additionalProperties": false
+}

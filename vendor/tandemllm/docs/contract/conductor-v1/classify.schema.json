@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor classify",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "profile": {
+      "type": "string"
+    },
+    "profile_version": {
+      "type": "integer"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean"
+    },
+    "class_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "source": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "kept": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "$ref": "decisions.schema.json#/$defs/stage"
+      }
+    },
+    "classifier_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "effort": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "budget": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "budget_source": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "thinking": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "decisions": {
+      "type": "object"
+    },
+    "shadow": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "extra": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "note_parts": {
+      "type": "array"
+    },
+    "thinking_off": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "contract_version",
+    "profile",
+    "mode",
+    "active"
+  ],
+  "additionalProperties": false
+}

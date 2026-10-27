@@ -1,0 +1,81 @@
+{
+ "_provenance": {
+  "what": "uncensored count of the lookup drafter's top-line continuation per (source, match length 3-8, copy-run bin 0 / 1-7 / 8-23 / 24+): [tokens that followed the line, misses inside the line]",
+  "counted": "2026-09-29, rho_prior.py over every output position of the held-out traces below, lookup = NgramDrafter(min_order 3, corpus 38M, corpus_weight 0.5, min_corpus_order 8)",
+  "traces": "13 held-out greedy traces (published NVFP4 weights, today's router): quote_de (quote, 623+500), quote_prose (quote, 721+600), copy_code (quote, 1221+800), edit_hints (edit, 404+397), edit_rename (edit, 622+589), edit_spell (edit, 638+608), heavy_port (edit_heavy, 827+700), mixed_explain (mixed, 249+336), fresh_prose (prose, 31+256), fresh_chat (chat, 22+256), fresh_code (code, 29+256), long_quote16k (quote, 16025+24), long_edit16k (edit, 16031+48)",
+  "held_out_from": "the replay lattice sets (results/lat-b8, lat-b16, the 2026-09-29 quote/edit set) and tools/forced_bench.py workloads: documents from ids-65536.npy past token 40,000 (prose, code; 12-gram overlap with the bench's 32k prompts 0.0 % and 0.7 %) and German tokens 2,000-2,600 (unused by any benchmark), edits of engine/ functions, new fresh prompts",
+  "replaces": "the in-sample prior of 2026-09-28 (counted on the replay's own traces)"
+ },
+ "both|8|0": [
+  64.0,
+  8.0
+ ],
+ "both|8|1": [
+  1156.0,
+  148.0
+ ],
+ "both|8|2": [
+  2510.0,
+  262.0
+ ],
+ "both|8|3": [
+  30542.0,
+  10.0
+ ],
+ "corpus|8|0": [
+  31.0,
+  39.0
+ ],
+ "corpus|8|1": [
+  64.0,
+  44.0
+ ],
+ "local|3|0": [
+  923.0,
+  206.0
+ ],
+ "local|4|0": [
+  17.0,
+  13.0
+ ],
+ "local|4|1": [
+  816.0,
+  106.0
+ ],
+ "local|5|0": [
+  0.0,
+  2.0
+ ],
+ "local|5|1": [
+  748.0,
+  80.0
+ ],
+ "local|6|1": [
+  649.0,
+  63.0
+ ],
+ "local|7|0": [
+  10.0,
+  1.0
+ ],
+ "local|7|1": [
+  594.0,
+  55.0
+ ],
+ "local|8|0": [
+  652.0,
+  4.0
+ ],
+ "local|8|1": [
+  5236.0,
+  37.0
+ ],
+ "local|8|2": [
+  9270.0,
+  71.0
+ ],
+ "local|8|3": [
+  31858.0,
+  100.0
+ ]
+}

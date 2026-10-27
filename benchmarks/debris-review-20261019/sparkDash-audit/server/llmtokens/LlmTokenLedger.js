@@ -1,0 +1,537 @@
+/**
+ * LlmTokenLedger — cumulative prompt/completion token totals per model.
+ *
+ * Local-only sparkdash module (kept outside upstream-touched files so an
+ * upstream pull only needs the documented anchor lines — see README.md).
+ *
+ * How it works: LlmProbe already reports cumulative server counters in every
+ * snapshot (`totalOutputTokens`, and `totalPromptTokens` added locally). This
+ * ledger diffs consecutive observations per (sparkId, port) series and credits
+ * the delta to the model the server reported at that moment. Counters that go
+ * backwards mean the engine restarted — the baseline is re-seeded without
+ * crediting anything.
+ *
+ * Storage shape (config/llm-token-totals.json):
+ * {
+ *   "version": 1,
+ *   "series": {
+ *     "<sparkId>:<port>": {
+ *       "updatedAt": 1730000000000,
+ *       "lastModelId": "org/model",
+ *       "counters": { "output": 1234, "prompt": 5678 },
+ *       "models": {
+ *         "org/model": {
+ *           "promptTokens": 5678, "completionTokens": 1234, "lastSeenAt": ...
+ *         }
+ *       }
+ *     }
+ *   }
+ * }
+ */
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { atomicWrite, quarantineCorrupt } from "../util/atomicWrite.js";
+import { addTokens, addTokensTo } from "../../src/shared/tokenFormat.js";
+import { LLM_TOKEN_JSON_PATH } from "../config.js";
+
+const FLUSH_MS = 30_000;
+const MAX_MODELS_PER_SERIES = 100;
+const MAX_SERIES = 200;
+/** Daily per-model buckets retained for range queries (covers "last month" + margin). */
+const MAX_DAILY_DAYS = 35;
+/** Hourly per-model buckets (UTC hour keys) kept for the detailed token page's "last 24 h" view. */
+const MAX_HOURLY_HOURS = 72;
+/** Any per-sample delta above this is a counter anomaly, not real traffic. */
+const MAX_CREDITABLE_DELTA = 1e9;
+const UNKNOWN_MODEL = "unknown";
+const MODEL_ID_MAX_LEN = 200;
+
+/** Valid range keys for GET /api/llm-token-totals?range=… ("all" = lifetime). */
+export function normalizeLlmTokenRange(value) {
+  return value === "today" || value === "7d" || value === "14d" || value === "30d"
+    ? value
+    : "all";
+}
+
+/** Number of UTC date keys a range covers (null = lifetime). */
+function rangeDayCount(range) {
+  if (range === "today") return 1;
+  if (range === "7d") return 7;
+  if (range === "14d") return 14;
+  if (range === "30d") return 30;
+  return null;
+}
+
+function utcDateKey(nowMs) {
+  return new Date(nowMs).toISOString().slice(0, 10);
+}
+
+/** "2026-10-07T14" — UTC hour bucket key. */
+function utcHourKey(nowMs) {
+  return new Date(nowMs).toISOString().slice(0, 13);
+}
+
+/** Coerce an on-disk { bucketKey: { modelId: row } } map; drops anything malformed. */
+function sanitizeBuckets(buckets) {
+  const out = {};
+  for (const [bucketKey, bucketVal] of Object.entries(buckets)) {
+    if (!bucketVal || typeof bucketVal !== "object") continue;
+    const models = {};
+    for (const [mId, r] of Object.entries(bucketVal)) {
+      if (!r || typeof r !== "object") continue;
+      const promptTokens = Math.max(0, Math.round(Number(r.promptTokens) || 0));
+      const cachedTokens = Math.max(0, Math.round(Number(r.cachedTokens) || 0));
+      models[mId] = {
+        promptTokens,
+        completionTokens: Math.max(0, Math.round(Number(r.completionTokens) || 0)),
+        cachedTokens: Math.min(cachedTokens, promptTokens),
+      };
+    }
+    out[bucketKey] = models;
+  }
+  return out;
+}
+
+/** Credit one delta set into a { modelId: row } bucket, keeping cached ⊆ prompt. */
+function creditBucket(bucket, modelId, dOut, dIn, dCached) {
+  const row = bucket[modelId] || (bucket[modelId] = { promptTokens: 0, completionTokens: 0, cachedTokens: 0 });
+  if (dOut > 0) addTokensTo(row, "completionTokens", dOut);
+  if (dIn != null && dIn > 0) addTokensTo(row, "promptTokens", dIn);
+  if (dCached != null && dCached > 0) addTokensTo(row, "cachedTokens", dCached);
+  if (row.cachedTokens > row.promptTokens) {
+    addTokensTo(row, "promptTokens", row.cachedTokens - row.promptTokens);
+  }
+}
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const DEFAULT_LEDGER_PATH = LLM_TOKEN_JSON_PATH;
+
+function finiteCount(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+/**
+ * Pair each spark's metrics.llm entries with its llmPorts and pull the token
+ * counters. Mirrors the FleetEnergy tokenObservation alignment contract:
+ * entries[i] <-> llmPorts[i]. Rows without an output counter (probe down,
+ * older probe without totalPromptTokens support is fine — only the output
+ * counter is mandatory) are skipped.
+ * @param {Array<unknown>} snapshots
+ * @returns {Array<{ sparkId: string, port: number, modelId: string|null, output: number, prompt: number|null, cached: number|null }>}
+ */
+export function extractTokenObservations(snapshots) {
+  const rows = [];
+  for (const snap of Array.isArray(snapshots) ? snapshots : []) {
+    if (!snap || typeof snap !== "object") continue;
+    const entries = snap.metrics?.llm;
+    const ports = snap.llmPorts;
+    if (!Array.isArray(entries) || !Array.isArray(ports)) continue;
+    if (entries.length !== ports.length) continue;
+    const sparkId = typeof snap.id === "string" ? snap.id : null;
+    if (!sparkId) continue;
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const port = ports[i];
+      if (!Number.isInteger(port) || port < 1 || port > 65535) continue;
+      if (entry?.available !== true) continue;
+      const output = finiteCount(entry.totalOutputTokens);
+      if (output == null) continue;
+      const prompt = entry.totalPromptTokens == null ? null : finiteCount(entry.totalPromptTokens);
+      const cached = entry.totalCachedTokens == null ? null : finiteCount(entry.totalCachedTokens);
+      const rawModel = typeof entry.modelId === "string" ? entry.modelId.trim() : "";
+      const modelId = rawModel ? rawModel.slice(0, MODEL_ID_MAX_LEN) : null;
+      rows.push({ sparkId, port, modelId, output, prompt, cached });
+    }
+  }
+  return rows;
+}
+
+function seriesKey(sparkId, port) {
+  return `${sparkId}:${port}`;
+}
+
+export class LlmTokenLedger {
+  /**
+   * @param {string} [filePath]
+   */
+  constructor(filePath = DEFAULT_LEDGER_PATH) {
+    this.filePath = filePath;
+    /** @type {{ version: number, series: Record<string, unknown> }} */
+    this._data = { version: 1, series: {} };
+    this._dirty = false;
+    this._flushTimer = null;
+    /** Consecutive samples that credited the previous model because the probe omitted modelId. */
+    this._fallbackStreak = new Map();
+    this._load();
+  }
+
+  _load() {
+    try {
+      if (!fs.existsSync(this.filePath)) return;
+      const raw = JSON.parse(fs.readFileSync(this.filePath, "utf8"));
+      if (!raw || typeof raw !== "object" || !raw.series || typeof raw.series !== "object") return;
+      this._data = { version: 1, series: this._sanitize(raw.series) };
+    } catch (err) {
+      if (err instanceof SyntaxError) quarantineCorrupt(this.filePath, "LlmTokenLedger", err);
+      this._data = { version: 1, series: {} };
+    }
+  }
+
+  /** Coerce an on-disk payload (possibly from an older local version) to the current shape. */
+  _sanitize(series) {
+    const out = {};
+    for (const [key, value] of Object.entries(series)) {
+      if (!value || typeof value !== "object") continue;
+      const models = {};
+      if (value.models && typeof value.models === "object") {
+        for (const [modelId, row] of Object.entries(value.models)) {
+          if (!row || typeof row !== "object") continue;
+          const promptTokens = Math.max(0, Math.round(Number(row.promptTokens) || 0));
+          const cachedTokens = Math.max(0, Math.round(Number(row.cachedTokens) || 0));
+          models[modelId] = {
+            promptTokens,
+            completionTokens: Math.max(0, Math.round(Number(row.completionTokens) || 0)),
+            // Older files have no cached split; clamp to the prompt bucket.
+            cachedTokens: Math.min(cachedTokens, promptTokens),
+            lastSeenAt: Number(row.lastSeenAt) || 0,
+          };
+        }
+      }
+      out[key] = {
+        updatedAt: Number(value.updatedAt) || 0,
+        lastModelId: typeof value.lastModelId === "string" ? value.lastModelId : null,
+        counters: {
+          output: finiteCount(value.counters?.output),
+          prompt: value.counters?.prompt == null ? null : finiteCount(value.counters.prompt),
+          cached: value.counters?.cached == null ? null : finiteCount(value.counters.cached),
+        },
+        models,
+      };
+      // Range buckets (optional — files written before ranges / hourly lack them).
+      if (value.daily && typeof value.daily === "object") out[key].daily = sanitizeBuckets(value.daily);
+      if (value.hourly && typeof value.hourly === "object") out[key].hourly = sanitizeBuckets(value.hourly);
+    }
+    return out;
+  }
+
+  /**
+   * Reset the counted totals and daily/hourly history, for every series or one Spark's.
+   * The engines' own counters are kept as baselines, so the next sample credits only new
+   * tokens instead of re-adding everything the engine has served since it started.
+   * @param {{ sparkId?: string }} [opts]
+   * @returns {number} how many model rows were removed
+   */
+  reset({ sparkId } = {}) {
+    let removed = 0;
+    for (const [key, series] of Object.entries(this._data.series)) {
+      if (sparkId && !key.startsWith(`${sparkId}:`)) continue;
+      removed += Object.keys(series.models || {}).length;
+      series.models = {};
+      delete series.daily;
+      delete series.hourly;
+    }
+    if (removed > 0) {
+      this._dirty = true;
+      this.flush();
+    }
+    return removed;
+  }
+
+  _scheduleFlush() {
+    if (this._flushTimer) return;
+    this._flushTimer = setTimeout(() => {
+      this._flushTimer = null;
+      this.flush();
+    }, FLUSH_MS);
+    this._flushTimer.unref?.();
+  }
+
+  flush() {
+    if (!this._dirty) return;
+    try {
+      atomicWrite(this.filePath, JSON.stringify(this._data));
+      this._dirty = false;
+    } catch (err) {
+      console.error("[LlmTokenLedger] write failed:", err.message);
+    }
+  }
+
+  close() {
+    if (this._flushTimer) {
+      clearTimeout(this._flushTimer);
+      this._flushTimer = null;
+    }
+    this.flush();
+  }
+
+  /**
+   * Credit deltas from one batch of observations. Returns true when state changed.
+   * @param {Array<{ sparkId: string, port: number, modelId: string|null, output: number, prompt: number|null }>} observations
+   * @param {number} [now]
+   */
+  record(observations, now = Date.now()) {
+    let changed = false;
+    for (const obs of Array.isArray(observations) ? observations : []) {
+      const key = seriesKey(obs.sparkId, obs.port);
+      let series = this._data.series[key];
+      if (!series) {
+        series = {
+          updatedAt: 0,
+          lastModelId: null,
+          counters: { output: null, prompt: null, cached: null },
+          models: {},
+        };
+        this._data.series[key] = series;
+      }
+
+      // Attribute to the model the server reports now; when the probe could not
+      // name one, stick to the series' last known model (never lose attribution).
+      // One missing sample is normal. A streak means the probe cannot name the
+      // model, so the previous model may be receiving tokens it did not serve.
+      const modelId = obs.modelId ?? series.lastModelId ?? UNKNOWN_MODEL;
+      if (obs.modelId) {
+        series.lastModelId = obs.modelId;
+        this._fallbackStreak.delete(key);
+      } else if (series.lastModelId) {
+        const streak = (this._fallbackStreak.get(key) || 0) + 1;
+        this._fallbackStreak.set(key, streak);
+        if (streak === 2) {
+          console.warn(
+            `[llm-tokens] ${key} has no model id for ${streak} samples; crediting ${series.lastModelId}`
+          );
+        }
+      }
+
+      // First observation after start/reload only seeds the baseline.
+      if (series.counters.output == null) {
+        series.counters.output = obs.output;
+        series.counters.prompt = obs.prompt;
+        series.counters.cached = obs.cached;
+        series.updatedAt = now;
+        changed = true;
+        continue;
+      }
+
+      const dOut = obs.output - series.counters.output;
+      let dIn =
+        obs.prompt != null && series.counters.prompt != null
+          ? obs.prompt - series.counters.prompt
+          : null;
+      let dCached =
+        obs.cached != null && series.counters.cached != null
+          ? obs.cached - series.counters.cached
+          : null;
+      series.counters.output = obs.output;
+      series.counters.prompt = obs.prompt;
+      series.counters.cached = obs.cached;
+      series.updatedAt = now;
+
+      // Counter went backwards or jumped implausibly → engine restarted or a
+      // counter anomaly: re-seed the baseline and credit nothing.
+      if (dOut < 0 || dOut > MAX_CREDITABLE_DELTA) {
+        changed = true;
+        continue;
+      }
+      if (dIn != null && (dIn < 0 || dIn > MAX_CREDITABLE_DELTA)) {
+        dIn = null;
+      }
+      if (dCached != null && (dCached < 0 || dCached > MAX_CREDITABLE_DELTA)) {
+        dCached = null;
+      }
+
+      if (dOut > 0 || (dIn != null && dIn > 0)) {
+        let row = series.models[modelId];
+        if (!row) {
+          row = { promptTokens: 0, completionTokens: 0, cachedTokens: 0, lastSeenAt: now };
+          series.models[modelId] = row;
+        }
+        if (dOut > 0) addTokensTo(row, "completionTokens", dOut);
+        if (dIn != null && dIn > 0) addTokensTo(row, "promptTokens", dIn);
+        if (dCached != null && dCached > 0) addTokensTo(row, "cachedTokens", dCached);
+        // Keep cached ⊆ prompt: a bigger cached delta means the backend
+        // backfilled cache stats for older traffic (or counted buckets
+        // slightly differently). Absorb the excess into the prompt bucket.
+        if (row.cachedTokens > row.promptTokens) {
+          addTokensTo(row, "promptTokens", row.cachedTokens - row.promptTokens);
+        }
+        row.lastSeenAt = now;
+
+        // Same deltas into the per-UTC-day and per-UTC-hour buckets that power range queries.
+        if (!series.daily || typeof series.daily !== "object") series.daily = {};
+        const dayKey = utcDateKey(now);
+        creditBucket(series.daily[dayKey] || (series.daily[dayKey] = {}), modelId, dOut, dIn, dCached);
+        if (!series.hourly || typeof series.hourly !== "object") series.hourly = {};
+        const hourKey = utcHourKey(now);
+        creditBucket(series.hourly[hourKey] || (series.hourly[hourKey] = {}), modelId, dOut, dIn, dCached);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this._prune();
+      this._dirty = true;
+      this._scheduleFlush();
+    }
+    return changed;
+  }
+
+  _prune() {
+    const keys = Object.keys(this._data.series);
+    if (keys.length > MAX_SERIES) {
+      keys.sort((a, b) => (this._data.series[a].updatedAt || 0) - (this._data.series[b].updatedAt || 0));
+      for (const k of keys.slice(0, keys.length - MAX_SERIES)) delete this._data.series[k];
+    }
+    for (const series of Object.values(this._data.series)) {
+      const models = Object.values(series.models);
+      if (models.length > MAX_MODELS_PER_SERIES) {
+        models.sort((a, b) => (a.lastSeenAt || 0) - (b.lastSeenAt || 0));
+        for (const m of models.slice(0, models.length - MAX_MODELS_PER_SERIES)) {
+          const modelId = Object.keys(series.models).find((k) => series.models[k] === m);
+          if (modelId) delete series.models[modelId];
+        }
+      }
+      // Hourly buckets: keep only the newest MAX_HOURLY_HOURS UTC hour keys.
+      if (series.hourly && typeof series.hourly === "object") {
+        const hourKeys = Object.keys(series.hourly).sort();
+        if (hourKeys.length > MAX_HOURLY_HOURS) {
+          for (const k of hourKeys.slice(0, hourKeys.length - MAX_HOURLY_HOURS)) {
+            delete series.hourly[k];
+          }
+        }
+      }
+      // Daily buckets: keep only the newest MAX_DAILY_DAYS UTC date keys.
+      if (series.daily && typeof series.daily === "object") {
+        const dayKeys = Object.keys(series.daily).sort();
+        if (dayKeys.length > MAX_DAILY_DAYS) {
+          for (const k of dayKeys.slice(0, dayKeys.length - MAX_DAILY_DAYS)) {
+            delete series.daily[k];
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Read-only public shape for GET /api/llm-token-totals.
+   * `range`: "all" (lifetime) or a daily-bucket window (today / 7d / 14d / 30d).
+   * Ranged rows aggregate the retained UTC-day buckets; day boundaries are UTC,
+   * matching the LlmDaily convention. `lastSeenAt` is null for ranged rows.
+   * @param {string} [range]
+   * @param {number} [nowMs]
+   */
+  snapshot(range = "all", nowMs = Date.now()) {
+    const dayCount = rangeDayCount(range);
+    const series = [];
+    for (const [key, s] of Object.entries(this._data.series)) {
+      const sep = key.lastIndexOf(":");
+      if (sep <= 0) continue;
+      let models;
+      if (dayCount == null) {
+        models = Object.entries(s.models).map(([modelId, row]) => ({
+          modelId,
+          promptTokens: row.promptTokens || 0,
+          completionTokens: row.completionTokens || 0,
+          cachedTokens: row.cachedTokens || 0,
+          lastSeenAt: row.lastSeenAt || 0,
+        }));
+      } else {
+        const wanted = new Set();
+        for (let i = 0; i < dayCount; i++) wanted.add(utcDateKey(nowMs - i * 86_400_000));
+        const agg = new Map();
+        for (const dateKey of Object.keys(s.daily || {}).sort().reverse()) {
+          if (!wanted.has(dateKey)) continue;
+          for (const [modelId, row] of Object.entries(s.daily[dateKey])) {
+            const acc =
+              agg.get(modelId) || { promptTokens: 0, completionTokens: 0, cachedTokens: 0 };
+            acc.promptTokens = addTokens(acc.promptTokens, row.promptTokens || 0);
+            acc.completionTokens = addTokens(acc.completionTokens, row.completionTokens || 0);
+            acc.cachedTokens = addTokens(acc.cachedTokens, row.cachedTokens || 0);
+            agg.set(modelId, acc);
+          }
+        }
+        models = [...agg.entries()].map(([modelId, row]) => ({
+          modelId,
+          promptTokens: row.promptTokens,
+          completionTokens: row.completionTokens,
+          cachedTokens: Math.min(row.cachedTokens, row.promptTokens),
+          lastSeenAt: null,
+        }));
+      }
+      models = models
+        .filter((row) => row.promptTokens > 0 || row.completionTokens > 0)
+        .sort(
+          (a, b) =>
+            b.completionTokens + b.promptTokens - (a.completionTokens + a.promptTokens)
+        );
+      const totals = models.reduce(
+        (acc, row) => ({
+          promptTokens: addTokens(acc.promptTokens, row.promptTokens),
+          completionTokens: addTokens(acc.completionTokens, row.completionTokens),
+          cachedTokens: addTokens(acc.cachedTokens || 0, row.cachedTokens),
+        }),
+        { promptTokens: 0, completionTokens: 0, cachedTokens: 0 }
+      );
+      series.push({
+        sparkId: key.slice(0, sep),
+        port: Number(key.slice(sep + 1)),
+        updatedAt: s.updatedAt || null,
+        lastModelId: s.lastModelId ?? null,
+        totals,
+        models,
+      });
+    }
+    series.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    return { range: dayCount == null ? "all" : range, series };
+  }
+}
+
+/**
+ * Flat rows for the detailed token page: one row per (bucket, spark, port, model).
+ * `day` rows are UTC dates ("2026-10-07"), `hour` rows UTC hours ("2026-10-07T14").
+ * Only buckets with traffic exist, so absent buckets mean "no tokens".
+ */
+LlmTokenLedger.prototype.history = function history(nowMs = Date.now()) {
+  const day = [];
+  const hour = [];
+  let firstDay = null;
+  let firstHour = null;
+  for (const [key, s] of Object.entries(this._data.series)) {
+    const sep = key.lastIndexOf(":");
+    if (sep <= 0) continue;
+    const sparkId = key.slice(0, sep);
+    const port = Number(key.slice(sep + 1));
+    const collect = (buckets, into) => {
+      for (const [t, models] of Object.entries(buckets || {})) {
+        for (const [modelId, r] of Object.entries(models)) {
+          if (!(r.promptTokens > 0 || r.completionTokens > 0)) continue;
+          into.push({
+            t,
+            sparkId,
+            port,
+            modelId,
+            promptTokens: r.promptTokens || 0,
+            completionTokens: r.completionTokens || 0,
+            cachedTokens: Math.min(r.cachedTokens || 0, r.promptTokens || 0),
+          });
+        }
+      }
+    };
+    collect(s.daily, day);
+    collect(s.hourly, hour);
+  }
+  day.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+  hour.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+  firstDay = day.length ? day[0].t : null;
+  firstHour = hour.length ? hour[0].t : null;
+  return {
+    generatedAt: nowMs,
+    retention: { days: MAX_DAILY_DAYS, hours: MAX_HOURLY_HOURS },
+    firstDay,
+    firstHour,
+    day,
+    hour,
+  };
+};
+
+export const llmTokenLedger = new LlmTokenLedger();

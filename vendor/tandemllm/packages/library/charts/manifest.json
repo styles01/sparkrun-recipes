@@ -1,0 +1,41 @@
+{
+  "name": "charts",
+  "version": "1.0.0",
+  "title": "Charts",
+  "kind": "skill",
+  "set": "first",
+  "description": "A chart from data in the prompt (CSV, JSON or numbers in the text) as one SVG block in the house style - dark readout, cobalt series, signal-orange highlight, tabular numbers, units on the axes; line, bar, scatter, histogram, heatmap, sparkline, stat tile.",
+  "source": "skill:charts",
+  "max_tokens": 500,
+  "house_body_tokens": 350,
+  "general": false,
+  "library": true,
+  "requires_tools": [],
+  "fallback": null,
+  "classes": ["drawing", "design_ui", "code_edit", "research"],
+  "files": {
+    "body": "SKILL.md",
+    "references": ["references/chart-grammar.md"],
+    "exemplars": []
+  },
+  "overlaps": {
+    "ui-design": "page layout, spacing and type rules stay there; this package is the chart alone (one svg block) and its data-readback contract",
+    "matplotlib-plots": "Python charts to PNG stay there; this package is SVG by hand in the browser style"
+  },
+  "contract": "one svg block (viewBox 0 0 800 450); an html block only when the prompt asks for a page",
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 20,
+    "thinking": false,
+    "max_tokens": 24000,
+    "seed": 42,
+    "render_calls_max": 2,
+    "checks": ["one_file", "runs", "prompt_terms"],
+    "judge_extra": ["numbers"],
+    "human_sample": ["ch-01", "ch-02", "ch-03", "ch-04", "ch-06", "ch-09", "ch-11", "ch-14", "ch-17", "ch-20"]
+  },
+  "calibration": null,
+  "measured": null,
+  "signature": null
+}

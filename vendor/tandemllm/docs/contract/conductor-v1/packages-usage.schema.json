@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /v1/conductor/packages/usage?name=&limit=: the journal's last 7 days per package (injections, shadow notes, library picks), one package's newest rows, the library's newest retrieval rows (G2)",
+  "type": "object",
+  "required": ["contract_version", "since_ms", "now_ms", "rows", "packages", "name", "recent", "library"],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {"type": "string", "enum": ["1.0"]},
+    "since_ms": {"type": "integer"},
+    "now_ms": {"type": "integer"},
+    "rows": {"type": "integer", "description": "router rows read"},
+    "packages": {"type": "object", "additionalProperties": {"$ref": "#/$defs/counts"}},
+    "name": {"type": ["string", "null"]},
+    "recent": {"type": "array", "items": {"$ref": "#/$defs/use"}},
+    "library": {
+      "type": "object",
+      "required": ["searched", "picked", "top", "rows"],
+      "additionalProperties": false,
+      "properties": {
+        "searched": {"$ref": "#/$defs/span"},
+        "picked": {"$ref": "#/$defs/span"},
+        "top": {
+          "type": "array",
+          "items": {"type": "object", "required": ["name", "picks"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "picks": {"type": "integer"}}}
+        },
+        "rows": {"type": "array", "items": {"$ref": "#/$defs/retrieval"}}
+      }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "required": ["day", "week"],
+      "additionalProperties": false,
+      "properties": {"day": {"type": "integer"}, "week": {"type": "integer"}}
+    },
+    "counts": {
+      "type": "object",
+      "required": ["injected", "shadow", "pick"],
+      "additionalProperties": false,
+      "properties": {"injected": {"$ref": "#/$defs/span"}, "shadow": {"$ref": "#/$defs/span"}, "pick": {"$ref": "#/$defs/span"}}
+    },
+    "use": {
+      "type": "object",
+      "required": ["ts_ms", "how", "id", "request_id", "session_key", "class_id", "profile", "client_kind"],
+      "additionalProperties": false,
+      "properties": {
+        "ts_ms": {"type": "integer"},
+        "how": {"enum": ["injected", "shadow", "pick"]},
+        "id": {"type": "string"},
+        "request_id": {"type": ["string", "null"]},
+        "session_key": {"type": ["string", "null"]},
+        "class_id": {"type": ["string", "null"]},
+        "profile": {"type": ["string", "null"]},
+        "client_kind": {"type": ["string", "null"]}
+      }
+    },
+    "retrieval": {
+      "type": "object",
+      "required": ["id", "ts_ms", "session_key", "class_id", "profile", "client_kind", "mode", "trigger", "query_chars", "candidates", "chosen", "how", "applied", "cached", "live"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "ts_ms": {"type": "integer"},
+        "session_key": {"type": ["string", "null"]},
+        "class_id": {"type": ["string", "null"]},
+        "profile": {"type": ["string", "null"]},
+        "client_kind": {"type": ["string", "null"]},
+        "mode": {"type": ["string", "null"]},
+        "trigger": {"type": ["string", "null"]},
+        "query_chars": {"type": ["integer", "null"]},
+        "candidates": {
+          "type": "array",
+          "items": {"type": "object", "required": ["name", "score"], "additionalProperties": false, "properties": {"name": {"type": ["string", "null"]}, "score": {"type": ["number", "null"]}}}
+        },
+        "chosen": {"type": "array", "items": {"type": "string"}},
+        "how": {"type": ["string", "null"]},
+        "applied": {"type": ["array", "null"], "items": {"type": "string"}},
+        "cached": {"type": "boolean"},
+        "live": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

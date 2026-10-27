@@ -1,0 +1,272 @@
+{
+  "contract_version": "1.0",
+  "at": 1700001004.1,
+  "windows": {
+    "now_s": 2.0,
+    "done_keep_s": 4.0,
+    "stats_s": 300.0,
+    "cost_min_s": 60.0
+  },
+  "lanes": [
+    {
+      "id": "a",
+      "backend": "ds",
+      "kind": "deepseek",
+      "model": "m-flash",
+      "client": {
+        "kind": "other",
+        "user": null,
+        "session": "agent-a"
+      },
+      "state": "thinking",
+      "label": null,
+      "tool": null,
+      "elapsed_ms": 3500.0,
+      "ttft_ms": 500.0,
+      "waiting_ms": null,
+      "tokens": 150,
+      "tokens_source": "frames",
+      "frames": 150,
+      "tool_frames": 0,
+      "tool_chars": 0,
+      "thinking_tokens": 150,
+      "decode_now": 50.0,
+      "decode_avg": 50.0,
+      "prefill": null,
+      "prompt_tokens": null,
+      "cached_tokens": null,
+      "cache_hit": null,
+      "cost_micros": 300,
+      "cost_partial": true,
+      "max_tokens": null,
+      "relay_id": null,
+      "via": null
+    },
+    {
+      "id": "b",
+      "backend": "ds",
+      "kind": "deepseek",
+      "model": "m-flash",
+      "client": {
+        "kind": "other",
+        "user": null,
+        "session": "agent-b"
+      },
+      "state": "tool_call",
+      "label": null,
+      "tool": "write",
+      "elapsed_ms": 3500.0,
+      "ttft_ms": 500.0,
+      "waiting_ms": null,
+      "tokens": null,
+      "tokens_source": null,
+      "frames": 150,
+      "tool_frames": 150,
+      "tool_chars": 0,
+      "thinking_tokens": null,
+      "decode_now": null,
+      "decode_avg": null,
+      "prefill": null,
+      "prompt_tokens": null,
+      "cached_tokens": null,
+      "cache_hit": null,
+      "cost_micros": null,
+      "cost_partial": false,
+      "max_tokens": null,
+      "relay_id": null,
+      "via": null
+    },
+    {
+      "id": "c",
+      "backend": "ds",
+      "kind": "deepseek",
+      "model": "m-flash",
+      "client": {
+        "kind": "other",
+        "user": null,
+        "session": "agent-c"
+      },
+      "state": "writing",
+      "label": null,
+      "tool": null,
+      "elapsed_ms": 3500.0,
+      "ttft_ms": 500.0,
+      "waiting_ms": null,
+      "tokens": 60,
+      "tokens_source": "frames",
+      "frames": 60,
+      "tool_frames": 0,
+      "tool_chars": 0,
+      "thinking_tokens": 0,
+      "decode_now": 20.0,
+      "decode_avg": 24.8,
+      "prefill": null,
+      "prompt_tokens": null,
+      "cached_tokens": null,
+      "cache_hit": null,
+      "cost_micros": 120,
+      "cost_partial": true,
+      "max_tokens": null,
+      "relay_id": null,
+      "via": null
+    }
+  ],
+  "recent": [
+    {
+      "id": "w0",
+      "backend": "ds",
+      "kind": "deepseek",
+      "model": "m-flash",
+      "client": {
+        "kind": "other",
+        "user": null,
+        "session": "agent-w0"
+      },
+      "state": "done",
+      "label": null,
+      "tool": null,
+      "elapsed_ms": 300.0,
+      "ttft_ms": 10.0,
+      "waiting_ms": null,
+      "tokens": 31,
+      "tokens_source": "usage",
+      "frames": 30,
+      "tool_frames": 0,
+      "tool_chars": 0,
+      "thinking_tokens": null,
+      "decode_now": null,
+      "decode_avg": 103.4,
+      "prefill": null,
+      "prompt_tokens": 100,
+      "cached_tokens": 40,
+      "cache_hit": 0.4,
+      "cost_micros": 500,
+      "cost_partial": false,
+      "max_tokens": null,
+      "relay_id": null,
+      "via": null,
+      "finish": "stop",
+      "status": 200,
+      "ended_ms": 3800.0
+    },
+    {
+      "id": "w1",
+      "backend": "ds",
+      "kind": "deepseek",
+      "model": "m-flash",
+      "client": {
+        "kind": "other",
+        "user": null,
+        "session": "agent-w1"
+      },
+      "state": "done",
+      "label": null,
+      "tool": null,
+      "elapsed_ms": 300.0,
+      "ttft_ms": 10.0,
+      "waiting_ms": null,
+      "tokens": 31,
+      "tokens_source": "usage",
+      "frames": 30,
+      "tool_frames": 0,
+      "tool_chars": 0,
+      "thinking_tokens": null,
+      "decode_now": null,
+      "decode_avg": 103.4,
+      "prefill": null,
+      "prompt_tokens": 100,
+      "cached_tokens": 40,
+      "cache_hit": 0.4,
+      "cost_micros": 500,
+      "cost_partial": false,
+      "max_tokens": null,
+      "relay_id": null,
+      "via": null,
+      "finish": "stop",
+      "status": 200,
+      "ended_ms": 3500.0
+    }
+  ],
+  "backends": [
+    {
+      "id": "ds",
+      "kind": "deepseek",
+      "models": [
+        "m-flash"
+      ],
+      "in_flight": 3,
+      "decoding": 3,
+      "waiting": 0,
+      "decode_tps": 70.0,
+      "decode_unreported": 1,
+      "ttft_p50": 10.0,
+      "ttft_p90": 10.0,
+      "cache_hit": 0.4,
+      "cache_reported": 2,
+      "finished": 2,
+      "errors": 0,
+      "cost_per_min": 1000,
+      "cost_window": 1000,
+      "tokens_window": 62,
+      "frames": {
+        "verified": true,
+        "tools_verified": false,
+        "models": 1,
+        "checked": 2,
+        "passed": 2
+      },
+      "engine_view": false
+    }
+  ],
+  "totals": {
+    "in_flight": 3,
+    "decoding": 3,
+    "waiting": 0,
+    "decode_tps": 70.0,
+    "decode_reported": 2,
+    "decode_unreported": 1,
+    "prefill_tps": null,
+    "ttft_p50": 10.0,
+    "ttft_p90": 10.0,
+    "ttft_n": 2,
+    "cache_hit": 0.4,
+    "cache_reported": 2,
+    "prompt_tokens_window": 200,
+    "cached_tokens_window": 80,
+    "cost_per_min": 1000,
+    "cost_window": 1000,
+    "cost_in_flight": 420,
+    "finished": 2,
+    "errors": 0,
+    "refused": 0,
+    "tokens_window": 62,
+    "backends": 1
+  },
+  "series": [
+    {
+      "t": 1700001002.1,
+      "by": {
+        "ds": 70.0
+      },
+      "in_flight": 3
+    },
+    {
+      "t": 1700001003.1,
+      "by": {
+        "ds": 70.0
+      },
+      "in_flight": 3
+    },
+    {
+      "t": 1700001004.1,
+      "by": {
+        "ds": 70.0
+      },
+      "in_flight": 3
+    }
+  ],
+  "build_us": {
+    "last": 57.0,
+    "max": 57.0
+  }
+}

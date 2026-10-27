@@ -1,0 +1,561 @@
+# NVIDIA Nemotron 3.5 Super VL 120B-A12B in TandemLLM: the setup guide's registry entry (docs/setup.md). Schema 1.
+#
+# NVIDIA's hybrid Mamba2 / mixture-of-experts model (120B, 12B active) with its RADIO image tower (ENG-365): from
+# NVIDIA's own ModelOpt checkpoint (NVFP4 experts, FP8 Mamba2 / attention / head) read as stored,
+# or from our EXL3 packs of the BF16 checkpoint (engine/models/nemotron_h, docs/nemotron-h.md), with NVIDIA's
+# LiLiCorr drafter for it. weights_gib: allocated at load (measured 2026-10-16). Window up to 1,048,576 tokens, the
+# checkpoint's own (config.json llm_config.max_position_embeddings, tokenizer model_max_length), slot 0 and the side
+# slots alike; the default stays 262,144. Its KV is 8,192 bytes a token (8 attention layers, 2 KV heads of 128): 8 GiB
+# at 1,048,576. Checked on EXL3 4.0 with slot 0 at 1,048,576 and 4 slots (ENG-363): needles 5/5 at 131,054 and 249,983
+# prompt tokens; a 1,000,000-token prompt was not measured (not past 249,983). slots.max 3 is what was measured; the
+# side slot's part beyond its KV (side_slot_const_gib) is measured at load. Rows of the measured table come from real
+# runs only.
+schema: 1
+id: nemotron-3.5-super-vl-120b-a12b
+name: Nemotron 3.5 Super VL 120B-A12B
+family: Nemotron 3.5
+params: ~120B, ~12B active a token
+recommended: false
+order: 6
+pitch: NVIDIA's 120B hybrid Mamba2 and mixture-of-experts model that reads images too, from our EXL3 packs or NVIDIA's NVFP4 checkpoint.
+architecture: 88 layers, 40 Mamba2, 40 mixture-of-experts (512 experts a layer, 22 a token, one shared, a 1,024-wide
+  latent) and 8 attention layers without positional encoding, plus a one-step MTP head; it thinks in a <think> block
+  and calls tools in the XML form. Images go through its C-RADIO ViT-H/16 tower and projector (BF16 in every
+  checkpoint), 256 to 3,328 prompt rows an image (1,000 for a 1,280 x 800 screenshot).
+license: The model's license (OpenMDW-1.1) is on its Hugging Face page. TandemLLM itself is AGPL-3.0 or commercial.
+icon: null
+links:
+- label: Model card
+  url: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+- label: BF16 checkpoint
+  url: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16
+devices:
+- id: dgx-spark
+  label: NVIDIA DGX Spark (128 GB unified memory)
+  total_gib: 121.63
+  reserved_gib: 10.0
+  note: The GPU and the CPU share this memory. MemTotal reads 121.6 GiB of the 128 GB.
+assets:
+- id: nemotron-super-vl-lilicorr
+  label: LiLiCorr drafter for Nemotron 3.5 Super VL (NVIDIA)
+  path: ${HOME}/models/nemotron-3.5-super-vl-lilicorr/model.safetensors
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+  fetch:
+  - repo: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+    files:
+    - config.json
+    - hf_quant_config.json
+    - model.safetensors
+    to: ${HOME}/models/nemotron-3.5-super-vl-lilicorr
+    gb: 1.32
+  source: Public on Hugging Face, NVIDIA's NVFP4 drafter (its own NVFP4 head over the target's vocabulary); the engine
+    reads it as stored (engine/drafters/lilicorr.py).
+- id: qwen3.5-2b
+  label: Qwen3.5-2B (the narrator, and Wren)
+  path: ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b/config.json
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: Qwen/Qwen3.5-2B
+  fetch:
+  - repo: Qwen/Qwen3.5-2B
+    files:
+    - '*.json'
+    - '*.safetensors'
+    - '*.jinja'
+    - merges.txt
+    - LICENSE
+    to: ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b
+    gb: 4.57
+  source: Public on Hugging Face; install.sh --setup downloads it for Wren, the fetch step when the narrator is on (VIS-153).
+- id: laya
+  label: Laya decision models
+  path: ${HOME}/.qwen38-spark-engine/deciders/laya/model.safetensors
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: convaiinnovations/laya
+  fetch:
+  - repo: convaiinnovations/laya
+    files:
+    - config.json
+    - rl_agent_config.json
+    - model.safetensors
+    - 'encoder/*'
+    - 'tokenizer/*'
+    - 'multilingual/*'
+    - 'typed-decisions/*'
+    to: ${HOME}/.qwen38-spark-engine/deciders/laya
+    gb: 2.35
+  source: Public on Hugging Face (no token needed); the fetch step downloads its three models when Laya is on (VIS-153). Its Python files are not downloaded.
+profiles:
+- id: nemotron-super-vl-exl3-4.0
+  label: EXL3 4.0 bpw
+  format: exl3
+  bpw: 4.0
+  disk_gb: 65.0
+  weights_gib: 58.35
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Super-VL-120B-A12B-EXL3-4.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: true
+  badges: 
+  - recommended
+  quality:
+    kl_vs_bf16: 0.0486
+    top1_pct: 92.9
+    ppl: 3.941
+    date: '2026-10-16'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, 8 wikitext-2 rows of 1,024 tokens
+      from an HF job, BF16 ppl 3.84)'
+  assets_required:
+  - nemotron-super-vl-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision 97e00975) by exllamav3 1.6.2 with our Puzzle/Bolt and Super VL patches: every projection at 4 bits, head 6, the MTP head at 4; the RADIO vision tower is in the pack in BF16 and loaded beside it (ENG-365, 1.60 GiB). Measured 2026-10-16: 58.35 GiB at load (59.75 with the MTP head), decode 31.3 tok/s (NVIDIA''s NVFP4 19.6). Drafts with NVIDIA''s LiLiCorr drafter for Super VL and the lookup. The Hugging Face repository is public: a download needs no token.'
+  hf_revision: 437a1fd1920248164b68e72f18f64484782f4b69
+  max_window: 1048576
+- id: nemotron-super-vl-exl3-2.0
+  label: EXL3 2.0 bpw experts, 4-bit dense
+  format: exl3
+  bpw: 2.11
+  disk_gb: 36.84
+  weights_gib: 31.24
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Super-VL-120B-A12B-EXL3-2.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.3251
+    top1_pct: 82.12
+    ppl: 4.933
+    date: '2026-10-16'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, 8 wikitext-2 rows of 1,024 tokens
+      from an HF job, BF16 ppl 3.84)'
+  assets_required:
+  - nemotron-super-vl-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision 97e00975) by exllamav3 1.6.2 with our Puzzle/Bolt and Super VL patches at 2 bits with -hq (Bolt''s 2.0 recipe): routed experts at 2 bits, every other projection at 4, head 6, the MTP head at 4 to 6; the RADIO vision tower is in the pack in BF16 and loaded beside it (ENG-365, 1.60 GiB). Measured 2026-10-16: 31.24 GiB at load, decode 36.8 tok/s (the 4.0 pack 31.4) at a much larger loss (KL 0.325 against 0.049). Drafts with NVIDIA''s LiLiCorr drafter for Super VL and the lookup. The Hugging Face repository is public: a download needs no token.'
+  hf_revision: c772513fab08034725c057aa6a02591332a4ffbb
+  max_window: 1048576
+- id: nemotron-super-vl-nvfp4
+  label: NVFP4 (NVIDIA's checkpoint)
+  format: nvfp4
+  bpw: 4.5
+  disk_gb: 75.06
+  weights_gib: 66.63
+  drafters_gib: 1.32
+  hf_repo: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+  hf_private: false
+  made_by: {kind: vendor, name: NVIDIA}
+  recommended: false
+  badges: 
+  - NVIDIA's own quantization
+  quality:
+    kl_vs_bf16: 0.0408
+    top1_pct: 93.37
+    ppl: 3.834
+    date: '2026-10-16'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, 8 wikitext-2 rows of 1,024 tokens
+      from an HF job, BF16 ppl 3.84)'
+  assets_required:
+  - nemotron-super-vl-lilicorr
+  note: 'NVIDIA''s ModelOpt checkpoint read as stored: routed and shared experts NVFP4, the Mamba2 and attention projections and the head FP8 with a tensor scale; activations and the KV cache bf16. A decode token reads 10.1 GB of it. Measured 2026-10-16: 66.63 GiB at load, decode 19.6 tok/s; 131,072 tokens. Drafts with NVIDIA''s LiLiCorr drafter and the lookup.'
+  hf_revision: 8a115b9d966adce8c059a7bcf47f49a1e57957d8
+  max_window: 1048576
+measurements:
+  build: 0.11.0
+  date: '2026-10-16'
+  method: >-
+    the prose, chat and code asks of tools/fn_lookup_ab.py, one request at a time through one fresh server a run on
+    the DGX Spark, the GPU to itself: greedy, thinking off, 512 new tokens, streamed; decode tok/s = (tokens - 1) /
+    (last token - first token) on the client clock. The profile's drafting (LiLiCorr and the lookup cut by StairCut,
+    the shipped price file with its spec prior), 3 slots, conductor raw, the suffix store off, max_len 140,000. Three
+    runs a cell, alternating with plain servers; every drafted text is the plain run's, and no request was answered
+    from a cache. Measured on the branch merged as 0.11.0 before its version bump (its /health reads 0.10.0): the
+    engine, server and tools are the release's byte for byte. Not measured yet: sampled, 128 tokens, long context,
+    first-token times. Raw data: models/nemotron-3.5-super-vl-120b-a12b/measurements/0.11.0-summary.json.
+  source: models/nemotron-3.5-super-vl-120b-a12b/measurements/0.11.0-summary.json
+  rows:
+  - profile: nemotron-super-vl-exl3-4.0
+    build: 0.11.0
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [33.11, 32.33, 62.0, 2.05, 3], chat: [43.88, 43.33, 88.9, 3.9, 3], code: [53.57, 49.68, 80.2, 4.34, 3]}
+    ttft_s: {}
+    lossless: null
+  - profile: nemotron-super-vl-exl3-2.0
+    build: 0.11.0
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [35.59, 33.87, 52.8, 1.89, 3], chat: [46.22, 45.41, 68.9, 3.18, 3], code: [46.27, 36.41, 43.7, 2.3, 3]}
+    ttft_s: {}
+    lossless: null
+  - profile: nemotron-super-vl-nvfp4
+    build: 0.11.0
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [23.85, 23.81, 106.3, 2.54, 3], chat: [28.65, 28.39, 108.8, 3.12, 3], code: [39.87, 39.84, 119.8, 4.78, 3]}
+    ttft_s: {}
+    lossless: null
+
+memory:
+  parts:
+  - id: engine
+    label: Engine state, the decode graphs and warm-up
+    gib: 1.1
+    kind: fixed
+    source: 'measured 2026-10-16 at load (ENG-363): the engine 0.67 GiB of MemAvailable beyond slot 0''s KV, the
+      warm-up 0.43'
+  - id: lilicorr
+    label: LiLiCorr drafter (its head, taps and rings)
+    gib: 3.9
+    kind: fixed
+    source: 'measured 2026-10-16 at load: 2.26 GiB allocated, 3.90 of MemAvailable'
+  - id: allocator
+    label: Allocator reserve
+    gib: 1.5
+    kind: reserve
+    source: an estimate until measured on the Spark
+  - id: prefill_workspace
+    label: Prefill workspace (a 4,096-token chunk's activations, the SSD chunks and the batched experts)
+    gib: 3.4
+    kind: reserve
+    source: 'measured 2026-10-16 (the memory policy''s observed workspace, ENG-363): 3.34 GiB above the engine at a
+      131,054-token prefill, 3.18 at 249,983; it does not grow with the window (4,096-row chunks, attention reads
+      the cache in place)'
+  sources:
+  - engine/models/nemotron_h/pack.py PackIndex.decode_bytes (the checkpoints' headers, 2026-10-16)
+components:
+- id: conductor
+  label: Conductor
+  group: features
+  what: Gives each request the right instructions and helper packages, and watches long sessions so they do not
+    get stuck.
+  default: true
+  required: false
+  memory_gib: 0.0
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.1
+  depends_on: []
+  conflicts: []
+  knobs:
+    CONDUCTOR:
+      'on': 'on'
+      'off': raw
+    QSE_CONDUCTOR_CONFIG:
+      'on': ${HOME}/.qwen38-spark-engine/conductor
+      'off': 'off'
+  assets: []
+  docs: docs/server.md
+  note: 'On by default, with the model fit LFM2.5 measured (Laya answers the class question, core skill only, no
+    effort sentences, rules or memory notes) until it is measured on NemotronH.'
+- id: narrator
+  label: Narrator
+  group: roles
+  what: A small model that writes short status lines while the big model thinks, so you can see what it is doing.
+  default: false
+  required: false
+  memory_gib: 3.6
+  memory_max_gib: null
+  elastic: true
+  disk_gb: 4.3
+  depends_on:
+  - conductor
+  conflicts: []
+  knobs:
+    QWEN38_NARRATOR_MODEL:
+      'on': qwen3.5-2b
+      'off': ''
+    QWEN38_NARRATOR_DIR:
+      'on': ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b
+      'off': ''
+  assets:
+  - qwen3.5-2b
+  docs: docs/server.md
+  note: Qwen3.5-2B, 3.60 GiB in the live memory split. Off by default under Super VL (the model has the box to itself).
+- id: laya
+  label: Laya decision models
+  group: roles
+  what: Three tiny classifiers that answer the conductor's quick questions, like what kind of request this is, in
+    milliseconds.
+  default: true
+  required: false
+  memory_gib: 1.6
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 2.3
+  depends_on:
+  - conductor
+  conflicts: []
+  knobs:
+    QWEN38_DECIDER_MODELS:
+      'on': laya-english,laya-multilingual,laya-typed-decisions
+      'off': ''
+  assets:
+  - laya
+  docs: docs/server.md
+  note: The class question's answer under the model fit (served_classifier off).
+- id: vision
+  label: Vision
+  group: features
+  what: Lets the model read images you send with a message, and the screenshots its tools take.
+  default: true
+  required: false
+  memory_gib: 1.6
+  memory_max_gib: 2.1
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    VISION:
+      'on': 'on'
+      'off': 'off'
+  assets: []
+  docs: docs/nemotron-h.md
+  note: The checkpoint's C-RADIO tower and projector ship inside every Super VL checkpoint in BF16 (1.57 GB of
+    tensors); beside the EXL3 4.0 trunk they took 1.60 GiB allocated at load (ENG-365, 2026-10-17). The extra 0.5 GiB
+    is the cache of encoded images (--image-cache-mb 512). Encoding took 0.06 to 0.25 s for 300 to 1,000 rows; the
+    admission bound for the largest image (13,312 patches) is 1.6 GiB of activations.
+- id: response_cache
+  label: Response cache
+  group: caches
+  what: Answers an identical greedy request again from memory, without running the model.
+  default: false
+  required: false
+  memory_gib: 0.25
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    RESPONSE_CACHE:
+      'on': 'on'
+      'off': 'off'
+  assets: []
+  docs: docs/caches.md
+  note: Off on the reference box. Useful for scripts that send the same request many times; never for a benchmark.
+- id: proxy
+  label: Other backends
+  group: features
+  what: Lets the dashboard send some model names to other servers or cloud APIs, beside this engine.
+  default: false
+  required: false
+  memory_gib: 0.0
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    QSE_BACKENDS:
+      'on': ${HOME}/.qwen38-spark-engine/backends/config.sqlite3
+      'off': ''
+  assets: []
+  docs: docs/proxy.md
+  note: You add the backends later, on the Backends screen.
+- id: prompt_cache
+  label: Conversation cache
+  group: caches
+  what: Keeps the conversation the model is in, so the next turn starts where the last one ended instead of reading
+    everything again.
+  default: true
+  required: false
+  memory_gib: 0.16
+  memory_max_gib: 2.5
+  elastic: true
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    RESIDENT_GB:
+      'on': '2.5'
+      'off': '0'
+  assets: []
+  docs: docs/caches.md
+  note: The resident prefix with its anchors every 4,096 tokens (the prefill's chunk), the end anchor, the pin and
+    the park; an anchor is 194.3 MiB (162.3 MiB of Mamba2 states and 4,096 tokens of KV at 8,192 bytes, as on Bolt).
+- id: state_store
+  label: State store
+  group: caches
+  what: Saves the model's state after short chats, so the same start a second time costs nothing.
+  default: true
+  required: false
+  memory_gib: 0.49
+  memory_max_gib: 2.0
+  elastic: true
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    CACHE_GB:
+      'on': '2'
+      'off': '0'
+  assets: []
+  docs: docs/caches.md
+  note: null
+parallelism:
+  slots:
+    min: 1
+    max: 3
+    default: 3
+  window:
+    min: 8192
+    max: 1048576
+    default: 262144
+    step: 4096
+  side_window:
+    min: 8192
+    max: 1048576
+    default: 262144
+    step: 4096
+  kv_pool:
+    default: false
+  floor_gb:
+    min: 10
+    max: 40
+    default: 15
+  kv_hard_floor_gb: 10
+  kv_bytes_per_token: 8192
+  typical_fill_tokens: 32768
+  # measured 2026-10-16 at load: a side slot at 262,144 takes 2.82 GiB allocated, 3.10 of MemAvailable; less its
+  # 2.00 GiB of KV
+  side_slot_const_gib: 1.1
+  knobs:
+    slots: QSE_PARALLEL
+    window: MAX_LEN
+    side_window: QSE_SIDE_MAX_LEN
+    kv_pool: QSE_KV_POOL
+    floor_gb: QSE_PARALLEL_FLOOR_GB
+  fixed: {}
+methods:
+- id: temperature
+  label: Temperature
+  what: How random the answers are when a client does not say. NVIDIA's generation config sets 1.0.
+  type: number
+  min: 0
+  max: 2
+  default: 1.0
+  recommended: 1.0
+  knob: TEMPERATURE
+  docs: docs/nemotron-h.md
+- id: top_p
+  label: Top-p
+  what: The share of probability a sampled answer draws from, when a client does not say.
+  type: number
+  min: 0
+  max: 1
+  default: 0.95
+  recommended: 0.95
+  knob: TOP_P
+  docs: docs/nemotron-h.md
+- id: default_max_tokens
+  label: Default answer length
+  what: The longest answer, in tokens, when a client does not set max_tokens.
+  type: int
+  min: 1024
+  max: 262144
+  default: 32768
+  recommended: 32768
+  knob: DEFAULT_MAX_TOKENS
+  docs: docs/server.md
+- id: request_timeout
+  label: Request time limit
+  what: Seconds one request may run before the engine stops it.
+  type: int
+  min: 60
+  max: 14400
+  default: 3600
+  recommended: 3600
+  knob: REQUEST_TIMEOUT
+  docs: docs/server.md
+- id: max_queue
+  label: Queue length
+  what: How many requests may wait for a free slot before new ones are turned away.
+  type: int
+  min: 1
+  max: 64
+  default: 8
+  recommended: 8
+  knob: MAX_QUEUE
+  docs: docs/server.md
+- id: queue_timeout
+  label: Queue wait
+  what: Seconds a request may wait in the queue before it gets an error.
+  type: int
+  min: 10
+  max: 3600
+  default: 240
+  recommended: 240
+  knob: QUEUE_TIMEOUT
+  docs: docs/server.md
+advanced:
+- id: port
+  label: Port
+  what: The port the API and the dashboard answer on.
+  type: int
+  min: 1024
+  max: 65535
+  default: 8000
+  recommended: 8000
+  knob: PORT
+  docs: docs/operations.md
+- id: host
+  label: Listen on
+  what: The whole network, or only this machine.
+  type: enum
+  options:
+  - value: 0.0.0.0
+    label: the whole network
+  - value: 127.0.0.1
+    label: this machine only
+  default: 0.0.0.0
+  recommended: 0.0.0.0
+  knob: HOST
+  docs: docs/operations.md
+- id: served_model
+  label: Raw engine name
+  what: The model name of the raw engine. With the conductor on, clients see TandemLLM and this name is a hidden
+    alias.
+  type: string
+  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$
+  default: qwen38-spark-engine
+  recommended: qwen38-spark-engine
+  knob: SERVED_MODEL
+  docs: docs/server.md
+- id: dashboard_login
+  label: Dashboard login
+  what: With an admin password set, on makes the dashboard ask for it too.
+  type: enum
+  options:
+  - value: 'off'
+    label: 'off'
+  - value: 'on'
+    label: 'on'
+  default: 'off'
+  recommended: 'off'
+  knob: QSE_DASHBOARD_LOGIN
+  docs: docs/server.md
+- id: admin_password
+  label: Admin password
+  what: Without one, anyone who reaches the port can change the setup. Generate writes a random one into secrets.env
+    on the box; read it there with cat.
+  type: enum
+  options:
+  - value: keep
+    label: keep as it is
+  - value: generate
+    label: generate one
+  default: keep
+  recommended: keep
+  knob: null
+  docs: docs/operations.md

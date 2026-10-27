@@ -1,0 +1,99 @@
+<!doctype html>
+<!-- Exemplar: bouncing balls with restitution, friction and a click sound. 120 lines.
+     Plan:
+     1. Scene: eight balls bounce inside a dark box, a warm dusk palette, calm.
+     2. Systems: gravity + restitution + floor friction, wall collisions, a pluck per bounce, a bed.
+     3. Order: canvas skeleton, balls, physics, sound, keys. -->
+<html lang="en"><head><meta charset="utf-8"><title>Bouncing balls</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0f1419; display: grid; place-items: center; overflow: hidden; }
+  canvas { background: #0f1419; }
+  .hint { position: fixed; left: 12px; bottom: 10px; color: #93a1b3; font: 12px ui-monospace, Menlo, monospace; }
+</style></head>
+<body>
+<canvas></canvas>
+<div class="hint">click: sound on · space: pause · r: new seed · m: mute</div>
+<script>
+// --- seed and random -------------------------------------------------------
+const seed = +(new URLSearchParams(location.search).get('seed') || 1);
+function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rand = rng(seed);
+// --- canvas ----------------------------------------------------------------
+const cv = document.querySelector('canvas'), ctx = cv.getContext('2d');
+const W = 1280, H = 720;
+function fit() {
+  const s = Math.min(innerWidth / W, innerHeight / H), dpr = devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W * s + 'px'; cv.style.height = H * s + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+addEventListener('resize', fit); fit();
+// --- the balls -------------------------------------------------------------
+const PAL = ['#3b5a7a', '#5b7fa6', '#e0a458', '#f2d49b', '#c96a3a'];
+const G = 1400, REST = 0.78, FRICTION = 0.995, FLOOR = H - 40;
+const balls = Array.from({ length: 8 }, (_, i) => ({
+  x: 120 + rand() * (W - 240), y: 80 + rand() * 200, r: 18 + rand() * 22,
+  vx: (rand() - 0.5) * 500, vy: 0, c: PAL[i % PAL.length],
+}));
+let bounces = 0;
+function update(dt) {
+  for (const b of balls) {
+    b.vy += G * dt;
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.y + b.r > FLOOR) {                                      // floor: restitution + friction
+      b.y = FLOOR - b.r;
+      if (b.vy > 60) { pluck(200 + b.vy * 0.4); bounces++; }
+      b.vy = -b.vy * REST; b.vx *= FRICTION;
+      if (Math.abs(b.vy) < 20) b.vy = 0;
+    }
+    if (b.x - b.r < 0) { b.x = b.r; b.vx = -b.vx * REST; }        // walls
+    if (b.x + b.r > W) { b.x = W - b.r; b.vx = -b.vx * REST; }
+  }
+}
+function draw() {
+  ctx.fillStyle = '#0f1419'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#1c2a3a'; ctx.fillRect(0, FLOOR, W, H - FLOOR);
+  for (const b of balls) {
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fillStyle = b.c; ctx.fill();
+    ctx.beginPath(); ctx.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fill();            // a highlight
+  }
+}
+// --- sound: one context on the first gesture, a bed and a pluck per bounce ---
+let actx = null, master = null;
+function audio() {
+  if (actx) return;
+  actx = new AudioContext(); master = new GainNode(actx, { gain: 0.3 }); master.connect(actx.destination);
+  const lp = new BiquadFilterNode(actx, { type: 'lowpass', frequency: 600 });
+  lp.connect(master);
+  for (const f of [110, 110.7, 164.8, 165.6]) {                       // a detuned A + E bed
+    const o = new OscillatorNode(actx, { type: 'triangle', frequency: f });
+    const g = new GainNode(actx, { gain: 0.04 }); o.connect(g).connect(lp); o.start();
+  }
+}
+function pluck(freq) {
+  if (!actx) return;
+  const t = actx.currentTime;
+  const o = new OscillatorNode(actx, { type: 'triangle', frequency: freq });
+  const g = new GainNode(actx, { gain: 0 });
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.15, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  o.connect(g).connect(master); o.start(t); o.stop(t + 0.35);
+}
+addEventListener('pointerdown', audio, { once: true });
+addEventListener('keydown', audio, { once: true });
+// --- loop and keys ---------------------------------------------------------
+let paused = false, last = 0, frames = 0;
+function frame(ts) {
+  const dt = Math.min((ts - last) / 1000, 0.05); last = ts;
+  if (!paused) { update(dt); draw(); frames++; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+addEventListener('keydown', e => {
+  if (e.code === 'Space') paused = !paused;
+  if (e.key === 'r') location.search = '?seed=' + (seed + 1);
+  if (e.key === 'm' && master) master.gain.value = master.gain.value ? 0 : 0.3;
+});
+window.__state = () => ({ tandem_state: 1, frames, paused, seed, bounces, audio: actx ? actx.state : 'none' });
+</script>
+</body></html>

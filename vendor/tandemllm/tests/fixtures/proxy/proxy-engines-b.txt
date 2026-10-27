@@ -1,0 +1,413 @@
+# HELP qse_backend_info the engine behind a backend whose own /metrics page is read (kind, version from its discovery route)
+# TYPE qse_backend_info gauge
+qse_backend_info{backend="sglang1",kind="sglang",version="0.5.21"} 1
+qse_backend_info{backend="vllm1",kind="vllm",version="0.30.0"} 1
+# HELP qse_backend_awake 1 while the engine is awake, 0 asleep (from the backend's own /metrics)
+# TYPE qse_backend_awake gauge
+qse_backend_awake{backend="vllm1"} 1
+# HELP qse_backend_cache_hit_rate the engine's own prefix-cache hit rate over its logging window, 0 to 1 (from the backend's own /metrics)
+# TYPE qse_backend_cache_hit_rate gauge
+qse_backend_cache_hit_rate{backend="sglang1"} 0.61
+# HELP qse_backend_decode_seconds a request's decode (from the backend's own /metrics)
+# TYPE qse_backend_decode_seconds histogram
+qse_backend_decode_seconds_bucket{backend="vllm1",le="0.3"} 0
+qse_backend_decode_seconds_bucket{backend="vllm1",le="0.5"} 0
+qse_backend_decode_seconds_bucket{backend="vllm1",le="0.8"} 0
+qse_backend_decode_seconds_bucket{backend="vllm1",le="1"} 0
+qse_backend_decode_seconds_bucket{backend="vllm1",le="1.5"} 1
+qse_backend_decode_seconds_bucket{backend="vllm1",le="2"} 44
+qse_backend_decode_seconds_bucket{backend="vllm1",le="2.5"} 44
+qse_backend_decode_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="15"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="30"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="50"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="60"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="120"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="240"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="480"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="960"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="1920"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="7680"} 46
+qse_backend_decode_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_decode_seconds_sum{backend="vllm1"} 94.2
+qse_backend_decode_seconds_count{backend="vllm1"} 46
+# HELP qse_backend_e2e_seconds a request from arrival to its end (from the backend's own /metrics)
+# TYPE qse_backend_e2e_seconds histogram
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="0.1"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="0.2"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="0.4"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="0.6"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="0.8"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="1"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="2"} 0
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="4"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="6"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="8"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="10"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="20"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="40"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="60"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="80"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="100"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="200"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="400"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="600"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="1200"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="1800"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="2400"} 32
+qse_backend_e2e_seconds_bucket{backend="sglang1",le="+Inf"} 32
+qse_backend_e2e_seconds_sum{backend="sglang1"} 101.90000000000003
+qse_backend_e2e_seconds_count{backend="sglang1"} 32
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="0.3"} 0
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="0.5"} 0
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="0.8"} 0
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="1"} 0
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="1.5"} 0
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="2"} 1
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="2.5"} 44
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="15"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="30"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="50"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="60"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="120"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="240"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="480"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="960"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="1920"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="7680"} 46
+qse_backend_e2e_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_e2e_seconds_sum{backend="vllm1"} 113.90000000000008
+qse_backend_e2e_seconds_count{backend="vllm1"} 46
+# HELP qse_backend_gen_tps the engine's own generation rate, tokens a second (from the backend's own /metrics)
+# TYPE qse_backend_gen_tps gauge
+qse_backend_gen_tps{backend="sglang1"} 118.5
+# HELP qse_backend_generation_tokens_total tokens generated (from the backend's own /metrics)
+# TYPE qse_backend_generation_tokens_total counter
+qse_backend_generation_tokens_total{backend="sglang1"} 8800
+qse_backend_generation_tokens_total{backend="vllm1"} 9600
+# HELP qse_backend_inference_seconds a request's time running (prefill and decode) (from the backend's own /metrics)
+# TYPE qse_backend_inference_seconds histogram
+qse_backend_inference_seconds_bucket{backend="vllm1",le="0.3"} 0
+qse_backend_inference_seconds_bucket{backend="vllm1",le="0.5"} 0
+qse_backend_inference_seconds_bucket{backend="vllm1",le="0.8"} 0
+qse_backend_inference_seconds_bucket{backend="vllm1",le="1"} 0
+qse_backend_inference_seconds_bucket{backend="vllm1",le="1.5"} 0
+qse_backend_inference_seconds_bucket{backend="vllm1",le="2"} 1
+qse_backend_inference_seconds_bucket{backend="vllm1",le="2.5"} 44
+qse_backend_inference_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="15"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="30"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="50"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="60"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="120"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="240"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="480"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="960"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="1920"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="7680"} 46
+qse_backend_inference_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_inference_seconds_sum{backend="vllm1"} 104.60000000000007
+qse_backend_inference_seconds_count{backend="vllm1"} 46
+# HELP qse_backend_itl_seconds time between two output tokens (from the backend's own /metrics)
+# TYPE qse_backend_itl_seconds histogram
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.002"} 0
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.004"} 0
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.006"} 0
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.008"} 0
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.01"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.015"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.02"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.025"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.03"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.035"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.04"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.06"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.08"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.1"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.2"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.4"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.6"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="0.8"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="1"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="2"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="4"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="6"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="8"} 8800
+qse_backend_itl_seconds_bucket{backend="sglang1",le="+Inf"} 8800
+qse_backend_itl_seconds_sum{backend="sglang1"} 79.20000000000282
+qse_backend_itl_seconds_count{backend="sglang1"} 8800
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.01"} 0
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.025"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.05"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.075"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.1"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.15"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.2"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.3"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.4"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.5"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="0.75"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="1"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="2.5"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="5"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="7.5"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="10"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="20"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="40"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="80"} 9600
+qse_backend_itl_seconds_bucket{backend="vllm1",le="+Inf"} 9600
+qse_backend_itl_seconds_sum{backend="vllm1"} 230.40000000000782
+qse_backend_itl_seconds_count{backend="vllm1"} 9600
+# HELP qse_backend_kv_capacity_tokens KV tokens the pool holds (from the backend's own /metrics)
+# TYPE qse_backend_kv_capacity_tokens gauge
+qse_backend_kv_capacity_tokens{backend="sglang1"} 100000
+# HELP qse_backend_kv_tokens KV tokens in use (from the backend's own /metrics)
+# TYPE qse_backend_kv_tokens gauge
+qse_backend_kv_tokens{backend="sglang1"} 40000
+# HELP qse_backend_kv_usage KV cache in use, 0 to 1 (from the backend's own /metrics)
+# TYPE qse_backend_kv_usage gauge
+qse_backend_kv_usage{backend="sglang1"} 0.4
+qse_backend_kv_usage{backend="vllm1"} 0.27
+# HELP qse_backend_preemptions_total requests preempted (from the backend's own /metrics)
+# TYPE qse_backend_preemptions_total counter
+qse_backend_preemptions_total{backend="sglang1"} 2
+qse_backend_preemptions_total{backend="vllm1"} 1
+# HELP qse_backend_prefill_seconds a request's prefill (from the backend's own /metrics)
+# TYPE qse_backend_prefill_seconds histogram
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="0.3"} 44
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="0.5"} 44
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="0.8"} 45
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="1"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="1.5"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="2"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="2.5"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="15"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="30"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="50"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="60"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="120"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="240"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="480"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="960"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="1920"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="7680"} 46
+qse_backend_prefill_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_prefill_seconds_sum{backend="vllm1"} 10.400000000000002
+qse_backend_prefill_seconds_count{backend="vllm1"} 46
+# HELP qse_backend_prefix_cache_hits_total prompt tokens found in the prefix cache (from the backend's own /metrics)
+# TYPE qse_backend_prefix_cache_hits_total counter
+qse_backend_prefix_cache_hits_total{backend="vllm1"} 30800
+# HELP qse_backend_prefix_cache_queries_total prompt tokens looked up in the prefix cache (from the backend's own /metrics)
+# TYPE qse_backend_prefix_cache_queries_total counter
+qse_backend_prefix_cache_queries_total{backend="vllm1"} 53000
+# HELP qse_backend_prompt_tokens_cached_total prompt tokens served from a cache (local and external) (from the backend's own /metrics)
+# TYPE qse_backend_prompt_tokens_cached_total counter
+qse_backend_prompt_tokens_cached_total{backend="sglang1"} 23840
+qse_backend_prompt_tokens_cached_total{backend="vllm1"} 30800
+# HELP qse_backend_prompt_tokens_total prompt tokens processed (from the backend's own /metrics)
+# TYPE qse_backend_prompt_tokens_total counter
+qse_backend_prompt_tokens_total{backend="sglang1"} 41200
+qse_backend_prompt_tokens_total{backend="vllm1"} 53000
+# HELP qse_backend_queue_seconds a request's time waiting (from the backend's own /metrics)
+# TYPE qse_backend_queue_seconds histogram
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0"} 0
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.001"} 0
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.005"} 0
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.01"} 0
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.05"} 30
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.1"} 30
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.2"} 30
+qse_backend_queue_seconds_bucket{backend="sglang1",le="0.5"} 31
+qse_backend_queue_seconds_bucket{backend="sglang1",le="1"} 31
+qse_backend_queue_seconds_bucket{backend="sglang1",le="2"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="3"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="4"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="5"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="10"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="15"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="20"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="30"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="40"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="50"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="60"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="70"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="80"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="90"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="100"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="200"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="300"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="400"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="500"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="600"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="700"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="800"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="900"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="1000"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="1200"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="1400"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="1600"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="1800"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="2000"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="2500"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="3000"} 32
+qse_backend_queue_seconds_bucket{backend="sglang1",le="+Inf"} 32
+qse_backend_queue_seconds_sum{backend="sglang1"} 2.4000000000000004
+qse_backend_queue_seconds_count{backend="sglang1"} 32
+qse_backend_queue_seconds_bucket{backend="vllm1",le="0.3"} 1
+qse_backend_queue_seconds_bucket{backend="vllm1",le="0.5"} 44
+qse_backend_queue_seconds_bucket{backend="vllm1",le="0.8"} 45
+qse_backend_queue_seconds_bucket{backend="vllm1",le="1"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="1.5"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="2"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="2.5"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="15"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="30"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="50"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="60"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="120"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="240"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="480"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="960"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="1920"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="7680"} 46
+qse_backend_queue_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_queue_seconds_sum{backend="vllm1"} 18.900000000000002
+qse_backend_queue_seconds_count{backend="vllm1"} 46
+# HELP qse_backend_requests_aborted_total requests aborted (from the backend's own /metrics)
+# TYPE qse_backend_requests_aborted_total counter
+qse_backend_requests_aborted_total{backend="sglang1"} 1
+# HELP qse_backend_requests_finished_total requests finished, by reason (from the backend's own /metrics)
+# TYPE qse_backend_requests_finished_total counter
+qse_backend_requests_finished_total{backend="sglang1"} 32
+qse_backend_requests_finished_total{backend="vllm1",reason="abort"} 1
+qse_backend_requests_finished_total{backend="vllm1",reason="error"} 0
+qse_backend_requests_finished_total{backend="vllm1",reason="length"} 2
+qse_backend_requests_finished_total{backend="vllm1",reason="repetition"} 0
+qse_backend_requests_finished_total{backend="vllm1",reason="stop"} 43
+# HELP qse_backend_requests_running requests in the engine's batches (from the backend's own /metrics)
+# TYPE qse_backend_requests_running gauge
+qse_backend_requests_running{backend="sglang1"} 2
+qse_backend_requests_running{backend="vllm1"} 1
+# HELP qse_backend_requests_waiting requests waiting to be scheduled (from the backend's own /metrics)
+# TYPE qse_backend_requests_waiting gauge
+qse_backend_requests_waiting{backend="sglang1"} 0
+qse_backend_requests_waiting{backend="vllm1"} 0
+# HELP qse_backend_spec_accept_length tokens a verify step commits in the engine's last window (the bonus token included) (from the backend's own /metrics)
+# TYPE qse_backend_spec_accept_length gauge
+qse_backend_spec_accept_length{backend="sglang1"} 3.1
+# HELP qse_backend_spec_accept_rate accepted over proposed drafts in the engine's last window, 0 to 1 (from the backend's own /metrics)
+# TYPE qse_backend_spec_accept_rate gauge
+qse_backend_spec_accept_rate{backend="sglang1"} 0.7
+# HELP qse_backend_spec_accepted_tokens_per_pos_total draft tokens accepted, by draft position (from the backend's own /metrics)
+# TYPE qse_backend_spec_accepted_tokens_per_pos_total counter
+qse_backend_spec_accepted_tokens_per_pos_total{backend="vllm1",position="0"} 2890
+qse_backend_spec_accepted_tokens_per_pos_total{backend="vllm1",position="1"} 2250
+qse_backend_spec_accepted_tokens_per_pos_total{backend="vllm1",position="2"} 1610
+# HELP qse_backend_spec_accepted_tokens_total draft tokens accepted (from the backend's own /metrics)
+# TYPE qse_backend_spec_accepted_tokens_total counter
+qse_backend_spec_accepted_tokens_total{backend="vllm1"} 6750
+# HELP qse_backend_spec_draft_tokens_total draft tokens proposed (from the backend's own /metrics)
+# TYPE qse_backend_spec_draft_tokens_total counter
+qse_backend_spec_draft_tokens_total{backend="vllm1"} 9600
+# HELP qse_backend_spec_drafts_total speculative drafts (from the backend's own /metrics)
+# TYPE qse_backend_spec_drafts_total counter
+qse_backend_spec_drafts_total{backend="vllm1"} 3200
+# HELP qse_backend_spec_num_draft_tokens draft tokens a step proposes (from the backend's own /metrics)
+# TYPE qse_backend_spec_num_draft_tokens gauge
+qse_backend_spec_num_draft_tokens{backend="sglang1"} 4
+# HELP qse_backend_spec_steps speculative steps configured (from the backend's own /metrics)
+# TYPE qse_backend_spec_steps gauge
+qse_backend_spec_steps{backend="sglang1"} 3
+# HELP qse_backend_spec_verify_calls_total speculative verify calls (from the backend's own /metrics)
+# TYPE qse_backend_spec_verify_calls_total counter
+qse_backend_spec_verify_calls_total{backend="sglang1"} 2860
+# HELP qse_backend_tpot_seconds a request's time per output token (from the backend's own /metrics)
+# TYPE qse_backend_tpot_seconds histogram
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.01"} 0
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.025"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.05"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.075"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.1"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.15"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.2"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.3"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.4"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.5"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="0.75"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="1"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="2.5"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="7.5"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="80"} 46
+qse_backend_tpot_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_tpot_seconds_sum{backend="vllm1"} 1.15
+qse_backend_tpot_seconds_count{backend="vllm1"} 46
+# HELP qse_backend_ttft_seconds time to first token (from the backend's own /metrics)
+# TYPE qse_backend_ttft_seconds histogram
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="0.1"} 0
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="0.2"} 30
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="0.4"} 30
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="0.6"} 31
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="0.8"} 31
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="1"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="2"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="4"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="6"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="8"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="10"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="20"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="40"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="60"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="80"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="100"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="200"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="400"} 32
+qse_backend_ttft_seconds_bucket{backend="sglang1",le="+Inf"} 32
+qse_backend_ttft_seconds_sum{backend="sglang1"} 5.9
+qse_backend_ttft_seconds_count{backend="sglang1"} 32
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.001"} 0
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.005"} 0
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.01"} 0
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.02"} 0
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.04"} 0
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.06"} 43
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.08"} 43
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.1"} 44
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.25"} 45
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.5"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="0.75"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="1"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="2.5"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="5"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="7.5"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="10"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="20"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="40"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="80"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="160"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="640"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="2560"} 46
+qse_backend_ttft_seconds_bucket{backend="vllm1",le="+Inf"} 46
+qse_backend_ttft_seconds_sum{backend="vllm1"} 2.74
+qse_backend_ttft_seconds_count{backend="vllm1"} 46

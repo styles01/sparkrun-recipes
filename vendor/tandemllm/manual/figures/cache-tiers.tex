@@ -1,0 +1,29 @@
+% The cache tiers, from the engine's own buffers down to the NVMe, in lookup order.
+\begin{tikzpicture}[
+    tier/.style={draw=cobalt, fill=cobaltlight, rounded corners=2pt, minimum height=9mm,
+      text width=46mm, align=left, font=\sffamily\small, inner sep=4pt},
+    disk/.style={draw=signal, fill=signallight, rounded corners=2pt, minimum height=9mm,
+      text width=46mm, align=left, font=\sffamily\small, inner sep=4pt},
+    note/.style={font=\sffamily\scriptsize, text=slate, text width=58mm, align=left, anchor=west},
+    node distance=2mm]
+  \node[tier] (rows) {rows in place + grid anchors};
+  \node[note] at ([xshift=4mm]rows.east) {the last prefill's KV, a recurrent-state anchor every 1,024 tokens; 2.5 GiB of anchors};
+  \node[tier, below=of rows] (end) {end anchor};
+  \node[note] at ([xshift=4mm]end.east) {the state at the end of the last generation; 147 MiB};
+  \node[tier, below=of end] (pin) {pinned head};
+  \node[note] at ([xshift=4mm]pin.east) {the head a long unrelated request would cut; 4 GiB};
+  \node[tier, below=of pin] (park) {parked session};
+  \node[note] at ([xshift=4mm]park.east) {another session's rows past the shared head; 4 GiB};
+  \node[tier, below=of park] (store) {state store};
+  \node[note] at ([xshift=4mm]store.east) {whole snapshots: session and prefix cache; 2 GiB, 1 GiB an entry};
+  \node[disk, below=4mm of store] (tier) {disk tier};
+  \node[note] at ([xshift=4mm]tier.east) {heads and prefixes read twice, chunks of 1,024 rows; 50 GB};
+  \node[disk, below=of tier] (spill) {session spill};
+  \node[note] at ([xshift=4mm]spill.east) {whole live conversations at a stop or an eviction; 40 GB};
+  \node[quiet, below=4mm of spill, text width=46mm, align=left] (cold) {cold prefill};
+  \node[note] at ([xshift=4mm]cold.east) {about 740 tokens a second at best};
+  \draw[very thick, ->, slate] ([xshift=-5mm]rows.north west) -- ([xshift=-5mm]cold.south west)
+    node[midway, sloped, above, font=\sffamily\scriptsize] {looked up in this order};
+  \node[font=\sffamily\scriptsize, text=cobalt, anchor=south west] at (rows.north west) {device memory};
+  \node[font=\sffamily\scriptsize, text=signal, anchor=south west] at (tier.north west) {NVMe};
+\end{tikzpicture}

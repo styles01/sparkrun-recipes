@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor meta",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "modes": {
+      "type": "array"
+    },
+    "task_modes": {
+      "type": "array"
+    },
+    "profile_modes": {
+      "type": "array"
+    },
+    "efforts": {
+      "type": "array"
+    },
+    "sizes": {
+      "type": "array"
+    },
+    "size_signals": {
+      "type": "array"
+    },
+    "tool_turn_efforts": {
+      "type": "array"
+    },
+    "decisions": {
+      "type": "array"
+    },
+    "client_kinds": {
+      "type": "array"
+    },
+    "state_kinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "the kinds of TandemLLM state lines a profile's ui.kinds switches"
+    },
+    "state_channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "S1: where a profile's state lines go (ui.states_channel): reasoning or content; X1: inline"
+    },
+    "side_kinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "S1: the kinds of a client's side request a router's structural.side_shapes names"
+    },
+    "locked": {
+      "type": "object"
+    },
+    "tasks": {
+      "type": "object"
+    },
+    "schemas": {
+      "type": "object"
+    },
+    "roles": {
+      "type": "object",
+      "description": "SRV-133: the role contract's values (kinds, windows, fallbacks, writes, sharing, contracts) and the defaults a document stored before them gets"
+    }
+  },
+  "required": [
+    "contract_version",
+    "modes",
+    "task_modes",
+    "profile_modes",
+    "efforts",
+    "decisions",
+    "client_kinds",
+    "locked",
+    "tasks",
+    "schemas"
+  ],
+  "additionalProperties": false
+}

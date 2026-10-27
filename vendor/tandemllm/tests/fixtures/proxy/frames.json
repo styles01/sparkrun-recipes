@@ -1,0 +1,420 @@
+{
+ "note": "Frames and bodies shaped as OpenAI (chat completions, Responses API), DeepSeek, vLLM, SGLang and this engine document them; written by hand from the providers' published shapes, not recorded from paid calls.",
+ "streams": {
+  "openai_chat_injected": {
+   "kind": "openai",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hel\"},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"lo\"},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":1959,\"completion_tokens\":412,\"total_tokens\":2371,\"prompt_tokens_details\":{\"cached_tokens\":1536,\"audio_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":230,\"audio_tokens\":0}}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 1959,
+    "completion_tokens": 412,
+    "cached_tokens": 1536,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 230
+   },
+   "reasoning": false,
+   "tools": 0,
+   "token_frames": 2,
+   "dropped": [
+    4
+   ],
+   "finish": "stop"
+  },
+  "openai_chat_client_asked": {
+   "kind": "openai",
+   "injected": false,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\"},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":1959,\"completion_tokens\":412,\"total_tokens\":2371,\"prompt_tokens_details\":{\"cached_tokens\":1536,\"audio_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":230,\"audio_tokens\":0}}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 1959,
+    "completion_tokens": 412,
+    "cached_tokens": 1536,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 230
+   },
+   "reasoning": false,
+   "tools": 0,
+   "token_frames": 1,
+   "dropped": [],
+   "finish": "stop"
+  },
+  "generic_no_details": {
+   "kind": "generic",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"a\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"length\"}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":7,\"total_tokens\":19}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 7,
+    "cached_tokens": null,
+    "cache_write_tokens": null,
+    "reasoning_tokens": null
+   },
+   "reasoning": false,
+   "tools": 0,
+   "token_frames": 1,
+   "dropped": [
+    2
+   ],
+   "finish": "length"
+  },
+  "generic_no_usage": {
+   "kind": "generic",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"a\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": null,
+    "completion_tokens": null,
+    "cached_tokens": null,
+    "cache_write_tokens": null,
+    "reasoning_tokens": null
+   },
+   "reasoning": false,
+   "tools": 0,
+   "token_frames": 1,
+   "dropped": [],
+   "finish": "stop"
+  },
+  "vllm_reasoning_content": {
+   "kind": "generic",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\"Let me\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" think\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"42\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":30,\"completion_tokens\":9,\"total_tokens\":39,\"prompt_tokens_details\":{\"cached_tokens\":16}}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 30,
+    "completion_tokens": 9,
+    "cached_tokens": 16,
+    "cache_write_tokens": null,
+    "reasoning_tokens": null
+   },
+   "reasoning": true,
+   "tools": 0,
+   "token_frames": 3,
+   "dropped": [
+    5
+   ],
+   "finish": "stop"
+  },
+  "sglang_reasoning_tokens": {
+   "kind": "generic",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning\":\"hm\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"ok\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":4,\"total_tokens\":14,\"reasoning_tokens\":2,\"prompt_tokens_details\":null}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 4,
+    "cached_tokens": null,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 2
+   },
+   "reasoning": true,
+   "tools": 0,
+   "token_frames": 2,
+   "dropped": [
+    3
+   ],
+   "finish": "stop"
+  },
+  "think_tags_in_content": {
+   "kind": "tandemllm",
+   "injected": false,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"<think>\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"plan\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"</think>done\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"TandemLLM\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":20,\"completion_tokens\":6,\"total_tokens\":26,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":4}}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 6,
+    "cached_tokens": 0,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 4
+   },
+   "reasoning": true,
+   "tools": 0,
+   "token_frames": 3,
+   "dropped": [],
+   "finish": "stop"
+  },
+  "tool_call_deltas": {
+   "kind": "openai",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"index\":0,\"id\":\"call_a\",\"type\":\"function\",\"function\":{\"name\":\"read\",\"arguments\":\"\"}}]},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"path\\\"\"}}]},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\": 3}\"}}]},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":1,\"id\":\"call_b\",\"type\":\"function\",\"function\":{\"name\":\"write\",\"arguments\":\"{}\"}}]},\"finish_reason\":null}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}],\"usage\":null}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":50,\"completion_tokens\":20,\"total_tokens\":70,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 50,
+    "completion_tokens": 20,
+    "cached_tokens": 0,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 0
+   },
+   "reasoning": false,
+   "tools": 2,
+   "token_frames": 4,
+   "dropped": [
+    5
+   ],
+   "finish": "tool_calls"
+  },
+  "deepseek_reasoner": {
+   "kind": "deepseek",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":null,\"reasoning_content\":\"\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\"First\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Answer\"},\"finish_reason\":null}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}",
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[],\"usage\":{\"prompt_tokens\":2000,\"completion_tokens\":300,\"total_tokens\":2300,\"prompt_cache_hit_tokens\":1536,\"prompt_cache_miss_tokens\":464,\"completion_tokens_details\":{\"reasoning_tokens\":250}}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": 2000,
+    "completion_tokens": 300,
+    "cached_tokens": 1536,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 250
+   },
+   "reasoning": true,
+   "tools": 0,
+   "token_frames": 2,
+   "dropped": [
+    4
+   ],
+   "finish": "stop"
+  },
+  "error_inside_stream": {
+   "kind": "generic",
+   "injected": true,
+   "events": [
+    "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"m\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"a\"},\"finish_reason\":null}]}",
+    "data: {\"error\":{\"message\":\"overloaded\",\"type\":\"server_error\"}}",
+    "data: [DONE]"
+   ],
+   "usage": {
+    "prompt_tokens": null,
+    "completion_tokens": null,
+    "cached_tokens": null,
+    "cache_write_tokens": null,
+    "reasoning_tokens": null
+   },
+   "reasoning": false,
+   "tools": 0,
+   "token_frames": 1,
+   "dropped": [],
+   "finish": "error"
+  },
+  "openai_responses": {
+   "kind": "openai",
+   "path": "/v1/responses",
+   "injected": false,
+   "events": [
+    "event: response.created\ndata: {\"response\":{\"id\":\"resp_1\",\"status\":\"in_progress\",\"usage\":null},\"type\":\"response.created\"}",
+    "event: response.output_item.added\ndata: {\"output_index\":0,\"item\":{\"type\":\"reasoning\"},\"type\":\"response.output_item.added\"}",
+    "event: response.reasoning_summary_text.delta\ndata: {\"delta\":\"Plan\",\"type\":\"response.reasoning_summary_text.delta\"}",
+    "event: response.output_item.added\ndata: {\"output_index\":1,\"item\":{\"type\":\"message\"},\"type\":\"response.output_item.added\"}",
+    "event: response.output_text.delta\ndata: {\"delta\":\"Hi\",\"type\":\"response.output_text.delta\"}",
+    "event: response.output_text.delta\ndata: {\"delta\":\"!\",\"type\":\"response.output_text.delta\"}",
+    "event: response.output_item.added\ndata: {\"output_index\":2,\"item\":{\"type\":\"function_call\",\"name\":\"f\"},\"type\":\"response.output_item.added\"}",
+    "event: response.function_call_arguments.delta\ndata: {\"delta\":\"{}\",\"type\":\"response.function_call_arguments.delta\"}",
+    "event: response.completed\ndata: {\"response\":{\"id\":\"resp_1\",\"status\":\"completed\",\"model\":\"gpt-x\",\"usage\":{\"input_tokens\":5000,\"input_tokens_details\":{\"cached_tokens\":4096},\"output_tokens\":120,\"output_tokens_details\":{\"reasoning_tokens\":64},\"total_tokens\":5120}},\"type\":\"response.completed\"}"
+   ],
+   "usage": {
+    "prompt_tokens": 5000,
+    "completion_tokens": 120,
+    "cached_tokens": 4096,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 64
+   },
+   "reasoning": true,
+   "tools": 1,
+   "token_frames": 4,
+   "dropped": [],
+   "finish": "stop"
+  }
+ },
+ "bodies": {
+  "openai_chat": {
+   "kind": "openai",
+   "body": {
+    "id": "c",
+    "object": "chat.completion",
+    "model": "m",
+    "choices": [
+     {
+      "index": 0,
+      "message": {
+       "role": "assistant",
+       "content": "x",
+       "tool_calls": [
+        {
+         "id": "a",
+         "type": "function",
+         "function": {
+          "name": "f",
+          "arguments": "{}"
+         }
+        }
+       ]
+      },
+      "finish_reason": "tool_calls"
+     }
+    ],
+    "usage": {
+     "prompt_tokens": 1959,
+     "completion_tokens": 412,
+     "total_tokens": 2371,
+     "prompt_tokens_details": {
+      "cached_tokens": 1536,
+      "audio_tokens": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 230,
+      "audio_tokens": 0
+     }
+    }
+   },
+   "usage": {
+    "prompt_tokens": 1959,
+    "completion_tokens": 412,
+    "cached_tokens": 1536,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 230
+   },
+   "reasoning": false,
+   "tools": 1
+  },
+  "deepseek_chat": {
+   "kind": "deepseek",
+   "body": {
+    "id": "c",
+    "object": "chat.completion",
+    "model": "deepseek-chat",
+    "choices": [
+     {
+      "index": 0,
+      "message": {
+       "role": "assistant",
+       "content": "x",
+       "reasoning_content": "r"
+      },
+      "finish_reason": "stop"
+     }
+    ],
+    "usage": {
+     "prompt_tokens": 100,
+     "completion_tokens": 10,
+     "total_tokens": 110,
+     "prompt_cache_hit_tokens": 64,
+     "prompt_cache_miss_tokens": 36
+    }
+   },
+   "usage": {
+    "prompt_tokens": 100,
+    "completion_tokens": 10,
+    "cached_tokens": 64,
+    "cache_write_tokens": null,
+    "reasoning_tokens": null
+   },
+   "reasoning": true,
+   "tools": 0
+  },
+  "responses_body": {
+   "kind": "openai",
+   "path": "/v1/responses",
+   "body": {
+    "id": "resp",
+    "object": "response",
+    "status": "completed",
+    "output": [
+     {
+      "type": "reasoning"
+     },
+     {
+      "type": "message"
+     }
+    ],
+    "usage": {
+     "input_tokens": 5000,
+     "input_tokens_details": {
+      "cached_tokens": 4096
+     },
+     "output_tokens": 120,
+     "output_tokens_details": {
+      "reasoning_tokens": 64
+     },
+     "total_tokens": 5120
+    }
+   },
+   "usage": {
+    "prompt_tokens": 5000,
+    "completion_tokens": 120,
+    "cached_tokens": 4096,
+    "cache_write_tokens": null,
+    "reasoning_tokens": 64
+   },
+   "reasoning": true,
+   "tools": 0
+  },
+  "embeddings": {
+   "kind": "openai",
+   "path": "/v1/embeddings",
+   "body": {
+    "object": "list",
+    "data": [],
+    "usage": {
+     "prompt_tokens": 8,
+     "total_tokens": 8
+    }
+   },
+   "usage": {
+    "prompt_tokens": 8,
+    "completion_tokens": 0,
+    "cached_tokens": null,
+    "cache_write_tokens": null,
+    "reasoning_tokens": null
+   },
+   "reasoning": false,
+   "tools": 0
+  }
+ }
+}

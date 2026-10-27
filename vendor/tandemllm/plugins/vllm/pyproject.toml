@@ -1,0 +1,35 @@
+# tandemllm-vllm-plugin: TandemLLM's per-request stats from inside vLLM (layer L2, docs/proxy.md).
+#
+#   pip install plugins/vllm          into the environment vLLM runs in; it pulls nothing
+#
+# vLLM finds both entry points by itself. The stat logger loads unless VLLM_PLUGINS leaves it out;
+# the pull route loads only when VLLM_PLUGINS names `tandem_stats_endpoint` (vLLM's rule for
+# endpoint plugins). Tested versions: plugins/README.md.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tandemllm-vllm-plugin"
+dynamic = ["version"]
+description = "Per-request queue, prefill and decode times, cached tokens and preemptions from inside vLLM, pushed to TandemLLM's dashboard"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "Khaled Bakeer" }]
+keywords = ["vllm", "metrics", "observability", "tandemllm"]
+dependencies = []
+
+[project.entry-points."vllm.stat_logger_plugins"]
+tandem_stat_logger = "tandem_vllm_plugin.logger:TandemStatLogger"
+
+[project.entry-points."vllm.endpoint_plugins"]
+tandem_stats_endpoint = "tandem_vllm_plugin.endpoint:TandemStatsEndpoint"
+
+[tool.setuptools]
+packages = ["tandem_vllm_plugin"]
+
+[tool.setuptools.dynamic]
+version = { attr = "tandem_vllm_plugin.__version__" }

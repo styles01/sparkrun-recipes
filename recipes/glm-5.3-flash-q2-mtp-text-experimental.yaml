@@ -1,0 +1,107 @@
+recipe_version: "4"
+name: glm-5.3-flash-q2-mtp-text-experimental
+# Staged research variant. Not Arena-eligible and not a production deployment.
+description: "GLM-5.3-Flash on one DGX Spark through a source-pinned eauchs llama.cpp fork and Unsloth UD-Q2_K_XL GGUF. Text-only MTP evaluation: one active request, q8 KV, 32K baseline first; 128K and 256K are separately gated single-request probes. This deliberately trades quality for enough unified-memory headroom to investigate local serving safely."
+model: unsloth/GLM-5.3-Flash-GGUF
+model_revision: "2975ab414d30340466d8c51533c6e91f0cca64c1"
+runtime: llama-cpp-fork
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-05"
+  status: "staged-candidate-not-running"
+  tags:
+    - glm
+    - glm-5.3-flash
+    - gguf
+    - q2_k_xl
+    - llama-cpp
+    - glm5next
+    - mtp
+    - gb10
+    - dgx-spark
+    - text-only
+    - single-lane
+    - experimental
+  runbook: runbooks/glm-5.3-flash-q2-mtp-text-experimental.md
+  canonical_launcher: scripts/switch-to-glm53-flash-q2-mtp-text-experimental.sh
+  upstream_model: "https://huggingface.co/unsloth/GLM-5.3-Flash-GGUF"
+  upstream_model_revision: "2975ab414d30340466d8c51533c6e91f0cca64c1"
+  upstream_runtime: "https://github.com/eauchs/llama.cpp"
+  upstream_runtime_revision: "1d0c76f3c6d030fdfc269aa27db6334ea2834cec"
+  evidence_repo: "https://github.com/Weschera/glm53-flash-one-spark"
+  upstream_license: "MIT"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu: NVIDIA GB10
+  unified_memory_gib: 121.7
+  disk_free_gib_before_download: 140
+  exclusive_spark_lane: true
+  memory_cgroup_max: "118G"
+  cuda_toolkit: nvcc
+
+model_layout:
+  local_dir: "~/models/hf/GLM-5.3-Flash-GGUF-UD-Q2_K_XL"
+  relative_gguf_dir: "UD-Q2_K_XL"
+  expected_gguf_shards: 4
+  quantization: "Unsloth UD-Q2_K_XL GGUF"
+  reported_weight_size_gb: 109
+  reported_weight_size_gib: 101.51
+  memory_note: "Leaves roughly 20.2 GiB of the 121.7-GiB unified pool before KV, runtime workspace, and OS. The 118G (decimal) cgroup cap is approximately 109.9 GiB, preserving about 11.8 GiB outside the scope for OS/SSH; 256K remains a measured gate, not a fit claim. IQ3_XXS (120 GB) is excluded because it leaves only about 9.9 GiB."
+
+runtime_details:
+  build: "eauchs/llama.cpp@1d0c76f3c6d030fdfc269aa27db6334ea2834cec, CMake + GGML_CUDA"
+  server_binary: "~/src/llama-glm53-flash-mtp/build/bin/llama-server"
+  host: "0.0.0.0"
+  port: 8000
+  served_model_name: "GLM-5.3-Flash-Q2-MTP"
+  chat_template: jinja
+  speculation: draft-mtp
+  tf32_override: "0"
+  flash_attention: "off pending correctness comparison"
+  modalities: "text-only; the selected MTP fork declares text-only support"
+
+lanes:
+  - name: 32k-baseline
+    purpose: "First local smoke, correctness, memory-recovery, and MTP acceptance gate"
+    max_model_len: 32768
+    max_num_seqs: 1
+    kv_cache_dtype: q8_0
+    flash_attention: off
+    speculation:
+      method: draft-mtp
+    status: "first permitted start lane"
+  - name: 128k-eval
+    purpose: "Single-request retrieval and real-text decode evaluation after 32K gates pass"
+    max_model_len: 131072
+    max_num_seqs: 1
+    kv_cache_dtype: q8_0
+    flash_attention: off
+    speculation:
+      method: draft-mtp
+    status: "blocked until 32K correctness and recovery pass"
+  - name: 256k-probe
+    purpose: "Single-request context ceiling probe, not concurrent service"
+    max_model_len: 262144
+    max_num_seqs: 1
+    kv_cache_dtype: q8_0
+    flash_attention: off
+    speculation:
+      method: draft-mtp
+    status: "blocked until 128K gates pass; never test 1M on one Spark"
+
+promotion_gates:
+  - "Pinned source/model identities and exact GGUF shard layout verify before start."
+  - "At 32K: deterministic non-speculative versus MTP comparison, MTP acceptance, and repeated recovery pass."
+  - "At 128K/256K: early/middle/late retrieval plus captured-text decode pass; HTTP 200 alone is insufficient."
+  - "Record unified-memory low-water mark, scope/cgroup peak, TTFT, output tok/s, p95 ITL, and raw completions."
+  - "Vision is a separate fork and a separate validation effort; do not infer it from this recipe."
+  - "Two concurrent requests require a new explicit memory and stability gate; this recipe is one active request only."

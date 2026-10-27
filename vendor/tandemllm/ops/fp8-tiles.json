@@ -1,0 +1,33 @@
+{
+ "17408x5120": {
+  "bn": 64,
+  "warps": 8,
+  "stages": 5
+ },
+ "10240x5120": {
+  "bn": 64,
+  "warps": 8,
+  "stages": 3
+ },
+ "6144x5120": {
+  "bn": 64,
+  "warps": 8,
+  "stages": 2
+ },
+ "5120x6144": {
+  "bn": 64,
+  "warps": 4,
+  "stages": 3
+ },
+ "12288x5120": {
+  "bn": 64,
+  "warps": 8,
+  "stages": 4
+ },
+ "1024x5120": {
+  "bn": 64,
+  "warps": 8,
+  "stages": 3
+ },
+ "_note": "tools/fp8_probe.py --sweep, 2026-09-27 20:04, NVIDIA GB10: bit-identical to the default launch at M 1..32"
+}

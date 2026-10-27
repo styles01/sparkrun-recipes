@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor eval write",
+  "description": "POST /v1/conductor/evals {report}: the file the suite report was kept as in evals/",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "file": {
+      "type": "string",
+      "pattern": "^suite-\\d{4}-\\d{2}-\\d{2}-\\d{6}\\.json$"
+    }
+  },
+  "required": [
+    "contract_version",
+    "file"
+  ],
+  "additionalProperties": false
+}

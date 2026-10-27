@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor memory disk clear",
+  "type": "object",
+  "description": "POST /v1/conductor/memory/disk/clear (C1): what was on disk before, and the tier after",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "cleared": {
+      "type": "boolean"
+    },
+    "entries": {
+      "type": "integer"
+    },
+    "chunks": {
+      "type": "integer"
+    },
+    "bytes": {
+      "type": "integer"
+    },
+    "disk": {
+      "$ref": "memory-disk.schema.json"
+    }
+  },
+  "required": [
+    "contract_version",
+    "cleared",
+    "entries",
+    "chunks",
+    "bytes",
+    "disk"
+  ],
+  "additionalProperties": false
+}

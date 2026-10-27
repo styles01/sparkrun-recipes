@@ -1,0 +1,88 @@
+The shipping container is a plain steel box, and almost everything interesting about it happened
+outside the box. Before containers, a ship carried sacks, barrels, crates and loose bundles, and a
+crew of dockworkers moved each item by hand between the quay and the hold. A cargo could sit in a
+port for a week while men rearranged it. The cost of that week was invisible in the freight rate
+and enormous in the total. When Malcom McLean converted a tanker to carry truck trailers in 1956,
+the saving he found was not in the steel. It was in the hours that stopped being spent.
+
+What made the box work was agreement. A container is useful only if the crane at the far end can
+lift it, the truck chassis can carry it, and the railcar can take it without modification. That
+means corner castings in the same place, the same lengths, the same stacking strength, everywhere.
+The agreement took a decade of argument, and several shipping lines lost money defending sizes
+that did not survive. The standard that emerged was not the best design anyone had drawn. It was
+the one enough parties could live with.
+
+Ports changed shape as a result. The old finger piers of Manhattan and Liverpool were built for
+ships that stayed a long time and for warehouses that stood close to the water. A container port
+wants the opposite: a straight quay, deep water, and a very large flat yard behind it. Cities that
+had no room for the yard lost their traffic to places that did, often a short distance away and
+usually with a cheaper workforce. Newark took New York's cargo. Felixstowe took London's.
+
+Something similar happened to the crews. A ship that once needed two hundred dockers now needs a
+crane driver, a lasher and a clerk. The union response is one of the better studied labour
+conflicts of the century, partly because it ended in a bargain rather than a defeat: in several
+ports the men accepted mechanisation in exchange for guaranteed income, and the guarantees were
+honoured for decades.
+
+Consider a different kind of system, with a similar lesson about interfaces. A wine region is
+usually described by soil and weather, and both matter, but the thing that decides whether a
+region has a reputation is a set of rules about what may be written on the label. Burgundy sells
+place names. Bordeaux sells estate names. Champagne sells a method and a region together, and has
+defended the pairing in court for a century. None of those choices follows from the chemistry of
+the grape. They are commercial decisions that became traditions, and the tradition then shaped the
+planting.
+
+Soil does matter, though not in the way the marketing suggests. Vines do badly in rich ground.
+Given plenty of water and nitrogen they grow leaves, set heavy crops, and make thin wine. The
+famous slopes are famous partly because they are poor: stony, shallow, well drained, and steep
+enough that water leaves quickly. A vine under mild stress sends roots down instead of shoots out,
+and ripens a smaller crop more completely. The grower's craft is largely the management of that
+stress, which is why the same clone planted two hundred metres apart can give two different wines.
+
+Weather sets the outer limits. A late frost in May can remove most of a crop in one night, and the
+countermeasures are all crude: burning straw, spraying water so that the latent heat of freezing
+holds the buds at zero, or flying a helicopter low enough to mix the warm air above the inversion
+into the cold layer below. Each of these is expensive, none is reliable, and all of them are used.
+
+Bread is a third example of the same pattern, where a small number of physical facts are dressed
+up as tradition. Wheat flour makes a dough that holds gas because two proteins, glutenin and
+gliadin, form a network when hydrated and worked. Rye has much less of that network and relies on
+pentosans instead, which is why rye bread is denser and why a rye dough is sticky rather than
+elastic. Sourdough is not a flavour so much as an ecology: a stable community of lactic acid
+bacteria and wild yeast, in which the bacteria outnumber the yeast by roughly a hundred to one and
+set the acidity, while the yeast does most of the lifting.
+
+The acidity does more than taste sour. It slows the enzymes that would otherwise degrade the
+starch, it strengthens the gluten network at moderate levels and weakens it at high ones, and it
+makes the loaf keep longer by discouraging the mould that would otherwise arrive on the third day.
+Bakers learned all of this by feel long before anyone wrote down the mechanism, and the written
+mechanism has not changed the practice much. It has mostly explained why the practice works.
+
+Mountains give a fourth case, and here the timescale is what surprises people. The Alps are young,
+which is why they are high and sharp; the Appalachians are old, which is why they are low and
+rounded. But the rounding is not simple wear. A mountain range is a load on the crust, and the
+crust floats. As erosion removes material from the top, the range rises in response, so the rocks
+now at the summit were once several kilometres below the surface. A range can lose a vertical
+kilometre of rock and end up only a few hundred metres shorter. The valleys deepen faster than the
+peaks fall.
+
+Glaciers cut differently from rivers, and the difference is visible from a train window. A river
+cuts a V, because the water works at a line on the valley floor. A glacier cuts a U, because the
+ice works across its whole width and plucks at the walls as well as the bed. Where a small glacier
+joined a larger one, the small valley is left hanging above the big one, and a waterfall marks the
+join. Yosemite is a catalogue of this, and so is the west coast of Scotland, where the sea has
+since flooded the U-shaped valleys and made the sea lochs.
+
+The last example is the one with the clearest economics. Salt was a strategic good for most of
+recorded history, not because it is rare but because it is heavy and needed in quantity. Meat and
+fish could not be kept through a winter without it. Places that could make salt cheaply, by
+evaporating seawater in a warm dry climate or by pumping brine from a dome, sold it far inland at
+prices set almost entirely by transport. Roads were named after it. Taxes were levied on it, and
+the taxes were resented out of proportion to their size, because salt is one of the few goods that
+a poor household cannot simply do without.
+
+Refrigeration removed the strategic value in about forty years, and the industry that remained is
+mostly chemical: chlorine, caustic soda, and the road salt that keeps winter traffic moving. The
+tonnage is larger than it has ever been. The price is low enough that nobody thinks about it. That
+is the usual fate of a commodity whose importance was really the importance of the problem it
+solved, and the problem got solved another way.

@@ -1,0 +1,70 @@
+recipe_version: "4"
+name: qwen3.8-flash-next-mia-nvfp4-220k
+# Experimental: independently reviewed upstream variation. It is not deployed,
+# not Arena-qualified, and must not replace a healthy serving lane without a Go.
+description: "Qwen3.8-Flash-Next Mia NVFP4 on one DGX Spark through MiaAI-Lab's source-pinned TP=1 vLLM recipe. Evaluation profile: native 220,000 context, YaRN off, BF16/auto KV, MTP off, three lanes, vision/video retained by the multimodal checkpoint, cgroup/watchdog guarded. The author FP8-KV+MTP=3 profile remains separately gated; this lane increase does not enable MTP or FP8 KV."
+model: Mia-AiLab/Qwen3.8-Flash-Next-NVFP4
+model_revision: "925d7be6c14c6c9442ef83e8f05b5a3c39304f69"
+runtime: vllm
+container: "vllm/vllm-openai@sha256:3b0e188ffceb3d07e09c3cb5215433a0020eacf02d7f882ed3a8bfd15454477e"
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-04"
+  upstream_source: "https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark"
+  upstream_revision: "09d4424"
+  upstream_license: "AGPL-3.0-or-later"
+  runbook: runbooks/qwen38-flash-next-mia-nvfp4-220k.md
+  canonical_script: scripts/switch-to-qwen38-flash-next-mia-nvfp4-220k.sh
+  source: "https://huggingface.co/Mia-AiLab/Qwen3.8-Flash-Next-NVFP4"
+  tags:
+    - qwen
+    - qwen3.8
+    - flash-next
+    - nvfp4
+    - vllm
+    - gb10
+    - source-pinned
+    - experimental
+    - multimodal
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+
+# The Spark has a single unified memory pool. “CPU offload” does not create
+# extra physical memory; the upstream PLE mmap/offload is viable only because
+# file-backed pages are evictable. Its cgroup and watchdog are mandatory.
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  served_model_name: qwen3.8-flash-next
+  tensor_parallel: 1
+  max_model_len: 220000
+  max_num_seqs: 3
+  max_num_batched_tokens: 16384
+  yarn: false
+  kv_cache_dtype: auto
+  kv_target_gib: 16
+  host_reserve_gib: 26
+  speculative_method: none
+  default_chat_template_kwargs:
+    enable_thinking: true
+    reasoning_effort: low
+  reasoning_parser: qwen3
+  tool_call_parser: qwen3_coder
+  enable_auto_tool_choice: true
+
+safety:
+  exclusive_occupancy_required: true
+  cgroup_and_watchdog_required: true
+  docker_gpu_mode: "privileged + --gpus all, after real CUDA allocation preflight"
+  start_behavior: "refuse if another LLM workload is present; never stop it"
+  no_hermes_or_loca_config_writes: true
+
+benchmark:
+  framework: manual-evaluation-only
+  notes: "Do not report 1M context. The pinned upstream code defaults to native 262K and caps its YaRN path at 512K; its own launcher states 1M does not fit. First gates: real chat, 100K/200K/262K retrieval, memory low-water, restart/unload, multimodal, and task-quality comparison against the live Q4 lane."
+# 2026-09-19 (P2): decode benchmarks MUST use exact_tg + tg>=400 — profile: @styles01/spark-arena-v2-p400. Short-completion (tg=128, no-exact) measurements under-report 25-275% by depth x concurrency (A/B: bench_f7b70ca6e6bf vs bench_bc90208d7d77).

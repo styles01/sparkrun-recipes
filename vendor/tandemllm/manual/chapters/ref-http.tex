@@ -1,0 +1,48 @@
+\chapter{HTTP API reference}\label{ch:ref-http}
+
+The engine's server and the standalone proxy speak the same API for clients, and each adds its own routes for the dashboard and the conductor. This chapter lists every route, every header and every error they use. The tables are written in \code{manual/tools/http_ref.py}, and \code{gen_reference.py --check} compares them with the code on every build: a route a handler tests, a header name or an error type the code uses that is missing here, or a row the code no longer has, fails the check.
+
+\section{Who may call what}\index{auth}
+
+The admin password is the admin token, \code{QSE_ADMIN_TOKEN}\index{qseadmintoken@\texttt{QSE\_ADMIN\_TOKEN}} in \code{secrets.env} (\code{TANDEM_ADMIN_TOKEN} for the standalone proxy). It is not set by default. Then every route below answers anyone who reaches the port, and only \code{/metrics} keeps the metrics token when one is set (Section~\ref{sec:dash-login}). With a password set, an admin route needs it as a bearer header or a dashboard session (a cookie the token buys). A request from the machine itself (loopback, no proxy headers) needs neither, because the watchdog and the measurement tools rely on that (\code{--trust-loopback}\index{trust-loopback@\texttt{-\kern0pt-trust-loopback}}).
+
+The OpenAI routes are open on the engine, with or without a password. Behind the proxy they are open until the first user key exists; from then on every request from another machine needs a key. Table~\ref{tab:ref-http-who} names the labels the route tables use.
+
+\input{generated/http-who}
+
+\section{The engine's routes}
+
+Table~\ref{tab:ref-engine-routes} lists the engine server's routes. A route the server does not know answers 404. A route whose part is off on this server also answers 404: the conductor's routes without \code{--conductor-config} and the proxy's without \code{--backends}, each with a message that names the flag, and the decision and Laya routes without decision models, as an unknown route. With \code{--backends}\index{backends@\texttt{-\kern0pt-backends}} the engine's server also serves the proxy's routes.
+
+\input{generated/http-engine-routes}
+
+\section{The proxy's own routes}
+
+Table~\ref{tab:ref-proxy-routes} lists the routes of \code{tandem-dash}, the standalone proxy. It serves no model of its own: every completion goes to a backend, and the answer's bytes go back to the client unchanged. Table~\ref{tab:ref-side-routes} adds the two small servers that run beside the engine or the proxy: the remote host collector and the status responder that answers while the engine is stopped.
+
+\input{generated/http-proxy-routes}
+
+\section{The conductor's and the configuration routes}
+
+The conductor's routes and the proxy's configuration routes are generated from the route tables at the top of \code{server/conductor/routes.py} and \code{proxy/config_api.py}.
+
+\input{generated/routes}
+
+\section{Headers}\index{headers}
+
+Table~\ref{tab:ref-headers} lists every header the engine and the proxy read or write beyond the ones HTTP itself needs. \emph{in} is a header the server reads, \emph{out} one it writes.
+
+\input{generated/http-headers}
+
+\section{Errors}\index{errors}
+
+Errors are OpenAI-shaped:
+
+\begin{jsonc}
+{"error": {"message": "max_tokens must be at least 1", "type": "invalid_request_error",
+           "param": "max_tokens", "code": null}}
+\end{jsonc}
+
+A 400 names the field or the message part it refuses in \code{param}. A refusal the client can retry (a full queue, the memory gate, a server that drains) has the type \code{server_busy}, the status in \code{code}, and a \code{Retry-After} header. A refusal after a stream opened (a queue timeout, a prompt too long, the memory gate, a backend that failed) ends the stream with a chunk whose \code{finish_reason} is \code{"error"} and which carries the \code{error} object, then \code{[DONE]}. The decision routes keep their own body, \code{{"type": "error", "error": {"type", "message"}}}. Table~\ref{tab:ref-errors} lists every status and type.
+
+\input{generated/http-errors}

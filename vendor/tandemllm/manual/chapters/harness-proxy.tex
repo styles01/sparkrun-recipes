@@ -1,0 +1,68 @@
+\chapter{The conductor in front of any backend}\label{ch:harness-proxy}
+
+The conductor runs in front of other backends too: the router's task class, the effort, the packages and skills as notes, the side requests' caps, the loop guards, the empty-turn continue and the tool checks, the compaction section, the status lines and memory notes. In the engine's server with \code{--backends}\index{backends@\texttt{-\kern0pt-backends}} it is the engine's own conductor. The standalone proxy keeps one of its own under \code{--conductor-config}\index{conductor-config@\texttt{-\kern0pt-conductor-config}} (default \code{~/.tandemllm/conductor}, \code{off} for none), with its journal in the usage ledger's file, as on the engine.
+
+\section{Switching it on}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The conductor's settings per backend.}\label{tab:harness-settings}
+\begin{tabularx}{\linewidth}{@{}L{.2\linewidth}L{.36\linewidth}Y@{}}
+\toprule
+\hd{setting} & \hd{where} & \hd{values} \\
+\midrule
+\code{harness.mode} & the backend's form, \code{TANDEM_BACKEND_<ID>_HARNESS} & \code{off} (the default): the relay, byte for byte; \code{shadow}: journal what it would do; \code{on} \\
+\code{harness.profile} & the form, \code{TANDEM_BACKEND_<ID>_HARNESS_PROFILE} & the conductor profile for this backend's requests; empty picks by client \\
+a feature group per model & the model's row & \code{inherit}, \code{off}, \code{shadow}, \code{on}; never above the mode \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Start with \code{shadow}, read what it would have done in the Conductor view's journal and the Compare view's precision per backend, then switch to \code{on}. With the conductor off for every backend, a relayed request is copied byte for byte apart from the model id and the usage frame.
+
+\section{The feature groups}\index{feature group}
+
+Each feature group can be switched per model. What \code{inherit} means depends on the side: a local engine gets everything, while a cloud API gets the groups that cost tokens on every turn, or a second request, off or in shadow until a model is switched on.
+
+\begin{table}[htbp]
+\centering\small
+\caption[Feature groups of the conductor over HTTP]{Feature groups of the conductor over HTTP, what \texttt{inherit} resolves to, and what each costs.}\label{tab:feature-groups}
+\begin{tabularx}{\linewidth}{@{}L{.13\linewidth}YL{.07\linewidth}L{.07\linewidth}L{.22\linewidth}@{}}
+\toprule
+\hd{group} & \hd{what it does} & \hd{local} & \hd{cloud} & \hd{cost} \\
+\midrule
+\code{class} & the router's question, asked of the backend with its own constraint field & on & on & one short extra request per new user message \\
+\code{effort} & the backend's thinking switch: \code{chat_template_kwargs.enable_thinking}, \code{reasoning_effort}, DeepSeek's \code{thinking.type} & on & on & nothing; a level is a word or on/off, never a hard cap \\
+\code{packages} & the router's note at the end of the newest user message, replayed at the same message index & on & off & input tokens every turn; a prefix cache keeps its match \\
+\code{side} & a client's title or summary call capped, thinking off & on & on & saves tokens \\
+\code{loops} & D1 and D2 on the streamed words; the tool-argument guard & on & on & a reasoning close is a second request (vLLM and SGLang only) \\
+\code{e1} & an empty answer to a request with tools gets a second request & on & off & one more full request \\
+\code{tools} & the tool-call checks; a regenerate is a second request & on & shadow & the checks are free, a regenerate is one more request \\
+\code{compaction} & the TandemLLM section appended to a client's compaction request & on & on & nothing extra \\
+\code{states} & the status lines in the stream & on & on & nothing \\
+\code{memory} & the memory card and notes; the model's blocks written; the background writer & on & shadow & the card's tokens; the writer's request \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The Backends screen shows, next to each switch, what it resolves to, one sentence on what it costs or loses on that backend, and what its extra requests cost over the last 24 hours. The class questions are ledger rows of the client \code{harness}, and a second request's tokens and cost are in its journal row.
+
+\section{What is different from the engine}
+
+\paragraph{The note is text.} On the engine the note is token ids placed before the turn's end token. Over HTTP it is text at the end of the user's message, inside the \code{<runtime-note>} frame the router uses, so a model could quote it. The replay keeps the bytes of the conversation's head the same from turn to turn, so a backend with a prefix cache (vLLM, SGLang, OpenAI's and DeepSeek's prompt caches) keeps its match: a hash covers each message's role, content, name and tool calls up to the noted one. A client that rewrites its history breaks the hash; the note is gone, and the router adds its block again.
+
+\paragraph{The class question is a request.} On the engine the class question costs nothing beside the turn. Over HTTP it is a request of its own, a few hundred prompt tokens, with the backend's own way to constrain the answer: vLLM's \code{structured_outputs.choice}, SGLang's \code{regex}, an OpenAI JSON-schema enum, TandemLLM's own grammar, else plain text. A new user message can ask up to three questions (the class, the package, a library skill); a tool turn asks none. With the conductor on, the proxy's own time in the ledger includes the plan.
+
+\paragraph{Second requests continue the first.} E1, the regenerate and the reasoning close are second requests. The client still gets one stream: the second answer goes out as the continuation of the first, with the first chunk's id, no second role delta and one \code{[DONE]}. To make that possible the proxy holds the finish frame, the usage frame and \code{[DONE]} until the turn is settled, and holds the tool-call frames while a check can act. When the client asked for usage, the usage it gets is the sum of every request, and so is the ledger row. A reasoning close needs \code{continue_final_message}, which the \code{vllm} and \code{sglang} kinds have; on any other backend D1 and D2 are journaled in shadow. A request without a stream gets the plan and none of the monitor's acts, which read the stream.
+
+\section{The word-level loop detector}
+
+D1's three arms run over words instead of tokens over HTTP (\code{server/conductor/monitor/tier0_words.py}), with thresholds measured for words, never the token ones copied. On the reasoning of an opencode database (2,674 finished turns and 20 loops), the strictest of 32 settings fired on 6 of the finished turns and caught 11 of the 20 loops (\measured, \code{tools/loop_words_fp.py}, 2026-10-04). The engine's own D1 acted on that traffic, so some of those 6 may be loops it closed; the text alone does not say which. The shipped words block therefore says \code{calibrated: false}, and every D1 verdict over the proxy stays in shadow until the Compare view's labels show its precision.
+
+\section{Laya, the library and the session address}
+
+The standalone proxy serves the library (\code{GET /v1/library}) and \code{POST /v1/laya/ask} when the conductor's \code{decider} role names a decision model over HTTP. Both answer under \code{/s/<token>/}, the address the notes give the model, and are journaled to that session. The \code{classifier} role may name a backend (\code{backend:<id>/<model>}) to answer the class question instead of the request's own backend, and the \code{narrator} role the same for the status lines; without one, the lines are the templates.
+
+\section{What was checked}
+
+Against the live engine as a backend of kind \code{tandemllm}: the class question was answered by the engine through its grammar, the note was added and replayed on the next turn at the same message, and a title was capped at 64 tokens with thinking off (\code{tools/proxy_harness_check.py}). The close by \code{continue_final_message} and the reasoning parsers' output after it are tested on a fake backend. The cloud providers' answers to the class question and to the effort switch are tested on their documented shapes, not on a paid call.

@@ -1,0 +1,79 @@
+recipe_version: "2"
+name: nemotron-3.5-super-vl-nvfp4
+description: "NVIDIA Nemotron 3.5 Super VL 120B-A12B NVFP4 on 1x DGX Spark (GB10) — two shapes: OFFICIAL (1-seq, benchmarked, arena sub1792088588383) and ESTATE (3 lanes + decider sidecar, agentic long-context)"
+model: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+runtime: vllm
+container: vllm/vllm-openai:nightly-3f1bcfd82bb2e93fcd364fc7a5491718453a77e2
+drafter:
+  model: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+
+executor_config:
+  entrypoint: ""
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+
+# ─── SHAPE A: official NVIDIA benchmark config (arena-verified 28/28) ───
+command: |
+  pip install -q b12x 'vllm[b12x]' && python3 -c 'import b12x' && \
+  curl -fsSL https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4/resolve/main/ultra_v3_reasoning_parser.py -o /cache/huggingface/ultra_v3_reasoning_parser.py && \
+  export VLLM_USE_V2_MODEL_RUNNER=1 && \
+  vllm serve nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 \
+    --served-model-name nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 \
+    --max-num-seqs 1 \
+    --trust-remote-code \
+    --gpu-memory-utilization 0.75 \
+    --max-num-batched-tokens 8192 \
+    --speculative_config.model nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr \
+    --speculative_config.num_speculative_tokens 7 \
+    --speculative_config.method dflash \
+    --mamba-backend flashinfer \
+    --mamba-ssm-cache-dtype float16 \
+    --enable-mamba-cache-stochastic-rounding \
+    --mamba-cache-philox-rounds 5 \
+    --enable-mamba-shared-prefix-checkpoint \
+    --video-pruning-rate 0.5 \
+    --media-io-kwargs '{"video": {"fps": 2, "num_frames": 256}}' \
+    --block-size 64 \
+    --prefix-match-unit 64 \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_coder \
+    --reasoning-parser-plugin /cache/huggingface/ultra_v3_reasoning_parser.py \
+    --reasoning-parser ultra_v3
+
+# ─── SHAPE B: estate agentic config (3 lanes + decider sidecar) ───
+#   env-driven: MAX_NUM_SEQS=3, MAX_MODEL_LEN=275000, GPU_MEM_UTIL=0.86
+#   + decider lane (d3-mini llama.cpp) on :8710 sidecar — 4.3GB, fits at 0.86
+#   verified on these boxes @4x275K/0.88: KV 1,155,749 tokens, 4.20x concurrency
+#   (estate detail: LANE-REGISTRY.yaml nemotron-120-test)
+
+# ─── SPEED LEDGER (what moved numbers in the house, ranked) ───
+# 1. B12X native NVFP4 kernels — CRITICAL: the arena-verified numbers below ran on the
+#    Marlin FALLBACK (b12x never registered in the bench container; its pip step silently
+#    failed). Expect material decode gains once B12xNvFp4W4A16 engages. This recipe now
+#    installs + asserts the import; the fallback kernel line in the logs is the tell.
+# 2. dflash draft depth vs context: x7 wins short/medium (975 tok/s @4K = 2.2x dsv41's
+#    4K decode; 601 @32K) but acceptance collapses at depth (49 tok/s @100K). Options:
+#    (a) fewer drafts at depth — x5/x3 measured runs; v0.32 spec config is static per serve
+#    (b) mamba-ssm-cache-dtype bfloat16 (2x-card value) vs float16 — depth stability test
+#    (c) shared-prefix-checkpoint already ON = the agentic prefix-reuse lever
+# 3. max-num-batched-tokens 16384 (2x-card value) for 3-lane prefill bursts
+# 4. --compilation-config.max_cudagraph_capture_size 256 (2x-card value)
+# 5. TensorFold TP2 (dsv41 v1.1): only engine proven >600 tok/s @32K in-house; a Nemotron
+#    TP2 needs BOTH sparks free — possible but ends the media lane; sequencing decision.
+# 6. EXL3 of Nemotron (Mia-AiLab/Cruz path): Mamba-2 layers are NOT exllamav3-quantizable;
+#    only MoE experts + linears are — a hybrid partial-EXL3 pack = a real encode project.
+#    Parked unless B12X + tuning miss the bar.
+
+benchmark:
+  shape_A_official:
+    cells: "28/28, 0 fail, sub1792088588383 uploaded"
+    single_stream: "975 tok/s @4K | 601 @32K | 49 @100K"
+    multi_conc: "104-216 tok/s aggregate (c=2..10)"
+    prefill: "~2,300 tok/s @100K"
+  note: "above ran WITH the Marlin fallback — b12x-native rerun pending"
+
+metadata:
+  author: styles01
+  tags: [nemotron, nvidia, nvfp4, vl, mamba, mtp, dflash, spark, gb10, model-drop-2026-10]

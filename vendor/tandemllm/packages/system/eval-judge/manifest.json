@@ -1,0 +1,30 @@
+{
+  "name": "eval-judge",
+  "version": "1.0.0",
+  "title": "Eval judge",
+  "kind": "package",
+  "set": "system",
+  "description": "The judge prompt and the rubric format for eval runs: five scored items (match, composition, motion, sound, bugs) from three frames and the probes, one JSON object, the same scores for the same input. Named by the eval harness only; no class lists it.",
+  "source": "system/eval-judge/PACKAGE.md",
+  "max_tokens": 900,
+  "general": false,
+  "library": false,
+  "requires_tools": [],
+  "fallback": null,
+  "classes": [],
+  "files": {"body": "PACKAGE.md", "references": ["references/judge-prompts.md", "references/rubric-format.md"], "exemplars": []},
+  "judge": {"model": "the served model through its image input", "temperature": 0, "frames_at": [0.5, 2, 5], "frame_size": "640x360", "output": "one JSON object", "items": ["match", "composition", "motion", "sound", "bugs"], "human_sample": 10, "agreement": "Cohen's kappa on the human sample, reported with every run; a judge below 0.4 is not used for claims"},
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 6,
+    "thinking": false,
+    "max_tokens": 600,
+    "seed": 42,
+    "checks": ["json_only", "all_items_scored", "scores_in_range", "stable_twice", "expected_band"]
+  },
+  "calibration": null,
+  "measured": null,
+  "signature": null,
+  "signing": "OPS-31: the system set is signed at install; the catalog key is not in the repository"
+}

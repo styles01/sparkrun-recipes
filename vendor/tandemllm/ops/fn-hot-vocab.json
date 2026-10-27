@@ -1,0 +1,13 @@
+{
+ "_about": "hot vocabulary of the Flash-Next MTP draft head (tools/fn_hot_vocab.py)",
+ "corpus": "~/tandem-live/corpus/tokens.npy",
+ "corpus_tokens": 38121609,
+ "special": 33,
+ "size": 65536,
+ "corpus_coverage": {
+  "16384": 0.9243,
+  "32768": 0.9739,
+  "49152": 0.9914,
+  "65536": 0.9979
+ }
+}

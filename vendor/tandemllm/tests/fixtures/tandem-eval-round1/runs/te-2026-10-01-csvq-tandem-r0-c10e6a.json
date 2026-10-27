@@ -1,0 +1,81 @@
+{
+ "suite": "csvq",
+ "arm": "tandem",
+ "rep": 0,
+ "tag": "te-2026-10-01-csvq-tandem-r0-c10e6a",
+ "started_at": "2026-10-01T12:56:56Z",
+ "error": null,
+ "store_clear": {
+  "at": "2026-10-01T12:56:56Z",
+  "status": 200,
+  "error": null
+ },
+ "dir": "{run}/te-2026-10-01-csvq-tandem-r0-c10e6a",
+ "session_id": "ses_f0875e96bffeAec2CI86c8u1Zo",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_minutes": 12.2,
+ "gates": {
+  "total": 1,
+  "passed": 1,
+  "by_gate": [
+   {
+    "id": "pass",
+    "passed": true,
+    "minutes": 12.2
+   }
+  ]
+ },
+ "passed": true,
+ "minutes_to_pass": 12.2,
+ "final_check": {
+  "verdict": "PASS",
+  "readings": [],
+  "tail": "taskcheck csvq\nRESULT: PASS\n"
+ },
+ "tokens": {
+  "input": 0,
+  "output": 0,
+  "reasoning": 0,
+  "cache_read": 0
+ },
+ "cache_hit": null,
+ "gen_tps": null,
+ "turns": 0,
+ "tool_calls": 0,
+ "tool_errors": 0,
+ "empty_stops": 0,
+ "last_finish": null,
+ "continuations": {
+  "needed": 1,
+  "sent": 0,
+  "driver": "watch"
+ },
+ "engine": {
+  "requests": 10,
+  "finish": {
+   "stop": 1,
+   "tool_calls": 9
+  },
+  "decode_tps_median": 73.12,
+  "prefill_tps_median": 617.03,
+  "completion_tokens": 33598,
+  "reasoning_tokens": 26019,
+  "prompt_tokens": 521183,
+  "cached_tokens": 467968
+ },
+ "conductor": {
+  "acts": 1,
+  "by_task": {
+   "D1": 1
+  },
+  "gave_ups": 0,
+  "shadow": 0
+ },
+ "pristine": {
+  "ok": true,
+  "changed": [],
+  "restored": []
+ },
+ "ended_at": "2026-10-01T13:09:08Z"
+}

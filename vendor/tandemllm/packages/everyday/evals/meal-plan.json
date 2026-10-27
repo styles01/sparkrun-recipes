@@ -1,0 +1,18 @@
+{
+  "package": "meal-plan",
+  "rubric": [
+    "Frame and assumptions stated (days, eaters, diet, time); one line per meal with the dish, cooking time and leftovers noted.",
+    "Ingredients reused on purpose across days; bases and proteins varied; dishes doable in the time given.",
+    "Diet rules kept as hard rules (halal, no pork, vegetarian, vegan, gluten-free, allergies) with label-check notes where needed.",
+    "Shopping list grouped by shop area with quantities for the number of eaters; items the user has are left out.",
+    "2 or 3 prep tips; no invented prices; medical diets defer to the doctor or dietitian."
+  ],
+  "prompts": [
+    {"id": "meal-plan-1", "lang": "en", "text": "Meal plan for 5 weekday dinners, family of 4 (kids 5 and 9), no pork, 30 minutes max, we have rice, pasta, eggs and onions at home."},
+    {"id": "meal-plan-2", "lang": "de", "text": "Ich bin Vegetarierin, koche nur für mich, wenig Budget, habe wenig Lust zu kochen. 7 Tage Abendessen plus Einkaufsliste, bitte mit Resten."},
+    {"id": "meal-plan-3", "lang": "ar", "text": "خطة وجبات لأسبوع لشخصين، حلال، فطور وغداء وعشاء، ميزانية محدودة، مع قائمة التسوق."},
+    {"id": "meal-plan-4", "lang": "en", "text": "I have chicken thighs, a bag of spinach, feta, potatoes, lemons and yoghurt. Plan 3 dinners for 2 people."},
+    {"id": "meal-plan-5", "lang": "en", "text": "Gluten-free lunchboxes for my daughter (7) for a school week, she doesn't like fish, needs to be cold."},
+    {"id": "meal-plan-6", "lang": "de", "text": "Mein Arzt sagt ich soll wegen Diabetes Typ 2 weniger Zucker und Weißmehl essen. Mach mir einen Essensplan für 5 Tage mit Frühstück und Abendessen."}
+  ]
+}

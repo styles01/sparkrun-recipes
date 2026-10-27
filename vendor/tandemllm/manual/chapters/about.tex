@@ -1,0 +1,41 @@
+\chapter*{About this manual}
+\addcontentsline{toc}{chapter}{About this manual}
+
+This book describes TandemLLM version \version: an environment that runs the models your agents need, on your own machine and in front of cloud APIs. It covers the engine with the models it runs together and the conductor that plans each turn. It covers the caches and the memory notes, and the dashboard and proxy that watch every backend. It sits beside the Markdown pages in \code{docs/} and goes further: figures and screenshots show how the parts fit together, and a script writes its reference part from the code.
+
+Part I says what TandemLLM is, names the machine and the model every measurement comes from, and follows one request through it. Part II installs and runs it, alone or together with other engines and cloud APIs. Part III explains how the engine reaches 49.89 tokens a second for one request on its test board, and how the benchmark row measures it. Part IV covers the conductor, the layer that plans each turn and watches it run. Part V walks through the dashboard's views. Part VI is the reference: about 800 rows that a script writes from the code or checks against it, then troubleshooting and the roadmap. A glossary and an index close the book.
+
+\section*{How numbers are labelled}
+
+Every number in this book is one of three kinds, and the text says which.
+
+\begin{itemize}
+\item \measured: measured on the test machine, a DGX Spark with Qwen3.8-27B (Section~\ref{sec:test-env}), with the published NVFP4 weights unless the text names another set. The caption or the sentence names the version or the date, and the tool that measured it when one did.
+\item \arith: computed from sizes, such as bytes read divided by memory bandwidth. Nothing ran.
+\item estimate: a guess with its basis stated. The book uses few of them and marks each one.
+\end{itemize}
+
+The speed numbers of the StairCut paper are the reference for single-request speed. They were measured on the published weights with the persistent suffix store off, on the benchmark row described in Chapter~\ref{ch:measurement}. Later releases are held to those numbers by a same-hour comparison before they ship.
+
+Agreement with greedy decoding is a measured property with one documented exception, a near tie between the two best tokens. Chapter~\ref{ch:exactness} states it precisely. Where this book says that resuming from a cache is \enquote{bit for bit}, a test compared the bytes.
+
+\section*{Conventions}
+
+Commands, flags, variables, files and HTTP routes are set in \code{monospace}. Paths under \code{~/.qwen38-spark-engine/} and \code{~/.tandemllm/} are the engine's and the proxy's state directories on the machine that runs them. Runtime names still carry the project's old prefix (\code{QWEN38_}, \code{QSE_}); a later release renames them together.
+
+The engine runs on Linux. The dashboard and the proxy run on Linux and macOS.
+
+\section*{Building this book}
+
+The source is in \code{manual/} of the repository. \code{make} in that directory regenerates the reference tables from the code (\code{tools/gen_reference.py}) and runs \code{latexmk -lualatex}. The repository keeps one built copy, \code{manual/tandemllm-manual.pdf}, so a reader needs no LaTeX; build it again before a release changes the book. The \code{manual.yml} workflow also builds it when a release tag is pushed and attaches it to that GitHub release, as \code{tandemllm-manual-<version>.pdf}.
+
+\section*{Citing}
+
+Cite the paper for the decoding method and its numbers (Section~\ref{sec:paper}), and the repository for the software; \code{CITATION.cff} has both.
+
+\section*{License}\index{license}\index{AGPL-3.0-only}\index{CC BY 4.0}
+
+The text of this manual is licensed under CC BY 4.0, like the documentation in \code{docs/}. The code it describes is licensed separately: AGPL-3.0-only, or a commercial license from the copyright holder. The model weights are not part of the repository; the base model and the base drafter are Apache-2.0, and so are the published NVFP4 overlays and fine-tuned drafters derived from them.
+
+\vfill
+{\small\color{slate} TandemLLM \version. \textcopyright{} 2026 the TandemLLM authors.}

@@ -1,0 +1,163 @@
+\chapter{Operations}\label{ch:operations}
+
+A DGX Spark has 128~GB of memory that the CPU and the GPU share, and a board that runs out of it does not recover by itself: the GPU driver locks, the machine stops answering, and only a power cycle brings it back. Most rules in this chapter exist to keep that from happening on a machine nobody can reach.
+
+\section{One engine per board}\label{sec:one-engine}\index{one engine per board}
+
+The served engine reserves about 69~GB. A second engine of the same size does not fit, and two engines loading side by side wedge the board. Every script in \code{ops/} checks for a running engine first, and a loading engine counts although it answers nothing yet: the server binds its port only after the weights are in, so for the minutes of a load neither \code{/health} nor the port shows it. \code{ops/engines.sh} finds engines by their process instead (\code{. ops/engines.sh; engine_pids}). The same rule holds for a vLLM or SGLang started on the same board.
+
+\section{Memory rules}\index{memory rules}
+
+Keep at least 15~GiB of \code{MemAvailable} at the worst case of anything you run. Before any change that can raise memory (a cache budget, the context length, a new resident copy), write down its worst-case bytes first. During a trial, run a guard that kills your test process when \code{MemAvailable} drops under 10~GiB.
+
+\begin{table}[htbp]
+\centering\small
+\caption[What the served stack holds]{What the served stack holds. \measured{} with \texttt{tools/mem\_audit.py} and the engine's own memory split, 2026-10-01, at the 262,144-token context.}\label{tab:memory-split}
+\begin{tabularx}{\linewidth}{@{}YL{.42\linewidth}@{}}
+\toprule
+\hd{item} & \hd{size} \\
+\midrule
+NVFP4 weights and the FP8 head, on the device & about 16.4 GiB \\
+KV buffer, allocated for the whole context at load & 104.25 KiB a token (106,752 bytes): 64 KiB for the target, 20 KiB for each of the two block drafters, 256 B of rotary table; 28.0 GB (26.1 GiB) at 262,144 tokens \\
+the engine at load (allocated) & 57.0 GiB: weights 16.35, KV pool 16.00, drafters' context caches 10.00, recurrent state 0.14, vision 0.86, the rest 13.7 \\
+the same at a 131,072-token context & 44.0 GiB: halving the window frees 13.0 GiB \\
+the caches at their caps & state store 2 GiB, resident anchors 2.5, stash 1, pinned head 4, parked session 4 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[tandem, xbar stacked, height=3.6cm, width=.95\linewidth, bar width=16pt,
+    xmin=0, xmax=120, xlabel={GiB (the board's 128 GB are about 119 GiB)}, onebar,
+    legend style={at={(0.5,1.08)}, anchor=south, legend columns=4, font=\sffamily\scriptsize},
+    legend cell align=left, grid=none]
+  \addplot[fill=cobalt, draw=cobalt] coordinates {(16.35,0)};
+  \addplot[fill=cobalt!55, draw=cobalt] coordinates {(16.00,0)};
+  \addplot[fill=cobalt!25, draw=cobalt] coordinates {(10.00,0)};
+  \addplot[fill=slate!40, draw=slate] coordinates {(14.70,0)};
+  \addplot[fill=signallight, draw=signal] coordinates {(13.50,0)};
+  \addplot[fill=paper, draw=rule] coordinates {(48.65,0)};
+  \legend{weights 16.35, KV pool 16.00, drafter caches 10.00, the rest 14.70, caches at caps 13.5, left for the rest of the board}
+\end{axis}
+\end{tikzpicture}
+\caption[Where the engine's memory goes]{Where the served engine's memory goes at the 262,144-token context. The first four parts are the engine at load, 57.0~GiB allocated (\measured, the engine's memory split, 2026-10-01; \enquote{the rest} is the recurrent state, the vision tower, drafter weights and buffers, verify graphs and warm-up workspace). The caches at their caps add about 13.5~GiB under the 70~GiB ceiling (\arith, from the served budgets).}\label{fig:memory-split}
+\end{figure}
+
+Page cache\index{page cache} counts as available memory but is not always given back in time. After a load the engine never reads the weight files again, so \code{ops/start.sh}\index{ops/start.sh@\texttt{ops/start.sh}} drops their page cache (\code{tools/drop_page_cache.py}, \code{posix_fadvise} with \code{DONTNEED}, no root needed). Without that drop an 8,192-row prefill once took free memory to 1~GB and the driver logged \code{NV_ERR_NO_MEMORY}.
+
+Inside the engine three limits hold the caches and the prefill workspace: 70~GiB between requests, 77~GiB during a prefill, and 2~GiB of free allocator blocks kept between requests. Section~\ref{sec:memory-gate} explains how the memory gate enforces them.
+
+\section{One model at a time}\label{sec:two-models}\index{Flash-Next!operations}\index{weight profile}
+
+The board serves one big model at a time, the 27B or Qwen3.8-Flash-Next, and \code{ops/active-profile} names the profile it serves. The 27B's profiles are \code{nvfp4} and \code{exl3-<bpw>}; Flash-Next's are \code{flashnext-2.05} to \code{flashnext-6.05}, one per EXL3 pack (\code{ops/profiles/_flashnext.env} and one small file each). The same scripts serve both:
+
+\begin{itemize}
+\item \code{ops/use-profile.sh flashnext-3.05} checks or fetches the pack, stops the engine under the box lock, starts the new profile and runs the smoke check. A failed smoke starts the previous profile again, 27B or Flash-Next. A Flash-Next profile needs no 27B drafter, draft head or base snapshot. Since 0.8.1 a 27B profile's switch fetches those too, when they are missing: the K3 drafters, the K4 draft head, the BF16 drafters into \code{train/} and the FP8 base checkpoint (Section~\ref{sec:new-box}).
+\item The fetch takes one branch of \code{turboderp/Qwen3.8-Flash-Next-exl3}, pinned to its commit when the download starts. The branch has no checksum list, so \code{ops/fetch_weights.py} records the hub's sha256 of every file and checks against it. The 4.05, 5.05 and 6.05 packs share one n-gram table file, which a second pack hard-links instead of downloading 39~GB again.
+\item \code{ops/start.sh} passes the profile's \code{QSE_ENGINE_FLAGS} (\code{--model <pack> --drafter mtp}) and \code{--corpus} in place of the 27B's model and drafter flags; without that key the 27B's command line is the one it was.
+\item The page-cache drop after a start drops the pack's pages and keeps a warm n-gram table, which the engine keeps reading.
+\item The watchdog and the reboot line run \code{ops/start.sh} of the tree that serves, so a crash or a reboot brings back the active profile, whichever model it is. The status page names the profile that is loading.
+\item A start with a \code{--max-len} above the profile's largest window stops before the load and names both numbers (Table~\ref{tab:fn-packs}).
+\end{itemize}
+
+The memory rules hold for Flash-Next with two additions. Under the warm policy the n-gram table is page cache that the engine reads on every token, and MemAvailable counts it as free; every floor check therefore takes the table's resident bytes off first, and the dashboard shows them beside the memory split. Each profile sets its own ceiling and peak, with the arithmetic in the file: 66 and 77~GiB for 3.05, 81 and 92~GiB for 4.05, against 70 and 77 for the 27B. A 3.05 engine held 46.9~GiB after its load, with MemAvailable at 68.0~GiB (\measured). Chapter~\ref{ch:flashnext} has the windows each pack fits and the runs behind them.
+
+\section{Starting and stopping}\index{start.sh}\index{stop.sh}
+
+\code{ops/serve.env}\index{ops/serve.env@\texttt{ops/serve.env}} is the served configuration: about 60 settings, from paths and the port to every engine switch, each with the reason for its value in a comment. The scripts read it.
+
+\begin{table}[htbp]
+\centering\small
+\caption{The service scripts in \texttt{ops/}.}\label{tab:ops-scripts}
+\begin{tabularx}{\linewidth}{@{}L{.3\linewidth}Y@{}}
+\toprule
+\hd{script} & \hd{what it does} \\
+\midrule
+\code{ops/make-secrets.sh} & creates \code{secrets.env} with the metrics token (mode 600), once; \code{--admin} adds the admin password, which turns the admin rule on; \code{--rotate} replaces what is there \\
+\code{ops/start.sh} & starts the engine on the port from \code{serve.env} and waits for \code{/health}; refuses while an engine is alive or the port is held \\
+\code{ops/stop.sh [seconds]} & sends SIGTERM, waits for the drain (60~s by default), and kills only after that \\
+\code{ops/watchdog.sh} & one health check, for cron every minute; restarts after 3 failures in a row \\
+\code{ops/hold.sh <minutes> <cmd>} & runs a command with the board to itself, then restores the service \\
+\code{ops/gate.sh <label>} & the release gate (Chapter~\ref{ch:measurement}) \\
+\code{ops/roles.sh load|up|down|settle} & loads the roles beside the engine one at a time through the residency planner \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\code{ops/start.sh} is safe to run at any time. If the engine is healthy it says so and exits. Once the server answers, it drops the weights' page cache, asks the conductor to load the decision models named for the start, and loads the narrator's model, each through the residency planner.
+
+Stopping drains\index{drain}. SIGTERM and SIGINT make the server stop taking work: \code{/health} answers \code{draining} with a 503, new requests get a 503 with \code{Retry-After: 30}, the generation in flight finishes with its last chunk and \code{[DONE]}, and the process exits 0. After the work in flight, the drain writes the resident conversation and the parked one to the NVMe (about 3~s for 130,000 tokens), and the next start reads the resident one back before it serves, so that conversation's next turn resumes at its end instead of reading everything again (Section~\ref{sec:spill}).
+
+\section{The watchdog}\index{watchdog}
+
+The watchdog restarts only what it is sure about. A healthy server is left alone, and so is a draining one, because killing a graceful stop halfway is worse than a slow stop. A loading engine is left alone for up to 900~s. Only a server that fails three checks in a row is restarted, so one slow check during a long verify does not bounce a working server.
+
+At boot two cron\index{cron} lines bring the service up:
+
+\begin{plain}
+@reboot sleep 90 && bash $HOME/<checkout>/ops/start.sh >> $HOME/<checkout>/logs/boot.log 2>&1
+* * * * * bash $HOME/<checkout>/ops/watchdog.sh
+\end{plain}
+
+\code{ops/qwen38-engine.service} is a systemd\index{systemd} user unit for the same job, and the installer can write one (\code{--systemd}). A user unit survives logout only with \code{loginctl enable-linger}, which needs root. Install one mechanism, never both: two supervisors for one port start the service twice.
+
+\section{Holding the board}\index{hold}
+
+Measurements need the board to themselves, and so does anything that loads a second copy of the model. \code{ops/hold.sh}\index{ops/hold.sh@\texttt{ops/hold.sh}} makes the safe sequence the easy one:
+
+\begin{shell}
+flock ~/.qwen38-box.flock bash ops/hold.sh 30 python tools/verify_spec.py ...
+\end{shell}
+
+It arms a pause file so the watchdog stands back, keeps it fresh for the whole hold, stops the service and runs the command. Afterwards it restarts the service and waits for \code{/health}. On every exit path, a killed command included, it removes the pause. The lock file makes two holds wait for each other, and a pause file older than 2,400~s is ignored, so a crashed hold cannot leave the service unsupervised for long. Background jobs of the engine itself (the summary written ahead, the shadow reader, the memory writer) take the same lock without waiting and give it back when a hold asks for it. Taking the service down stops everyone who uses it: hold the board when nobody needs the service, and keep holds short.
+
+\section{While the engine is away}\label{sec:status-page}\index{status page}
+
+A stop, a hold or a start takes the engine away for minutes. \code{ops/start.sh}, \code{ops/stop.sh} and \code{ops/hold.sh} write what they do to \code{logs/engine-status.json}: the state (\code{stopping}, \code{held}, \code{starting}, \code{up}, \code{failed}, \code{down}), since when, a hold's reason (\code{HOLD_REASON}, or the first line of the file \code{HOLD_NOTE} names) and its budget, and the last five start times, whose median is the next estimate. With \code{QSE_STATUS_PORT} in serve.env the scripts keep a small responder on 127.0.0.1 (\code{ops/engine_status.py}). It answers what a reverse proxy sends it when the engine does not: a page for \code{/dashboard/} that names the state, the reason and about how long is left, checks \code{/health} every 5~s and opens the dashboard when the engine is back; and for every other request the OpenAI error shape, status 503, \code{Retry-After}, with the same facts under \code{engine}. An open dashboard shows them in its offline banner. \code{GET /v1/models} is the exception: it answers 200 with the engine's last model list, which \code{set up} keeps in the status file, so Open WebUI keeps TandemLLM in its list through a restart and a chat shows the engine's sentence instead of ``Model not found''. The nginx lines are in \code{docs/operations.md}.
+
+\section{Roles beside the engine}\label{sec:residency}\index{residency planner}\index{role}
+
+The engine loads first and holds most of the board. Anything else that runs beside it (a decision model, the narrator, the shadow reader) loads after it, one at a time, through the residency planner (\code{server/conductor/residency.py}). A role may load when
+\[
+\textit{MemAvailable} - \underbrace{(\textit{peak} - \textit{held now})}_{\text{the engine's growth}} - \textit{claim} \;\ge\; \textit{floor} + \textit{margin},
+\]
+with the engine's declared peak at 77~GiB and the floor and margin at 15 and 6~GiB by default. It never loads during a hold, and never while another load runs. A refusal names its reason (\code{refused_hold}, \code{refused_load_in_progress}, \code{refused_memory}, \code{refused_unknown_role}) and is journaled in \code{residency.jsonl} under the conductor's directory.
+
+A claim is the role's peak, not its idle size, and it is what the role takes from \code{MemAvailable}, not what \code{nvidia-smi} shows. The floor, the margin, the settle time, the load order and the claims are the conductor's \code{residency} document, versioned like the others and edited in the dashboard. The System view shows the plan: the engine's own memory split, \code{MemAvailable}, every role with its claim and whether it fits now, and the last refusal. Nothing unloads on its own when \code{MemAvailable} falls after a role loaded; the plan shows it.
+
+\code{ops/roles.sh} loads external roles. \code{ROLES_AUTOLOAD} in \code{serve.env} names the roles \code{start.sh} brings up after the engine (none in the shipped profile). A role served by vLLM runs BF16 weights with an unquantised KV cache, and its \code{--gpu-memory-utilization} is the planner's byte math, never vLLM's default of 0.9, which on this board would take the engine's memory too.
+
+\section{Logs}\index{logs}
+
+Each request leaves one log line with its token counts, its finish reason and its rate, and no line carries the text of a prompt or an answer. \code{--log-content} lets exception messages that quote a request into the log, and \code{--log-request-keys} logs parameter names and scalar values, never messages. The installed engine's log is \code{~/TandemLLM/src/logs/engine.log} (\code{bin/tandem logs} follows it), and the dashboard's Dev view shows it live.
+
+\section{Monitoring}\index{monitoring}
+
+\code{/health} returns the status, the queue counters (running, waiting, served, refused, errors, timeouts, abandoned), the cache report and the allocator's memory figures. On this board \code{nvidia-smi} reports no used memory, so \code{torch.cuda.memory_allocated} and \code{memory_reserved} are the numbers to watch. Allocated memory that climbs across requests is a leak; reserved memory that climbs while allocated memory stays flat is fragmentation.
+
+\code{/metrics} serves Prometheus\index{Prometheus} metrics (Chapter~\ref{ch:ref-metrics}). \code{ops/monitoring/} has a scrape configuration, alert rules with their tests, and a Grafana\index{Grafana} dashboard that \code{tools/grafana_dashboard.py} generates. The conductor's stall watchdog can send a push notification when an unattended session's client has gone; the URL comes from \code{TANDEM_NOTIFY_URL} or the policy, and is empty in the shipped policy.
+
+\section{Settings}
+
+\code{engine/settings.py} is the one registry\index{settings registry} of every \code{QWEN38_*} switch the engine reads, with its default and the module that reads it; \code{tests/test_settings.py} fails if any module reads a switch another way. To see what is in effect:
+
+\begin{shell}
+python -c "from engine.settings import SETTINGS; import json; print(json.dumps(SETTINGS.describe(), indent=1))"
+\end{shell}
+
+Server behaviour (ports, limits, caches, reasoning) is set by command-line flags, which \code{ops/start.sh} builds from \code{serve.env}. Chapter~\ref{ch:ref-cli} lists every flag and Chapter~\ref{ch:ref-env} every variable.
+
+\section{Deploying and rolling back}\index{deploy}\index{rollback}
+
+An installed engine upgrades by running the installer again (Chapter~\ref{ch:install-engine}). A checkout that serves the service upgrades in four steps:
+
+\begin{enumerate}
+\item Copy the serving directory to a dated backup.
+\item Copy the new files in, keeping the local \code{serve.env} values that are site-specific (paths, port).
+\item Restart through \code{ops/hold.sh}, so the watchdog does not race the restart.
+\item Check that \code{/health} says \code{ok} and that \code{VERSION} is the new one, then send a short request.
+\end{enumerate}
+
+Run the gate and the client smoke set before step 1 (Chapter~\ref{ch:measurement}). A deploy that fails step 4 goes back to the backup. The usage ledger and the config database migrate forward in place and keep every row, and an older release ignores the columns a newer one added, so a rollback needs no data step. The disk tier sweeps files of another code fingerprint at the start; a rollback therefore starts that tier empty, and the session spill keeps its conversations when only the files that keep state changed.

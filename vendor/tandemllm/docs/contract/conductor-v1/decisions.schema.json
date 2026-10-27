@@ -1,0 +1,840 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor decisions",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/decision"
+      }
+    }
+  },
+  "required": [
+    "contract_version",
+    "decisions"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ts_ms": {
+          "type": "integer"
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "client_kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "router_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "shadow",
+            "on"
+          ]
+        },
+        "class_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "decider",
+            "qwen",
+            "qwen_context",
+            "probe",
+            "sticky",
+            "structural",
+            "fallback",
+            "profile",
+            null
+          ]
+        },
+        "kept": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "below_switch",
+            "fail_open",
+            "no_answer",
+            "no_text",
+            "tool_media",
+            null
+          ]
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stage": {
+                "enum": [
+                  "decider",
+                  "qwen",
+                  "qwen_context",
+                  "probe"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "confidence": {
+                "type": "number"
+              },
+              "probs": {
+                "type": "object"
+              },
+              "ms": {
+                "type": "number"
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "accept": {
+                "type": "number"
+              },
+              "below": {
+                "type": "boolean"
+              },
+              "cached": {
+                "type": "boolean"
+              },
+              "reason": {
+                "enum": [
+                  "followup",
+                  "long"
+                ]
+              },
+              "prompt_tokens": {
+                "type": "integer"
+              },
+              "prefilled": {
+                "type": "integer"
+              },
+              "reused": {
+                "type": "integer"
+              },
+              "stage_ms": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "stage",
+              "label",
+              "confidence",
+              "ms",
+              "error"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "classifier_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "off",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            null
+          ]
+        },
+        "budget": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "budget_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thinking": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decisions": {
+          "type": "object"
+        },
+        "injected": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "pos": {
+                "type": "integer"
+              },
+              "at": {
+                "type": "integer"
+              },
+              "tokens": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "effort",
+                        "package",
+                        "rules",
+                        "identity"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "kinds": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "effort",
+                    "packages",
+                    "rules",
+                    "identity"
+                  ]
+                }
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pos",
+              "at",
+              "tokens",
+              "text",
+              "parts",
+              "kinds",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "replayed": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "shadow": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "next_checker": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "right",
+            "wrong",
+            null
+          ]
+        },
+        "label_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelled_at": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "acted": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "changed": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "extra": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "route",
+            "side"
+          ],
+          "description": "route: the router's decision for a turn; side: a client's side request it served by its shape (S1, extra.side)"
+        },
+        "task": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tier": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sp": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rule": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trigger": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "decision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cap": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tier1_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "question_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "probabilities": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "tier1_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "hidden_text_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hidden_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "tokens_at_cut": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "position": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "policy_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          },
+          "description": "the monitor's decisions in the same request"
+        }
+      },
+      "required": [
+        "id",
+        "ts_ms",
+        "session_key",
+        "profile",
+        "mode",
+        "class_id",
+        "source",
+        "stages",
+        "decisions"
+      ],
+      "additionalProperties": false
+    },
+    "stage": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "enum": [
+            "decider",
+            "qwen"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "probs": {
+          "type": "object"
+        },
+        "ms": {
+          "type": "number"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "accept": {
+          "type": "number"
+        },
+        "below": {
+          "type": "boolean"
+        },
+        "cached": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stage",
+        "label",
+        "confidence",
+        "ms",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "injected": {
+      "type": "object",
+      "properties": {
+        "pos": {
+          "type": "integer"
+        },
+        "at": {
+          "type": "integer"
+        },
+        "tokens": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "effort",
+                  "package",
+                  "rules",
+                  "identity"
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "effort",
+              "packages",
+              "rules",
+              "identity"
+            ]
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pos",
+        "at",
+        "tokens",
+        "text",
+        "parts",
+        "kinds",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "description": "one decision of the session monitor (kind monitor): its task, tier and mode, the rule and why, the action, the hidden text, the outcome",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ts_ms": {
+          "type": "integer"
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "const": "monitor"
+        },
+        "task": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tier": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "shadow",
+            "act",
+            null
+          ]
+        },
+        "sp": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rule": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trigger": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "decision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cap": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hidden_text_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hidden_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "tokens_at_cut": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "position": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "next_checker": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "policy_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "client_kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "right",
+            "wrong",
+            null
+          ]
+        },
+        "label_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelled_at": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "ts_ms",
+        "request_id",
+        "session_key",
+        "kind",
+        "task",
+        "mode",
+        "decision",
+        "action",
+        "hidden_tokens",
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,49 @@
+\chapter{Environment and configuration reference}\label{ch:ref-env}
+
+TandemLLM reads four families of settings. Engine switches are \code{QWEN38_*} variables, read through one registry. Server settings are command-line flags (Chapter~\ref{ch:ref-cli}); \code{ops/start.sh}\index{ops/start.sh@\texttt{ops/start.sh}} builds them from \code{ops/serve.env}\index{ops/serve.env@\texttt{ops/serve.env}}, and a few \code{QSE_*} variables set flags' defaults or serve the scripts. The proxy, the collector and the plugins read \code{TANDEM_*} variables. And the conductor's behaviour lives in its versioned documents, which the dashboard edits.
+
+\section{The served profile}\index{serve.env}
+
+\code{ops/serve.env} is the served configuration. On an installed engine it is \code{~/TandemLLM/run/ops/serve.env}, rewritten by every run of the installer, and \code{local.env} beside it is read last for your own values.
+
+\input{generated/serve-env}
+
+\section{Engine switches}\index{QWEN38 variables}
+
+\code{engine/settings.py} lists every engine switch with its default and the module that reads it; \code{tests/test_settings.py} fails when a module reads one another way. The table shows each switch, its code default, and the value the served profile sets when it sets one.
+
+\input{generated/engine-knobs}
+
+\section{Server variables}\index{QSE variables}
+
+\input{generated/qse-vars}
+
+The most used: \code{QSE_CONDUCTOR_CONFIG}\index{qseconductorconfig@\texttt{QSE\_CONDUCTOR\_CONFIG}}, \code{QSE_USAGE_LEDGER}\index{qseusageledger@\texttt{QSE\_USAGE\_LEDGER}}, \code{QSE_DISK_CACHE}\index{qsediskcache@\texttt{QSE\_DISK\_CACHE}} and \code{QSE_BACKENDS}\index{qsebackends@\texttt{QSE\_BACKENDS}} name the conductor's directory, the ledger, the disk tier's directory and the proxy's config database; \code{ops/start.sh} passes them to the service only, so a benchmark server started with \code{serve.env} exported never writes them. \code{QSE_DASHBOARD_LOGIN}\index{qsedashboardlogin@\texttt{QSE\_DASHBOARD\_LOGIN}} turns the dashboard login on. \code{QSE_ADMIN_TOKEN} and \code{QSE_METRICS_TOKEN} live in \code{secrets.env}, which \code{ops/make-secrets.sh} writes.
+
+\section{Proxy, collector and plugin variables}\index{TANDEM variables}
+
+\input{generated/tandem-vars}
+
+\section{The conductor's documents}\index{conductor documents}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The conductor's versioned documents.}\label{tab:ref-documents}
+\begin{tabularx}{\linewidth}{@{}L{.16\linewidth}YL{.22\linewidth}@{}}
+\toprule
+\hd{document} & \hd{what it holds} & \hd{edited on} \\
+\midrule
+\code{profiles} & one document per profile: mode, decisions, task modes and caps, thinking, \code{ui}, outcomes, library, memory, shadow & Profiles \\
+\code{router} & the classes and their policy, the classifier stages and thresholds, the structural rules, side shapes, outcomes, library & Routing \\
+\code{packages} & every package: source, switch, limits, flags & Packages \\
+\code{roles} & every role's contract & Profiles, Roles \\
+\code{settings} & the default profile, transcripts, the disk tier, memory notes and the writer & Memory, Profiles \\
+\code{deciders} & the decision models, their questions, Laya for scripts & Deciders \\
+\code{residency} & the floor, the margin, the settle time, the load order, the claims & Profiles, Residency \\
+\code{monitor} & the session monitor's policy (version 0 is \code{ops/supervisor.yaml}) & Monitor \\
+\code{harness} & the harness's settings per backend, behind the proxy & Backends \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A document is JSON, checked against the conductor's schema (\code{GET /v1/conductor/meta} serves it, and \code{docs/contract/conductor-v1/} holds a copy). A version stored by an older release loads with defaults for every field it lacks, and the journal says so once.

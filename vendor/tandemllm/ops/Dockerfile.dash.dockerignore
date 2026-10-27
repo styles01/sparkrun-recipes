@@ -1,0 +1,13 @@
+# the image needs pyproject.toml, VERSION, the license files, docs/proxy.md, proxy/, server/ and
+# dashboard/dist/ only
+*
+!pyproject.toml
+!VERSION
+!LICENSE
+!COMMERCIAL-LICENSE.md
+!NOTICE
+!docs/proxy.md
+!proxy/
+!server/
+!dashboard/dist/
+**/__pycache__

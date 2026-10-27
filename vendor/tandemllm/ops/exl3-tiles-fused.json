@@ -1,0 +1,203 @@
+{
+ "_about": "ENG-E6 phase 2 (2026-10-09): column tiling for the FUSED group shapes of the EXL3 builds at the default order (S, wk unchanged = bit-identical); tools/exl3_linear.py reads it via QWEN38_EXL3_TILES. Source: ~/exl3k/runs/tiles-fused.json (cold ring, CUDA graph). K2/K3 entries added 03:34 (~/exl3k/runs/tiles-fused-23.json).",
+ "34816x5120x4": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 417.1,
+  "us_m16": 391.8
+ },
+ "34816x5120x5": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 0,
+  "cfg2": 2,
+  "us_m16_default": 491.5,
+  "us_m16": 491.5
+ },
+ "34816x5120x6": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 590.3,
+  "us_m16": 585.8
+ },
+ "5120x17408x4": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 202.7,
+  "us_m16": 199.5
+ },
+ "5120x17408x5": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 252.6,
+  "us_m16": 248.0
+ },
+ "5120x17408x6": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 298.8,
+  "us_m16": 291.7
+ },
+ "16384x5120x4": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 194.0,
+  "us_m16": 187.4
+ },
+ "16384x5120x5": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 237.3,
+  "us_m16": 232.8
+ },
+ "16384x5120x6": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 277.5,
+  "us_m16": 273.9
+ },
+ "14336x5120x4": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 183.1,
+  "us_m16": 166.6
+ },
+ "14336x5120x5": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 209.8,
+  "us_m16": 206.1
+ },
+ "14336x5120x6": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 245.7,
+  "us_m16": 243.3
+ },
+ "5120x6144x4": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 75.1,
+  "us_m16": 72.1
+ },
+ "5120x6144x5": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 92.2,
+  "us_m16": 90.9
+ },
+ "5120x6144x6": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 108.8,
+  "us_m16": 106.2
+ },
+ "34816x5120x2": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 219.6,
+  "us_m16": 209.1
+ },
+ "34816x5120x3": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 312.3,
+  "us_m16": 307.2
+ },
+ "5120x17408x2": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 106.1,
+  "us_m16": 103.8
+ },
+ "5120x17408x3": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 156.1,
+  "us_m16": 153.5
+ },
+ "16384x5120x2": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 107.1,
+  "us_m16": 99.3
+ },
+ "16384x5120x3": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 151.8,
+  "us_m16": 145.5
+ },
+ "14336x5120x2": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 105.0,
+  "us_m16": 96.3
+ },
+ "14336x5120x3": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m16_default": 141.2,
+  "us_m16": 132.9
+ },
+ "5120x6144x2": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 42.3,
+  "us_m16": 40.3
+ },
+ "5120x6144x3": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m16_default": 58.7,
+  "us_m16": 56.7
+ }
+}

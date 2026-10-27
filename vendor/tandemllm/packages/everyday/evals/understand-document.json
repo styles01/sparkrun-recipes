@@ -1,0 +1,18 @@
+{
+  "package": "understand-document",
+  "rubric": [
+    "First line says what the document is, from whom, about what; then the four answers: what they want, by when, what it costs or pays, what happens if nothing is done.",
+    "Terms explained in a few words; the arithmetic of totals shown; the user's numbers and dates kept exactly.",
+    "Numbered next steps with check steps (compare with own records, the deadline against the postmark).",
+    "Unusual things named clearly (sums that do not add up, new bank accounts, pressure) or 'nothing unusual'; no law or fee stated from memory as fact.",
+    "Court, enforcement, dismissal, large tax or insurance letters name a professional and say the deadline still runs; never advise ignoring an authority."
+  ],
+  "prompts": [
+    {"id": "understand-document-1", "lang": "de", "text": "Was bedeutet das und was muss ich tun? 'Sehr geehrter Herr Aydin, Ihr Antrag auf Wohngeld wurde abgelehnt, da Ihr anzurechnendes Einkommen die Einkommensgrenze um 86 Euro übersteigt. Gegen diesen Bescheid können Sie innerhalb eines Monats nach Bekanntgabe Widerspruch einlegen. Rechtsbehelfsbelehrung siehe Rückseite.'"},
+    {"id": "understand-document-2", "lang": "en", "text": "My electricity bill says: previous reading 14,230 kWh, current 16,105 kWh, unit price 0.31, standing charge 12.50 per month for 12 months, payments made 1,100, balance due 180.75. Is that right and what do I do?"},
+    {"id": "understand-document-3", "lang": "ar", "text": "وصلتني رسالة من البنك: 'نود إعلامكم بأن حسابكم سيتم إغلاقه خلال 30 يومًا ما لم تقوموا بتحديث بيانات التعريف الخاصة بكم في أحد فروعنا.' ماذا يعني هذا وهل هو خطير؟"},
+    {"id": "understand-document-4", "lang": "en", "text": "I got a letter from a debt collection agency about an old phone contract, 340 euros plus 95 euros fees, they say pay within 7 days or they go to court. I don't remember this contract. What now?"},
+    {"id": "understand-document-5", "lang": "de", "text": "Hilf mir das Formular auszufüllen: 'Antrag auf Kindergeld' – welche Felder gibt es normalerweise und was brauche ich dafür? Wir haben ein Kind, geboren im Januar, beide Eltern angestellt."},
+    {"id": "understand-document-6", "lang": "en", "text": "My rental contract says: 'The tenant shall bear the cost of minor repairs up to 100 euros per instance and 8 % of the annual rent in total.' What does that mean for me with a rent of 950 a month?"}
+  ]
+}

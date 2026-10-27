@@ -1,0 +1,19 @@
+{
+  "package": "creative-writing",
+  "rubric": [
+    "The piece is complete at the default length (bedtime story 300 to 500 words, poem 8 to 16 lines, speech 200 to 400 words) or the user's number, and uses the names and details given.",
+    "A story has one hero, one problem, three steps and an ending that answers the beginning; a children's story has short sentences, concrete things, repetition and a calm ending.",
+    "Tone fits the occasion; a speech is warm and specific, never mocking; no moral added unless asked.",
+    "Rhymes are natural in the user's language or the poem is free verse; no forced rhymes.",
+    "Names and titles come in groups of style with a short why each and a pick."
+  ],
+  "prompts": [
+    {"id": "creative-writing-1", "lang": "en", "text": "A bedtime story for my daughter Mia, 5, about a little cloud who doesn't want to rain."},
+    {"id": "creative-writing-2", "lang": "de", "text": "Eine kurze Rede zum 70. Geburtstag meiner Mutter Helga. Sie war Krankenschwester, liebt ihren Garten und Skat, hat uns drei Kinder allein großgezogen. Warm, ein bisschen lustig, 2 Minuten."},
+    {"id": "creative-writing-3", "lang": "ar", "text": "اكتب قصيدة قصيرة عن الحنين إلى البيت لصديق يعيش في الغربة، بدون قافية إجبارية."},
+    {"id": "creative-writing-4", "lang": "en", "text": "10 name ideas for a small bakery in a seaside town, we do sourdough and cinnamon buns."},
+    {"id": "creative-writing-5", "lang": "de", "text": "Ein Vers für eine Geburtstagskarte, 6 Zeilen, für meinen Kollegen Jan, der immer zu spät kommt aber den besten Kaffee kocht."},
+    {"id": "creative-writing-6", "lang": "en", "text": "A funny toast for my best friend's wedding, I'm the best man, his name is Tom, hers is Priya, they met at a salsa class where he stepped on her foot."},
+    {"id": "creative-writing-7", "lang": "en", "text": "A riddle for kids about a key, with the answer hidden."}
+  ]
+}

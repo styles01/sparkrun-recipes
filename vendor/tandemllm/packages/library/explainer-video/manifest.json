@@ -1,0 +1,44 @@
+{
+  "name": "explainer-video",
+  "version": "1.0.0",
+  "title": "Explainer video",
+  "kind": "skill",
+  "set": "first",
+  "description": "A short explainer video with synthesised sound rendered to an mp4 through the render_video tool - a scene script (title cards, numbers with their sources, schematic marks) and a sound cue list (bed, whoosh, chime, optional narration); every number on screen names its source.",
+  "source": "skill:explainer-video",
+  "max_tokens": 500,
+  "house_body_tokens": 350,
+  "general": false,
+  "library": true,
+  "requires_tools": ["render_video"],
+  "fallback": "explainer-video-script",
+  "classes": ["drawing", "code_edit"],
+  "files": {
+    "body": "SKILL.md",
+    "references": ["references/scene-and-cue-format.md", "references/render-video-interface.md"],
+    "exemplars": []
+  },
+  "tool": {
+    "name": "render_video",
+    "args": {"scenes": "object[]", "cues": "object", "asked_seconds": "number", "out": "string", "size": "1280x720 | 1920x1080", "fps": "integer"},
+    "returns": ["path", "seconds", "lufs", "true_peak_dbtp", "lra", "black_max_s", "scenes", "frames_checked", "frames"],
+    "runs_on": "a remote runner with Manim or an HTML capture, numpy/scipy, ffmpeg loudnorm; the tool server forwards the call",
+    "target": {"lufs": -18, "true_peak_dbtp": -1.5}
+  },
+  "blocked_on": "SRV-105 (the tool server) and the remote runner. Until a chat offers a tool with `scenes` and `cues` arguments the tool fit leaves this package out and puts `explainer-video-script` in its place.",
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 12,
+    "thinking": false,
+    "max_tokens": 24000,
+    "seed": 42,
+    "render_calls_max": 3,
+    "checks": ["file_exists", "length_range", "audio_nonsilent", "loudness_range", "true_peak", "no_black_second", "sources_named", "schematic_labelled", "narration_present", "no_number_scenes"],
+    "judge_extra": ["honesty"],
+    "human_sample": ["ev-01", "ev-02", "ev-03", "ev-04", "ev-05", "ev-06", "ev-08", "ev-09", "ev-11", "ev-12"]
+  },
+  "calibration": null,
+  "measured": null,
+  "signature": null
+}

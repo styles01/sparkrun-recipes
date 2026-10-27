@@ -1,0 +1,79 @@
+\chapter{Command-line reference}\label{ch:ref-cli}
+
+The tables in this part are generated from the code by \code{manual/tools/gen_reference.py}, which parses the argument parsers, the settings registry, the metric registrations and the ledger's schema with Python's \code{ast} module and never imports the project. The manual's build runs it first, so the tables follow the code they were built from. A description is the first sentence of the flag's own help text; where the code gives none, the generator carries a short one. A default is the code's; where the served profile passes another value, the cell says \enquote{served:} and that value, as \code{ops/start.sh}\index{ops/start.sh@\texttt{ops/start.sh}} builds it from \code{ops/serve.env}\index{ops/serve.env@\texttt{ops/serve.env}}.
+
+\section{The engine's server}\index{server flags}
+
+\code{python server/app.py [flags]}, or \code{ops/start.sh}, which builds the flags from \code{serve.env}. \code{python server/app.py --help} prints the full help texts.
+
+\input{generated/server-flags}
+
+\section{The dashboard and proxy}\index{tandem-dash}
+
+\code{tandem-dash serve} and \code{python -m proxy} take the same flags; \code{tandem-dash check}, \code{secrets} and \code{backends} take them too and add their own action (Table~\ref{tab:tandem-dash}).
+
+\input{generated/proxy-flags}
+
+\input{generated/launch-flags}
+
+\input{generated/hostcollect-flags}
+
+\section{The service scripts}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The scripts in \texttt{ops/} and the installed control script.}\label{tab:ref-scripts}
+\begin{tabularx}{\linewidth}{@{}L{.36\linewidth}Y@{}}
+\toprule
+\hd{command} & \hd{what it does} \\
+\midrule
+\code{bin/tandem start|stop|restart|status|smoke|logs} & the installed engine's control script (Chapter~\ref{ch:install-engine}) \\
+\code{ops/start.sh} & starts the engine from \code{serve.env}, waits for \code{/health}, drops the weights' page cache, loads the roles \\
+\code{ops/stop.sh [seconds]} & SIGTERM, the drain, then a kill only after the wait \\
+\code{ops/watchdog.sh} & one health check, for cron every minute \\
+\code{ops/hold.sh <minutes> <command>} & a command with the board to itself, then the service back \\
+\code{ops/gate.sh <label> [--profile F]} & the release gate \\
+\code{ops/make-secrets.sh [--admin] [--rotate]} & the metrics token; \code{--admin} adds the admin password \\
+\code{ops/roles.sh load|up|down|settle} & roles beside the engine, through the residency planner \\
+\code{. ops/engines.sh; engine_pids} & every engine process on the board \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Measurement and maintenance tools}
+
+The \code{tools/} directory holds about 180 scripts: kernels, quantisers, probes, checks and benches. The ones this manual refers to are listed here; each prints its own \code{--help}.
+
+\begin{table}[htbp]
+\centering\small
+\caption{The tools this manual refers to.}\label{tab:ref-tools}
+\begin{tabularx}{\linewidth}{@{}L{.32\linewidth}Y@{}}
+\toprule
+\hd{tool} & \hd{what it does} \\
+\midrule
+\code{tools/row3.py} & the benchmark row, N runs through one server, with \code{--compare} \\
+\code{tools/block_ab.py} & the in-process A/B for changes that keep the bits \\
+\code{tools/forced_bench.py} & the teacher-forced bench \\
+\code{tools/verify_spec.py} & the agreement gate with its near-tie rule \\
+\code{tools/flagoff_identity.py} & the identity gate with the new flags off \\
+\code{tools/api_text_check.py} & 13 plain requests against the current release \\
+\code{tools/client_smoke.py} & the request shapes real clients send \\
+\code{tools/verify_curve.py} & the verify prices StairCut cuts on \\
+\code{tools/quant_nvfp4.py}, \code{quant_head.py} & the quantisers \\
+\code{tools/quality_gate.py} & the quality gate \\
+\code{tools/calib_corpus.py}, \code{build_corpus.py} & the calibration text and the lookup corpus \\
+\code{tools/mem_audit.py} & the memory a configuration holds \\
+\code{tools/disk_cache_live.py}, \code{disk_restore_check.py} & the disk tier's live and bit-exact checks \\
+\code{tools/session_spill_check.py} & the session spill's bit-exact check \\
+\code{tools/lane_check.py} & the side lane on the real engine \\
+\code{tools/tandem_eval.py} & the conductor's evaluation suites \\
+\code{tools/conductor_policy.py} & the monitor's policy schema and its check \\
+\code{tools/shadow_ab.py}, \code{shadow_measure.py} & the shadow reader's cost and read rate \\
+\code{tools/voice_replay.py} & a recorded session's lines through the voice \\
+\code{tools/proxy_bench.py}, \code{proxy_gate.py} & the proxy's overhead and its decode check \\
+\code{tools/parallel_load.py} & agent-like sessions over several backends \\
+\code{tools/package_check.sh} & the wheel builds and installs without torch \\
+\code{manual/tools/gen_reference.py} & this part's tables \\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,18 @@
+{
+  "package": "social-post",
+  "rubric": [
+    "The first line works as a hook on its own; the facts (what, when, where, how much) follow; one call to action closes it.",
+    "Length fits the platform (X under 280 characters, Instagram under 150 words, LinkedIn 80 to 200 words, a listing with title and fact lines).",
+    "3 to 5 real hashtags where they belong, none on LinkedIn job posts beyond 2 or in WhatsApp; emoji only when the tone is casual, none on LinkedIn or listings.",
+    "The user's own voice, no marketing words, no invented prices, dates, links or discounts.",
+    "One post, complete; a one-line offer of variants at most."
+  ],
+  "prompts": [
+    {"id": "social-post-1", "lang": "en", "text": "Instagram caption: we adopted a dog from the shelter, his name is Bruno, 3 years old, super shy at first, now sleeps on the couch."},
+    {"id": "social-post-2", "lang": "de", "text": "Kleinanzeige: Verkaufe Kinderfahrrad 16 Zoll, blau, 2 Jahre alt, kleine Kratzer, neue Bremsen, 60 Euro, Abholung in Köln-Ehrenfeld."},
+    {"id": "social-post-3", "lang": "ar", "text": "منشور فيسبوك لمحل الحلويات الخاص بي: عرض رمضان، كنافة بالجبن، كيلو بـ 45 ريال، التوصيل مجاني داخل جدة، الطلب عبر واتساب."},
+    {"id": "social-post-4", "lang": "en", "text": "LinkedIn post: after 6 years I'm leaving Metro Bank to join a fintech startup as product manager. Grateful to my team, excited, no cringe please."},
+    {"id": "social-post-5", "lang": "de", "text": "WhatsApp-Nachricht an die Elterngruppe: Sommerfest der Klasse 3b am 21. Juni 15-18 Uhr auf dem Schulhof, jeder bringt was zu essen mit, wer kann beim Aufbau um 14 Uhr helfen?"},
+    {"id": "social-post-6", "lang": "en", "text": "A short bio for my Instagram, I'm a yoga teacher in Lisbon, classes in English and Portuguese, beginners welcome."}
+  ]
+}

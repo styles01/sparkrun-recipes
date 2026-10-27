@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor watch",
+  "description": "GET /v1/conductor/watch: what the session tasks (S1, S2, S4) hold per session, newest first",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "monitor": {
+      "type": "boolean",
+      "description": "false: the session monitor does not run (--conductor raw)"
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/session"
+      }
+    }
+  },
+  "required": [
+    "contract_version",
+    "monitor",
+    "sessions"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "session": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "type": "string"
+        },
+        "requests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_seen": {
+          "type": "number"
+        },
+        "ended_at": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "running": {
+          "type": "boolean"
+        },
+        "note_at": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "idle_minutes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "client_gone": {
+          "type": "boolean"
+        },
+        "watch": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "minutes": {
+              "type": "number"
+            },
+            "mode": {
+              "enum": [
+                "off",
+                "shadow",
+                "act"
+              ]
+            },
+            "profile": {
+              "type": "string"
+            },
+            "client": {
+              "type": "string"
+            },
+            "notify": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "task",
+            "minutes",
+            "mode",
+            "profile",
+            "client",
+            "notify"
+          ],
+          "additionalProperties": false
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string"
+              },
+              "checker": {
+                "type": "string"
+              },
+              "gate": {
+                "type": "string"
+              },
+              "op": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "noted": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "task",
+              "checker",
+              "gate",
+              "op",
+              "limit",
+              "values",
+              "noted"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "compaction": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer"
+            },
+            "watching": {
+              "type": "boolean"
+            },
+            "steps": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "task",
+            "count",
+            "watching",
+            "steps"
+          ],
+          "additionalProperties": false
+        },
+        "progress": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "last": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "minutes": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "task",
+            "last",
+            "minutes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "session",
+        "requests",
+        "last_seen",
+        "ended_at",
+        "running",
+        "note_at",
+        "idle_minutes",
+        "client_gone",
+        "watch",
+        "gates",
+        "compaction",
+        "progress"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

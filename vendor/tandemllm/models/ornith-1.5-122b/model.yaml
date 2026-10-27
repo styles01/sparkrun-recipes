@@ -1,0 +1,496 @@
+# Ornith-1.5-122B in TandemLLM: the setup guide's registry entry (docs/setup.md). Schema 1.
+#
+# Ornith's agentic and coding model on the Qwen3.5 mixture-of-experts architecture (engine/models/qwen3_5_moe), from our
+# EXL3 pack, drafting with its own MTP layer (the public DFlash2 drafter for it is the other head). weights_gib: allocated at load (measured 2026-10-20). Window
+# 262,144 tokens (max_position_embeddings); its KV is 24,576 bytes a token (12 attention layers, 2 KV heads of 256).
+# One sequence slot: the joint verify of several slots is not built for this trunk yet. Rows of the measured table come
+# from real runs only.
+schema: 1
+id: ornith-1.5-122b
+name: Ornith-1.5-122B
+family: Ornith 1.5
+params: ~122B, ~10B active a token
+recommended: false
+order: 7
+pitch: An agentic and coding mixture-of-experts model on the Qwen3.5 architecture that reads images too, from our EXL3 pack.
+architecture: 48 layers, 36 Gated DeltaNet and 12 gated attention layers, each with a mixture of 256 experts of which 8 and
+  a shared one run a token, plus one multi-token-prediction layer; it thinks in a <think> block and calls tools in the XML
+  form. Images go through its Qwen3.5 vision tower (27 blocks), in the pack at 6 bits.
+license: The model's license (MIT) is on its Hugging Face page. TandemLLM itself is AGPL-3.0 or commercial.
+icon: null
+links:
+- label: Model card
+  url: https://huggingface.co/ornith-ai/Ornith-1.5-122B
+- label: DFlash2 drafter
+  url: https://huggingface.co/incoai/Ornith-1.5-122B-DFlash2
+devices:
+- id: dgx-spark
+  label: NVIDIA DGX Spark (128 GB unified memory)
+  total_gib: 121.63
+  reserved_gib: 10.0
+  note: The GPU and the CPU share this memory. MemTotal reads 121.6 GiB of the 128 GB.
+assets:
+- id: ornith-dflash2
+  label: DFlash2 drafter for Ornith-1.5-122B
+  path: ${HOME}/models/ornith-1.5-122b-dflash2/model.safetensors
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: incoai/Ornith-1.5-122B-DFlash2
+  fetch:
+  - repo: incoai/Ornith-1.5-122B-DFlash2
+    files:
+    - config.json
+    - model.safetensors
+    to: ${HOME}/models/ornith-1.5-122b-dflash2
+    gb: 1.86
+  source: Public on Hugging Face (Apache-2.0), BF16; the engine reads it as stored (engine/models/qwen3_5_moe/dflash2.py).
+- id: qwen3.5-2b
+  label: Qwen3.5-2B (the narrator, and Wren)
+  path: ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b/config.json
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: Qwen/Qwen3.5-2B
+  fetch:
+  - repo: Qwen/Qwen3.5-2B
+    files:
+    - '*.json'
+    - '*.safetensors'
+    - '*.jinja'
+    - merges.txt
+    - LICENSE
+    to: ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b
+    gb: 4.57
+  source: Public on Hugging Face; install.sh --setup downloads it for Wren, the fetch step when the narrator is on (VIS-153).
+- id: laya
+  label: Laya decision models
+  path: ${HOME}/.qwen38-spark-engine/deciders/laya/model.safetensors
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: convaiinnovations/laya
+  fetch:
+  - repo: convaiinnovations/laya
+    files:
+    - config.json
+    - rl_agent_config.json
+    - model.safetensors
+    - encoder/*
+    - tokenizer/*
+    - multilingual/*
+    - typed-decisions/*
+    to: ${HOME}/.qwen38-spark-engine/deciders/laya
+    gb: 2.35
+  source: Public on Hugging Face (no token needed); the fetch step downloads its three models when Laya is on (VIS-153). Its
+    Python files are not downloaded.
+profiles:
+- id: ornith-1.5-122b-exl3-4.0
+  label: EXL3 4.0 bpw
+  format: exl3
+  bpw: 4.0
+  disk_gb: 64.6
+  weights_gib: 59.95
+  drafters_gib: 1.21
+  hf_repo: 0xBakeer/TandemLLM-Ornith-1.5-122B-EXL3-4.0
+  hf_private: false
+  made_by:
+    kind: ours
+    name: 0xBakeer
+    github: 0xBakeer
+  recommended: true
+  badges:
+  - recommended
+  quality:
+    kl_vs_bf16: 0.1386
+    top1_pct: 86.18
+    ppl: 7.267
+    date: '2026-10-20'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/q35m_quality.py, 8 wikitext rows of 1,024 tokens from
+      the conversion job, BF16 ppl 7.094; the converter''s own forward of the pack: KL 0.136, ppl 7.315)'
+  assets_required: []
+  note: 'Converted from the BF16 checkpoint (revision e09bc0dfbe) by exllamav3 1.6.2: every projection at 4 bits, head 6,
+    the MTP layer at 4, the vision tower at 6 (loaded beside it on the EXL3 kernels, 0.35 GB). Measured 2026-10-20: 59.95
+    GiB at load, 61.16 with the MTP layer the profile drafts with (the lookup beside it, cut by StairCut from the pack''s
+    price file); plain decode 37.2 to 38.4 tok/s. The DFlash2 drafter for Ornith is the other head (QSE_ORN_HEAD=dflash2,
+    2.86 GiB).'
+  hf_revision: 92f7483cb2c7389757343e433b98d075c5ff611c
+  max_window: 262144
+measurements:
+  build: 0.13.0
+  date: '2026-10-20'
+  method: 'tools/q35m_ab.py through one fresh server a run on the Spark, the GPU to itself: the prose, chat, code, edit and
+    copy asks, one greedy request each, thinking off, 512 new tokens, model TandemLLM (3,146 to 4,165 prompt tokens), one
+    slot, max_len 262,144, the pack''s price file; a 2,048-token game file through the raw model. One run a cell, on the
+    tree 0.13.0 ships (its /health read 0.12.2+<profile>). Summary: models/ornith-1.5-122b/measurements/0.13.0-summary.json;
+    raw data: 0.12.2-drafters.json (and 0.12.2-summary.json, the first runs without a price file).'
+  source: models/ornith-1.5-122b/measurements/0.13.0-summary.json
+  rows:
+  - profile: ornith-1.5-122b-exl3-4.0
+    build: 0.13.0
+    date: '2026-10-20'
+    comparable: true
+    note: The MTP layer + lookup, anchor backoff 8, the price file; edit and copy asks 115.87 and 124.75 tok/s, a 2,048-token
+      game file 103.28; plain prose / chat / code / edit / copy 37.55 / 37.81 / 38.42 / 38.03 / 38.13 and the game file 37.18;
+      DFlash2 (NVFP4, hot head) 67.29 / 92.22 / 91.66 / 106.87 / 122.76 and 96.77; every text the plain run's.
+    cells:
+      greedy_512:
+        prose:
+        - 85.3
+        - 85.3
+        - 169.17
+        - 14.43
+        - 1
+        chat:
+        - 110.0
+        - 110.0
+        - 143.82
+        - 15.82
+        - 1
+        code:
+        - 114.19
+        - 114.19
+        - 87.75
+        - 10.02
+        - 1
+    ttft_s: {}
+    lossless: null
+memory:
+  parts:
+  - id: engine
+    label: Engine state, the decode graphs and warm-up
+    gib: 1.6
+    kind: fixed
+    source: 'measured 2026-10-20 at load with the MTP layer: the engine 0.52, the drafters 1.48, the warm-up 0.38 and the
+      graphs 0.10 GiB of MemAvailable beyond the weights (server [memory] line)'
+  - id: allocator
+    label: Allocator reserve
+    gib: 1.5
+    kind: reserve
+    source: an estimate until measured on the Spark
+  - id: prefill_workspace
+    label: Prefill workspace (a 4,096-token chunk's activations and the attention's keys)
+    gib: 4.0
+    kind: reserve
+    source: an estimate until measured on the Spark
+  sources:
+  - engine/models/qwen3_5_moe/pack.py Qwen35MoePackIndex.decode_bytes (the pack's headers, 2026-10-20)
+components:
+- id: conductor
+  label: Conductor
+  group: features
+  what: Gives each request the right instructions and helper packages, and watches long sessions so they do not get stuck.
+  default: true
+  required: false
+  memory_gib: 0.0
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.1
+  depends_on: []
+  conflicts: []
+  knobs:
+    CONDUCTOR:
+      'on': 'on'
+      'off': raw
+    QSE_CONDUCTOR_CONFIG:
+      'on': ${HOME}/.qwen38-spark-engine/conductor
+      'off': 'off'
+  assets: []
+  docs: docs/server.md
+  note: On by default, with the conductor's default fit until it is measured on Ornith.
+- id: narrator
+  label: Narrator
+  group: roles
+  what: A small model that writes short status lines while the big model thinks, so you can see what it is doing.
+  default: false
+  required: false
+  memory_gib: 3.6
+  memory_max_gib: null
+  elastic: true
+  disk_gb: 4.3
+  depends_on:
+  - conductor
+  conflicts: []
+  knobs:
+    QWEN38_NARRATOR_MODEL:
+      'on': qwen3.5-2b
+      'off': ''
+    QWEN38_NARRATOR_DIR:
+      'on': ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b
+      'off': ''
+  assets:
+  - qwen3.5-2b
+  docs: docs/server.md
+  note: Qwen3.5-2B, 3.60 GiB in the live memory split. Off by default under Ornith (the model has the box to itself).
+- id: laya
+  label: Laya decision models
+  group: roles
+  what: Three tiny classifiers that answer the conductor's quick questions, like what kind of request this is, in milliseconds.
+  default: true
+  required: false
+  memory_gib: 1.6
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 2.3
+  depends_on:
+  - conductor
+  conflicts: []
+  knobs:
+    QWEN38_DECIDER_MODELS:
+      'on': laya-english,laya-multilingual,laya-typed-decisions
+      'off': ''
+  assets:
+  - laya
+  docs: docs/server.md
+  note: The class question's answer under the model fit (served_classifier off).
+- id: vision
+  label: Vision
+  group: features
+  what: Lets the model read images you send with a message, and the screenshots its tools take.
+  default: true
+  required: false
+  memory_gib: 0.35
+  memory_max_gib: 0.85
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    VISION:
+      'on': 'on'
+      'off': 'off'
+  assets: []
+  docs: docs/server.md
+  note: The pack's own Qwen3.5 tower (6-bit EXL3 projections) on the EXL3 kernels, 0.35 GB at load (2026-10-20); the extra
+    0.5 GiB is the cache of encoded images (--image-cache-mb 512).
+- id: response_cache
+  label: Response cache
+  group: caches
+  what: Answers an identical greedy request again from memory, without running the model.
+  default: false
+  required: false
+  memory_gib: 0.25
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    RESPONSE_CACHE:
+      'on': 'on'
+      'off': 'off'
+  assets: []
+  docs: docs/caches.md
+  note: Off on the reference box. Useful for scripts that send the same request many times; never for a benchmark.
+- id: proxy
+  label: Other backends
+  group: features
+  what: Lets the dashboard send some model names to other servers or cloud APIs, beside this engine.
+  default: false
+  required: false
+  memory_gib: 0.0
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    QSE_BACKENDS:
+      'on': ${HOME}/.qwen38-spark-engine/backends/config.sqlite3
+      'off': ''
+  assets: []
+  docs: docs/proxy.md
+  note: You add the backends later, on the Backends screen.
+- id: prompt_cache
+  label: Conversation cache
+  group: caches
+  what: Keeps the conversation the model is in, so the next turn starts where the last one ended instead of reading everything
+    again.
+  default: true
+  required: false
+  memory_gib: 0.16
+  memory_max_gib: 2.5
+  elastic: true
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    RESIDENT_GB:
+      'on': '2.5'
+      'off': '0'
+  assets: []
+  docs: docs/caches.md
+  note: The resident prefix with its anchors every 4,096 tokens (the prefill's chunk), the end anchor, the pin and the park;
+    an anchor holds the 36 GDN layers' states and 4,096 tokens of KV at 24,576 bytes.
+- id: state_store
+  label: State store
+  group: caches
+  what: Saves the model's state after short chats, so the same start a second time costs nothing.
+  default: true
+  required: false
+  memory_gib: 0.49
+  memory_max_gib: 2.0
+  elastic: true
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    CACHE_GB:
+      'on': '2'
+      'off': '0'
+  assets: []
+  docs: docs/caches.md
+  note: null
+parallelism:
+  slots:
+    min: 1
+    max: 1
+    default: 1
+  window:
+    min: 8192
+    max: 262144
+    default: 262144
+    step: 4096
+  side_window:
+    min: 8192
+    max: 262144
+    default: 65536
+    step: 4096
+  kv_pool:
+    default: false
+  floor_gb:
+    min: 10
+    max: 40
+    default: 15
+  kv_hard_floor_gb: 10
+  kv_bytes_per_token: 24576
+  typical_fill_tokens: 32768
+  side_slot_const_gib: 0.0
+  knobs:
+    slots: QSE_PARALLEL
+    window: MAX_LEN
+    side_window: QSE_SIDE_MAX_LEN
+    kv_pool: QSE_KV_POOL
+    floor_gb: QSE_PARALLEL_FLOOR_GB
+  fixed: {}
+methods:
+- id: temperature
+  label: Temperature
+  what: How random the answers are when a client does not say. The model's generation config sets 0.6.
+  type: number
+  min: 0
+  max: 2
+  default: 0.6
+  recommended: 0.6
+  knob: TEMPERATURE
+  docs: docs/server.md
+- id: top_p
+  label: Top-p
+  what: The share of probability a sampled answer draws from, when a client does not say.
+  type: number
+  min: 0
+  max: 1
+  default: 0.95
+  recommended: 0.95
+  knob: TOP_P
+  docs: docs/server.md
+- id: default_max_tokens
+  label: Default answer length
+  what: The longest answer, in tokens, when a client does not set max_tokens.
+  type: int
+  min: 1024
+  max: 262144
+  default: 32768
+  recommended: 32768
+  knob: DEFAULT_MAX_TOKENS
+  docs: docs/server.md
+- id: request_timeout
+  label: Request time limit
+  what: Seconds one request may run before the engine stops it.
+  type: int
+  min: 60
+  max: 14400
+  default: 3600
+  recommended: 3600
+  knob: REQUEST_TIMEOUT
+  docs: docs/server.md
+- id: max_queue
+  label: Queue length
+  what: How many requests may wait for a free slot before new ones are turned away.
+  type: int
+  min: 1
+  max: 64
+  default: 8
+  recommended: 8
+  knob: MAX_QUEUE
+  docs: docs/server.md
+- id: queue_timeout
+  label: Queue wait
+  what: Seconds a request may wait in the queue before it gets an error.
+  type: int
+  min: 10
+  max: 3600
+  default: 240
+  recommended: 240
+  knob: QUEUE_TIMEOUT
+  docs: docs/server.md
+advanced:
+- id: port
+  label: Port
+  what: The port the API and the dashboard answer on.
+  type: int
+  min: 1024
+  max: 65535
+  default: 8000
+  recommended: 8000
+  knob: PORT
+  docs: docs/operations.md
+- id: host
+  label: Listen on
+  what: The whole network, or only this machine.
+  type: enum
+  options:
+  - value: 0.0.0.0
+    label: the whole network
+  - value: 127.0.0.1
+    label: this machine only
+  default: 0.0.0.0
+  recommended: 0.0.0.0
+  knob: HOST
+  docs: docs/operations.md
+- id: served_model
+  label: Raw engine name
+  what: The model name of the raw engine. With the conductor on, clients see TandemLLM and this name is a hidden alias.
+  type: string
+  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$
+  default: qwen38-spark-engine
+  recommended: qwen38-spark-engine
+  knob: SERVED_MODEL
+  docs: docs/server.md
+- id: dashboard_login
+  label: Dashboard login
+  what: With an admin password set, on makes the dashboard ask for it too.
+  type: enum
+  options:
+  - value: 'off'
+    label: 'off'
+  - value: 'on'
+    label: 'on'
+  default: 'off'
+  recommended: 'off'
+  knob: QSE_DASHBOARD_LOGIN
+  docs: docs/server.md
+- id: admin_password
+  label: Admin password
+  what: Without one, anyone who reaches the port can change the setup. Generate writes a random one into secrets.env on the
+    box; read it there with cat.
+  type: enum
+  options:
+  - value: keep
+    label: keep as it is
+  - value: generate
+    label: generate one
+  default: keep
+  recommended: keep
+  knob: null
+  docs: docs/operations.md

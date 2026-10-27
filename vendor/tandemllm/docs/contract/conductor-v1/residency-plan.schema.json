@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor residency plan",
+  "description": "GET /v1/conductor/residency/plan (OPS-41): the residency document, what may load beside the engine now (MemAvailable from /proc, the claims, floor plus margin, one role after the other in the document's order), the engine's own memory split, and the planner's journal; OPS-47: the engine's growth to its declared peak counts before every claim, and `limits` is every memory limit with what it holds now",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "doc": {
+      "type": "object",
+      "description": "the residency document; its own schema is residency.config.schema.json"
+    },
+    "plan": {
+      "type": "object",
+      "properties": {
+        "mem_available_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "floor_gib": {
+          "type": "number"
+        },
+        "margin_gib": {
+          "type": "number"
+        },
+        "need_gib": {
+          "type": "number"
+        },
+        "spendable_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "settle_s": {
+          "type": "integer"
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/row"
+          }
+        },
+        "engine_peak_gib": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "OPS-47: the engine's declared peak (MEM_PEAK_GIB), GiB"
+        },
+        "engine_now_gib": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "OPS-47: what the engine's allocator holds now (reserved, the decision models left out), GiB"
+        },
+        "engine_growth_gib": {
+          "type": "number",
+          "description": "OPS-47: what the engine may still take, peak minus now (the whole peak with no reading), subtracted before the claim"
+        }
+      },
+      "required": [
+        "mem_available_gib",
+        "floor_gib",
+        "margin_gib",
+        "need_gib",
+        "spendable_gib",
+        "settle_s",
+        "order",
+        "rows"
+      ],
+      "additionalProperties": false
+    },
+    "engine": {
+      "description": "server/memsplit.py's split, the same object as dashboard-v1 system memory.split; null when it could not be read",
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "last_refusal": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "the newest check that was refused (a journal line), null when none",
+      "properties": {
+        "kind": {
+          "enum": [
+            "check"
+          ]
+        },
+        "ts": {
+          "type": "number"
+        },
+        "role": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ts",
+        "role",
+        "reason"
+      ],
+      "additionalProperties": true
+    },
+    "journal": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/journal"
+      }
+    },
+    "limits": {
+      "description": "OPS-47: the engine's memory limits (server/memlimits.py view()): one row per serve.env key with its value, where it comes from (serve.env, or the residency document's engine section edited in the dashboard), whether a change applies at the next request or needs a restart (MAX_LEN is locked at 262,144), and what it holds now against its cap (bytes for GiB and MiB keys); the memory policy's report (engine/cache.py Budget: ceiling, peak, slack, the shed counts and log); the last session switch and its re-read cost; the parked session. Null when it could not be read",
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "unit": {
+                "enum": [
+                  "GiB",
+                  "MiB",
+                  "tokens",
+                  "on/off"
+                ]
+              },
+              "what": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "flag": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "source": {
+                "enum": [
+                  "serve.env",
+                  "dashboard"
+                ]
+              },
+              "applies": {
+                "enum": [
+                  "next request",
+                  "restart",
+                  "locked"
+                ]
+              },
+              "locked": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "running": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pending_restart": {
+                "type": "boolean"
+              },
+              "used": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "cap": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "unit",
+              "what",
+              "value",
+              "flag",
+              "source",
+              "applies",
+              "locked",
+              "running",
+              "pending_restart",
+              "used",
+              "cap"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "budget": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "engine/cache.py Budget.report(): the limits in bytes, the allocator's numbers less the decision models, the workspace estimate, counts, the shed log",
+          "properties": {
+            "ceiling": {
+              "type": "integer"
+            },
+            "peak": {
+              "type": "integer"
+            },
+            "slack": {
+              "type": "integer"
+            },
+            "allocated": {
+              "type": "integer"
+            },
+            "reserved": {
+              "type": "integer"
+            },
+            "reserve": {
+              "type": "integer"
+            },
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "ts": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "ts"
+                ]
+              }
+            },
+            "shed": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer"
+              }
+            },
+            "refused": {
+              "type": "integer"
+            },
+            "prefill_peak": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "ceiling",
+            "peak",
+            "slack",
+            "allocated",
+            "reserved",
+            "reserve",
+            "events",
+            "shed",
+            "refused",
+            "prefill_peak"
+          ]
+        },
+        "workspace_at_max_len": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "switch": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "ts": {
+              "type": "number"
+            },
+            "from": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "to": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokens": {
+              "type": "integer"
+            },
+            "reused": {
+              "type": "integer"
+            },
+            "reread": {
+              "type": "integer"
+            },
+            "via": {
+              "type": "string"
+            },
+            "ms": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "ts",
+            "from",
+            "to",
+            "tokens",
+            "reused",
+            "reread",
+            "via",
+            "ms"
+          ],
+          "additionalProperties": false
+        },
+        "switches": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "park": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "owner": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "rows": {
+              "type": "integer"
+            },
+            "base": {
+              "type": "integer"
+            },
+            "bytes": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "owner",
+            "rows",
+            "base",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "version",
+        "rows",
+        "budget",
+        "workspace_at_max_len",
+        "switch",
+        "switches",
+        "park",
+        "owner"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "version",
+    "doc",
+    "plan",
+    "engine",
+    "last_refusal",
+    "journal"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "row": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "allowed": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "refused_hold",
+            "refused_load_in_progress",
+            "refused_memory",
+            "refused_unknown_role",
+            null
+          ]
+        },
+        "mem_available_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "claim_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "basis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "floor_gib": {
+          "type": "number"
+        },
+        "margin_gib": {
+          "type": "number"
+        },
+        "need_gib": {
+          "type": "number"
+        },
+        "after_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "engine_peak_gib": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "OPS-47: the engine's declared peak (MEM_PEAK_GIB), GiB"
+        },
+        "engine_now_gib": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "OPS-47: what the engine's allocator holds now (reserved, the decision models left out), GiB"
+        },
+        "engine_growth_gib": {
+          "type": "number",
+          "description": "OPS-47: what the engine may still take, peak minus now (the whole peak with no reading), subtracted before the claim"
+        }
+      },
+      "required": [
+        "role",
+        "allowed",
+        "reason",
+        "mem_available_gib",
+        "claim_gib",
+        "basis",
+        "floor_gib",
+        "margin_gib",
+        "need_gib",
+        "after_gib"
+      ],
+      "additionalProperties": false
+    },
+    "journal": {
+      "type": "object",
+      "description": "one line of residency.jsonl: a check (the decision with kind check and its source) or a load the ops script measured (kind loaded: before_gib, after_gib, took_gib); OPS-47: the engine's memory policy (role engine): a cache given back (memory_shed: level, why, freed), a prefill refused with a 503 (memory_refused: n, need, peak), the workspace estimate raised (memory_estimate_raised)",
+      "properties": {
+        "kind": {
+          "enum": [
+            "check",
+            "loaded",
+            "memory_shed",
+            "memory_refused",
+            "memory_estimate_raised"
+          ]
+        },
+        "ts": {
+          "type": "number"
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ts",
+        "role"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

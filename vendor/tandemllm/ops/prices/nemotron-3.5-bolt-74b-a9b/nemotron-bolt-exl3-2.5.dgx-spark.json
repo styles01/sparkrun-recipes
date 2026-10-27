@@ -1,0 +1,56 @@
+{
+ "0": {
+  "chain": {
+   "1": 22.774,
+   "2": 26.012,
+   "3": 28.424,
+   "4": 30.9,
+   "5": 32.626,
+   "6": 34.25,
+   "7": 36.082,
+   "8": 37.881,
+   "9": 39.513,
+   "10": 40.997,
+   "11": 41.587,
+   "12": 43.256,
+   "13": 46.03,
+   "14": 47.583,
+   "15": 49.709,
+   "16": 50.554
+  },
+  "plain": {
+   "1": 23.602
+  },
+  "spec": {
+   "1": 13.9
+  }
+ },
+ "16384": {
+  "chain": {
+   "1": 23.039,
+   "2": 26.328,
+   "3": 29.296,
+   "4": 31.546,
+   "5": 33.213,
+   "6": 34.44,
+   "7": 36.054,
+   "8": 38.556,
+   "9": 40.253,
+   "10": 41.909,
+   "11": 43.087,
+   "12": 44.691,
+   "13": 47.095,
+   "14": 48.306,
+   "15": 49.796,
+   "16": 51.572
+  },
+  "plain": {
+   "1": 23.602
+  },
+  "spec": {
+   "1": 13.9
+  }
+ },
+ "step_ms": 1.78,
+ "measured": "tools/nh_check.py staircase and bench on stair.json, bench.json: chain = a VerifyGraph replay of 1..16 rows (CUDA events, the median), at the staircase's contexts (the lowest as class 0); plain = the captured decode step's ms a token, host wall clock with a sync a token. No prime prior (learned online). Spec prior 13.9 ms a token: (8-row chain + draft) / (0.75 x LiLiCorr's offline accepted length), lilicorr.json."
+}

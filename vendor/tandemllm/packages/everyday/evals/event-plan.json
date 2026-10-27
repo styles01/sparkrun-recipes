@@ -1,0 +1,18 @@
+{
+  "package": "event-plan",
+  "rubric": [
+    "Frame and assumptions stated; a countdown with the four stages (weeks before, one week, day before, the day) and a run of the day with clock times.",
+    "Food and drink quantities computed from the guest number with the stated amounts; children counted as half for food.",
+    "To-do and shopping grouped (food, drinks, tableware, decoration, activities, other); budget as ranges with a note to check prices.",
+    "A children's party has at most 5 activities, food halfway, cake near the end, adult ratio named; diet rules and allergies kept.",
+    "The two often-forgotten items for this kind of event; no invented venue, supplier or price."
+  ],
+  "prompts": [
+    {"id": "event-plan-1", "lang": "en", "text": "Plan a garden barbecue for 20 adults and 6 kids for my 40th, Saturday afternoon in July, budget around 400."},
+    {"id": "event-plan-2", "lang": "de", "text": "Kindergeburtstag, meine Tochter wird 7, 10 Kinder, bei uns zu Hause, 3 Stunden, Thema Pferde. Ablauf und Einkaufsliste bitte."},
+    {"id": "event-plan-3", "lang": "ar", "text": "أريد تنظيم عشاء إفطار رمضاني في البيت لـ 12 شخصًا من العائلة. ما الذي أحتاجه وكيف أرتب الوقت؟"},
+    {"id": "event-plan-4", "lang": "en", "text": "A farewell for a colleague leaving after 12 years, 25 people in the office, Friday 4pm, we have a 300 budget. Ideas and a timeline."},
+    {"id": "event-plan-5", "lang": "en", "text": "Dinner party for 8 on Saturday, two vegetarians, one person can't eat nuts. Menu, timeline for the day and shopping list."},
+    {"id": "event-plan-6", "lang": "de", "text": "Babyparty für meine Schwester, 15 Frauen, Sonntagnachmittag im Gemeinschaftsraum. Was brauchen wir, was machen wir, wer macht was?"}
+  ]
+}

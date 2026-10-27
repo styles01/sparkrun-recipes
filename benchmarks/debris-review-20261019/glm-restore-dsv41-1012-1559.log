@@ -1,0 +1,15 @@
+
+  [1;36m┌────────────────────────────────────────────┐[0m
+  [1;36m│[0m  [1mGLM-5.3 Flash EXL3[0m  [2m·  start.sh   [0m        [1;36m│[0m
+  [1;36m└────────────────────────────────────────────┘[0m
+
+[1;36m[glm53-exl3][0m checking worker jaita@10.200.0.2 ...
+PREFLIGHT OK [head]: MemAvailable=112.93/121.69 GiB; request=103.44 GiB plus 2.00 GiB headroom
+PREFLIGHT OK [worker]: MemAvailable=117.25/121.69 GiB; request=103.43 GiB plus 2.00 GiB headroom
+[1;36m[glm53-exl3][0m preflight OK (head=larryspark 10.200.0.1, worker=jaita@10.200.0.2)
+[1;36m[glm53-exl3][0m pulling ghcr.io/miaai-lab/glm-5.3-flash-2x-dgx-sparks:exl3-instanttensor (local recipe b48a1ab9f688 held until the pulled stamp is checked) ...
+Error response from daemon: Head "https://ghcr.io/v2/miaai-lab/glm-5.3-flash-2x-dgx-sparks/manifests/exl3-instanttensor": denied: denied
+[1;31m[glm53-exl3][0m ERROR: docker pull ghcr.io/miaai-lab/glm-5.3-flash-2x-dgx-sparks:exl3-instanttensor failed.
+  :exl3-instanttensor is a public GHCR package — check network / disk.
+  If you still get 401/403: echo YOUR_PAT | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
+  Overlay rebuild: BUILD=1 ./start.sh. Recipe-stamp drift also rebuilds; SKIP_BUILD=1 keeps GHCR.

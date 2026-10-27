@@ -1,0 +1,19 @@
+{
+  "package": "translate",
+  "rubric": [
+    "The translation comes first, complete, with the same paragraphs, lists and order; names, numbers, dates and links unchanged.",
+    "Meaning and tone kept (formal stays formal, a joke stays a joke); idioms rendered as idioms; no content added, softened or summarised.",
+    "Formality choice (Sie/du, vous/tu) fits the reader and is named in a note when the source does not show it.",
+    "Notes only for real choices: a word with no exact match, an unclear source, the dialect used for Arabic.",
+    "Right-to-left output is clean: one paragraph per source paragraph, no mixed-language sentences."
+  ],
+  "prompts": [
+    {"id": "translate-1", "lang": "en", "text": "Translate into German for my neighbour (we are on first-name terms): 'Hi Anna, I'll be away next week. Could you water the plants on the balcony twice? The key is with Mrs Berger. Thanks a lot!'"},
+    {"id": "translate-2", "lang": "de", "text": "Übersetze ins Arabische, formell, für ein Amt: 'Sehr geehrte Damen und Herren, ich bitte um einen Termin zur Verlängerung meiner Aufenthaltserlaubnis. Meine Erlaubnis läuft am 15. Juni ab. Mit freundlichen Grüßen, Omar Haddad'"},
+    {"id": "translate-3", "lang": "ar", "text": "ترجم إلى الإنجليزية: 'عزيزي السيد جونسون، نأسف للتأخير في إرسال الطلب. سيصلكم الشحن يوم الخميس القادم. مع فائق الاحترام.'"},
+    {"id": "translate-4", "lang": "en", "text": "What does this say? 'Sehr geehrte Frau Yilmaz, Ihr Termin am 12.05. um 9:30 Uhr wurde bestätigt. Bitte bringen Sie Ihre Versichertenkarte und den Überweisungsschein mit.'"},
+    {"id": "translate-5", "lang": "en", "text": "How do I say 'I'm sorry for your loss' in Arabic, to a colleague whose father died? Formal."},
+    {"id": "translate-6", "lang": "de", "text": "Übersetze diesen Spruch ins Englische, er soll witzig bleiben: 'Ich bin nicht faul, ich bin im Energiesparmodus.'"},
+    {"id": "translate-7", "lang": "mixed", "text": "Translate to Turkish: 'The parcel will arrive between 2 and 4 pm. If nobody is home, it goes to the shop at Hauptstraße 12.'"}
+  ]
+}

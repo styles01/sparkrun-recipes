@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "id": "nemotron-super-vl-exl3-3.5bpw",
+  "name": "Nemotron 3.5 Super VL 120B A12B EXL3 3.5bpw HQ",
+  "base_model": "nemotron-3.5-super-vl-120b-a12b",
+  "finetune_of": null,
+  "author": {
+    "github": "styles01",
+    "social": {
+      "huggingface": "aitamedia"
+    }
+  },
+  "hf": {
+    "repo": "aitamedia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-EXL3-3.5bpw",
+    "revision": "358667cf420fc2869dff43d9ff64bafe31aef03b"
+  },
+  "format": "exl3",
+  "bpw": 3.58,
+  "size_gb": 57.8,
+  "load": "standalone",
+  "modalities": {
+    "text": true,
+    "image": false,
+    "audio": false,
+    "video": false
+  },
+  "modalities_in_pack": [
+    "text"
+  ],
+  "drafters": "none",
+  "license": "OpenMDW-1.1",
+  "license_url": "https://openmdw.ai/license/1-1/",
+  "description": "EXL3 (exllamav3) HQ quantization of NVIDIA's Nemotron 3.5 Super VL 120B A12B (88-layer hybrid mamba-attention-MoE with MTP; text arch remapped from the omni checkpoint). Encoded -b 3.5 --hq (3.5bpw experts, 5bpw attention+dense, 16bpw head and embeddings). The pack holds the language model only, no vision tower: text only.",
+  "tags": [
+    "exl3",
+    "hybrid-mamba",
+    "mtp",
+    "120b-a12b",
+    "dgx-spark"
+  ],
+  "added": "2026-10-17",
+  "status": "verified",
+  "verified": {
+    "build": "0.12.1",
+    "device": "dgx-spark",
+    "date": "2026-10-20",
+    "tok_s": {
+      "prose": 33.2,
+      "code": 53.9,
+      "chat": 37.4,
+      "plain": 25.9
+    },
+    "tokens_per_round": {
+      "prose": 2.97,
+      "code": 5.38,
+      "chat": 3.41
+    },
+    "notes": "text only; one run per kind, 512 greedy, thinking off, LiLiCorr + lookup from the 4.0 profile; 53.58 GiB at load; top-1 99.6 % against the converter's own forward on 512 positions"
+  }
+}

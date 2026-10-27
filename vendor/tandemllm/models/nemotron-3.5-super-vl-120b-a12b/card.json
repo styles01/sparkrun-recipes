@@ -1,0 +1,16 @@
+{
+  "model": "nemotron-3.5-super-vl-120b-a12b",
+  "label": "Nemotron 3.5 Super VL 120B-A12B",
+  "packs": [
+    "nemotron-super-vl-*"
+  ],
+  "context_limit": 1048576,
+  "max_output": 32768,
+  "capabilities": {
+    "thinking": true,
+    "tools": true,
+    "vision": true,
+    "structured": true,
+    "parallel_tool_calls": true
+  }
+}

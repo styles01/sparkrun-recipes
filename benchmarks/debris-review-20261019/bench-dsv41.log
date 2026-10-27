@@ -1,0 +1,68 @@
+
+!       _____                  __      ___
+!      / ___/____  ____ ______/ /__   /   |  ________  ____  ____ _
+!      \__ \/ __ \/ __ `/ ___/ //_/  / /| | / ___/ _ \/ __ \/ __ `/
+!     ___/ / /_/ / /_/ / /  / ,<    / ___ |/ /  /  __/ / / / /_/ /
+!    /____/ .___/\__,_/_/  /_/|_|  /_/  |_/_/   \___/_/ /_/\__,_/
+!        /_/
+
+sparkrun v0.3.6 — Spark Arena benchmark
+
+Authentication verified.
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+VRAM Estimation:
+  Model dtype:      int4
+  KV cache dtype:   bfloat16 (default)
+  Model weights:    0.00 GB
+  Tensor parallel:  2
+  Per-GPU total:    0.00 GB
+  DGX Spark fit:    YES
+
+  GPU Memory Budget:
+    gpu_memory_utilization: 88%
+    Usable GPU memory:     106.5 GB (121 GB x 88%)
+    Available for KV:      106.5 GB
+  Warning: model_params not available; model weight estimate is zero
+  Warning: Missing architecture info (num_layers, num_kv_heads, head_dim); KV cache estimate unavailable
+============================================================
+sparkrun v0.3.6 — benchmark
+============================================================
+Recipe:                @styles01/dsv41-tp2-2x
+Model:                 sudoingx/DeepSeek-V4.1-Flash-EXL3-2.7bpw
+Runtime:               vllm-distributed
+Image:                 dsv41-serve:local
+Benchmark Framework:   llama-benchy
+Benchmark Profile:     @official/spark-arena-v2
+Hosts:                 10.200.0.1, 10.200.0.2
+Mode:                  cluster (2 nodes)
+
+Benchmark args:
+  pp:                                 [2048]
+  depth:                              [0, 4096, 8192, 16384, 32768, 65535, 100000]
+  prefix_caching:                     True
+  tg:                                 [400]
+  exact_tg:                           True
+  concurrency:                        [1, 2, 5, 10]
+  runs:                               3
+  served_model_name:                  dsv41
+============================================================
+
+Benchmark ID:          bench_d309ed767613
+State directory:       /home/jaita/.cache/sparkrun/benchmarks/bench_d309ed767613
+
+Pinned llama-benchy version: 0.4.0
+Step 1/3: Launching inference...
+[1/6] Preparing
+  done (0.0s)
+[2/6] Building — skipped (no builder)
+[3/6] Distributing resources
+  SSH cmd <- 10.200.1.1 FAILED rc=255 (0.0s): Host key verification failed.
+  SSH cmd <- 10.200.1.2 FAILED rc=255 (0.0s): Host key verification failed.
+  Distributing image dsv41-serve:local to 2 host(s)
+Failed to pull image dsv41-serve:local: Error response from daemon: pull access denied for dsv41-serve, repository does not exist or may require 'docker login': denied: requested access to the resource is denied
+
+Failed to ensure local image 'dsv41-serve:local' — aborting distribution
+Error: inference launch failed: launch_inference failed: Image distribution failed on: 10.200.0.1, 10.200.0.2

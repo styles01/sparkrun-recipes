@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor memory sessions",
+  "type": "object",
+  "description": "GET /v1/conductor/memory/sessions (VIS-48): every session transcript on the box, newest first, and the writer",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/session"
+      }
+    },
+    "writer": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "refused": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "queue": {
+          "type": "integer"
+        },
+        "blocks": {
+          "type": "integer"
+        },
+        "counters": {
+          "type": "integer"
+        },
+        "dropped": {
+          "type": "integer"
+        },
+        "failed": {
+          "type": "integer"
+        },
+        "redactions": {
+          "type": "integer"
+        },
+        "pruned": {
+          "type": "integer"
+        },
+        "bytes": {
+          "type": "integer"
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "enum": [
+                "tools",
+                "all",
+                "none"
+              ]
+            },
+            "retention_days": {
+              "type": "integer"
+            },
+            "clip_chars": {
+              "type": "integer"
+            },
+            "loop_chars": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "scope",
+            "retention_days",
+            "clip_chars",
+            "loop_chars"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "root",
+        "refused",
+        "queue",
+        "blocks",
+        "counters",
+        "dropped",
+        "failed",
+        "redactions",
+        "pruned",
+        "bytes",
+        "settings"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "sessions",
+    "writer"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "counts": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "meta.json's counts (null: a session directory without meta.json)",
+      "properties": {
+        "requests": {
+          "type": "integer"
+        },
+        "blocks": {
+          "type": "integer"
+        },
+        "untranscribed": {
+          "type": "integer"
+        },
+        "compactions": {
+          "type": "integer"
+        },
+        "hidden_notes": {
+          "type": "integer"
+        },
+        "acts": {
+          "type": "integer"
+        },
+        "redactions": {
+          "type": "integer"
+        },
+        "clipped": {
+          "type": "integer"
+        },
+        "reasoning_tokens": {
+          "type": "integer"
+        },
+        "snapshots": {
+          "type": "integer",
+          "description": "J1: the turn snapshots written beside the blocks (absent: none)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "description": "one session's meta.json (server/conductor/transcripts.py) with its month; a directory without meta.json lists with session, counts and first_ms null",
+      "properties": {
+        "session": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dir": {
+          "type": "string"
+        },
+        "month": {
+          "type": "string"
+        },
+        "client": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "first_ms": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "last_ms": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "keep": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer"
+        },
+        "counts": {
+          "$ref": "#/$defs/counts"
+        },
+        "checkers": {
+          "type": "object",
+          "properties": {
+            "PASS": {
+              "type": "integer"
+            },
+            "FAIL": {
+              "type": "integer"
+            },
+            "last": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "offsets": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "has_meta": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session",
+        "dir",
+        "month",
+        "keep",
+        "counts",
+        "has_meta"
+      ],
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "description": "one block of transcript.md: its header fields and its text",
+      "properties": {
+        "turn": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "time": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "compaction": {
+          "type": "boolean"
+        },
+        "class_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reasoning_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "turn",
+        "time",
+        "request_id",
+        "compaction",
+        "class_id",
+        "effort",
+        "reasoning_tokens",
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

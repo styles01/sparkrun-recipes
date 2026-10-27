@@ -1,0 +1,89 @@
+{
+  "contract_version": "1.0",
+  "from": "2025-09-25",
+  "to": "2026-09-24",
+  "bucket": "day",
+  "tz": "Europe/Berlin",
+  "filters": {
+    "model": null,
+    "client": null
+  },
+  "buckets": [
+    {
+      "start": "2026-09-23T00:00:00+02:00",
+      "requests": 0,
+      "errors": 0,
+      "prompt_tokens": 0,
+      "cached_tokens": 0,
+      "completion_tokens": 0,
+      "reasoning_tokens": 0,
+      "total_tokens": 0,
+      "tool_call_requests": 0,
+      "decode_tps_p50": null,
+      "decode_tps_p90": null,
+      "ttft_ms_p50": null,
+      "ttft_ms_p90": null,
+      "prefill_tps_p50": null,
+      "tokens_per_block_mean": null,
+      "draft_acceptance": null
+    },
+    {
+      "start": "2026-09-24T00:00:00+02:00",
+      "requests": 44,
+      "errors": 0,
+      "prompt_tokens": 210331,
+      "cached_tokens": 150012,
+      "completion_tokens": 20114,
+      "reasoning_tokens": 8123,
+      "total_tokens": 230445,
+      "tool_call_requests": 5,
+      "decode_tps_p50": 64,
+      "decode_tps_p90": 120.2,
+      "ttft_ms_p50": 702,
+      "ttft_ms_p90": 2300,
+      "prefill_tps_p50": 2080,
+      "tokens_per_block_mean": 4.2,
+      "draft_acceptance": 0.28
+    }
+  ],
+  "totals": {
+    "requests": 812,
+    "errors": 3,
+    "refused": 0,
+    "prompt_tokens": 4102233,
+    "cached_tokens": 2950112,
+    "completion_tokens": 390774,
+    "reasoning_tokens": 150231,
+    "total_tokens": 4493007,
+    "tool_call_requests": 120,
+    "thinking_requests": 640,
+    "decode_tps_p50": 61.2,
+    "decode_tps_p90": 118.4,
+    "ttft_ms_p50": 690,
+    "ttft_ms_p90": 2410,
+    "prefill_tps_p50": 2105,
+    "tokens_per_block_mean": 4.1,
+    "draft_acceptance": 0.27,
+    "active_days": 21
+  },
+  "top_days": [
+    {
+      "date": "2026-09-18",
+      "total_tokens": 1203340,
+      "requests": 212,
+      "top_client": "k:3f9a1c0e2b7d"
+    }
+  ],
+  "dimensions": {
+    "models": [
+      "qwen38-spark-engine"
+    ],
+    "clients": [
+      {
+        "id": "k:3f9a1c0e2b7d",
+        "label": "open-webui",
+        "kind": "open-webui"
+      }
+    ]
+  }
+}

@@ -1,0 +1,294 @@
+{
+ "build": "0.11.0",
+ "device": "dgx-spark",
+ "tree": "the super-vl branch before the 0.11.0 version bump (its /health reads 0.10.0+<profile>); engine/, server/ and tools/ byte for byte the 0.11.0 release's",
+ "server": "server/app.py --max-len 140000 --conductor raw --suffix-store '' --drafter mtp --draft-head lilicorr --parallel 3, one fresh server a run, the shipped price file with its spec prior",
+ "client": "the five asks of tools/fn_lookup_ab.py, 512 greedy tokens, thinking off, streamed; tok_s = (tokens - 1) / (last token - first token) on the client clock; tok_round = the server's tokens a block, ms_round = its predicted_ms / blocks; cache_source the server's",
+ "profiles": {
+  "nemotron-super-vl-exl3-4.0": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "time": "2026-10-16 03:52:51",
+     "version": "0.10.0+nemotron-super-vl-exl3-4.0",
+     "classes": {
+      "prose": {
+       "tok_s": 33.38,
+       "tok_round": 1.93,
+       "ms_round": 58.07,
+       "tokens": 436,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 43.33,
+       "tok_round": 3.87,
+       "ms_round": 89.35,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 49.68,
+       "tok_round": 2.85,
+       "ms_round": 57.46,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    },
+    {
+     "time": "2026-10-16 04:01:55",
+     "version": "0.10.0+nemotron-super-vl-exl3-4.0",
+     "classes": {
+      "prose": {
+       "tok_s": 32.33,
+       "tok_round": 1.85,
+       "ms_round": 57.25,
+       "tokens": 436,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 43.58,
+       "tok_round": 3.87,
+       "ms_round": 88.84,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 55.53,
+       "tok_round": 5.01,
+       "ms_round": 90.22,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    },
+    {
+     "time": "2026-10-16 04:07:50",
+     "version": "0.10.0+nemotron-super-vl-exl3-4.0",
+     "classes": {
+      "prose": {
+       "tok_s": 33.63,
+       "tok_round": 2.38,
+       "ms_round": 70.68,
+       "tokens": 436,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 44.72,
+       "tok_round": 3.96,
+       "ms_round": 88.58,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 55.49,
+       "tok_round": 5.16,
+       "ms_round": 93.02,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    }
+   ]
+  },
+  "nemotron-super-vl-exl3-2.0": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "time": "2026-10-16 06:00:04",
+     "version": "0.10.0+nemotron-super-vl-exl3-2.0",
+     "classes": {
+      "prose": {
+       "tok_s": 33.87,
+       "tok_round": 1.16,
+       "ms_round": 34.4,
+       "tokens": 374,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 45.41,
+       "tok_round": 2.79,
+       "ms_round": 61.49,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 36.41,
+       "tok_round": 1.0,
+       "ms_round": 27.46,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    },
+    {
+     "time": "2026-10-16 06:07:53",
+     "version": "0.10.0+nemotron-super-vl-exl3-2.0",
+     "classes": {
+      "prose": {
+       "tok_s": 35.51,
+       "tok_round": 1.94,
+       "ms_round": 54.86,
+       "tokens": 374,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 46.57,
+       "tok_round": 3.38,
+       "ms_round": 72.67,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 38.06,
+       "tok_round": 1.09,
+       "ms_round": 28.75,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    },
+    {
+     "time": "2026-10-16 06:12:41",
+     "version": "0.10.0+nemotron-super-vl-exl3-2.0",
+     "classes": {
+      "prose": {
+       "tok_s": 37.38,
+       "tok_round": 2.57,
+       "ms_round": 69.01,
+       "tokens": 374,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 46.67,
+       "tok_round": 3.38,
+       "ms_round": 72.51,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 64.34,
+       "tok_round": 4.82,
+       "ms_round": 74.93,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    }
+   ]
+  },
+  "nemotron-super-vl-nvfp4": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "time": "2026-10-16 02:53:35",
+     "version": "0.10.0+nemotron-super-vl-nvfp4",
+     "classes": {
+      "prose": {
+       "tok_s": 23.85,
+       "tok_round": 2.55,
+       "ms_round": 106.96,
+       "tokens": 399,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 28.5,
+       "tok_round": 3.06,
+       "ms_round": 107.37,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 39.84,
+       "tok_round": 4.78,
+       "ms_round": 119.88,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    },
+    {
+     "time": "2026-10-16 03:05:52",
+     "version": "0.10.0+nemotron-super-vl-nvfp4",
+     "classes": {
+      "prose": {
+       "tok_s": 23.81,
+       "tok_round": 2.52,
+       "ms_round": 105.82,
+       "tokens": 399,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 28.39,
+       "tok_round": 3.1,
+       "ms_round": 109.09,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 39.86,
+       "tok_round": 4.78,
+       "ms_round": 119.82,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    },
+    {
+     "time": "2026-10-16 03:13:48",
+     "version": "0.10.0+nemotron-super-vl-nvfp4",
+     "classes": {
+      "prose": {
+       "tok_s": 23.89,
+       "tok_round": 2.54,
+       "ms_round": 106.13,
+       "tokens": 399,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "chat": {
+       "tok_s": 29.07,
+       "tok_round": 3.19,
+       "ms_round": 109.86,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      },
+      "code": {
+       "tok_s": 39.9,
+       "tok_round": 4.78,
+       "ms_round": 119.69,
+       "tokens": 512,
+       "cache_source": "none",
+       "same_text_as_plain": true
+      }
+     }
+    }
+   ]
+  }
+ }
+}

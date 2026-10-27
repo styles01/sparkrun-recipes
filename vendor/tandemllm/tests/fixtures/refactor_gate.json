@@ -1,0 +1,58 @@
+{
+ "aarch64-linux-torch2.13.0": {
+  "bf16": {
+   "S": "f6f3a981f5eb452662570315",
+   "after_commit": "eb3e942aa9f4e5cca5eb48cf",
+   "block": "40c85c919b1648f9650bce99",
+   "conv": "b663ef0003944edfb0674182",
+   "decode0": "41f875fbdd7806dc90dbb341",
+   "decode1": "c058c516484b29fb800cefb9",
+   "decode2": "91075e03d23b8a0bfcebaa45",
+   "kv_k": "f1aeed158ef3a9e96addefc0",
+   "kv_v": "df4eac9e489f422847a1b4af",
+   "prefill": "6cf044fd20f827eeb5143495",
+   "tree": "5a066ab4804d0e4de34df525"
+  },
+  "fp8": {
+   "S": "e375eb2662b668c7951c6a25",
+   "after_commit": "1e9b74306267efb67a6702b8",
+   "block": "4ecc35990682e4f3b6956396",
+   "conv": "d207489111ce768be2fadb4f",
+   "decode0": "6cfb2c608eae27c30e53dfbe",
+   "decode1": "59561d24c3f114ca3fc4a2b1",
+   "decode2": "96919f7896c266761df828eb",
+   "kv_k": "54bd22e042d6fbc61ccf201d",
+   "kv_v": "c6034f088d873215ec6ade25",
+   "prefill": "3f33b7f22e5872b11ec597ae",
+   "tree": "42e3a70ed790541d9631f3c7"
+  }
+ },
+ "arm64-darwin-torch2.14.0": {
+  "bf16": {
+   "S": "dc62b1a0331b75e4c243a5a1",
+   "after_commit": "5a1a8b404c065044248dd44d",
+   "block": "b84f729da37140d9de2a7a8e",
+   "conv": "08d87996b2b87057260e1ac2",
+   "decode0": "4bab583a9986bb650e233c37",
+   "decode1": "97dd241232d79a74d3027555",
+   "decode2": "98b4100b8f913e34d894a355",
+   "kv_k": "c6aeb13f802c785509cd2c09",
+   "kv_v": "f843699947b11394b821044d",
+   "prefill": "1498ec90fae36d2da237e387",
+   "tree": "b0ae45e8f11650f605a9bce5"
+  },
+  "fp8": {
+   "S": "39b915bea3eb490d72332884",
+   "after_commit": "759ae8e62a0a85747240b013",
+   "block": "c2d0788c883cf029fc755526",
+   "conv": "4d6481bf683d61470b87ed92",
+   "decode0": "283f5e7144d3b06075287f89",
+   "decode1": "8d693277f366aed414958209",
+   "decode2": "8e6615c5920a7b3c54189a70",
+   "kv_k": "c02b715a9493224128d927af",
+   "kv_v": "e1b7d672d322124b629ce233",
+   "prefill": "10673027fac36fc0c79d994d",
+   "tree": "1cd7768b40a3cfc41fdec6a9"
+  }
+ }
+}

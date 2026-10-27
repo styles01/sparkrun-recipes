@@ -1,0 +1,216 @@
+{"text": "Refactor the lexer in src/lexer.ts so every token carries its line and column.", "label": "code_edit"}
+{"text": "Add a --dry-run flag to the deploy script that prints what it would do and exits.", "label": "code_edit"}
+{"text": "Rename the function get_usr to get_user everywhere in the repo and update the call sites.", "label": "code_edit"}
+{"text": "Write a Python function that parses ISO 8601 durations like PT1H30M into seconds, with tests.", "label": "code_edit"}
+{"text": "Convert the class components in src/components to React function components with hooks.", "label": "code_edit"}
+{"text": "Implement pagination for the /api/orders endpoint: limit and cursor query params.", "label": "code_edit"}
+{"text": "Extract the retry logic in http_client.go into its own package and use it in both clients.", "label": "code_edit"}
+{"text": "Add type hints to every function in utils/io.py and make mypy pass.", "label": "code_edit"}
+{"text": "Replace the hand-written SQL in reports.py with SQLAlchemy queries.", "label": "code_edit"}
+{"text": "Create a CLI in Rust that reads a CSV and prints the column sums.", "label": "code_edit"}
+{"text": "Move the config loading out of main.py into config.py and add validation for missing keys.", "label": "code_edit"}
+{"text": "Write the unit tests for the RateLimiter class, covering the burst and the refill.", "label": "code_edit"}
+{"text": "Add a dark mode toggle to the settings component, stored in localStorage.", "label": "code_edit"}
+{"text": "Port this bash script to Python, keeping the same flags: backup.sh", "label": "code_edit"}
+{"text": "Implement an LRU cache with O(1) get and put in TypeScript.", "label": "code_edit"}
+{"text": "Split the 1,200-line app.js into modules: routes, db, auth.", "label": "code_edit"}
+{"text": "Add caching headers to the static file handler: ETag and Cache-Control max-age.", "label": "code_edit"}
+{"text": "Make the upload endpoint stream the file to disk instead of reading it into memory.", "label": "code_edit"}
+{"text": "Write a GitHub Actions workflow that runs lint and tests on every push.", "label": "code_edit"}
+{"text": "Add a new column created_by to the tasks table with a migration and fill it in the API.", "label": "code_edit"}
+{"text": "Implement the missing delete endpoint in the notes service, with a soft delete flag.", "label": "code_edit"}
+{"text": "change the timeout from 30s to 60s in the worker and make it configurable via env", "label": "code_edit"}
+{"text": "Build a small Express server with a /health route and a /todos CRUD API backed by SQLite.", "label": "code_edit"}
+{"text": "Use a worker pool for the image resizing so it processes four files at once.", "label": "code_edit"}
+{"text": "The tests fail with KeyError: 'user_id' in test_orders.py, find out why and fix it.", "label": "debug"}
+{"text": "My React app shows a blank page after the build, the console says Uncaught TypeError: cannot read properties of undefined (reading 'map').", "label": "debug"}
+{"text": "Why does this Go program deadlock? fatal error: all goroutines are asleep", "label": "debug"}
+{"text": "The Docker container exits immediately with code 137. What is wrong?", "label": "debug"}
+{"text": "npm install fails with ERESOLVE unable to resolve dependency tree, fix it.", "label": "debug"}
+{"text": "Segmentation fault when I call parse() twice in a row, here is the stack trace.", "label": "debug"}
+{"text": "The API returns 500 only in production, logs show connection reset by peer on the DB.", "label": "debug"}
+{"text": "My Python script gets slower every hour and memory keeps growing, find the leak.", "label": "debug"}
+{"text": "CI is red: the snapshot test for Header fails after the font change.", "label": "debug"}
+{"text": "The date picker shows yesterday's date for users in Tokyo. Fix the timezone bug.", "label": "debug"}
+{"text": "Cargo build error: borrowed value does not live long enough in handler.rs line 42.", "label": "debug"}
+{"text": "Clicking save twice creates two records, find the race and stop it.", "label": "debug"}
+{"text": "The websocket disconnects every 60 seconds behind nginx, what am I missing?", "label": "debug"}
+{"text": "TypeError: 'NoneType' object is not subscriptable in get_config, but the file exists.", "label": "debug"}
+{"text": "Our cron job runs twice at 3am on the day the clocks change. Why?", "label": "debug"}
+{"text": "The checker says RESULT: FAIL, tone_mae 0.155 > 0.1. Fix the drawing so it passes.", "label": "debug"}
+{"text": "Pytest hangs forever on test_stream_upload with no output.", "label": "debug"}
+{"text": "The Three.js scene renders black on Safari but works in Chrome.", "label": "debug"}
+{"text": "Login works locally but the session cookie is not set on the staging domain.", "label": "debug"}
+{"text": "The build is fine but the service crashes on start with ModuleNotFoundError: No module named 'app.settings'.", "label": "debug"}
+{"text": "The sort puts 10 before 9 in the file list; it should be natural order.", "label": "debug"}
+{"text": "The migration fails with duplicate key value violates unique constraint on users_email_key.", "label": "debug"}
+{"text": "Something in the last commit broke the search results, they are empty now. Bisect and fix.", "label": "debug"}
+{"text": "the fps drops to 20 when the snow particles are on, find what is slow", "label": "debug"}
+{"text": "Make the settings page look calmer: more white space, one accent colour, better hierarchy.", "label": "design_ui"}
+{"text": "Redesign the pricing page so the recommended plan stands out on mobile.", "label": "design_ui"}
+{"text": "The dashboard cards look cluttered. Improve the layout and the typography.", "label": "design_ui"}
+{"text": "Design a dark theme for the admin panel that still passes contrast checks.", "label": "design_ui"}
+{"text": "Make the login screen feel more modern and trustworthy.", "label": "design_ui"}
+{"text": "Improve the empty states in the app: they are just blank grey boxes right now.", "label": "design_ui"}
+{"text": "Our onboarding flow has five screens; make it feel lighter and fix the visual rhythm.", "label": "design_ui"}
+{"text": "The table on the orders page is unreadable on a phone. Make it work at 390 px.", "label": "design_ui"}
+{"text": "Pick a colour palette and type scale for a calm note-taking app and apply it.", "label": "design_ui"}
+{"text": "Design a nicer file upload component with drag and drop, progress and error states.", "label": "design_ui"}
+{"text": "The navigation bar looks dated, give it a cleaner look with better spacing.", "label": "design_ui"}
+{"text": "Make the buttons consistent across the app: sizes, radius, hover and focus states.", "label": "design_ui"}
+{"text": "Create a landing page hero for a local AI engine, dark style, one clear call to action.", "label": "design_ui"}
+{"text": "Restyle the chat bubbles so user and assistant messages are easy to tell apart.", "label": "design_ui"}
+{"text": "The form feels cramped. Improve the spacing, labels and error messages.", "label": "design_ui"}
+{"text": "Design a settings sidebar with sections that collapse on mobile.", "label": "design_ui"}
+{"text": "Make the charts on the stats page match the rest of the design system.", "label": "design_ui"}
+{"text": "Improve the UX of the checkout: fewer fields, clearer steps, better feedback.", "label": "design_ui"}
+{"text": "The modal dialogs look different everywhere. Unify their look and behaviour.", "label": "design_ui"}
+{"text": "Give the portfolio site a more elegant, editorial look.", "label": "design_ui"}
+{"text": "Design a toast notification style that fits our dark instrument-panel theme.", "label": "design_ui"}
+{"text": "make the header sticky and less tall, it eats half the phone screen", "label": "design_ui"}
+{"text": "The icons are a mix of three sets; choose one style and make them consistent.", "label": "design_ui"}
+{"text": "Make the search results page easier to scan: hierarchy, snippets, highlighting.", "label": "design_ui"}
+{"text": "Draw this portrait as one spiral line whose width follows the tone of the photo.", "label": "drawing"}
+{"text": "Turn mona.jpg into an animated pencil sketch on a canvas.", "label": "drawing"}
+{"text": "Make a one-line drawing of the face in the reference image, never lifting the pen.", "label": "drawing"}
+{"text": "Create a stippled portrait from this photo using dots whose density follows darkness.", "label": "drawing"}
+{"text": "Paint a watercolour-style sunset with SVG and blur filters.", "label": "drawing"}
+{"text": "Animate a hand-drawn signature appearing stroke by stroke.", "label": "drawing"}
+{"text": "Draw a cat in continuous line art with p5.js.", "label": "drawing"}
+{"text": "Render the photo as ASCII art in the browser, animated from top to bottom.", "label": "drawing"}
+{"text": "Make a charcoal sketch effect of the reference image with hatching in the dark areas.", "label": "drawing"}
+{"text": "Draw a mandala with rotational symmetry on a canvas, animated as it builds.", "label": "drawing"}
+{"text": "Create an engraving-style portrait with parallel lines that bend around the face.", "label": "drawing"}
+{"text": "Sketch a city skyline at night with SVG, lights turning on one by one.", "label": "drawing"}
+{"text": "Draw a tree that grows its branches recursively with a slight wind animation.", "label": "drawing"}
+{"text": "make a pencil drawing of my dog from dog.png, it should look hand drawn", "label": "drawing"}
+{"text": "Turn the reference photo into a single continuous TSP path drawing.", "label": "drawing"}
+{"text": "Draw a flower field in a flat illustration style with canvas.", "label": "drawing"}
+{"text": "Create a pixel-art portrait of the photo at 64x64 and animate it fading in.", "label": "drawing"}
+{"text": "Paint an oil-painting style version of this landscape with visible brush strokes.", "label": "drawing"}
+{"text": "Draw an animated doodle of a rocket launching, in a sketchy line style.", "label": "drawing"}
+{"text": "Make a spirograph drawing generator with sliders for the gear sizes.", "label": "drawing"}
+{"text": "Draw the Eiffel tower in isometric line art.", "label": "drawing"}
+{"text": "Create a portrait from the photo using only concentric circles of varying thickness.", "label": "drawing"}
+{"text": "Draw a comic-style panel of a robot waving, with ink outlines.", "label": "drawing"}
+{"text": "Generate a generative art piece of flowing lines following a noise field.", "label": "drawing"}
+{"text": "Rebuild this fjord photo as a Three.js scene that matches it from the hero camera.", "label": "three_d"}
+{"text": "Give the voxel pagoda island four seasons with snow and falling leaves.", "label": "three_d"}
+{"text": "Make a rotating 3D model viewer for a GLB file with orbit controls.", "label": "three_d"}
+{"text": "Build a low-poly forest in Three.js with fog and a day-night cycle.", "label": "three_d"}
+{"text": "Create a voxel character that walks around a small island.", "label": "three_d"}
+{"text": "Add realistic water with reflections to the lake in the 3D scene.", "label": "three_d"}
+{"text": "Make a WebGL particle galaxy that you can fly through.", "label": "three_d"}
+{"text": "Model a simple house in Three.js from boxes and give it windows that glow at night.", "label": "three_d"}
+{"text": "Turn the heightmap image into a 3D terrain mesh with a snow line.", "label": "three_d"}
+{"text": "Build a 3D bar chart of the monthly sales that you can rotate.", "label": "three_d"}
+{"text": "Create a Minecraft-style block world with chunks and a first-person camera.", "label": "three_d"}
+{"text": "Make the 3D scene hit 60 fps: merge geometries and use instancing for the trees.", "label": "three_d"}
+{"text": "Add shadows and ambient occlusion to the voxel scene.", "label": "three_d"}
+{"text": "Recreate the mountain photo as a 3D scene with the right skyline and colours.", "label": "three_d"}
+{"text": "Build a solar system in Three.js with orbits to scale in time.", "label": "three_d"}
+{"text": "Make a 3D dice roller with physics.", "label": "three_d"}
+{"text": "Create an isometric 3D room with furniture you can drag around.", "label": "three_d"}
+{"text": "add rain and thunder to the 3d island with lightning flashes", "label": "three_d"}
+{"text": "Build a racing track in Three.js with a car you can steer with the arrow keys.", "label": "three_d"}
+{"text": "Turn this floor plan into an extruded 3D model in the browser.", "label": "three_d"}
+{"text": "Make a 3D globe with markers for our office locations.", "label": "three_d"}
+{"text": "Create a voxel art editor where you click to place and remove blocks.", "label": "three_d"}
+{"text": "Animate a camera flight along a spline through the 3D canyon scene.", "label": "three_d"}
+{"text": "Build a 3D snow globe that shakes when you click it.", "label": "three_d"}
+{"text": "Plan the migration of the billing service from cron jobs to a queue, step by step.", "label": "plan"}
+{"text": "Before we start: how should we structure the monorepo for three apps and shared UI?", "label": "plan"}
+{"text": "Break down the new search feature into tickets we can ship one at a time.", "label": "plan"}
+{"text": "Design the architecture for a notification service that sends email, SMS and push.", "label": "plan"}
+{"text": "What is the plan to move our Postgres from a single VM to a managed cluster with no downtime?", "label": "plan"}
+{"text": "Outline the steps to add multi-tenancy to the app, with the risks at each step.", "label": "plan"}
+{"text": "Propose a data model for a kanban tool with boards, columns, cards and comments.", "label": "plan"}
+{"text": "Plan how we test the new payment flow before launch.", "label": "plan"}
+{"text": "Sketch an approach for offline sync between the mobile app and the server.", "label": "plan"}
+{"text": "We need to split the monolith. Propose the first three services to cut out and why.", "label": "plan"}
+{"text": "Write an implementation plan for adding SSO with OIDC to our three apps.", "label": "plan"}
+{"text": "How should we roll out the new pricing to existing customers? Give a phased plan.", "label": "plan"}
+{"text": "Plan a caching layer for the product catalog: what to cache, where, and invalidation.", "label": "plan"}
+{"text": "Design the folder structure and module boundaries for a new Go microservice.", "label": "plan"}
+{"text": "Before coding anything, make a plan for the photo-to-3D rebuild in stages with checks.", "label": "plan"}
+{"text": "Plan the refactor of the auth module so we can swap the session store later.", "label": "plan"}
+{"text": "Propose milestones for building a CLI tool that syncs notes between two machines.", "label": "plan"}
+{"text": "What's the order of work to add image input to the chat API?", "label": "plan"}
+{"text": "Plan a load test for the API: tools, scenarios, targets, how to read the results.", "label": "plan"}
+{"text": "Design an event schema for analytics that we won't regret in a year.", "label": "plan"}
+{"text": "Plan the upgrade from Python 3.9 to 3.12 across our services.", "label": "plan"}
+{"text": "Give me a step-by-step plan to set up backups and restore drills for the database.", "label": "plan"}
+{"text": "lay out the stages for the seasons feature before we touch the code", "label": "plan"}
+{"text": "Plan how to introduce feature flags into the codebase without a big bang.", "label": "plan"}
+{"text": "How does the resident prefix cache work in this engine?", "label": "research"}
+{"text": "Compare SQLite, Postgres and DuckDB for a local analytics dashboard.", "label": "research"}
+{"text": "What is the difference between speculative decoding and Medusa heads?", "label": "research"}
+{"text": "Explain how CRDTs handle concurrent edits in a collaborative editor.", "label": "research"}
+{"text": "Which OAuth flow should a CLI tool use, and why?", "label": "research"}
+{"text": "What are the trade-offs between WebSockets and Server-Sent Events for live dashboards?", "label": "research"}
+{"text": "How do vector databases index embeddings? Explain HNSW in plain words.", "label": "research"}
+{"text": "Look up how Linux decides which process to kill when memory runs out.", "label": "research"}
+{"text": "What changed in React 19 that affects forms?", "label": "research"}
+{"text": "Explain the CAP theorem with an example from our setup.", "label": "research"}
+{"text": "How does Git store a commit internally?", "label": "research"}
+{"text": "Which is faster for JSON parsing in Python: orjson, ujson or the standard library?", "label": "research"}
+{"text": "How do browsers decide when to repaint, and what triggers layout thrashing?", "label": "research"}
+{"text": "What is NVFP4 and how does it differ from FP8?", "label": "research"}
+{"text": "Explain how TLS 1.3 handshakes work.", "label": "research"}
+{"text": "What are the common ways to rate-limit an API, and which suits a small team?", "label": "research"}
+{"text": "How does Kubernetes schedule a pod onto a node?", "label": "research"}
+{"text": "Find out what the licence AGPL-3.0 requires when we offer the software over a network.", "label": "research"}
+{"text": "What's the best way to store secrets for a home server setup?", "label": "research"}
+{"text": "How does the Qwen chat template handle tool calls?", "label": "research"}
+{"text": "Explain the difference between processes and threads in Python and the GIL.", "label": "research"}
+{"text": "what are good sources to learn about compiler design?", "label": "research"}
+{"text": "How do Bloom filters work and where would we use one?", "label": "research"}
+{"text": "Compare Three.js and Babylon.js for a browser game.", "label": "research"}
+{"text": "Summarize this changelog in five bullet points.", "label": "summarize"}
+{"text": "Give me a short summary of the meeting notes below.", "label": "summarize"}
+{"text": "TL;DR of this article please.", "label": "summarize"}
+{"text": "Shorten this README introduction to three sentences.", "label": "summarize"}
+{"text": "Summarize the key decisions in this design doc.", "label": "summarize"}
+{"text": "What are the main points of this email thread? Keep it brief.", "label": "summarize"}
+{"text": "Condense the following log into what went wrong and when.", "label": "summarize"}
+{"text": "Summarize our conversation so far so we can continue in a new session.", "label": "summarize"}
+{"text": "Make a one-paragraph summary of this research paper abstract.", "label": "summarize"}
+{"text": "Extract the action items from these notes.", "label": "summarize"}
+{"text": "Summarize the diff: what does this pull request change?", "label": "summarize"}
+{"text": "Give me the three most important takeaways from this podcast transcript.", "label": "summarize"}
+{"text": "Boil this spec down to a checklist.", "label": "summarize"}
+{"text": "Summarize the test results below: which suites failed and why.", "label": "summarize"}
+{"text": "Write a short summary of this contract's termination clause.", "label": "summarize"}
+{"text": "Sum up the customer feedback below in themes.", "label": "summarize"}
+{"text": "Please shorten this paragraph without losing the numbers.", "label": "summarize"}
+{"text": "Summarize the benchmark table: which configuration is fastest?", "label": "summarize"}
+{"text": "Give a brief recap of the incident report for the team channel.", "label": "summarize"}
+{"text": "Summarize this long Slack thread into who decided what.", "label": "summarize"}
+{"text": "Condense this 10-page policy into a half-page brief.", "label": "summarize"}
+{"text": "can you summarize what this function does in one sentence", "label": "summarize"}
+{"text": "Summarize the release notes of the last three versions.", "label": "summarize"}
+{"text": "Summarize these interview notes into strengths and concerns.", "label": "summarize"}
+{"text": "hi!", "label": "chat"}
+{"text": "Thanks, that works now.", "label": "chat"}
+{"text": "Good morning, how are you?", "label": "chat"}
+{"text": "What's 15 percent of 80?", "label": "chat"}
+{"text": "Tell me a short joke about programmers.", "label": "chat"}
+{"text": "ok cool", "label": "chat"}
+{"text": "What day of the week was 1 January 2000?", "label": "chat"}
+{"text": "How do you say thank you in Japanese?", "label": "chat"}
+{"text": "Can you recommend a good sci-fi book?", "label": "chat"}
+{"text": "lol that's funny", "label": "chat"}
+{"text": "What is the capital of Australia?", "label": "chat"}
+{"text": "Nice, thanks a lot!", "label": "chat"}
+{"text": "How many ounces are in a pound?", "label": "chat"}
+{"text": "Who wrote Pride and Prejudice?", "label": "chat"}
+{"text": "Is it pronounced gif or jif?", "label": "chat"}
+{"text": "What's a good name for a cat?", "label": "chat"}
+{"text": "hey, quick question: is 97 a prime?", "label": "chat"}
+{"text": "Wish me luck for my exam tomorrow!", "label": "chat"}
+{"text": "What's the weather usually like in Lisbon in May?", "label": "chat"}
+{"text": "Thanks for the help today, have a good night.", "label": "chat"}
+{"text": "How long should I boil an egg for a soft yolk?", "label": "chat"}
+{"text": "What does ASAP stand for?", "label": "chat"}
+{"text": "Convert 100 Fahrenheit to Celsius.", "label": "chat"}
+{"text": "great job", "label": "chat"}

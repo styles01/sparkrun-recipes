@@ -1,0 +1,27 @@
+\chapter{Roadmap}\label{ch:roadmap}
+
+Today the engine serves three main models, one at a time (Qwen3.8-27B, Qwen3.8-Flash-Next and, from 0.9.0, LFM2.5-24B-A2B), with small models beside them, it is measured on one board (the DGX Spark, Section~\ref{sec:test-env}), and it decodes up to four requests at once. Each step below widens one of those limits, and each keeps the two rules that hold today: the output stays the model's greedy text, up to the documented near-tie exception, and no measured number gets worse. The steps are listed in the order they are planned. Nothing here is a promise of dates, and nothing here is measured unless it says so.
+
+\section{A mixture-of-experts model, and what is left}
+
+Qwen3.8-Flash-Next is served (Chapter~\ref{ch:flashnext}), from turboderp's EXL3 packs and not from the NVFP4 checkpoint this chapter once planned. Three parts are open. The 5.05 pack codes its experts at 5 and 7 bits, and the MoE kernels take 2 to 6 and 8. No pack's quality against the BF16 model is measured, because the 360~GB release does not fit the board. And parallel requests are on with three slots, but three together take as long as one after the other; CUDA graphs for the joint pass are next. After it, other EXL3 models that fit one board, Qwen3.6-35B-A3B among them.
+
+\section{Parallel requests}
+
+Phase A ships, off in the 27B's shipped profile and on with three slots in Flash-Next's (Section~\ref{sec:parallel-requests}): side slots, the GPU turn, a packed draft and a joint verify of at most 32 rows, admission by bytes. Two requests at once reach about 1.4$\times$ the total of one, not 2$\times$: a joint pass of 32 rows costs more than one of 16 at today's kernels. Next: one engine thread for all slots, joint verify graphs and one graph pool, so a side slot costs under 3~GiB instead of 7. Later, multi-user serving with caches isolated per user, so no user can resume from another user's prefix; the proxy already gives each user a key of their own.
+
+\section{The NVMe tier}
+
+The disk tier shipped in 0.4.0, and its restore was measured on the board: a 10,701-token head read back in 226~ms, and after a restart the first process's files restored bit for bit to the second process's cold prefill (\measured). What remains is a background backfill of the resident prompt's chunks while the engine is idle.
+
+\section{Profiles as data}
+
+Today a serving profile is a \code{serve.env} file. Part of this shipped: weight profiles that \code{ops/use-profile.sh} switches one engine at a time with a rollback (0.5.0), the model registry and the setup guide's estimate (0.7.0), and a fetch of every file a profile reads, each checked against the hub's sha256 (0.8.1). The plan is a small profile format that a validator checks: every weight file with its format and hash, all the settings, and a facts block with what was measured (memory and disk, speed at prompt lengths from 256 to 64k tokens, quality against the reference), each number labelled with how it was obtained. Still open: the format and its validator, and a signed catalogue of tested profiles in the repository that the setup guide installs from.
+
+\section{Other GPUs, then several}
+
+Other single GPUs first (H100, H200, RTX Pro 6000, L40S). Most have no FP4 tensor cores, so they need to decode the 4-bit weights in software or run an FP8 or BF16 profile. Each needs its own tile tables, and the router needs new prices: a GPU that reads memory ten times faster moves the best tree width and drafter size. Discrete GPUs also change the memory model, since admission must count the GPU's own memory and not the system's. Then several GPUs: tensor parallel inside one server, two DGX Sparks over their 200~Gb/s link, servers with 8 GPUs. A reduction across GPUs changes the order of a floating-point sum, so row invariance needs a fixed reduction order across devices.
+
+\section{Housekeeping}
+
+Runtime names still carry the old project name, from the \code{QWEN38_} and \code{QSE_} variable prefixes to the metric names. They change together in one release, and the old variable names keep working for one release after that. Engine settings move from import-time globals to a settings object handed to the engine, so two engines with different settings can share a process. The engine moves into an installable package, and the dashboard's package goes to PyPI.

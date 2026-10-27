@@ -1,0 +1,90 @@
+\chapter{Adding a model}\label{ch:adding-model}
+
+The engine serves big models such as Qwen3.8-27B, a hybrid of Gated DeltaNet and attention layers, and Qwen3.8-Flash-Next, a mixture of experts on the same hybrid (Chapter~\ref{ch:flashnext}). The small models beside them (the Qwen3.5 narrator and shadow reader) run on the 27B's forward code. Flash-Next was the first model added through the adapter path below. This chapter lists the seams where a new model plugs in, what each one expects, and the tests a new model must pass before its numbers mean anything. Some of the engine is still specific to this family, and the last section says which parts.
+
+\section{The adapter path}\label{sec:adapter-path}\index{model adapter}\index{ModelState}
+
+A new architecture brings a package under \code{engine/models/<name>/}, one registry entry (\code{engine/models/__init__.py}) and data files, and no edit anywhere else. The methods read a model only through its adapter. \code{tests/test_load_shared.py} fails if code under \code{server/} names a model or asks an engine what it is. Five layers depend only downward (Figure~\ref{fig:engine-layers}). The upper three exist, the formats as today's \code{Linear} protocol, and so does the server's one loader. Four pieces are still design: format plugins (ENG-253), a kernel registry (ENG-251), device profiles (ENG-255) and the mesh (ENG-259).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=4mm]
+  \node[hot, minimum width=110mm] (m) {methods, written once\\[-1pt]{\scriptsize StairCut and its prices, the MTP drafter, the walk, every cache tier, the server, the governor}};
+  \node[box, minimum width=110mm, below=of m] (a) {model adapters, one per architecture\\[-1pt]{\scriptsize \texttt{qwen3\_5}: the 27B \quad \texttt{qwen4\_exp}: Flash-Next \quad hot and cold verbs, \texttt{ModelState}}};
+  \node[box, minimum width=110mm, below=of a] (f) {weight formats\\[-1pt]{\scriptsize the \texttt{Linear} protocol today; plugins with \texttt{read} and \texttt{bind} planned}};
+  \node[quiet, minimum width=110mm, below=of f] (h) {hardware, planned\\[-1pt]{\scriptsize \texttt{KernelImpl} keyed by op, format and device; device profiles}};
+  \node[quiet, minimum width=110mm, below=of h] (t) {topology, planned\\[-1pt]{\scriptsize \texttt{Mesh} at world 1: no collective on the code path}};
+  \draw[flow] (m) -- (a); \draw[flow] (a) -- (f); \draw[flow] (f) -- (h); \draw[flow] (h) -- (t);
+\end{tikzpicture}
+\caption[The engine's layers]{The engine's layers. A layer reads only the layers under it, and per-model numbers are data the adapter returns or files under \texttt{models/} and \texttt{ops/}. Filled: built; outlined: planned.}\label{fig:engine-layers}
+\end{figure}
+
+An adapter is the engine object with two sets of verbs. The hot verbs run every round and are the engine's own bound methods, never a wrapper, so graphs capture the same launches: \code{forward}, \code{forward_tree}, \code{forward_block}, \code{commit_tree}, \code{rollback_to}, \code{picks}, \code{hidden_post_norm}, \code{kv.length} and \code{reset}. The cold verbs run around a cache copy or at load: \code{caps} (what the server may ask: caches, side slots, the cache grid, the shadow reader, joint verify), \code{cost()} (state bytes and the prefill workspace), \code{cache_state()}, \code{resume_at(n)}, \code{settle()}, \code{discard_pending()}, \code{trim_pending(n)}, \code{manifest()} (what its stored rows depend on, for the disk tier's fingerprint), \code{memory_parts()}, \code{resident_files()} and \code{precapture()}. The 27B's cold verbs are installed on its class by \code{engine/models/qwen3_5/adapter.py}, so \code{engine/model.py} keeps its bytes.
+
+\code{cache_state()} returns a \code{ModelState}: \emph{sections}, the recurrent state by name and copied whole, and \emph{views}, the position-indexed buffers with their token axis and sliced by length. Every tier keeps a sequence in that form, and a signature over names, shapes and dtypes refuses a restore across models.
+
+A new model then needs, in order: a config reader that refuses unknown fields; a reader for its checkpoint and a \code{Linear} object for each weight; a reference forward checked layer by layer against the published implementation; the engine with the hot verbs, every verified row equal to the decode step's row; the cold verbs; a draft head if the checkpoint ships one (the shared MTP drafter asks for \code{depth}, \code{reset}, \code{prime}, \code{capture_all}, \code{launch}, \code{read}, \code{views} and \code{resume}); a server builder \code{serve(a, ctx)}; the registry entry; and its data files: a StairCut price file per profile and device, the weight profiles (\code{ops/profiles/<name>.env}) and the Setup Guide's registry entry (\code{models/<id>/model.yaml}, described in \code{docs/setup.md}).
+
+\section{The seams}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+  \node[quiet, minimum width=24mm] (env) at (0,1.5) {environment};
+  \node[quiet, minimum width=24mm] (cfg) at (0,0) {\texttt{config.json}};
+  \node[quiet, minimum width=24mm] (ck) at (0,-1.5) {checkpoint files};
+  \node[box, minimum width=28mm] (set) at (3.6,1.5) {\texttt{EngineSettings}\\[-1pt]{\scriptsize engine/settings.py}};
+  \node[box, minimum width=28mm] (tc) at (3.6,0) {\texttt{TextConfig}\\[-1pt]{\scriptsize engine/config.py}};
+  \node[box, minimum width=28mm] (lay) at (3.6,-1.5) {\texttt{Layout}\\[-1pt]{\scriptsize engine/loader.py}};
+  \node[box, minimum width=26mm] (lin) at (7.2,-1.5) {\texttt{Linear}\\[-1pt]{\scriptsize engine/linear.py}};
+  \node[hot, minimum width=28mm] (model) at (10.6,0) {target model\\[-1pt]{\scriptsize engine/model.py}};
+  \node[box, minimum width=28mm] (dr) at (10.6,-2.8) {drafters declare\\[-1pt]{\scriptsize what they read}};
+  \draw[flow] (env) -- (set);
+  \draw[flow] (cfg) -- (tc);
+  \draw[flow] (ck) -- (lay);
+  \draw[flow] (lay) -- (lin);
+  \draw[flow] (set.east) -| ([xshift=-4mm]model.north);
+  \draw[flow] (tc) -- (model);
+  \draw[flow] (lin.east) -| ([xshift=-6mm]model.south);
+  \draw[flow] ([xshift=6mm]model.south) -- ([xshift=6mm]dr.north);
+\end{tikzpicture}
+\caption{The seams a new model plugs into.}\label{fig:seams}
+\end{figure}
+
+\paragraph{Config.} \code{engine/config.py::load_config} reads \code{config.json} into a \code{TextConfig} with every size the engine needs, from the layer count to the rotary settings, and answers which layers are recurrent. It accepts a vision-language config (the text model under \code{text_config}) and a text-only one. A new family either fits \code{TextConfig} or extends it; the rest of the engine asks \code{TextConfig}, never the raw JSON.
+
+\paragraph{Layout.} \code{engine/loader.py::Layout} says how a checkpoint names its tensors, in one place. The engine addresses every tensor by a canonical name, the language model's own naming with the checkpoint's wrapper prefix taken off. The layout lists the prefixes to strip, the tensors the language model never reads (such as a vision tower), where the checkpoint keeps its prediction head, and the projections that may be stored as FP8 pairs or as plain matrices. \code{tests/test_layout.py} pins the served checkpoint's key set: 1,250 language-model keys read, 333 vision keys skipped.
+
+\paragraph{Weight formats.} Every weight the engine multiplies by implements one small interface (\code{engine/linear.py}): a shape, the bytes read per use, and \code{matmul}. \code{FP8Block}, \code{NVFP4Block}, \code{FP8Head} and \code{BF16Block} implement it. The model calls \code{w.matmul(x)} and never asks which format it holds. A new format is a new class with those three members, plus a kernel that keeps the row-invariance rule (Chapter~\ref{ch:kernels}).
+
+\paragraph{Settings.} \code{engine/settings.py} is the registry of every \code{QWEN38_*} switch, read only through \code{SETTINGS.get(name)}. \code{EngineSettings(env, prefix)} gives the same reads over another mapping or another prefix.
+
+\paragraph{What a drafter reads.} A drafter reads parts of the target: hidden states at some layers, the embedding, the head. Each drafter declares these through \code{Drafter.requires()}: the hidden size, the tap layers, the target tensors it reads by name, and the vocabulary size. At load the engine compares them with the target and refuses a mismatch by name, so a DFlash2 drafter trained for another model fails there instead of drafting garbage. A new model needs its own block drafter; the lookup drafter works for any model once its corpus is rebuilt with the new tokenizer (\code{tools/build_corpus.py}). The lookup stores record the tokenizer's sha256 and refuse to open under another tokenizer.
+
+\paragraph{The tokenizer and the chat template.} The server renders prompts with the model's own chat template and reads the model's own tool-call and reasoning formats. A model with another format needs its own parser behind the same OpenAI output.
+
+\section{The tests a new model must pass}
+
+In this order, each on the new model:
+
+\begin{enumerate}
+\item \code{tools/refcheck.py}: argmax agreement with the published reference implementation on teacher-forced positions, the reference in its own process because only one model fits on the board at a time. On Qwen3.8 the engine agrees on 99.25~\% of 400 positions and on all 242 confident ones (\measured).
+\item \code{tools/quality_gate.py} for every quantised weight set (Chapter~\ref{ch:quantisation}).
+\item \code{tools/verify_spec.py}\index{tools/verifyspec.py@\texttt{tools/verify\_spec.py}}, the agreement gate with its near-tie rule, with every drafter (Chapter~\ref{ch:exactness}).
+\item The CPU suite, including \code{tests/test_refactor_gate.py}. That test records the exact bytes of a tiny model's run (every logit and every byte of state after a prefill, a decode, a block verify, a rollback, a tree verify and a commit) and fails if any byte moves. A change that is supposed to change arithmetic re-records the fixture and says why.
+\item \code{ops/gate.sh}\index{ops/gate.sh@\texttt{ops/gate.sh}} and the client smoke set before any number is published (Chapter~\ref{ch:measurement}).
+\end{enumerate}
+
+Flash-Next took its own form of these gates: the one loader (\code{tests/test_load_shared.py}), every cache tier against a cold prefill (\code{tests/test_cache_any_model.py} and its server check), a fingerprint that moves with its kernels and tables and with nothing else (\code{tests/test_fp_v3.py}), the load-time self-check of every verify width (3,936 rows bit for bit on the 3.05 pack), and speculative against plain decoding in the engine and through the server (\code{tools/fn_spec_check.py}, \code{tools/fn_server_check.py --compare}).
+
+\section{What is still specific to Qwen3.8}
+
+\begin{itemize}
+\item \code{engine/model.py} implements the 27B's forward and \code{engine/models/flashnext/} Flash-Next's. A new family needs its own layer code behind the same verify, commit and cache interfaces; Flash-Next routes its experts inside the verify, and every row reads its own experts.
+\item The recurrent-layer kernels assume Gated DeltaNet's state shape, heads of 128 by 128.
+\item Tile tables and router prices are measured for each model's shapes on the GB10. A new model or a new board needs its own sweep and its own price file; the kernel registry and device profiles that would make a board data are planned, not built.
+\item Some modules read their switches into globals at import, so two engines with different settings cannot share one process yet.
+\item Runtime names still carry the old project name, from the \code{QWEN38_} and \code{QSE_} prefixes to the \code{Qwen38Engine} class.
+\end{itemize}
+
+The Qwen3.5 small models already run on the engine's own forward: the narrator and the shadow reader load them through \code{engine/generative/qwen35.py}, the same layer code, because they share Qwen3.8's architecture family and its tokenizer (Chapter~\ref{ch:lines}).

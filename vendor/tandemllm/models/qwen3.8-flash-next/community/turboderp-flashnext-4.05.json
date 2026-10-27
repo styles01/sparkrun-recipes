@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "id": "turboderp-flashnext-4.05",
+  "name": "Qwen3.8-Flash-Next EXL3 4.05 bpw",
+  "base_model": "qwen3.8-flash-next",
+  "finetune_of": null,
+  "author": {
+    "github": "turboderp",
+    "name": null,
+    "social": {
+      "huggingface": "turboderp"
+    }
+  },
+  "hf": {
+    "repo": "turboderp/Qwen3.8-Flash-Next-exl3",
+    "revision": "55a732e0c4c3d4614bc42b68493bb930d9b02c0a"
+  },
+  "format": "exl3",
+  "bpw": 4.05,
+  "size_gb": 107.46,
+  "load": "standalone",
+  "modalities": {
+    "text": true,
+    "image": true,
+    "audio": false,
+    "video": false
+  },
+  "modalities_in_pack": [
+    "text",
+    "image"
+  ],
+  "drafters": "in-pack",
+  "license": "qwen-community-1.0",
+  "license_url": "https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3/blob/55a732e0c4c3d4614bc42b68493bb930d9b02c0a/LICENSE",
+  "description": "turboderp's EXL3 quantisation of Qwen3.8-Flash-Next at 4.05 bits a weight, the branch 4.05bpw_h6_ng6: the weights, the vision tower, the multi-token-prediction draft layer and the n-gram table. TandemLLM serves it as the profile flashnext-4.05, up to a 208,896-token window on one DGX Spark.",
+  "tags": [
+    "quantisation",
+    "mixture-of-experts",
+    "vision"
+  ],
+  "added": "2026-10-11",
+  "profile": "flashnext-4.05",
+  "status": "verified",
+  "verified": {
+    "build": "0.7.2",
+    "device": "dgx-spark",
+    "date": "2026-10-12",
+    "notes": "loaded and answered one 260,800-token request (SPD-99); short-context speed not measured"
+  }
+}

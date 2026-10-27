@@ -1,0 +1,64 @@
+# Checks that the committed dashboard bundle (dashboard/dist/) is what its source builds to, on
+# every pull request and push to main that touches dashboard/**. dist/ is committed on purpose:
+# install.sh clones main and serves it, with no Node on the machine (docs/dashboard.md). A build is
+# reproducible here: the asset names are content hashes and sw.js's cache name is a hash of them,
+# so after `npm ci && npm run build` any file git sees as changed, deleted or new means a stale dist/.
+#
+# Not a required check while it has a paths filter: a pull request that does not touch dashboard/
+# never runs it, and a required check that never runs stays pending.
+name: dashboard-dist
+
+on:
+  pull_request:
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/dashboard-dist.yml"
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/dashboard-dist.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4.2.2
+
+      # no .nvmrc or engines field: Node 22 LTS (Vite 8 needs 20.19 or 22.12 and later)
+      - name: Set up Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check the committed bundle
+        run: |
+          stale="$(git status --porcelain -- dist)"
+          if [ -n "$stale" ]; then
+            echo "dashboard/dist/ differs from what dashboard/ builds to. Run 'cd dashboard && npm ci && npm run build' and commit dist/:"
+            echo "$stale"
+            echo "::error::dashboard/dist/ is stale"
+            exit 1
+          fi
+
+      # informational only: the gzip budget has little headroom and the gzip size depends on the
+      # runner's zlib build, so a size over the budget here does not fail the check
+      - name: Bundle size (informational)
+        continue-on-error: true
+        run: npm run test:size

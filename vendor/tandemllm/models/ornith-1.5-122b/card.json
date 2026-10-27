@@ -1,0 +1,14 @@
+{
+  "model": "ornith-1.5-122b",
+  "label": "Ornith-1.5-122B",
+  "packs": ["ornith-1.5-122b-*"],
+  "context_limit": 262144,
+  "max_output": 32768,
+  "capabilities": {
+    "thinking": true,
+    "tools": true,
+    "vision": true,
+    "structured": true,
+    "parallel_tool_calls": true
+  }
+}

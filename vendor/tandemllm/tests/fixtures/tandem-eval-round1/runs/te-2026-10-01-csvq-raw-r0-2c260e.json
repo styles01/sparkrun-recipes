@@ -1,0 +1,79 @@
+{
+ "suite": "csvq",
+ "arm": "raw",
+ "rep": 0,
+ "tag": "te-2026-10-01-csvq-raw-r0-2c260e",
+ "started_at": "2026-10-01T12:40:09Z",
+ "error": null,
+ "store_clear": {
+  "at": "2026-10-01T12:40:09Z",
+  "status": 200,
+  "error": null
+ },
+ "dir": "{run}/te-2026-10-01-csvq-raw-r0-2c260e",
+ "session_id": "ses_f088547f2ffeDHlNl8kv7HfWEj",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_minutes": 16.79,
+ "gates": {
+  "total": 1,
+  "passed": 1,
+  "by_gate": [
+   {
+    "id": "pass",
+    "passed": true,
+    "minutes": 16.79
+   }
+  ]
+ },
+ "passed": true,
+ "minutes_to_pass": 16.79,
+ "final_check": {
+  "verdict": "PASS",
+  "readings": [],
+  "tail": "taskcheck csvq\nRESULT: PASS\n"
+ },
+ "tokens": {
+  "input": 0,
+  "output": 0,
+  "reasoning": 0,
+  "cache_read": 0
+ },
+ "cache_hit": null,
+ "gen_tps": null,
+ "turns": 0,
+ "tool_calls": 0,
+ "tool_errors": 0,
+ "empty_stops": 0,
+ "last_finish": null,
+ "continuations": {
+  "needed": 1,
+  "sent": 0,
+  "driver": "watch"
+ },
+ "engine": {
+  "requests": 16,
+  "finish": {
+   "stop": 1,
+   "tool_calls": 15
+  },
+  "decode_tps_median": 58.78,
+  "prefill_tps_median": 595.92,
+  "completion_tokens": 44456,
+  "reasoning_tokens": 36302,
+  "prompt_tokens": 1024730,
+  "cached_tokens": 955392
+ },
+ "conductor": {
+  "acts": 0,
+  "by_task": {},
+  "gave_ups": 0,
+  "shadow": 0
+ },
+ "pristine": {
+  "ok": true,
+  "changed": [],
+  "restored": []
+ },
+ "ended_at": "2026-10-01T12:56:56Z"
+}

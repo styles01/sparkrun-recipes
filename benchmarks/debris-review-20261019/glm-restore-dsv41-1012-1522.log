@@ -1,0 +1,8 @@
+
+
+  Mia's TensorFold Start Script
+  Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold · 2 x DGX Spark · 4 at once · 1048576-token window · fp8 KV · dflash2 drafts · port 8888
+
+[1/5] Setup: image and checkpoint on both Sparks
+[start.sh] Ready: tensorfold-glm53:v0.6.0 (patches 31557ed1cef6) and Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold on both Sparks
+[start.sh] ERROR: incoai/GLM-5.3-Flash-DFlash2 @ bf582e4e not in /home/jaita/.cache/huggingface: scripts/prepare.sh did not download it

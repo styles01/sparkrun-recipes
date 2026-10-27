@@ -1,0 +1,73 @@
+{
+ "_about": "Flash-Next dense EXL3 splits for tools/fn_kernels.dense (tools/fn_tiles.py --dense, M = 1, cold ring, CUDA graph), 2026-10-11 13:18; us_exl3 = exl3_matmul with its rot_in at its own best split; applied by engine/models/flashnext/load.py",
+ "16384x2560x5": {
+  "S": 1,
+  "warps": 8,
+  "us": 117.49,
+  "us_exl3": 115.97,
+  "gb_s": 223.4
+ },
+ "2560x6144x5": {
+  "S": 2,
+  "warps": 8,
+  "us": 48.08,
+  "us_exl3": 45.7,
+  "gb_s": 204.8
+ },
+ "13312x2560x5": {
+  "S": 1,
+  "warps": 4,
+  "us": 93.59,
+  "us_exl3": 93.24,
+  "gb_s": 227.9
+ },
+ "2560x6144x6": {
+  "S": 2,
+  "warps": 8,
+  "us": 55.26,
+  "us_exl3": 53.81,
+  "gb_s": 213.8
+ },
+ "16384x2560x6": {
+  "S": 1,
+  "warps": 4,
+  "us": 132.63,
+  "us_exl3": 133.97,
+  "gb_s": 237.5
+ },
+ "13312x2560x6": {
+  "S": 1,
+  "warps": 4,
+  "us": 108.7,
+  "us_exl3": 109.89,
+  "gb_s": 235.4
+ },
+ "640x2560x3": {
+  "S": 4,
+  "warps": 4,
+  "us": 10.37,
+  "us_exl3": 8.69,
+  "gb_s": 59.9
+ },
+ "640x2560x4": {
+  "S": 4,
+  "warps": 4,
+  "us": 10.35,
+  "us_exl3": 9.17,
+  "gb_s": 79.8
+ },
+ "248320x2560x5": {
+  "S": 1,
+  "warps": 8,
+  "us": 1696.69,
+  "us_exl3": 1709.48,
+  "gb_s": 234.5
+ },
+ "248320x2560x6": {
+  "S": 1,
+  "warps": 8,
+  "us": 2033.97,
+  "us_exl3": 2053.17,
+  "gb_s": 234.7
+ }
+}

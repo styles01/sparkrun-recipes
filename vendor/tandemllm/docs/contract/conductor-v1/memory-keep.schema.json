@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor memory keep",
+  "type": "object",
+  "description": "PATCH /v1/conductor/memory/sessions/{key}/keep {keep}",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "session": {
+      "type": "string"
+    },
+    "keep": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "contract_version",
+    "session",
+    "keep"
+  ],
+  "additionalProperties": false
+}

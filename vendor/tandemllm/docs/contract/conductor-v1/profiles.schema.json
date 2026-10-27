@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor profiles",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "default_profile": {
+      "type": "string"
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "mode": {
+            "enum": [
+              "raw",
+              "shadow",
+              "on"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "clients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default_class": {
+            "type": "string"
+          },
+          "locked": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decisions": {
+            "type": "object"
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "tasks": {
+                "type": "object"
+              },
+              "decisions": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "tasks",
+              "decisions"
+            ],
+            "additionalProperties": false
+          },
+          "last_change": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer"
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "author": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "created_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "version",
+              "note",
+              "author",
+              "created_at"
+            ],
+            "additionalProperties": false
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "mode",
+          "description",
+          "clients",
+          "default_class",
+          "locked",
+          "decisions",
+          "counts",
+          "last_change",
+          "error"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "contract_version",
+    "default_profile",
+    "profiles"
+  ],
+  "additionalProperties": false
+}

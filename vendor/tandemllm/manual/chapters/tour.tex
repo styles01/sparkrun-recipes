@@ -1,0 +1,47 @@
+\chapter{One request, end to end}\label{ch:tour}
+
+This chapter follows one chat completion from a coding agent through every part of TandemLLM. Each step names the chapter that explains it. Figure~\ref{fig:request-path} is the map.
+
+\begin{figure}[htbp]
+\centering
+\input{figures/request-path}
+\caption{The request path. A client sends an OpenAI request; the proxy routes it by model id; the conductor's router plans the turn; admission decides when it runs; the caches decide where the prefill starts; then drafters and the target model take turns, round after round, while the conductor's monitor watches the output at fixed safe points. Requests for other backends leave at the proxy.}\label{fig:request-path}
+\end{figure}
+
+\section{The client sends a request}
+
+The client is any program that speaks the OpenAI chat completions API: the OpenAI SDK\index{OpenAI SDK}, opencode\index{opencode}, the Hermes agent\index{Hermes agent}, Open WebUI\index{Open WebUI} or \code{curl}. It sends \code{POST /v1/chat/completions} with its messages, its tools and its options, usually streamed. The engine's server reads every OpenAI field it can honour, accepts the ones that have no effect here, and refuses the rest with a 400 that names the field (Section~\ref{sec:api-fields}).
+
+\section{The proxy routes it}
+
+When the server runs with \code{--backends}\index{backends@\texttt{-\kern0pt-backends}}, or when the standalone proxy (\code{tandem-dash}) is in front, the request is routed by its \code{model} field. A model of another backend (vLLM, SGLang, a cloud API) is relayed there: the answer's bytes go back to the client unchanged, and the proxy writes one ledger row with the tokens, the time to first token, the decode rate and the cost. A request for \code{TandemLLM} stays in the engine's server. Chapter~\ref{ch:install-dash} sets this up and Chapter~\ref{ch:harness-proxy} covers the conductor in front of other backends.
+
+\section{The conductor plans the turn}
+
+With a conductor configuration the server serves one model name, \code{TandemLLM}\index{TandemLLM (model name)}: the weights with a conductor in front. Before the request queues, the conductor resolves a \term{profile} (by header, by client, or the default), and its router decides what kind of task the turn is. A tool-result turn keeps the session's class; only a new user message asks a classifier, and the default classifier is Qwen itself under a choice grammar. The class sets the thinking budget and adds a hidden note at the end of the last message: the effort sentence, rules and \emph{packages}\index{package} (skill texts). Later turns replay that note at the same token position, so the cached prefix keeps matching. Chapter~\ref{ch:conductor} explains the router and Chapter~\ref{ch:packages} the packages.
+
+A client's side request, such as opencode's title call, is recognised by its shape and served small: no classifier, no note, at most 64 output tokens for a title.
+
+\section{Admission decides when it runs}
+
+The engine holds one sequence unless \code{--parallel N} gives it more (Section~\ref{sec:parallel-requests}). A request that finds it busy waits in a bounded queue (8 by default). A streamed request that waits more than 10~s gets its stream opened and an SSE comment every 10~s, with an estimate of the wait. A short request (at most 2,048 prompt tokens and 64 output tokens, thinking off) does not wait at all: the running generation serves it at its next safe point, between two decode blocks or two prefill chunks, and gets its state back byte for byte. Before every prefill a memory gate checks that the prompt's workspace fits under the declared peak, giving caches back cheapest first. Chapter~\ref{ch:serving} covers the queue, the side lane and the memory gate.
+
+\section{The caches decide where the prefill starts}
+
+A prefill is the most expensive thing the engine does: 208.3~s for a 128k-token prompt from cold (\measured, the paper). Before it prefills, the engine looks for state it already has. In an agent session each turn's prompt is the previous prompt plus the answer plus a tool result, and the \term{resident prefix} still holds the previous turn's rows in the engine's own buffers, with recurrent-state \emph{anchors}\index{anchor} every 1,024 tokens and an \term{end anchor} at the end of the last generation. The next turn resumes there and forwards only what is new. Further down are a state store of snapshots, a disk tier on the NVMe for prefixes that come back, and a session spill that keeps whole conversations through a restart. Chapter~\ref{ch:caches} describes them all.
+
+\section{The decode loop}
+
+Then rounds run until the answer ends. In each round the block drafter proposes up to 15 tokens and the lookup drafter proposes continuations it has seen before; StairCut merges them into one tree and cuts it to the size that maximises expected tokens per millisecond on the measured verify cost. One forward pass of the target model verifies the whole tree through all 64 layers. The engine walks the tree with the model's own tokens, keeps the longest agreeing path plus one token of the model's own, and commits that path's KV rows and recurrent state. Chapter~\ref{ch:speculation} explains the round and Chapter~\ref{ch:kernels} the kernels that make the verify cheap.
+
+\section{The monitor watches the output}
+
+While the model writes, the conductor's \term{session monitor} reads the output at four safe points: before the prefill, after every committed block, at the end token, and when the answer's tool calls are complete. It can close a reasoning block that loops, continue a turn that ended empty, repair or regenerate a malformed tool call, and stop a tool call whose arguments repeat. Everything it adds is hidden from the client and never counted in \code{usage}. Chapter~\ref{ch:monitor} lists its tasks.
+
+\section{The stream goes back}
+
+Committed tokens stream to the client as they are verified, several at a time. A tool call streams as argument deltas while the model writes it, with values typed by the request's JSON schema. With a profile's status lines on, the client also sees one short line for each step the conductor takes (\enquote{› reading 20,745 tokens, about 18 s left}), which the engine strips again from the next prompt (Chapter~\ref{ch:lines}).
+
+\section{After the request}
+
+The request leaves one log line (counts, finish reason, rate, never text) and one row in the usage ledger. The conductor writes its decisions to a journal, a transcript block for a request with tools, and, when memory notes are on, any \code{<tandem_memory>} block the model wrote. When the session goes quiet, a background writer may write the session's facts as notes (Chapter~\ref{ch:memory}). The dashboard shows all of it live (Chapter~\ref{ch:dashboard}).

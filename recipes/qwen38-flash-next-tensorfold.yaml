@@ -1,0 +1,49 @@
+recipe_version: "4"
+name: qwen38-flash-next-tensorfold
+description: "Qwen3.8-Flash-Next EXL3 3.05bpw on single DGX Spark (GB10) via TensorFold v0.5.0 CUDA runtime — MTP drafting on, 262144 ctx, parallel 5; TF pip-pinned inside public NVCR PyTorch 26.07 container at launch"
+model: turboderp/Qwen3.8-Flash-Next-exl3
+model_revision: "69e33439ae950f17bcbe95c98f117d80f759ab6d"
+runtime: tensorfold
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-09-29"
+  status: "arena-candidate"
+  tags: [qwen3.8, flash-next, exl3, tensorfold, mtp, gb10, sm121, text-only, one-lane]
+  quantization: "EXL3 3.05 bits per weight, H5, ngram 5"
+  model_dtype: "exl3-3.05bpw"
+  engine_repo: "https://github.com/ashhart/TensorFold"
+  engine_version: "v0.5.0 (9cd52ab)"
+
+solo_only: true
+min_nodes: 1
+max_nodes: 1
+
+container: nvcr.io/nvidia/pytorch:26.07-py3
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  exclusive_spark_lane: true
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  parallel: 5
+  context: 262144
+  served_model_name: Qwen3.8-Flash-Next
+  mtp_drafts: 0
+
+env:
+  HF_HOME: /cache/huggingface
+  HF_HUB_OFFLINE: "0"
+  TRANSFORMERS_OFFLINE: "1"
+
+pre_exec:
+  - "pip install -q 'tensorfold @ git+https://github.com/ashhart/TensorFold.git@v0.5.0'"
+
+command: |
+  tensorfold serve {model} \
+    --host {host} --port {port} --parallel {parallel} \
+    --name {served_model_name}

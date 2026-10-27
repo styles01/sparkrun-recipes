@@ -1,0 +1,51 @@
+{
+ "aarch64-linux-cpu-torch2.13.0": {
+  "ref": {
+   "S.0": "f3b2761bacd2e14f",
+   "S.3": "49cbb98f2a36aecd",
+   "S.5": "eaa2de41c093815f",
+   "after_commit": "532e93f6705e5c08",
+   "chain": "b2baf1c62874c39c",
+   "conv.0": "a7ea2f380c20b0ce",
+   "conv.3": "1edae91150d9cf0e",
+   "conv.5": "17f54b872e95f924",
+   "decode": "8baf977ffa3c2c7c",
+   "k.2": "a5907edd554fd9e5",
+   "k.6": "4efb78d39f728d3b",
+   "prefill": "8c15b7abe5fee8f3",
+   "tree": "aec925102decbb70"
+  }
+ },
+ "aarch64-linux-cuda-torch2.13.0": {
+  "engine": {
+   "S.0": "a837e5cc3ce3f74f",
+   "S.3": "0139440404d2d10c",
+   "S.5": "d0237eac16a6028b",
+   "after_commit": "ec6a69eafefd61f6",
+   "conv.0": "2fbd61d08db786f6",
+   "conv.3": "16d731988127c321",
+   "conv.5": "35386423aa0c3ac3",
+   "decode": "fec5207c14baa2b7",
+   "k.2": "6da93012a88c5014",
+   "k.6": "6f12fdf8ed3c7555",
+   "prefill": "e61ae6982b729d9f",
+   "tree": "fc3e716ede9ca6d3"
+  }
+ },
+ "aarch64-linux-interp-torch2.13.0": {
+  "engine": {
+   "S.0": "cad2d9c627d0b40f",
+   "S.3": "1ea43a82035d7311",
+   "S.5": "e0fb41e57aa51a57",
+   "after_commit": "56696eaea4fe31fa",
+   "conv.0": "b12d7a76106a2d30",
+   "conv.3": "629ac73c48ac1dac",
+   "conv.5": "f6020b224ab10ae1",
+   "decode": "d46f0961dd634643",
+   "k.2": "7c4954162437d0f7",
+   "k.6": "c3fc5c50574a9289",
+   "prefill": "1e41152f09e64c10",
+   "tree": "f521e2ad274eff72"
+  }
+ }
+}

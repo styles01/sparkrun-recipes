@@ -1,0 +1,18 @@
+{
+  "package": "summarize-text",
+  "rubric": [
+    "First sentence says what the text is and its main point; then points in order of importance, each one line with its number, date or name.",
+    "Length within the asked or default limit (short 3 to 5 bullets; summary a paragraph plus bullets) and never over a quarter of the original.",
+    "Meeting notes, threads and chats carry Decisions, Open questions, Next actions (who, what, by when) or 'none'.",
+    "Nothing added, no opinion, no gap filled with guesses; every point checkable against the text.",
+    "Summary in the user's language even when the text is in another; the text's language named when it differs."
+  ],
+  "prompts": [
+    {"id": "summarize-text-1", "lang": "en", "text": "Summarise in 5 bullets: 'Team meeting 14 April. Present: Lea, Omar, Jens, Priya. The new booking page is 2 weeks late because the payment provider changed its API; Omar will finish the integration by 28 April. Lea presented the survey: 62 % of users want a dark mode, 40 % complain about slow search. Jens proposed moving search to a new index, cost about 3,000 per month; decision postponed until Priya has the numbers from finance (by Friday). Dark mode approved for the June release, Lea owns it. Next meeting 21 April.'"},
+    {"id": "summarize-text-2", "lang": "de", "text": "Fasse kurz zusammen, worum es geht und was ich tun muss: 'Sehr geehrte Frau Krüger, im Rahmen der jährlichen Betriebskostenabrechnung für 2025 ergibt sich für Ihre Wohnung eine Nachzahlung von 312,40 Euro. Die Abrechnung finden Sie im Anhang. Bitte überweisen Sie den Betrag bis zum 30. Juni auf das bekannte Konto. Einwände können Sie innerhalb von zwölf Monaten schriftlich geltend machen. Ab Juli erhöht sich Ihre monatliche Vorauszahlung um 25 Euro auf 215 Euro.'"},
+    {"id": "summarize-text-3", "lang": "ar", "text": "لخّص هذا المقال في فقرة واحدة: 'أعلنت وزارة النقل عن خطة جديدة لتوسيع شبكة المترو في المدينة بثلاثة خطوط إضافية بحلول عام 2030. ستبلغ تكلفة المشروع 4 مليارات، وسيتم تمويله جزئيًا من القطاع الخاص. تتوقع الوزارة أن يقلل المشروع الازدحام المروري بنسبة 20 بالمئة وأن يخدم مليون راكب يوميًا. تبدأ أعمال الحفر في الربع الأول من العام القادم، وستُغلق بعض الشوارع الرئيسية مؤقتًا.'"},
+    {"id": "summarize-text-4", "lang": "en", "text": "TL;DR of this email thread please (I'm the Mark here): 'From Sara: Mark, can you confirm the venue for the 20th? / From Mark: Not yet, the hall wants a 500 deposit by Wednesday. / From Sara: Pay it, I'll reimburse from the club account. Also we need a projector. / From Tim: I can bring my projector, but I need a HDMI adapter. / From Sara: Mark, can you get one? / From Mark: Sure.'"},
+    {"id": "summarize-text-5", "lang": "en", "text": "What are the key points of this study abstract? 'We followed 2,400 adults for 5 years. Those who walked at least 7,000 steps a day had a 50 % lower risk of death from any cause compared with those below 5,000 steps. Benefits plateaued above 10,000 steps. Step intensity was not associated with risk after adjusting for step count. Limitations include self-reported health and a single baseline measurement.'"},
+    {"id": "summarize-text-6", "lang": "de", "text": "Hier sind meine Notizen vom Elternabend, mach eine Zusammenfassung mit To-dos: Klassenfahrt 12.-14. Mai nach Hamburg, 180 Euro, Anzahlung 50 bis 15. März an Frau Behrens. Neue Mathelehrerin ab Ostern. Handyverbot ab Februar auf dem ganzen Schulgelände. Elternsprecher bleibt Herr Öztürk. Sommerfest braucht Helfer für Kuchen und Aufbau, Liste kommt per Mail.'"}
+  ]
+}

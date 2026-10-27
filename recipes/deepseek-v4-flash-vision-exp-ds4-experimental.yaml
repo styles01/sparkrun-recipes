@@ -1,0 +1,68 @@
+recipe_version: "4"
+name: deepseek-v4-flash-vision-exp-ds4-experimental
+description: "Experimental DeepSeek-V4-Flash-Vision-Exp Q2 on one DGX Spark via antirez/ds4 pinned source. Separate from the production Flash-0731 DS4 route: inline PNG/JPEG vision, one 4K resident session, no DSpark by default, port 8101, no Loca/Hermes integration."
+model: antirez/deepseek-v4-gguf
+runtime: ds4-cuda-experimental
+maintainer: styles01
+
+metadata:
+  author: styles01
+  status: "candidate-not-running"
+  created: "2026-09-02"
+  tags: [deepseek, ds4, vision-exp, experimental, cuda, gb10, spark, image, q2]
+  runbook: runbooks/deepseek-v4-flash-vision-exp-ds4-experimental.md
+  switch_script: scripts/switch-to-ds4-vision-exp-experimental.sh
+  upstream: "https://github.com/antirez/ds4"
+  upstream_revision: "110afdd8886586f18fc9b28bc5533152dd10e728"
+  model_source: "https://huggingface.co/antirez/deepseek-v4-gguf"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  build: "make cuda-spark"
+  exclusive_spark_lane: true
+  memory_cgroup_max: "110G"
+
+model_layout:
+  local_dir: "~/models/hf/DeepSeek-V4-Flash-Vision-Exp-Q2"
+  language_gguf: "DeepSeek-V4-Flash-Vision-Exp-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8.gguf"
+  vision_encoder_gguf: "DeepSeek-V4-Flash-Vision-Encoder.gguf"
+  optional_dspark_gguf: "DeepSeek-V4-Flash-Vision-Exp-DSpark-support.gguf"
+  quantization: "IQ2_XXS routed-expert gate/up + Q2_K routed-expert down; dense/control tensors retained at higher precision"
+  estimated_language_size_gib: 81
+  estimated_vision_encoder_size_gib: 0.9
+
+runtime_details:
+  engine: "antirez/ds4; not Entrpi/Bleysg v0.6.2"
+  port: 8101
+  host: "0.0.0.0"
+  input_media: "inline PNG/JPEG only; no video, remote URLs, or local-path input"
+  openai_surfaces: ["chat-completions", "responses"]
+  anthropic_surface: "messages with base64 image source"
+
+initial_lane:
+  context: 4096
+  batched_session: 1
+  speculation: "off"
+  disk_kv: "off"
+  served_as: "separate experimental endpoint; do not repoint Loca/Hermes"
+
+promotion_gates:
+  - "Pinned-source build and upstream CUDA regression/vision-preprocess tests pass."
+  - "Image semantic corpus passes, including OCR/screenshot, charts, spatial, negatives, followups, and multi-image turns."
+  - "Exact client payloads pass for OpenAI Chat/Responses, Anthropic, tools, streaming, and cancellation."
+  - "Measured memory headroom and post-failure real-inference health pass at each context tier."
+  - "Image-plus-agent/tool context ladder passes through the intended target context."
+  - "1/2/4 stream sweep establishes correctness, fairness, p95 latency, and memory behavior."
+  - "Optional Vision-Exp DSpark support gives a measured gain with no regression; 0731 drafter is never used."
+
+notes:
+  - "Do not modify the production 0731 DS4 recipe or switch script for this experiment."
+  - "Do not infer native batching throughput from --batched-session on single CUDA GPU."
+  - "No Arena run until a public, registered eligible recipe and native benchmark path are validated."

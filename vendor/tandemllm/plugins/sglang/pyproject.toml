@@ -1,0 +1,32 @@
+# tandemllm-sglang-plugin: TandemLLM's per-request stats from inside SGLang (layer L2, docs/proxy.md).
+#
+#   pip install plugins/sglang        into the environment SGLang runs in; it pulls nothing
+#
+# SGLang loads general plugins from the `sglang.srt.plugins` entry point group in every process
+# (the HTTP server's and each scheduler's) unless SGLANG_PLUGINS leaves `tandem` out. The data
+# needs `--enable-metrics`. Tested versions: plugins/README.md.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tandemllm-sglang-plugin"
+dynamic = ["version"]
+description = "Per-request queue, prefill and decode times, cached tokens, retractions and speculation from inside SGLang, pushed to TandemLLM's dashboard"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "Khaled Bakeer" }]
+keywords = ["sglang", "metrics", "observability", "tandemllm"]
+dependencies = []
+
+[project.entry-points."sglang.srt.plugins"]
+tandem = "tandem_sglang_plugin:register"
+
+[tool.setuptools]
+packages = ["tandem_sglang_plugin"]
+
+[tool.setuptools.dynamic]
+version = { attr = "tandem_sglang_plugin.__version__" }

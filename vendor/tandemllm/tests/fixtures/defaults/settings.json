@@ -1,0 +1,25 @@
+{
+ "from": "settings v4, the box, 2026-10-03",
+ "doc": {
+  "default_profile": "chat",
+  "journal": {
+   "retention_days": 30,
+   "digest": "tools"
+  },
+  "memory": {
+   "transcripts": {
+    "scope": "tools",
+    "retention_days": 30,
+    "clip_chars": 4000,
+    "loop_chars": 200
+   },
+   "disk_cache": {
+    "mode": "on",
+    "budget_gb": 16,
+    "ttl_days": 7,
+    "admit_after": 2,
+    "min_free_gb": 50
+   }
+  }
+ }
+}

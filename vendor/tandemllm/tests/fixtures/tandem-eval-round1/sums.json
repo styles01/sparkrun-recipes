@@ -1,0 +1,90 @@
+{
+ "te-2026-10-01-csvq-raw-r0-2c260e": {
+  "tokens": {
+   "input": 69338,
+   "output": 8154,
+   "reasoning": 36302,
+   "cache_read": 955392
+  },
+  "turns": 16,
+  "messages": 17,
+  "export_bytes": 248451
+ },
+ "te-2026-10-01-csvq-tandem-r0-c10e6a": {
+  "tokens": {
+   "input": 53215,
+   "output": 7579,
+   "reasoning": 26019,
+   "cache_read": 467968
+  },
+  "turns": 10,
+  "messages": 11,
+  "export_bytes": 179915
+ },
+ "te-2026-10-01-minicalc-raw-r0-7bcf01": {
+  "tokens": {
+   "input": 42005,
+   "output": 5403,
+   "reasoning": 16063,
+   "cache_read": 563200
+  },
+  "turns": 14,
+  "messages": 15,
+  "export_bytes": 141640
+ },
+ "te-2026-10-01-minicalc-tandem-r0-464b6a": {
+  "tokens": {
+   "input": 41985,
+   "output": 5633,
+   "reasoning": 17802,
+   "cache_read": 250880
+  },
+  "turns": 7,
+  "messages": 8,
+  "export_bytes": 132291
+ },
+ "te-2026-10-01-photo3d-raw-r0-5472f4": {
+  "tokens": {
+   "input": 410994,
+   "output": 46043,
+   "reasoning": 104075,
+   "cache_read": 16472064
+  },
+  "turns": 144,
+  "messages": 147,
+  "export_bytes": 12538488
+ },
+ "te-2026-10-01-photo3d-tandem-r0-11c1c9": {
+  "tokens": {
+   "input": 263228,
+   "output": 44562,
+   "reasoning": 47416,
+   "cache_read": 21703680
+  },
+  "turns": 192,
+  "messages": 193,
+  "export_bytes": 11177569
+ },
+ "te-2026-10-01-spiral-raw-r0-2dddea": {
+  "tokens": {
+   "input": 174735,
+   "output": 19273,
+   "reasoning": 50643,
+   "cache_read": 8648704
+  },
+  "turns": 90,
+  "messages": 91,
+  "export_bytes": 15443815
+ },
+ "te-2026-10-01-spiral-tandem-r0-51221b": {
+  "tokens": {
+   "input": 94546,
+   "output": 12220,
+   "reasoning": 7618,
+   "cache_read": 2777088
+  },
+  "turns": 54,
+  "messages": 55,
+  "export_bytes": 12538584
+ }
+}

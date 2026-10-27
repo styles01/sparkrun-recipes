@@ -1,0 +1,85 @@
+{
+ "suite": "spiral",
+ "arm": "raw",
+ "rep": 0,
+ "tag": "te-2026-10-01-spiral-raw-r0-2dddea",
+ "started_at": "2026-10-01T13:09:08Z",
+ "error": null,
+ "store_clear": {
+  "at": "2026-10-01T13:09:08Z",
+  "status": 200,
+  "error": null
+ },
+ "dir": "{run}/te-2026-10-01-spiral-raw-r0-2dddea",
+ "session_id": "ses_f086abd26ffeqALLplrPYdIPWP",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_minutes": 42.66,
+ "gates": {
+  "total": 3,
+  "passed": 0,
+  "by_gate": [
+   {
+    "id": "tone",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "ribbon",
+    "passed": false,
+    "minutes": null
+   },
+   {
+    "id": "animated",
+    "passed": false,
+    "minutes": null
+   }
+  ]
+ },
+ "passed": false,
+ "minutes_to_pass": null,
+ "final_check": null,
+ "tokens": {
+  "input": 0,
+  "output": 0,
+  "reasoning": 0,
+  "cache_read": 0
+ },
+ "cache_hit": null,
+ "gen_tps": null,
+ "turns": 0,
+ "tool_calls": 0,
+ "tool_errors": 0,
+ "empty_stops": 0,
+ "last_finish": null,
+ "continuations": {
+  "needed": 1,
+  "sent": 0,
+  "driver": "watch"
+ },
+ "engine": {
+  "requests": 90,
+  "finish": {
+   "stop": 1,
+   "tool_calls": 89
+  },
+  "decode_tps_median": 46.88,
+  "prefill_tps_median": 540.77,
+  "completion_tokens": 69916,
+  "reasoning_tokens": 50643,
+  "prompt_tokens": 8823439,
+  "cached_tokens": 8648704
+ },
+ "conductor": {
+  "acts": 0,
+  "by_task": {},
+  "gave_ups": 0,
+  "shadow": 0
+ },
+ "pristine": {
+  "ok": true,
+  "changed": [],
+  "restored": []
+ },
+ "ended_at": "2026-10-01T13:51:48Z"
+}

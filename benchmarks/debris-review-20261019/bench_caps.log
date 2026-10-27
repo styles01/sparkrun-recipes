@@ -1,0 +1,6 @@
+usage: bench_decode_8000.py [-h] --phase PHASE --out OUT [--runs RUNS]
+                            [--max-tokens MAX_TOKENS] [--skip-coherence]
+                            [--structured] [--coding]
+                            [--concurrency CONCURRENCY]
+                            [--warmup-tokens WARMUP_TOKENS]
+bench_decode_8000.py: error: the following arguments are required: --phase

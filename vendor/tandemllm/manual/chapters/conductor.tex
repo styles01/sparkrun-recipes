@@ -1,0 +1,155 @@
+\chapter{Profiles and the router}\label{ch:conductor}
+
+With the conductor\index{conductor} on, the engine serves one model, \code{TandemLLM}\index{TandemLLM (model name)}: the weights with a conductor in front. For every turn the conductor decides what kind of task it is, how hard the model should think, which instructions and skills go into the prompt, and what to do when the model loops, stops empty or writes a broken tool call. It tells the user what it is doing while the model works, keeps notes between sessions, and keeps long conversations resumable.
+
+Nothing of the conductor changes the model's own arithmetic. A turn's tokens come from the same greedy decoding; the conductor changes what goes into the prompt (a hidden note, a thinking cap) and acts at fixed safe points. Every decision, acted on or not, goes to one journal, and the dashboard's Conductor view shows it. This part of the book covers the conductor: this chapter the profiles and the router, then the packages and decision models (Chapter~\ref{ch:packages}), the session monitor (Chapter~\ref{ch:monitor}), the status lines and the small models (Chapter~\ref{ch:lines}), memory notes (Chapter~\ref{ch:memory}) and the conductor in front of other backends (Chapter~\ref{ch:harness-proxy}).
+
+\section{Switching it on and off}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The conductor's switches.}\label{tab:conductor-switches}
+\begin{tabularx}{\linewidth}{@{}L{.27\linewidth}Y@{}}
+\toprule
+\hd{what} & \hd{how} \\
+\midrule
+the whole conductor & \code{--conductor-config DIR} on the engine (\code{QSE_CONDUCTOR_CONFIG}, set in the shipped profile); \code{off} or empty: the engine serves its own model name and none of this runs \\
+the monitor's acts & \code{--conductor raw|shadow|on} (\code{CONDUCTOR}, \code{on} in the shipped profile), with its policy file \code{ops/supervisor.yaml} \\
+one request, raw & header \code{X-Tandem: raw}: the release's raw path, no class, no note, no effort change, no monitor \\
+one request, shadow & header \code{X-Tandem: shadow}: everything decides and journals, nothing acts \\
+one request, a profile & header \code{X-Tandem-Profile: <name>}; an unknown name is a 400 \\
+in front of another backend & the backend's \code{harness.mode} (Chapter~\ref{ch:harness-proxy}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A header can lower the mode, never raise it. Every response says what ran in its \code{X-Tandem}\index{x-tandem@\texttt{X-Tandem}} and \code{X-Tandem-Profile}\index{x-tandem-profile@\texttt{X-Tandem-Profile}} headers. \code{/v1/models} lists \code{TandemLLM} alone. Any other model name a client sends, the engine's own name included, is served as \code{TandemLLM}, so no client breaks on a name. The usage ledger records \code{model_served = TandemLLM} beside the name the client sent.
+
+\section{Versioned documents}\index{conductor documents}
+
+The configuration lives in versioned JSON documents under the conductor's directory, outside any repository: the profiles, the router's classes and thresholds, the roles, the packages, the settings, the deciders, the residency plan and the monitor's policy. The dashboard's Conductor view edits every one of them. Each save is checked first and shows its diff, then becomes a new version with a required note; any old version can be restored, and the next request uses it, with no restart. A file that fails to parse or validate keeps the last good version. The API is \code{/v1/conductor/*}; writes follow the admin rule: open while no admin password is set, else the admin token, a dashboard session, or a request from the machine itself. With \code{--conductor-defaults shipped}, a new directory starts with the shipped documents as version 1; with \code{builtin} it starts with minimal built-ins.
+
+\section{Profiles}\label{sec:profiles}\index{profile}
+
+A request resolves to a profile: the \code{X-Tandem-Profile} header, else the profile mapped to the client, else \code{tools} when no profile maps the client and the request offers a function tool with \code{tool_choice} other than \code{none} (an OpenAI SDK, curl, a benchmark; \code{settings.tools_profile} names it, and an empty name turns the rule off), else the default (\code{general}). The journal names the rule that picked it (\code{extra.profile_source}). The client is known by its requests (headers, tools, its fixed system texts), never by a word list.
+
+\begin{table}[htbp]
+\centering\small
+\caption{The shipped conductor profiles.}\label{tab:profiles}
+\begin{tabularx}{\linewidth}{@{}L{.13\linewidth}L{.24\linewidth}Y@{}}
+\toprule
+\hd{profile} & \hd{for} & \hd{what it turns on} \\
+\midrule
+\code{raw} & locked & nothing: the raw engine, as the release serves it \\
+\code{bench} & locked & the same, for benchmarks and the paper \\
+\code{chat} & Open WebUI, the Playground & class-aware effort, the reasoning-loop guards, the status lines in the reasoning \\
+\code{coding} & opencode & every routing decision, packages and skills, the loop guards, the empty-turn continue, the tool-call checks, turn snapshots, the library in shadow, the status lines as titled reasoning parts, the voice, the shadow reader when its model is set \\
+\code{hermes} & the Hermes agent & coding's routing, tasks and packages, the status lines in the reasoning \\
+\code{overnight} & unattended opencode runs, by header & coding plus the session tasks acting, raised caps, a push notification when the client has gone \\
+\code{tools} & API clients that offer tools & nothing in the prompt: the client's prompt, token for token the raw path's; the loop guards, the tool-call checks and C5 act; the secret echo mask \\
+\code{general} & any other client & class-aware effort and packages, the status lines in the reasoning \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A profile's mode is \code{raw}, \code{shadow} or \code{on}, and it caps the session monitor's mode. Its sections hold the decisions it acts on (class, effort, packages), the tasks' modes and caps, the thinking settings, what the user sees (\code{ui}), the outcomes, the library, memory and the shadow reader. The Profiles screen edits each one. Memory notes are off in every shipped profile; the shadow reader runs in the coding profile once its model is set.
+
+\section{The router}\label{sec:router}\index{router}\index{task class}
+
+Before a turn queues, the router decides which kind of task it is. Only a new user message asks a classifier. A turn that carries only tool results keeps the session's class, and so do a tool's media that a client sends as a user message right after the results, and the first message after a compaction. Figure~\ref{fig:router} shows the path.
+
+\begin{figure}[htbp]
+\centering
+\input{figures/router}
+\caption[The router's path from a request to a plan]{The router's path from a request to a plan. A client's side request gets a small plan of its own. A tool turn keeps the session's class. A new user message asks Qwen; below 0.45 the turn keeps the session's class, or the profile's default class on a first turn.}\label{fig:router}
+\end{figure}
+
+In the shipped router, which \code{ops/start.sh}\index{ops/start.sh@\texttt{ops/start.sh}} stores as version 1 on a new box (\code{--conductor-defaults shipped}), one classifier decides:
+
+\begin{enumerate}
+\item Qwen itself, raw, thinking off, its answer constrained to the class ids by a choice grammar, taken at a confidence of 0.45 or more; every class's probability comes from the answer's first token and its alternatives, and a code class under 0.7 for a request that names a piece of prose (an essay, a letter, ``700 words'') and nothing of code gives way to the best class outside the code classes (\code{guard} in the journal; on 374 labelled prompts it changed two essays and nothing else);
+\item below that, the turn keeps the session's class, or on a session's first turn the profile's default class, unless the top answer is a class that builds something (its policy names packages) and leads the second by 0.1: then the first turn takes it (\code{classifier.below_accept}). On 341 labelled prompts that rule turned two answers right and none wrong; one of the two was \enquote{Create a new folder and create there a pagoda garden} at three\_d 0.378, which had gone to chat (\measured).
+\end{enumerate}
+
+Asked who or what it is, the model names its model and that it runs in TandemLLM (``I'm Qwen3.8-27B, running in TandemLLM'') in the user's language: the router adds one hidden note on the turn whose message asks (English, German, French, Spanish, Italian, Dutch), replayed at its place on every later turn like the other notes, under every profile but \code{raw} and \code{bench}. \code{QWEN38_MODEL_NAME} names another checkpoint.
+
+The decider stage, a decision model asked a \code{choice} question (Laya, Chapter~\ref{ch:packages}), is off in the shipped router. On 216 labelled prompts Qwen's answer was right 0.949 of the time against Laya's 0.782 (\measured, \code{tools/conductor_eval.py}). A server started with \code{--conductor-defaults builtin} gets the minimal built-in router instead: the decider first, used at 0.80 or more, then Qwen at 0.55.
+
+No word list decides anything. The classifiers read a digest of the new user message, its head and its tail, sized to what each stage reads. Two more stages exist and are off by default in the router document: Qwen classifying inside the conversation the engine already holds (\code{classifier.context_stage}, for follow-ups and long prompts; every class is a single-letter token, so one forward's softmax is the answer), and a linear probe on Qwen's own hidden rows (\code{classifier.probe_stage}).
+
+An unsure deliverable is built and stated, not asked\index{reading line}. A class a classifier picks on the turn the class starts, below 0.8, with another class at 0.15 or more, both with a \code{reading} phrase in the router document (three\_d ``a 3D three.js scene'', design\_ui ``a flat web page'', drawing ``a 2D drawing''), gets one sentence in its note: build it as the picked class and open the answer with one short line such as ``Building it as a 3D three.js scene. Say if you wanted a flat web page.'', never a blocking question (\code{classifier.reading}, under the profile's \code{classify} decision; \code{mode: shadow} journals the sentence only). On 308 labelled prompts it fired on none, on 13 ambiguous ones on 7 (\measured, \code{tools/class_core_eval.py}).
+
+\begin{table}[htbp]
+\centering\small
+\caption{The router's shipped classes, with each class's effort and packages. A package marked core goes in on every turn of the class.}\label{tab:classes}
+\begin{tabularx}{\linewidth}{@{}L{.13\linewidth}YL{.1\linewidth}L{.3\linewidth}@{}}
+\toprule
+\hd{class} & \hd{what} & \hd{effort} & \hd{packages} \\
+\midrule
+\code{code_edit} & write, change, refactor or extend code & xhigh & coding (core), testing, Laya's test skills, test-web, test-cli, test-api, test-data, test-lib \\
+\code{debug} & find and fix a bug, a failing test, an error, a crash & xhigh & the same \\
+\code{design_ui} & the look of a page or an app & high & testing, Laya's, ui-design \\
+\code{drawing} & draw, paint or animate with code & high & testing, Laya's, three drawing skills \\
+\code{three_d} & a 3D scene or model & high & testing, Laya's, threejs-scene (core), photo-to-3d, voxel-seasons \\
+\code{writing} & prose: an essay, an email, documentation & medium & none \\
+\code{plan} & plan an approach before building & high & none \\
+\code{research} & look up, compare, explain & medium & none \\
+\code{summarize} & summarize given text, or a compaction & off & none \\
+\code{chat} & small talk or a short question & medium & none \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Effort and the thinking cap}\index{effort}
+
+The class sets the turn's effort, and every level except xhigh is a real cap on the reasoning that the engine enforces.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Effort levels and their reasoning caps.}\label{tab:effort}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\hd{effort} & \hd{reasoning cap} \\
+\midrule
+off & thinking off \\
+low & 1,024 tokens \\
+medium & 8,192 \\
+high & 16,384 \\
+xhigh & none below the 32,768-token backstop (D2) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+When the reasoning reaches its cap, the session monitor closes it with the vendor's closing phrase, hidden: the model reads the phrase, the client receives \code{</think>} and the answer. A profile's \code{thinking.budgets} overrides a level's cap. Thinking off is done in the prompt's tail: the generation prompt's open \code{<think>} becomes the template's closed empty block, so nothing before the tail changes.
+
+The client's own wishes count. A number of reasoning tokens in any shape clients send (Section~\ref{sec:client-budgets}) always wins, and so does thinking off or on. Thinking off (\code{reasoning_effort: none} and every other off form) holds under every profile: the router's journal row then says \code{thinking: off_client} ("client turned thinking off"; the dashboard shows "thinking off (client)"), not the class's level, and the turn gets no effort sentence, since it cannot think. An effort word such as \code{reasoning_effort: medium} is a ceiling on the router's level by default. The coding and overnight profiles ignore it, because opencode sends \code{medium} on every turn whatever the user picked (\code{thinking.client_word}: \code{ceiling} or \code{ignore}).
+
+Two refinements are switches of their own. Effort by task size (\code{thinking.by_size}, shadow by default) gives a class's levels per task size from four structural signals: the tokens the session added, the files its tool calls named, the gates a checker names, and the turn index. A tool-result turn's own level is \code{structural.tool_turn_effort} in the router document, \code{inherit} by default.
+
+\section{The note and its replay}\index{note}\index{replay}
+
+The class's plan goes into the prompt as a hidden note: the effort sentence, the class's rules, and the packages that fit. The note goes into the last message just before its end token, and later turns of the session replay it at the same token position, so the resident prefix and every cache keep matching. It is never streamed, never counted in \code{usage}, never stored in the suffix store, and a request with a note skips the response cache.
+
+A later user message's note carries only the parts that no live note of the session holds with the same text (\code{QWEN38_NOTE_DEDUP}, \code{parts}): a coding message whose task skill differs from the last one's adds that skill, a few hundred tokens, and not the general packages again (about 4,800 tokens). The replayed notes have a budget (\code{injection.max_replay_tokens}, 16,000). Over it the oldest note goes, which changes the prompt at that note's position, and the turn reads everything after it again. In the test builds before this release every new task skill brought the whole note back, and the third copy crossed the budget: in an Open WebUI agent chat a turn read 35,442 tokens again (49~s). \code{block} keeps the old rule for an A/B.
+
+\label{sec:router-session}The router's session is the client's conversation id (opencode's \code{x-session-id}\index{x-session-id@\texttt{x-session-id}}; Open WebUI's \code{X-OpenWebUI-Chat-Id}\index{X-OpenWebUI-Chat-Id@\texttt{X-OpenWebUI-Chat-Id}} when its connection sends the chat id as a header), else a hash of the conversation's head: its messages up to and including the first user message, which every turn sends again. Every chat that opens with the same message has that hash, so a head holds a list of conversations: a conversation's very first turn starts a new one when the newest of that head has had a turn, and a later turn finds its own by a hash of its whole first turn as the client sends it back. Without this, a new agent chat was measured starting with 27 turns and 21,216 session tokens of earlier chats and their notes replayed. A first turn regenerated without an id cannot be told from a new chat and starts afresh, which costs it nothing. The decision row's \code{extra.session} says how the session was found (\code{id}, \code{new}, \code{continued}, \code{alias}). Prefer the connection header to \code{ENABLE_FORWARD_USER_INFO_HEADERS}, which sends the same id but also the user's name and email to every connection.
+
+\section{Side requests}\label{sec:side-requests}\index{side request}
+
+opencode sends its title and summary calls beside the session's turns, and the Hermes agent sends a title call. The router knows such a request by its shape, not by its words: no \code{tools}, and the client's own fixed instruction opening the system message. A side request asks no classifier, gets no note, and touches nothing of the session; thinking is off unless the client asked for a number of reasoning tokens; its output is capped at 64 tokens for a title and 256 for opencode's summary. In the queue a side request of at most 8,192 prompt tokens goes ahead of every waiting turn, and with the engine busy it is served in the side lane. The router document's \code{structural.side_shapes} adds other clients' shapes.
+
+\section{Compaction}
+
+opencode's compaction request is the class \code{summarize}: structural, thinking off, no package, nothing replayed. The first user message after a compaction keeps the session's class and asks no classifier, because the compaction carried the task over and its few words (\enquote{continue}) are not a new task. The class's note goes in again at the compacted history's insertion point. How the engine serves a compaction from the conversation it already holds is in Section~\ref{sec:compaction}.
+
+Only opencode's request is a compaction: its system-prompt shape from any client, and the bare shape (no tools, no system text, the history as one long user message) only when the client is opencode. Another client's pasted document with ``summarize'' in a fresh chat has the bare shape too, and is an ordinary turn whose class the classifier decides.
+
+\section{Session addresses}\index{session address}
+
+The notes give the model \code{{tandem_url}}: the request's own address plus \code{/s/<token>}, 12 random characters kept 48 hours. A library read, a Laya question or a memory call from the model's scripts under that address is filed to its session in the journal. An unknown token is served and attributed to nobody; other routes under \code{/s/} are a 404.
+
+\code{QWEN38_TANDEM_URL} sets the address the notes give instead of the request's own, for clients whose scripts reach the engine under another name. The testing packages also name \code{{tandem_scratch}}, the place for their logs, helpers and kits: \code{.tandem} in the project by default, which the model excludes from git when it creates it and deletes before it reports done; \code{QWEN38_TANDEM_SCRATCH} names another place (\code{{token}} in it is the session token). A directory outside the project does not work under opencode, which asks before any path outside it.
+
+\section{What is journaled}\index{journal}
+
+The router's decisions and the monitor's go to one journal, the table \code{conductor_events} in the usage ledger's file, kept 30 days: the class, the confidence of every stage, the effort and its source, the note's text and its token count, every act with its hidden text (stored once by its hash in \code{conductor_texts}). \code{GET /v1/conductor/sessions/<key>/export?format=md} lists what the model saw that the client did not. With the conductor on, every request with tools is also written as a transcript block under \code{~/.qwen38-spark-engine/memory/sessions/}, mode 0600, kept 30 days, with secrets redacted first: a private key, a bearer or basic header, a service token, a JWT, credentials in a URL, a password assigned to a string all become \code{[redacted:<kind>]}. The answer has a twin of that rule, the secret echo mask (profile key \code{secret_mask}, SRV-625): a secret span a tool result in the conversation held is masked where the answer repeats it verbatim, \code{sk-abc123} as \code{sk-[redacted]}. The answer is never read for shapes, call arguments are untouched, and the mask is on in \code{tools}, \code{coding}, \code{chat-app} and \code{chat}.

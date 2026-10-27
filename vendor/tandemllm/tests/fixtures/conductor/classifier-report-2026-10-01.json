@@ -1,0 +1,184 @@
+{
+ "kind": "classifier",
+ "created_at": "2026-09-30T21:54:42Z",
+ "set": {
+  "name": "tests/fixtures/conductor/task_prompts.jsonl",
+  "n": 216,
+  "classes": [
+   "code_edit",
+   "debug",
+   "design_ui",
+   "drawing",
+   "three_d",
+   "plan",
+   "research",
+   "summarize",
+   "chat"
+  ]
+ },
+ "config": {
+  "router_from": "built-in",
+  "thresholds": {
+   "decider": 0.6,
+   "qwen": 0.55
+  }
+ },
+ "models": {
+  "decider": "auto",
+  "qwen": "qwen38-spark-engine"
+ },
+ "stages": {
+  "decider": {
+   "n": 216,
+   "answered": 146,
+   "correct": 138,
+   "accuracy": 0.6389,
+   "accuracy_answered": 0.9452,
+   "top1": 0.7824,
+   "p50_ms": 26.5,
+   "p95_ms": 48.4,
+   "confusion": {
+    "code_edit": {
+     "code_edit": 11,
+     "—": 12,
+     "plan": 1
+    },
+    "debug": {
+     "debug": 16,
+     "—": 7,
+     "three_d": 1
+    },
+    "design_ui": {
+     "design_ui": 19,
+     "code_edit": 1,
+     "—": 2,
+     "plan": 2
+    },
+    "drawing": {
+     "drawing": 19,
+     "—": 5
+    },
+    "three_d": {
+     "three_d": 18,
+     "—": 6
+    },
+    "plan": {
+     "plan": 20,
+     "—": 4
+    },
+    "research": {
+     "research": 10,
+     "—": 14
+    },
+    "summarize": {
+     "summarize": 21,
+     "—": 2,
+     "chat": 1
+    },
+    "chat": {
+     "chat": 4,
+     "—": 18,
+     "research": 2
+    }
+   }
+  },
+  "qwen": {
+   "n": 216,
+   "answered": 212,
+   "correct": 203,
+   "accuracy": 0.9398,
+   "accuracy_answered": 0.9575,
+   "top1": 0.9491,
+   "p50_ms": 553.4,
+   "p95_ms": 577.0,
+   "confusion": {
+    "code_edit": {
+     "code_edit": 24
+    },
+    "debug": {
+     "debug": 23,
+     "chat": 1
+    },
+    "design_ui": {
+     "design_ui": 19,
+     "code_edit": 5
+    },
+    "drawing": {
+     "drawing": 21,
+     "code_edit": 1,
+     "—": 2
+    },
+    "three_d": {
+     "three_d": 23,
+     "—": 1
+    },
+    "plan": {
+     "plan": 24
+    },
+    "research": {
+     "research": 22,
+     "—": 1,
+     "chat": 1
+    },
+    "summarize": {
+     "summarize": 23,
+     "chat": 1
+    },
+    "chat": {
+     "chat": 24
+    }
+   }
+  },
+  "cascade": {
+   "n": 216,
+   "answered": 213,
+   "correct": 202,
+   "accuracy": 0.9352,
+   "accuracy_answered": 0.9484,
+   "top1": 0.9352,
+   "p50_ms": 27.0,
+   "p95_ms": 606.2,
+   "confusion": {
+    "code_edit": {
+     "code_edit": 23,
+     "plan": 1
+    },
+    "debug": {
+     "debug": 22,
+     "chat": 1,
+     "three_d": 1
+    },
+    "design_ui": {
+     "design_ui": 21,
+     "code_edit": 1,
+     "plan": 2
+    },
+    "drawing": {
+     "drawing": 21,
+     "code_edit": 1,
+     "—": 2
+    },
+    "three_d": {
+     "three_d": 24
+    },
+    "plan": {
+     "plan": 24
+    },
+    "research": {
+     "research": 22,
+     "—": 1,
+     "chat": 1
+    },
+    "summarize": {
+     "summarize": 23,
+     "chat": 1
+    },
+    "chat": {
+     "chat": 22,
+     "research": 2
+    }
+   }
+  }
+ },
+ "note": "Measured on the Spark (GB10) on 2026-10-01 around 01:52 local: arbiter 0.2.0 (Laya, model auto) on 127.0.0.1:8010 with the engine resident and idle, Qwen = qwen38-spark-engine on :8000, thinking off, structured_outputs choice. Stage thresholds of that run: decider 0.60 (the decider stage was named arbiter then), Qwen 0.55."
+}

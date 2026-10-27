@@ -1,0 +1,89 @@
+{
+ "dt_s": 15.0,
+ "figures": {
+  "sglang1": {
+   "awake": null,
+   "cached_share": 0.7,
+   "decode_s": null,
+   "decode_tps": 120.0,
+   "e2e_s": {
+    "count": 2,
+    "p50": 3.0,
+    "p90": 3.8
+   },
+   "engine_cache_hit_rate": 0.61,
+   "engine_gen_tps": 118.5,
+   "finished": 2.0,
+   "kv_capacity_tokens": 100000.0,
+   "kv_tokens": 40000.0,
+   "kv_usage": 0.4,
+   "preemptions": 0.0,
+   "prefill_s": null,
+   "prefix_hit_rate": 0.7,
+   "prompt_tps": 80.0,
+   "queue_s": {
+    "count": 2,
+    "p50": 0.5,
+    "p90": 1.8
+   },
+   "running": 2.0,
+   "spec": {
+    "acceptance": 0.7,
+    "drafts": null,
+    "per_position": null,
+    "source": "engine_window",
+    "tokens_per_step": 3.1
+   },
+   "ttft_p50_s": 0.6,
+   "waiting": 0.0
+  },
+  "vllm1": {
+   "awake": true,
+   "cached_share": 0.8,
+   "decode_s": {
+    "count": 3,
+    "p50": 3.125,
+    "p90": 4.625
+   },
+   "decode_tps": 40.0,
+   "e2e_s": {
+    "count": 3,
+    "p50": 3.125,
+    "p90": 4.625
+   },
+   "engine_cache_hit_rate": null,
+   "engine_gen_tps": null,
+   "finished": 3.0,
+   "kv_capacity_tokens": null,
+   "kv_tokens": null,
+   "kv_usage": 0.27,
+   "preemptions": 0.0,
+   "prefill_s": {
+    "count": 3,
+    "p50": 0.65,
+    "p90": 0.94
+   },
+   "prefix_hit_rate": 0.8,
+   "prompt_tps": 66.67,
+   "queue_s": {
+    "count": 3,
+    "p50": 0.65,
+    "p90": 0.94
+   },
+   "running": 1.0,
+   "spec": {
+    "acceptance": 0.75,
+    "drafts": 200.0,
+    "per_position": [
+     0.95,
+     0.75,
+     0.55
+    ],
+    "source": "counters",
+    "tokens_per_step": 3.25
+   },
+   "ttft_p50_s": 0.175,
+   "waiting": 0.0
+  }
+ }
+}

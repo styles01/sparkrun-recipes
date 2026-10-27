@@ -1,0 +1,61 @@
+recipe_version: '6'
+name: qwen38-flash-next-tensorfold-lane
+description: "Qwen3.8-Flash-Next EXL3 3.05bpw on single DGX Spark (GB10) via TensorFold\
+  \ 1.0-era (ash cb2ebf05) CUDA runtime — MTP drafting on, 262144 ctx, parallel 4,\
+  \ VISION ON (--vision; the pack's 987 model.visual.* tower tensors; flash-next vision\
+  \ is fork-era-only: TF 0.5.0 lacks --vision, TF 0.6.0 --vision excludes flash-next)"
+model: /home/jaita/models/hf/turboderp/Qwen3.8-Flash-Next-exl3
+runtime: tensorfold
+maintainer: styles01
+metadata:
+  author: styles01
+  created: '2026-09-29'
+  status: daily-driver-lane
+  tags:
+  - qwen3.8
+  - flash-next
+  - exl3
+  - tensorfold
+  - mtp
+  - vision
+  - gb10
+  - sm121
+  - one-lane
+  quantization: EXL3 3.05 bits per weight, H5, ngram 5
+  model_dtype: exl3-3.05bpw
+  engine_repo: https://github.com/ashhart/TensorFold
+  engine_version: 1.0-era git cb2ebf0540f42604e2759b2ddef497861e928248 (pip-pinned at launch, per drama3-cuda.md recipe pin)
+  notes: 'path-mode: local flat checkpoint dir; offline. rev6 = vision restore: rev5
+    (TF0.6.0 dsv41-tensorfold:060 + --vision) failed boot: 0.6.0 --vision supports
+    only GLM-5.3-Flash + Qwen3.5/3.8 dense, flash-next excluded. This rev pip-installs
+    the 1.0-era ash rev INSIDE the nvcr 26.07 container (isolated from production
+    0.5.0). If the in-shard quantized tower needs the one-time CPU convert per the
+    flash-next-vision recipe, run tensorfold vision exl3_convert to an fp16 artifact
+    and add TENSORFOLD_VISION_WEIGHTS to env.'
+solo_only: true
+min_nodes: 1
+max_nodes: 1
+container: nvcr.io/nvidia/pytorch:26.07-py3
+executor_config:
+  entrypoint: ""
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: '12.1'
+  exclusive_spark_lane: true
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  parallel: 4
+  context: 262144
+  served_model_name: Qwen3.8-Flash-Next
+  mtp_drafts: 6
+  mtp_confidence: 0.6
+env:
+  HF_HOME: /cache/huggingface
+  HF_HUB_OFFLINE: '1'
+  TRANSFORMERS_OFFLINE: '1'
+  TENSORFOLD_VISION_WEIGHTS: /home/jaita/models/hf/turboderp/Qwen3.8-Flash-Next-exl3/vision-f16-v3.safetensors
+pre_exec:
+- pip install -q 'tensorfold @ git+https://github.com/ashhart/TensorFold.git@cb2ebf0540f42604e2759b2ddef497861e928248' 'transformers>=5,<6'
+command: "tensorfold serve {model} \\\n  --host {host} --port {port} --parallel {parallel}\
+  \ \\\n  --name {served_model_name} \\\n  --vision"

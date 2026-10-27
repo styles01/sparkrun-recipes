@@ -1,0 +1,167 @@
+{
+ "from": "profiles/overnight v8, the box, 2026-10-03",
+ "doc": {
+  "description": "Unattended opencode runs: coding plus the session tasks, raised caps.",
+  "mode": "on",
+  "clients": [],
+  "default_class": "code_edit",
+  "decisions": {
+   "classify": "on",
+   "effort": "on",
+   "packages": "on",
+   "rules": "on"
+  },
+  "routing": {
+   "three_d": {
+    "effort": "xhigh"
+   },
+   "drawing": {
+    "effort": "xhigh"
+   }
+  },
+  "thinking": {
+   "default": "medium",
+   "hints": true,
+   "client_override": true
+  },
+  "tasks": {
+   "D1": {
+    "mode": "act",
+    "cap": 2,
+    "thresholds": {
+     "repeat_share": 0.7,
+     "grey_low": 0.4,
+     "min_tokens": 2048,
+     "every_tokens": 64
+    }
+   },
+   "D1b": {
+    "mode": "act",
+    "cap": 2,
+    "thresholds": {
+     "min_span": 128
+    }
+   },
+   "D2": {
+    "mode": "act",
+    "cap": 2,
+    "thresholds": {
+     "backstop": 32768,
+     "answer_room": 2048
+    }
+   },
+   "D3": {
+    "mode": "shadow",
+    "cap": 2,
+    "thresholds": {
+     "act_at": 0.9,
+     "every_tokens": 1024
+    }
+   },
+   "D4": {
+    "mode": "off",
+    "cap": 2,
+    "thresholds": {}
+   },
+   "E1": {
+    "mode": "act",
+    "cap": 1,
+    "thresholds": {
+     "tries": 2
+    }
+   },
+   "E2": {
+    "mode": "shadow",
+    "cap": 1,
+    "thresholds": {
+     "claim_at": 0.85,
+     "admit_at": 0.6
+    }
+   },
+   "C1": {
+    "mode": "shadow",
+    "cap": 1,
+    "thresholds": {
+     "act_at": 0.85
+    }
+   },
+   "C2": {
+    "mode": "shadow",
+    "cap": 1,
+    "thresholds": {
+     "max_file_lines": 400
+    }
+   },
+   "C3": {
+    "mode": "act",
+    "cap": 1,
+    "thresholds": {
+     "repeats": 3
+    }
+   },
+   "C4": {
+    "mode": "act",
+    "cap": 1,
+    "thresholds": {
+     "repairs": 2
+    }
+   },
+   "S1": {
+    "mode": "act",
+    "cap": 2,
+    "thresholds": {
+     "fails": 3
+    }
+   },
+   "S2": {
+    "mode": "act",
+    "cap": 2,
+    "thresholds": {}
+   },
+   "S3": {
+    "mode": "shadow",
+    "cap": 2,
+    "thresholds": {
+     "act_at": 0.9
+    }
+   },
+   "S4": {
+    "mode": "act",
+    "cap": 2,
+    "thresholds": {
+     "minutes": 20
+    }
+   },
+   "HINT": {
+    "mode": "off",
+    "cap": 2,
+    "thresholds": {}
+   }
+  },
+  "caps": {
+   "acts_per_request": 3,
+   "acts_per_session_hour": 12
+  },
+  "toolgate": {
+   "risk": false,
+   "project": false,
+   "same_call": false,
+   "malformed": false,
+   "tier1_timeout_ms": 500
+  },
+  "context": {
+   "s1_runs": 3,
+   "s4_minutes": 20,
+   "notify": true
+  },
+  "hints": {
+   "stair_width": false,
+   "prefix_retention": false
+  },
+  "outcomes": {
+   "snapshots": "on",
+   "mode": "shadow",
+   "judge": "shadow"
+  }
+ }
+}

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "systemone answer",
+  "description": "POST /v1/systemone and /v1/predict on the engine port, and POST /v1/conductor/deciders/test (SRV-131): the Jev System One response as arbiter serves it, plus `path` (eager in stage A). The request is {state: string|object|array, model?: auto|jev-latest|<decision model or alias>, questions: {id: {type: choice|score|noul, instructions, criteria?}}, task?, lang?}; errors are {type: error, error: {type, message}} with 422 invalid_request_error, 529 overloaded_error, 503 warming|loading|refused|failed|not_loaded|busy_decoding (Retry-After), 504 timeout",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "model": {
+      "type": "string"
+    },
+    "answers": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/answer"
+      }
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "input_tokens": {
+          "type": "integer"
+        },
+        "output_tokens": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens"
+      ],
+      "additionalProperties": false
+    },
+    "routing": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "detection": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "workflow": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requested": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "path": {
+      "type": "string"
+    },
+    "latency_ms": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "model",
+    "answers",
+    "usage",
+    "routing",
+    "path",
+    "latency_ms"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "answer": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "choice",
+            "score",
+            "noul"
+          ]
+        },
+        "choice": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "noul": {
+          "type": "number"
+        },
+        "legend": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "probabilities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "action": {
+          "type": "object",
+          "properties": {
+            "act_probability": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "act_probability"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "confidence"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,217 @@
+\chapter{Serving}\label{ch:serving}
+
+\code{server/app.py}\index{server/app.py@\texttt{server/app.py}} speaks the OpenAI HTTP API, so any OpenAI client uses the engine by changing its base URL. It is built on the Python standard library (\code{ThreadingHTTPServer}), with no web framework. This chapter covers the request fields, reasoning and thinking budgets, tool calls, structured outputs, streaming, images, and how the server behaves under load: the queue, the side lane, the memory gate and the loop guard. Chapter~\ref{ch:ref-http} lists every route.
+
+\section{What the API supports}\label{sec:api-fields}\index{OpenAI API}
+
+\code{server/compat.py} gives every OpenAI request field one of three answers, and \code{tests/test_compat.py} pins the table.
+
+\begin{itemize}
+\item Honoured: \code{messages}, \code{model}, \code{stream}, \code{stream_options}, \code{max_tokens}, \code{max_completion_tokens}, \code{stop}, \code{temperature}, \code{top_p}, \code{seed}, \code{presence_penalty}, \code{frequency_penalty}, \code{logit_bias}, \code{logprobs}, \code{top_logprobs} (up to 20), \code{n} (up to 16, not streamed), \code{tools}, \code{tool_choice}, \code{parallel_tool_calls}, \code{reasoning_effort}, \code{response_format}, \code{modalities} (text output only). Messages may carry \code{image_url} parts.
+\item Accepted, without effect by their own definition: \code{user}, \code{metadata}, \code{store}, \code{service_tier}, \code{prompt_cache_key}, \code{safety_identifier}, \code{prediction}.
+\item Refused with a 400 that names the field: \code{audio}, \code{functions} and \code{function_call} (use \code{tools}), \code{web_search_options}, \code{verbosity}, and for completions \code{suffix} and \code{echo}. A malformed \code{tools} (not a list, an item without a function name, \code{parameters} that is not an object) is a 400 that names the item.
+\end{itemize}
+
+The request's own shape is checked first, and a wrong one is a 400 that names the field before anything reads it: no \code{messages} or an empty list, an unknown role (\code{messages[0].role}), a system prompt alone or only tool results (no user message to answer), a system message after the conversation began, \code{max_tokens} or \code{max_completion_tokens} below 1, an empty completion \code{prompt}, a body that is not a JSON object, and a prompt that renders to no token. OpenAI's \code{developer} role is the system prompt; a system and a developer message at the start become one system prompt, because the chat template reads one.
+
+Fields that are not OpenAI's pass through without a 400, because clients send extensions meant for other servers. The engine reads its own: \code{top_k}, \code{min_p}, \code{repetition_penalty}, \code{no_repeat_ngram_size}, \code{max_reasoning_tokens}, \code{reasoning_format}, \code{draft_temperature}, \code{chat_template_kwargs}, and the other servers' thinking-budget shapes.
+
+\section{Reasoning}\index{reasoning format}
+
+The model thinks inside \code{<think>} tags. The chat template opens the block in the prompt, so the model only ever writes \code{</think>}; the server re-emits \code{<think>} as the first delta so that clients which fold on a matched pair see one. \code{--reasoning-format}\index{reasoning-format@\texttt{-\kern0pt-reasoning-format}}, or \code{reasoning_format} in the request, picks how the thinking reaches the client:
+
+\begin{table}[htbp]
+\centering\small
+\caption{Reasoning formats.}\label{tab:reasoning-format}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\hd{value} & \hd{\texttt{content}} & \hd{\texttt{reasoning\_content}} \\
+\midrule
+\code{tags} (default) & the thinking inside \code{<think>...</think>}, then the answer & empty \\
+\code{reasoning_content} & the answer only & the thinking, as deltas \\
+\code{both} & as \code{tags} & as \code{reasoning_content} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Thinking budgets from the client}\label{sec:client-budgets}\index{thinking budget}
+
+A client may cap the thinking in any of the shapes clients send, and \code{server/thinking.py} reads them all into one budget.
+
+\begin{table}[htbp]
+\centering\small
+\caption{The thinking-budget shapes the server reads.}\label{tab:budget-shapes}
+\begin{tabularx}{\linewidth}{@{}L{.44\linewidth}Y@{}}
+\toprule
+\hd{shape} & \hd{read as} \\
+\midrule
+\code{max_reasoning_tokens}, \code{thinking_budget} & a cap in tokens \\
+\code{chat_template_kwargs.thinking_budget}, \code{.max_thinking_tokens}, \code{.reasoning_budget}, \code{.thinking_token_budget} & a cap in tokens \\
+\code{reasoning: {max_tokens, effort, enabled}} & \code{max_tokens} a cap, \code{effort} a word, \code{enabled: true} alone medium, \code{enabled: false} off \\
+\code{thinking: {type, budget_tokens}} & \code{enabled} with \code{budget_tokens} a cap, \code{enabled} or \code{adaptive} alone on without a cap, \code{disabled} off \\
+\code{reasoning_budget}, \code{max_thinking_tokens}, \code{thinking_token_budget}, \code{thinking_budget_tokens} & a cap in tokens \\
+\code{reasoning_effort}, \code{reasoning.effort}, \code{chat_template_kwargs.reasoning_effort} & the level's cap: \code{minimal} and \code{low} 1,024, \code{medium} 8,192, \code{high} 16,384, \code{xhigh} and \code{max} none; \code{none} is thinking off \\
+\code{enable_thinking: false} (top level or in \code{chat_template_kwargs}) & thinking off \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Whether the model thinks is decided first: by \code{chat_template_kwargs.enable_thinking} when it is set, else by the top-level \code{enable_thinking}, else by any off form. The cap is then the first number in the table's order, else the first effort word's cap. A number beats a word, and 0 is no cap. An unknown word or a negative number is a 400 that names the field.
+
+With the conductor deciding the effort, a client's number always wins, and its effort word is a ceiling on the router's level (Chapter~\ref{ch:conductor}). When a client asked for a budget in any shape and the reasoning would otherwise run into the output limit, the reasoning closes early enough to leave the answer \code{--answer-reserve}\index{answer-reserve@\texttt{-\kern0pt-answer-reserve}} tokens: \code{auto}, the default, is the smaller of 2,048 and a quarter of the limit. A request with none of these fields is served as before, token for token.
+
+\section{Tool calls}\index{tool calls}
+
+The request's \code{tools} go into the chat template\index{chat template}, and the model answers a call in its own XML form:
+
+\begin{plain}
+<tool_call>
+<function=read>
+<parameter=offset>
+150
+</parameter>
+</function>
+</tool_call>
+\end{plain}
+
+\code{server/toolcall.py} turns that into OpenAI \code{tool_calls} with \code{finish_reason: "tool_calls"}, on the streamed and the JSON path. It reads the strict form, a lenient form and a JSON call object, and only in the answer, never in the thinking. On a stream, a call goes out as argument deltas while the model writes it: the id and the name first, then each string value in pieces, so a whole-file write shows progress instead of minutes of silence.
+
+Argument values carry their schema's types. The model writes every value as text, so \code{offset} arrives as the characters \code{150}. The parser looks up the request's own schema, and a parameter whose schema does not allow a string is returned as JSON: \code{150}, \code{true}, a list. A typed value is held back on the stream until it is complete, then sent whole. On an 8-task agent run, a strict client that validates arguments against the schema refused 58 of 80 calls before this, and 0 of 26 after (\measured).
+
+\code{tool_choice} works as OpenAI defines it. \code{none} renders the prompt without tools. \code{required} and a named function become a constraint on the answer, the same token masks structured outputs use. \code{parallel_tool_calls: false} keeps one call.
+
+\section{Structured outputs}\index{structured outputs}
+
+\code{response_format} with \code{json_object} or \code{json_schema}, and \code{structured_outputs} with a \code{regex}, a \code{choice} list or a JSON schema, constrain the answer to a regular language. \code{engine/grammar.py} compiles each form to a finite automaton over bytes, because the tokenizer is byte-level and a token can end halfway through a character. A token is allowed in a state when walking its bytes never reaches the dead state; the engine computes that for the whole vocabulary at once per state and caches it, so a state costs a few milliseconds once. Each mask applies to every verified row of a draft tree, not only to one row per step, so constrained output under speculation is the text plain constrained decoding writes. JSON schemas with recursion are refused, and \code{json_object} allows a fixed nesting depth.
+
+With tools offered and \code{tool_choice} auto, a document constrains the answer to the calls or the document (SRV-619). The automaton is the product of the tool-call language and the document's, and where both are still open the mask follows the row's argmax before the mask: a call's first token commits to the calls, whitespace leaves the choice open, and any other token (the document's opening brace, a fence, prose, the end token) commits to the document. The mask stays a function of the prefix and the row, so speculation changes no token. The log line \code{[structured] <id> branch=calls|document} and \code{extra.structured_branch} say which side won. \code{tool_choice: none} is the document alone, \code{required} and a named function the calls alone. Through 0.11.4 such a request was a 400; \code{--tool-format pythonic} keeps it.
+
+A \code{</think>} the model writes again in its answer, alone on a line, is not sent under a conductor profile: Open WebUI closes a reasoning block at the first one and showed the second as text between two tool rows. The tag in a sentence, in code, in a tool call or closing a block the answer opened itself stays, and the raw path sends what the model wrote.
+
+Open WebUI's terminal tools end \code{run_command}'s description with the terminal's live working directory, inside the system prompt's tool block, so an agent's first \code{cd} changed the prompt about 4,800 tokens in and the next user message read the whole conversation again (measured: 41,749 tokens, 56~s). Under a conductor plan that is on, the sentence moves into a note at the turn where the directory changed and replays there, so the tool block stays the same for the session (\code{QWEN38_CLIENT_CWD}, \code{note}; \code{off}: the tools as sent).
+
+A client kind can have a format of its own when it names none and the server's is \code{tags}, under a conductor plan (\code{QWEN38_CLIENT_REASONING}, \code{kind=format,...}, \code{*} for every kind not named). The default, \code{*=reasoning_content,hermes=tags}, gives every client but the Hermes agent \code{reasoning_content}: an OpenAI SDK or curl client printed \code{message.content} and showed the model's thinking as its answer, and opencode with the installer's provider configuration showed it as literal \code{<think>} text. A client that wants the tags inline sends \code{reasoning_format: tags}. For Open WebUI the reason is its live view: Open WebUI 0.11.3 folds a \code{<think>} block out of the content after the fact and shows the stream piece that carries \code{</think>} as the text of a new message until the round's stream ends, so a long agent chat showed a literal \code{</think>} in 15 of 70 page scans; with \code{reasoning_content} three agent chats showed it in none of 683 scans (\measured). For that client the template's blank lines go out as one content piece where the reasoning ends, so Open WebUI closes and times each tool round's block even when the round goes straight to a tool call; a blank message is not shown. For the other clients the answer starts with its first character. A request's own \code{reasoning_format} wins. On the raw path an OpenAI SDK, curl or an unnamed client gets \code{reasoning_content} too, with stop strings matched on the answer, and every other client kind keeps the server's format (SRV-617): tool-eval-bench read the inline \code{<think>} block as the answer and failed its exact-answer scenarios.
+
+Under a conductor plan a request's \code{stop} strings apply to the answer, never inside the reasoning, and the blank lines that start the answer are not matched: \code{stop: ["\textbackslash n\textbackslash n"]} used to end a response at the first blank line of the thinking, with no answer. A plain API client (curl, an OpenAI SDK, an unnamed client) gets no status line in its content. A request that offered no \code{tools} never gets \code{tool_calls}: a call the model writes anyway is read out of the answer and dropped, and the finish stays \code{stop}.
+
+A JSON answer (\code{json_object}, \code{json_schema}) is parsed whole by its client, so a request that names no \code{reasoning_format} gets \code{reasoning_content} for it: the thinking goes to its own field and \code{message.content} is the JSON alone. A client that asks for \code{tags} keeps them. Such a request also gets the answer reserve a client's own thinking budget gets (Section~\ref{sec:client-budgets}), so the reasoning cannot spend \code{max_tokens} and cut the JSON, and it carries no status lines.
+
+\section{Streaming}\index{streaming}
+
+A streamed response sends one chunk per token, carries \code{usage} on the last chunk when the client asks for it (and by default, \code{--usage-default on}), then a chunk with \code{finish_reason} and \code{data: [DONE]}. A verify round accepts several tokens at once, so they reach the socket together: half the gaps between tokens are microseconds and the other half a whole round.
+
+\code{usage} counts what the client sent and what it received. \code{prompt_tokens} is the client's messages as the chat template renders them; the tokens the conductor adds (its new and replayed notes, and the closed think block of a turn it turned thinking off) are \code{usage.prompt_tokens_details.hidden_tokens}, absent when there are none, and \code{cached_tokens} is the client's tokens served from a cache: the cached span less the hidden tokens inside it, which the server tracks by position (an opencode turn that re-read 3,827 of its 24,706 client tokens used to report all 24,706 cached; it now reports 20,879). The engine's own counts of the whole prompt are in \code{timings}, and the ledger keeps them as \code{engine_cached} and \code{forwarded_tokens}.
+
+\code{finish_reason} is \code{stop}, \code{length}, \code{tool_calls}, \code{timeout} (the request's wall-clock cap) or \code{error}. On \code{error} the partial text has already been sent and an \code{error} object sits beside the finish reason. A client that hung up is logged as \code{abandoned}, not as an error. \code{server/stream.py} turns tokens into characters and holds back a trailing partial character until the next token completes it, so every character it sends is final and no replacement character reaches the client.
+
+\section{A long prefill, and a client that leaves}
+
+A long prompt prefills for minutes: 208.3~s at 128k tokens (\measured, the paper). After every prefill chunk the handler checks its socket. If the client has gone, the prefill stops there, the request ends \code{abandoned}, and the engine is free at once; the rows already prefilled stay resident, so a retry continues from there. A streamed prefill that has run for 5~s also sends an SSE comment after each chunk, at most once a second (\code{: prefill 12288/95131}). Clients ignore comment lines; proxies see a live stream and do not time it out.
+
+\section{Images}\index{images}
+
+A user, assistant or tool message may carry \code{image_url} parts with an \code{https://} or \code{data:image/...;base64,} URL. The server fetches and decodes them before the request queues and runs the checkpoint's own image processor: 16-pixel patches, 2 by 2 merge, 65,536 to 16,777,216 pixels. Each merged patch is one prompt row, so a 640 by 480 image is 300 rows, and those rows count as prompt tokens in \code{usage}. The vision tower\index{vision tower} (27 blocks, 0.92~GB, BF16) runs inside the prefill, when the first chunk that holds the image runs; the live view reads \enquote{Encoding image 1 of 2} meanwhile.
+
+A bad image is a 400 that names the part: a scheme other than https or data, a failed download, broken base64, a format the server does not read (it reads five: PNG, JPEG, WEBP, GIF, BMP), more than 20~MB, a header that declares more than 64 million pixels, more than 16 images in the newest message, more than 65,536 image rows in the newest message, an image in a system message, a video part, or any image when the server runs with \code{--vision off}. \code{--image-act-gb} (6) refuses an image whose encode would need more memory than that, before it queues.
+
+An https URL is a request the server makes for the client, so it is fenced. The host must resolve to public addresses only: loopback, private, link-local, shared, multicast and reserved ranges are refused, IPv4 inside IPv6 included. The connection goes to the address that was checked, with the certificate checked against the host name, so a second DNS answer cannot move it. A redirect is followed only to another https URL that passes the same check, at most 3 times. \code{--image-https-private on} lets URLs reach private addresses; \code{--image-https off} accepts data URLs only.
+
+A long conversation is not refused for the images it has gathered. A coding agent that reads a screenshot every few turns sends every earlier image again on every turn, so once it has read 17, every later request would be over the cap of 16. When the images are over \code{--max-images}\index{max-images@\texttt{-\kern0pt-max-images}} or \code{--max-image-rows}\index{max-image-rows@\texttt{-\kern0pt-max-image-rows}} and the excess is in earlier messages, the oldest images are left out instead, each replaced in the prompt by a fixed text. They go in steps of half the cap (8 by default), counted from the conversation's start, so the prompt's head that the caches resume stays the same for several turns. The response header \code{X-Tandem-Images-Left-Out} says how many.
+
+\section{Admission and limits}\index{admission}
+
+A sequence serves one request at a time, so requests wait for a free one in a bounded queue. The shipped profile has one sequence; Section~\ref{sec:parallel-requests} adds more.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Admission limits. Code defaults; the served values are in parentheses where they differ.}\label{tab:admission}
+\begin{tabularx}{\linewidth}{@{}L{.24\linewidth}L{.16\linewidth}Y@{}}
+\toprule
+\hd{limit} & \hd{value} & \hd{what happens} \\
+\midrule
+\code{--max-queue} & 8 & the next request gets a 503 with \code{Retry-After: 5} \\
+\code{--queue-timeout} & 120~s (240) & a request without a stream that waited that long gets a 429; a streamed chat request waits up to the request timeout \\
+\code{--request-timeout} & 900~s (3,600) & a generation that runs that long ends with \code{finish_reason: "timeout"} \\
+\code{--max-len} & 8,192 (262,144) & a prompt that does not fit gets a 400; \code{max_tokens} is clamped to what fits \\
+\code{--default-max-tokens} & 8,192 (32,768) & used when the request sends no \code{max_tokens} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+At load the server allocates the KV buffer for the whole context, so the context length is a memory decision taken before the first request (Table~\ref{tab:memory-split}).
+
+\section{The memory gate}\label{sec:memory-gate}\index{memory gate}
+
+Three limits hold the engine's memory. \code{--mem-ceiling-gib}\index{mem-ceiling-gib@\texttt{-\kern0pt-mem-ceiling-gib}} (70) is what the engine may hold between requests, allocated plus the allocator's reserve; a cache grows only while the engine stays under it. \code{--mem-peak-gib}\index{mem-peak-gib@\texttt{-\kern0pt-mem-peak-gib}} (77) is the ceiling plus the workspace of a 262,144-token prefill, what the engine may hold during a prefill. \code{--reserve-slack-gib}\index{reserve-slack-gib@\texttt{-\kern0pt-reserve-slack-gib}} (2) is how many free blocks the allocator may keep between requests; over it they go back to the driver after the request, never inside one.
+
+Before every prefill the gate brings the engine back under the ceiling and then checks that the prompt's estimated workspace fits under the peak. When it does not, it gives caches back, cheapest first (Figure~\ref{fig:memory-gate}). The last level releases the small models' own memory pools. Before a refusal the gate collects and empties the allocator once more, and a prompt whose workspace fits in the allocator's own free reserve is admitted. When nothing is enough, the request gets a 503 with \code{Retry-After} instead of running the board into its out-of-memory wedge, and the Dev view shows an error line with the allocated and reserved figures.
+
+\begin{figure}[htbp]
+\centering
+\input{figures/memory-gate}
+\caption[The memory gate]{The memory gate before every prefill. Each level is given back only while the prompt's workspace does not fit under the declared peak (77~GiB); a cache given back costs a later cold read, never a different token.}\label{fig:memory-gate}
+\end{figure}
+
+\section{The side lane}\label{sec:side-lane}\index{side lane}
+
+A short request does not wait for a long turn to end. When a request finds the engine busy and is short (at most 2,048 prompt tokens and 64 output tokens by default, one choice, no images, thinking off) and is either a raw request or a client's side request such as a title call, it becomes a job. The generation that holds the engine serves it at its next safe point, between two decode blocks or between two prefill chunks (\code{--side-lane decode} leaves the prefill out, \code{off} turns the lane off). The guest is prefilled from position 0 on the prefill's grid and decoded one token a forward with no drafter, so its answer is plain greedy decoding of its prompt.
+
+The generation gets the engine back as it was. \code{engine/cache.py}\index{engine/cache.py@\texttt{engine/cache.py}} \code{Borrow} copies what the guest can write: the KV rows the guest can reach, the recurrent state, the convolution tails, a walked chain state, and the record of a pending commit, copied unsettled so the next verify folds the same record into the same bytes. The drafter is never touched. A copy costs about 0.3~GB for a 2,000-token guest and is freed after it. \code{tests/test_side_lane.py} checks on the random model that the next block's logits, the state and every KV row are bit for bit an uninterrupted run's. The turn's text equals an uninterrupted run's only when its tree shapes are the same: the length router sizes blocks from timings measured inside the request (and, without \code{--no-learn-cost}, learned across requests), so a guest can change a later tree and a near tie can go the other way, as it can between two runs alone (Section~\ref{sec:two-runs}).
+
+\begin{figure}[htbp]
+\centering
+\input{figures/side-lane}
+\caption[The scheduler: side lane and queue]{The scheduler. A long turn holds the engine. Short guests (a title request, the router's own question) are served at the turn's next safe point and the turn gets its state back bit for bit. A second full turn waits in the queue; its stream opens after 10~s and carries a comment every 10~s.}\label{fig:side-lane}
+\end{figure}
+
+Measured on the engine (the 0.4.0 series, \code{tools/lane_check.py}, a 5,000-token prompt with 768 output tokens): with 10 short requests fired into it, the long request's reasoning and answer matched two runs alone in that hold. Nine of the ten were served in the lane, 1.2~s at the median and 5.1~s at most; the tenth asked for more output than the lane's cap and waited. The long request took 7.4~s longer, for 4.7~s the guests held the engine (\measured). A later measurement on the release's code parted at token 61 with guests, and at token 12 between two runs alone, both at near ties (Table~\ref{tab:two-runs}).
+
+Three guards apply. A job waits for a later safe point when the engine's memory plus the guest's copy and workspace would pass the declared peak. A disk-tier write that has not copied the rows below the guest yet stops where it is. A job no holder takes runs on its own thread under the lock. Side-lane rows are no speed sample: a short plain decode beside a turn says nothing about the engine's decode rate.
+
+\section{A turn behind a running turn}\index{waiting line}
+
+The side lane serves short requests only. A second session's full turn still waits for the running turn to end. A streamed chat request waits as long as one request may run (\code{--request-timeout}\index{request-timeout@\texttt{-\kern0pt-request-timeout}}). After 10~s in the queue its stream opens and an SSE comment\index{SSE comment} goes out every 10~s:
+
+\begin{plain}
+: waiting, position 1, about 40 s, 30 s so far
+\end{plain}
+
+A comment is not an event, so no client reads it as a token, and a client or proxy with an idle-read timeout keeps the connection. With the profile's progress lines on, the waiting line carries the same estimate (Chapter~\ref{ch:lines}). The estimate (\code{server/queue_wait.py}) reads the work of the request that holds the engine: the prefill it still has to read at its live rate, plus the tokens it is likely to still write, the 75th percentile of what earlier requests of its kind (thinking or not) wrote past the tokens it has written, never past its \code{max_tokens}, at its own decode rate. Each waiter ahead adds its typical time. Replayed over 3,716 requests of the reference box, with the waiter arriving at 10 to 90\,\% of each hold, the estimate for waits of 10 to 60~s was a median 0.52 of the real wait when it used only the hold times of earlier requests, and is 1.06 now; for waits over a minute 0.17 before and 0.59 now (\measured). Without a view of the holder, or with too few finished requests of its kind, the earlier rule stays: the median remaining hold time of requests that ran as long, and with too few of those the position only. A request without a stream cannot show that it is alive, so it keeps \code{--queue-timeout}\index{queue-timeout@\texttt{-\kern0pt-queue-timeout}} and its 429. A full queue is still refused at once with a 503. A request that has waited less than 2~s gets no line. When TandemLLM's own work holds the engine (the shadow reader, a summary prepared ahead), the line says so in plain words, and since that work yields at its next chunk, its estimate is the median of the waits requests really had behind it; the ledger's \code{wait_own_ms} records each request's time behind it.
+
+Two full turns are not interleaved on one sequence. Serving a second turn between the first one's blocks would mean prefilling its whole prompt and copying every KV row it can reach, each time it gets a slice; for a full turn that would cost more than it saves and hold two conversations' state at once. The client is told how long the wait is instead, unless the engine holds more than one sequence (Section~\ref{sec:parallel-requests}).
+
+\section{Parallel requests}\label{sec:parallel-requests}\index{parallel requests}
+
+With \code{--parallel N}\index{parallel@\texttt{-\kern0pt-parallel}} (\code{QSE_PARALLEL}, off by default) the engine builds N~-~1 side slots beside itself. Each is one sequence's complete state over the one copy of the weights: its own KV, recurrent state, verify graphs and drafter stack, \code{--side-max-len} tokens long (65,536). Slot~0 keeps the full window and every cache. A request takes a side slot when slot~0 is busy, its prompt and \code{max_tokens} fit, it has no images, and it does not continue slot~0's resident conversation; everything else about it is served by the same code. Whether a request continues that conversation is read off the client's own tokens: the server keeps the last slot-0 prompt whose rows stayed resident as the client's messages render it (no router note, no generated row), and a request whose rendered prompt starts with all of it, within one prefill chunk, waits for slot~0 and resumes in place. The resident rows themselves would not do: under a conductor plan they hold the router's notes and the end of the last generation, so an agent's next turn would never match and would read its whole conversation again on a side slot. TandemLLM's own work on slot~0 (the shadow reader, a summary being prepared, the memory writer, the router's question) gives way to a waiting request, so it never sends one to a side slot (a request waits for it up to 15~s). Two long agent sessions at once mostly take turns on slot~0, each resuming its own conversation (one in place, the other from the park or the disk): a side slot keeps no conversation, so a long agent turn there would read its whole prompt again. Measured with two opencode sessions started together (\measured, single runs): both done in 301~s taking turns, against 490~s with one of them on the side slot and 193~s one after the other. A side slot pays off for a new conversation, a short chat or a script. Sharing a client's head is not continuing a conversation: Open WebUI's system prompt and tool block (about 6,700 tokens) and opencode's (about 7,400) are the same for every chat, so a request continues slot~0's conversation only when the part it shares reaches past the end of its own first user message (\code{QWEN38_SIDE_CONV}). Without that rule a second Open WebUI tab asking a one-line question beside a short essay chat shared 6,675 of slot~0's 7,096 rows and waited 35.8~s with the side slot idle; with it, it ran on the side slot at once (TTFT 2.6~s, \measured, n~=~1). A side slot reads slot~0's disk tier, so that tab started from 6,144 tokens of the client's head on the NVMe (Section~\ref{sec:disk-tier}). One kind of request takes an idle side slot even when slot~0 is free: a guest of slot~0's conversation, short (at most \code{--resident-guest-max} tokens and under a quarter of it), sharing less than one prefill chunk with it, while slot~0 holds two chunks or more. The router's own questions before a new user message (its class and its package, 150 to 450 tokens) and a client's title, tags and follow-up tasks are such requests: on a side slot they cost the same prefill and leave slot~0's rows alone (\code{QWEN38_SIDE_GUESTS}, on). The side slots' buffers stay in the engine's memory limits whatever value a residency document gives the ceiling and the peak (\code{/health} \code{cache.memory.fixed}); in the test builds before this release the first request's document set them back and the caches lost the slot's 7.65~GiB, and the router's questions, refused their stash, cut the conversation's rows: replayed with one build (\measured, n~=~1 each), two new user messages after a 32,875-token conversation read 0\,\% from the cache (67.5 and 70.7~s) with the bytes lost and 99.9 and 99.3\,\% (6.4 and 9.4~s) with them. The \code{[parallel]} log line names the slot and why; the usage ledger's \code{slot} column records it.
+
+The GPU is shared in turns. Two or more decoding requests draft in one packed pass over the drafter and verify their trees in one joint pass: every projection runs once over all their rows, so the weights are read once, and each request's tree is cut to its share so the pass stays at or under 32 rows, the range where a row's result does not depend on its neighbours. A request alone keeps its own graphed verify. Admission by bytes keeps MemAvailable at or above \code{--parallel-floor-gb} (15): a request waits while its own prefill workspace, the other requests' and what the caches may still grow into, together at most the engine's room to \code{--mem-peak-gib}, would take it under the floor. Every cache and every prefill passes the memory policy, so the engine never takes more than that room. The wait is queue time (\code{wait_mem_ms} in the ledger) and the client gets a waiting line. A 26,236- and a 17,582-token prompt prefilled and decoded at once with MemAvailable at 28.7~GiB or more (\measured).
+
+Measured on one DGX Spark (\measured, single runs, four long-answer prompts of 384 tokens, store off): one request at a time 48.8~tok/s; two at once 67.4 in total (1.38$\times$), four 69.2 (1.42$\times$; 76.5 with \code{--parallel-cut joint}). With the flag on, one request at a time costs nothing. A side slot of 8,192 tokens takes 6.9 to 7.5~GiB beyond its window, most of it the pools of its 121 verify graphs.
+
+\paragraph{Beside the small models.} A box that also runs Laya and the narrator has less room. On a 128~GB DGX Spark at the 262,144-token window with Laya-english, the narrator (Qwen3.5-2B) and the shadow reader, MemAvailable at the worst moment with one sequence is about 22.7~GiB (\measured). Four 8,192-token slots (about 25~GiB) do not fit; two do, with one side slot of 65,536 tokens and \code{--side-graphs off}\index{side-graphs@\texttt{-\kern0pt-side-graphs}}: the slot then holds no verify graphs and verifies eager when it decodes alone (a joint pass is eager either way), about 1.5~GiB beyond its window instead of 7.5. The window matters more than the number of slots: a request takes a side slot only when its prompt, its \code{max_tokens} and the conductor's margin (8,192 tokens for a request it shapes) fit, and a chat client's \code{max_tokens} of 32,768 alone rules out an 8,192-token window. Side slots are built while the engine loads, before the residency planner loads Laya and the narrator, so the \code{residency} document's claims must be the models' measured sizes; with larger declared ones the planner refuses them. While two requests run, Laya answers only when slot~0 is idle (a decision forward takes the engine lock), and the narrator serves both requests, one line at a time.
+
+A request beside others writes its alone text up to a near tie (Chapter~\ref{ch:exactness}): its tree is cut to its share, another shape than alone, and the shape can move a near tie. On 30 prompts 17 texts were identical to their alone text at two requests and 15 at four, every first difference at a top-2 gap under 0.12 nats. \code{tools/parallel_bench.py} measures the totals and the agreement and proves from \code{/health} that the requests decoded together.
+
+\paragraph{Waiting for slot~0.} A request that continues slot~0's conversation prefers slot~0, but since 0.8.2 it waits there at most \code{QWEN38_SIDE_SLOT0_WAIT_S} seconds (3), then takes a free side slot its prompt fits in and prefills there what the disk tier does not hold. A request too long for every side slot still waits for slot~0. A match on the NVMe now counts as the request's conversation only when it reaches past the first user message; a match at the client's head, such as Open WebUI's system prompt and tool list, is logged as \code{spill_head=} and the request is a new conversation. On v0.8.0 such a head match held a new chat for 437~s while both side slots were free. \code{/health} \code{parallel} says how many requests may run at once (\code{max_running} with \code{max_running_reason}) and counts \code{spill_waits} and \code{slot0_gave_up}; the Lanes view's queued line says why a request waits, for example \enquote{Queued: all 3 slots are busy}.
+
+\paragraph{Images on a side slot.} Since 0.12.1 a request with images takes a side slot the way a text request does (\code{QWEN38_SIDE_IMAGES}, on; \code{off} keeps images on slot~0, as 0.12.0). Each side slot is its own engine over the same weights, with its own image context and rotary offset. The router expands each image to its rows on the host and keys them by the image's digest, as the caches do, and the window, the output cut and the memory admission count those rows: a screenshot of 1,280 by 800 pixels is 1,000 rows. On the 27B, one image request wrote the same 300 tokens on slot~1 as twice on slot~0 (\measured). Super VL's tower stays on slot~0.
+
+\section{A second model behind the same server}\label{sec:serving-flashnext}\index{Flash-Next!serving}
+
+\code{--model} with an EXL3 pack of Qwen3.8-Flash-Next serves that model through this server. The server reads the checkpoint's own configuration, finds its architecture in the registry (\code{engine/models}), and calls that entry's builder; it has no branch on the model's name (\code{tests/test_load_shared.py} fails on one). Everything in this chapter is the same code for every model: the request fields, reasoning formats and budgets, tool calls and grammar masks, penalties and \code{logit_bias}, logprobs, seeds, stops, streaming, the queue and the memory gate, the live view and the usage rows. Through the server, 19 of the 20 requests of \code{tools/fn_server_check.py} gave the same text, tool calls and logprobs with and without speculation; the 20th, a think budget at low effort, closes at a block boundary and differs after it (Section~\ref{sec:fn-exact}).
+
+A model's capabilities say what the server may ask beyond the request loop (\code{caps}). Flash-Next holds every cache, the KV pool and side slots, so parallel requests run on it without changing any answer, and its profiles turn them on with three slots (Chapter~\ref{ch:flashnext}). Images go through the same path: Flash-Next's builder hands the server its own tower on the EXL3 kernels (VIS-97), and its profiles run with \code{VISION=on}. One thing is off on Flash-Next: the conductor's shadow reader, because its outputs were validated on the 27B's reasoning only; its status says why. \code{/health} names the pack, its draft layer, the load time and the self-check.
+
+Since 0.8.2 the reference box serves Flash-Next with the conductor on, as it serves the 27B. Asked who it is, the model then answers that it is TandemLLM running the served model on the user's own machine: the conductor's identity note names the model from the pack's card. With the conductor off, v0.8.0 named another assistant in 20 of 20 answers. The Flash-Next profiles also load Laya, because the memory features ask a decision model whether a message means remember, forget or recall (about 20~ms); without it memory did not work on Flash-Next.
+
+\section{The tool-argument loop guard}\label{sec:argloop}\index{tool-argument loop guard}
+
+A model can loop inside a tool call, where the reasoning guards do not look. In one recorded case the model wrote the same 97-character row of a tile map 12,866 times inside a \code{write} call: 65,536 tokens, 327~s, nothing written, and the cut text made the next prompt 157,806 tokens. The lookup drafter copied the loop: all 31 draft tokens were accepted in 2,007 of its 2,209 blocks. The guard (\code{--argloop on|log|off}, \code{server/argloop.py}) reads the open call's arguments every 64 tokens once the block has 1,024 and fires on either of two rules. The periodic rule: the end of the block is one unit of at most 4,096 characters repeated exactly, 6 times over at least 1,024 tokens, or, for a unit of 256 characters or more, 3 times over at least 384 tokens. The size rule: the call passed 32,768 tokens and three times the request's longest message, and its last 16~KB compress 16 times or more.
+
+On the tile-map incident it fires 2,176 tokens into the call, 1,055 after the loop began. On a recorded Open WebUI call that looped on a 405-character piece of a sprite, it fires 448 tokens after the loop began, at three copies; the six-copy rule alone needed 1,024. On 4,780 real writes and edits from an opencode database it fires on none, with the long-unit rule or without it (\measured, \code{tools/argloop_fp.py}). Three identical frames of a sprite written in a row do not fire; a literal block of one line repeated over more than 1,024 tokens (600 zeros written out) does, with either rule. When it fires, the generation stops, the client gets one sentence and \code{finish_reason: "stop"}, and the session's next request with tools carries a hidden note naming the tool and the repeated piece: write it without the repetition, generate repeated rows with code, write a large file in parts. A call that already streamed part of its arguments keeps what was sent, and the cut text is never sent again as content.
+
+\paragraph{A stopped call sent back.} Open WebUI's tool loop answers a call whose arguments never closed with a tool error and sends the conversation again, the stopped arguments included. In the recorded case the model copied its own loop five times, byte for byte, about 55~s each, the prompt growing from 17,692 to 46,419 tokens. Now an assistant call in the history whose arguments do not parse (or a value of opencode's \code{invalid} stand-in) and end in a periodic stretch is cut to its first 1,500 characters and one marker before anything reads the messages; a call that parsed is never touched. The markers after the last user message are the retry streak: the retry's note says when the same loop came again, the router thinks one level higher on it (at least medium) unless the client turned thinking off, and after two identical stops in a row, or three of one tool, the engine does not generate again. The client gets one sentence and no call, and its tool loop ends.
+
+\section{Logs and privacy}\index{privacy}
+
+Each request leaves one log line (Chapter~\ref{ch:operations}), and no line carries the text of a prompt or an answer. The usage ledger (Chapter~\ref{ch:ref-metrics}) stores counts and timings, never text. The conductor's journal keeps the hidden texts the conductor itself wrote, for 30 days, and its transcripts keep a session's tool turns with secrets redacted, under the engine's home at mode 0600.

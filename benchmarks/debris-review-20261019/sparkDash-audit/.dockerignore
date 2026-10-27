@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.example
+*.log
+.DS_Store
+node_modules/
+
+# Don't skip server/ or config/ in Docker build
+# They are needed at runtime

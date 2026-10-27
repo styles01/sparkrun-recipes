@@ -1,0 +1,16 @@
+{
+  "model": "nemotron-3.5-bolt-74b-a9b",
+  "label": "Nemotron 3.5 Bolt 74B-A9B",
+  "packs": [
+    "nemotron-bolt-*"
+  ],
+  "context_limit": 262144,
+  "max_output": 32768,
+  "capabilities": {
+    "thinking": true,
+    "tools": true,
+    "vision": false,
+    "structured": true,
+    "parallel_tool_calls": true
+  }
+}

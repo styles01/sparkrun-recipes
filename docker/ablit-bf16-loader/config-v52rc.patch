@@ -1,0 +1,118 @@
+149a150,236
+> # --- plain-bf16 replacement modules (2026-10-20 oracle) --------------------------------
+> # Some packs (the dealignai 1017-UNCENSORED twin) replaced individual trellis
+> # modules with plain bf16 `.weight` after abliteration re-touched them: the
+> # twin carries layers 10..36 x {attn.wo_b, ffn.shared_experts.w2} as bf16 and
+> # keeps trellis everywhere else. The forced-Exl3 branch would KeyError on the
+> # missing trellis keys. Serving them through vLLM's stock bf16 path is exact
+> # (the tensor is the truth, nothing to dequantize), and row-parallel TP slicing
+> # of the out-major weight is natively the checkpoint layout.
+> _PLAIN_MODULES = ("attn.wo_b", "ffn.shared_experts.down_proj")
+> _PLAIN_DTYPES = ("BF16", "F16", "F32")
+> _PLAIN_HDR: dict[str, tuple[str, int] | None] = {}
+> 
+> 
+> def _ckpt_header_entry(mdir: str, shard: str, tensor: str) -> tuple[str, int] | None:
+>     """(dtype name, ndim) of a tensor from its shard's safetensors header, or None.
+> 
+>     Reads via os.pread on the raw fd: the buffered-open pattern broke inside the
+>     plugin's import context on the serve image ('read of closed file' mid-read);
+>     the 1 MB window covers the packs here (biggest header seen 485,440 B).
+>     """
+>     path = os.path.join(mdir, shard)
+>     key = f"{path}:{tensor}"
+>     if key in _PLAIN_HDR:
+>         return _PLAIN_HDR[key]
+>     entry = None
+>     try:
+>         fd = os.open(path, os.O_RDONLY)
+>         try:
+>             head = os.pread(fd, 8 + (1 << 20), 0)
+>         finally:
+>             os.close(fd)
+>         n = struct.unpack("<Q", head[:8])[0]
+>         hdr = json.loads(head[8:8 + n])
+>         e = hdr.get(tensor)
+>         if e:
+>             entry = (str(e.get("dtype")), len(e.get("shape") or []))
+>     except Exception:  # noqa: BLE001
+>         entry = None
+>     _PLAIN_HDR[key] = entry
+>     return entry
+> 
+> 
+> def _plain_ckpt_bf16(module: str, layer: int, mtp: int | None = None) -> bool:
+>     """True when the checkpoint stores this dense module instance as a plain
+>     2-D `.weight` (bf16/fp16/f32), with NO trellis of the module left.
+> 
+>     Decides the per-module-instance quant method purely from checkpoint key
+>     presence (index first, then the shard header for dtype): no config field,
+>     no name list. The module keeps the stock unquantized path so its plain
+>     weight loads through the default loader (TP per-rank slice as-is).
+>     """
+>     if module not in _PLAIN_MODULES:
+>         return False
+>     mdir = _model_dir()
+>     if mdir is None:
+>         return False
+>     patterns = _DENSE_TENSORS.get(module)
+>     if patterns is None:
+>         return False
+>     idx = _IDX_CACHE.get(mdir)
+>     if idx is None:
+>         try:
+>             with open(os.path.join(mdir, "model.safetensors.index.json")) as f:
+>                 idx = json.load(f).get("weight_map", {})
+>         except Exception:  # noqa: BLE001
+>             return False
+>         _IDX_CACHE[mdir] = idx
+>     if mtp is not None:
+>         prefix = f"mtp.{mtp}."
+>     else:
+>         prefix = ""
+>     for p in patterns:
+>         name = prefix + p.replace("{L}", str(layer))
+>         if idx.get(name) is not None:       # trellis present -> the EXL3 path owns the module
+>             return False
+>         plain = name[: -len(".trellis")] + ".weight"
+>         shard = idx.get(plain)
+>         if shard is None:                   # no trellis, no plain weight: not this pack's story
+>             return False
+>         entry = _ckpt_header_entry(mdir, shard, plain)
+>         if entry is None or entry[1] != 2 or entry[0] not in _PLAIN_DTYPES:
+>             logger.warning("EXL3 dense %s.%s: plain ckpt tensor %s unusable (%s %sD); keeping the EXL3 path",
+>                            module, layer, plain, entry[0] if entry else None, entry[1] if entry else "?")
+>             return False
+>     return True
+> 
+> 
+186a274,276
+> _MODEL_DIR_OVERRIDE: str | None = None
+> 
+> 
+187a278,279
+>     if _MODEL_DIR_OVERRIDE is not None:
+>         return _MODEL_DIR_OVERRIDE
+204,206c296,304
+<         with open(path, "rb") as f:
+<             n = struct.unpack("<Q", f.read(8))[0]
+<             hdr = json.loads(f.read(n))
+---
+>         # os.pread on the raw fd (see _ckpt_header_entry: buffered reads closed mid-frames
+>         # inside the plugin's import context on the serve image)
+>         fd = os.open(path, os.O_RDONLY)
+>         try:
+>             head = os.pread(fd, 8 + (1 << 20), 0)
+>         finally:
+>             os.close(fd)
+>         n = struct.unpack("<Q", head[:8])[0]
+>         hdr = json.loads(head[8:8 + n])
+364a463,470
+>                 if _plain_ckpt_bf16(dm[1], dm[0]):
+>                     # The checkpoint replaced this module with a plain bf16 weight (the abliteration
+>                     # re-quantization): nothing to decode, vLLM's stock path owns it (the inherited
+>                     # V4.1 base would force its FP8 scheme onto a scale-less weight - do NOT super()).
+>                     from vllm.model_executor.layers.linear import UnquantizedLinearMethod
+> 
+>                     logger.info("oracle-qm: PLAIN-BF16 %s L%s -> stock UnquantizedLinearMethod", dm[1], dm[0])
+>                     return UnquantizedLinearMethod()

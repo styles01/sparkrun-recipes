@@ -1,0 +1,78 @@
+# Recipe: qwen38-flash-next-exl3-native (P5 alternate lane)
+#
+# Status: PLANNED — not yet executed (no downloads, no installs).
+# Full plan: runbooks/qwen38-flash-next-exl3-native.md
+#
+# Role: single-stream deep-work/latency lane (~80-90 t/s code, 1 stream ONLY).
+# The daily driver stays qwen38-flash-next-vllm-nvfp4 (quality 91.9, concurrent).
+# NEVER co-resident with the NVFP4 lane — swap, don't stack.
+
+name: qwen38-flash-next-exl3-native
+description: >
+  Qwen3.8-Flash-Next EXL3 3.05bpw via native ExLlamaV3 (fork vcruz305@bf9e10f).
+  Single-stream latency lane: ~80 tok/s code (ViC305 79.95 / Yume 79.5 / Wesche 80.0),
+  90+ with per-expert-K kernel head. Quality TrueScore 84.6 (B) vs NVFP4 91.9.
+  NOT concurrency-capable — for concurrent multi-stream use the vllm-exl3 variant
+  (Path B in the runbook) or stay on NVFP4.
+
+model:
+  source: turboderp/Qwen3.8-Flash-Next-exl3
+  revision: 3.05bpw_h5_ng5
+  size_gb: 79.29
+  local_dir: ~/models/hf/turboderp/Qwen3.8-Flash-Next-exl3  # models rule: ~/models/ ONLY
+
+runtime:
+  kind: bare-venv            # NOT a container — exllamav3 JIT-builds for sm_121
+  engine: exllamav3-1.5.0
+  engine_source: https://github.com/vcruz305/exllamav3  # FORK, pin bf9e10f+
+  venv: ~/venvs/exl3-150
+  torch: "2.13.0"
+  cuda_arch: "12.1"
+
+env:
+  EXL3_INT8_GEMV: "0"        # int8 GEMV slower than fp16 on GB10
+  EXL3_MOE_COOP_WIDE: "1"    # wide 128-col MoE coop tile
+  EXL3_GR_INT8: "1"          # int8 hyperconnection mixers (+7-13%)
+  EXL3_MTP_HEAD_N: "65536"   # draft argmax over 64K lm_head slice
+  EXL3_NGRAM_STREAM: "0"
+  # EXL3_MIXEDK_LEGACY: "1"  # optional: +9% on sm_121 (fork f6e42ec) — A/B in Phase 1
+
+launch:
+  taskset: "5-9,15-19"       # 10 Cortex-X925 big cores only
+  argv: >-
+    examples/chat.py
+    -m ~/models/hf/turboderp/Qwen3.8-Flash-Next-exl3
+    -mode qwen35
+    -mtp -ndt 5 -dds -dc 0.6
+    -cq 8,8
+    -cs 262144
+    -tps
+  # -mtp -ndt 5 -dds -dc 0.6 = 5 drafts, dynamic-stop at confidence 0.6
+  # -cq 8,8 = 8-bit KV (+5% @4k, +11% @240k)
+  pre_load: ~/sparkrun-recipes/scripts/drop-model-cache.sh  # page cache is GPU-allocatable on GB10
+
+expected:
+  code_tps: 80              # triangulated 3x; 90+ w/ fork per-expert-K head (unverified on bf9e10f)
+  devops_tps: 62
+  prose_tps: 53
+  no_draft_tps: 33
+  ctx_240k_tps: 72          # 8-bit KV
+  prefill_tps: 1150         # flat to 480k
+  load_seconds: 30
+  resident_gb: 78.6
+
+swap:
+  stop_lane: ./stop.sh      # stop NVFP4 lane FIRST, verify memory free (HARD RULE)
+  restore: ./scripts/switch-to-qwen38-flash-next-vllm-nvfp4.sh
+
+gates:
+  phase1: reproduce 80 t/s code / 52 prose / 33 no-draft within 3 percent
+  phase2: >
+    safety + long-context + agentic probes on OUR evals (Wesche sub-scores are
+    single-source: safety 72.5, long-context 26.7 [contradicts Yume 15/15 needle
+    at 240k], agentic 88.1)
+  phase3: >
+    adopt as alternate lane only if 1+2 pass; wire SparkDash + Loca entry
+    qwen38-flash-next-exl3; NVFP4 stays default
+
+benchmark_rule: exact_tg true + tg 400+ (P2 rule) — never tg 128 without exact_tg

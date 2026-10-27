@@ -1,0 +1,80 @@
+\chapter{Ornith-1.5-122B}\label{ch:ornith}
+
+Ornith AI's Ornith-1.5-122B is an agentic and coding model on the Qwen3.5 mixture-of-experts layout. About 10B of its 122B parameters run for each token, and a decode token reads about 4.76~GB of our 4.0-bit EXL3 pack (\arith, from the headers). On one DGX Spark the engine decodes it at 37.2 to 38.4~tok/s plain and at 85.3 to 124.8~tok/s with its MTP layer and the lookup (\measured, 2026-10-20). Its support ships in release 0.13.0. This chapter says what is different about it and what is measured; Chapter~\ref{ch:adding-model} describes the adapter path it came in through.
+
+\section{The model}\index{Ornith-1.5-122B}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Ornith-1.5-122B beside Flash-Next.}\label{tab:orn-model}
+\begin{tabularx}{\linewidth}{@{}L{.2\linewidth}YL{.3\linewidth}@{}}
+\toprule
+\hd{part} & \hd{Ornith-1.5-122B} & \hd{Flash-Next} \\
+\midrule
+layers & 48: 36 Gated DeltaNet, 12 gated attention & 48: 36 Gated DeltaNet, 12 attention \\
+MLP & 256 experts a layer, 8 routed and 1 shared (sigmoid-gated) & 512 experts, 10 routed and 1 shared \\
+residual stream & one & 4 streams of 2,560 \\
+attention & dense, 2 KV heads of 256 & sparse past 2,051 tokens \\
+KV a token & 24,576 bytes, 2,048 more for the MTP layer & 29,952 bytes \\
+context & 262,144 tokens & 262,144 \\
+draft layer & one MTP layer & one MTP layer \\
+images & a Qwen3.5 vision tower, 27 blocks & a vision tower \\
+weights served & our EXL3 pack at 4.0 bits a weight & turboderp's EXL3 packs \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\code{engine/models/qwen3_5_moe} holds the trunk. It reads the configuration strictly and the EXL3 pack with its per-expert projections and mixed rates. The row step and the prefill run on Flash-Next's EXL3 kernels with one residual stream, and the router kernel takes up to 512 experts. The reference forward (\code{ref.py}) matches transformers on tiny random configs of both Qwen3.5 MoE shapes. The tokenizer has 248,320 ids, so the lookup keeps a suffix store of its own.
+
+\section{The pack}
+
+Our pack has every projection at 4 bits: the routed and shared experts, the Gated DeltaNet and the attention layers. The head is at 6 bits, the MTP layer at 4, and the vision tower at 6. exllamav3 1.6.2 converted it from the BF16 checkpoint at revision \code{e09bc0dfbe}. In layers 3 to 13, 13 routed experts have weights that are all zero once cast to fp16, and stock exllamav3 stops on them; the conversion used a patch that keeps their input scales, published in the pack's repository. The repository \code{0xBakeer/TandemLLM-Ornith-1.5-122B-EXL3-4.0} is public, 64.6~GB, pinned by commit (\code{92f7483c}).
+
+\begin{table}[htbp]
+\centering\small
+\caption[Ornith's quality]{The pack against the BF16 checkpoint's logits, 8 wikitext rows of 1,024 tokens (\code{tools/q35m_quality.py}), and this engine against exllamav3 1.6.0's own forward on the same pack, fed the engine's greedy tokens (512 positions). \measured, 2026-10-20.}\label{tab:orn-quality}
+\begin{tabularx}{\linewidth}{@{}L{.4\linewidth}Y@{}}
+\toprule
+\hd{check} & \hd{result} \\
+\midrule
+this engine against BF16 & KL 0.139, top-1 86.2~\%, perplexity 7.27 against 7.09 \\
+exllamav3's forward against BF16 & KL 0.136, perplexity 7.32 \\
+this engine against exllamav3's forward & top token at 498 of 512 positions (97.3~\%), KL 0.027 \\
+prefill against the engine's reference & the same top token \\
+a verify block's rows against the decode step & equal, chains of 2 to 32 rows and a tree \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The engine and exllamav3 do not agree on every token. Of the 14 positions where the top token differs, 9 have a margin under 0.5 logits, 2 a margin between 0.5 and 1, 2 between 1 and 2, and one over 4. The cause is not tested.
+
+\section{Drafting}
+
+The profile drafts with the pack's MTP layer as a chain of 3 and the lookup, in one tree that StairCut cuts with the pack's price file (\code{ops/prices/ornith-1.5-122b/}). After a round that StairCut cut to the anchor alone, the next 1, 2, 4, then 8 rounds take the plain step before the next draft (\code{QWEN38\_Q35M\_ANCHOR\_BACKOFF=8}); a round that drafts starts the count over. \code{QSE\_ORN\_HEAD=dflash2} drafts with incoai's DFlash2 drafter for Ornith instead (1.86~GB, Apache-2.0), with its projections in NVFP4 and its head over the 32,768 most used tokens; it takes 2.86~GiB.
+
+\begin{table}[htbp]
+\centering\small
+\caption[Ornith's speed]{Decode through the server, tok/s: one fresh server a row, greedy, thinking off, 512 new tokens on prompts of 3,146 to 4,165 tokens, one run a cell; the last column a 2,048-token code answer through the raw path. Every drafted text equals the plain one. \measured, 2026-10-20.}\label{tab:orn-speed}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \hd{prose} & \hd{code} & \hd{chat} & \hd{edit} & \hd{copy} & \hd{2,048 code} \\
+\midrule
+plain & 37.6 & 38.4 & 37.8 & 38.0 & 38.1 & 37.2 \\
+MTP layer + lookup (the profile) & 85.3 & 114.2 & 110.0 & 115.9 & 124.8 & 103.3 \\
+DFlash2 + lookup & 67.3 & 91.7 & 92.2 & 106.9 & 122.8 & 96.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Serving}
+
+One slot, a window up to 262,144 tokens, the pack's own vision tower on the EXL3 kernels (0.35~GB at load). The model thinks in a \code{<think>} block and calls tools in the XML form. The checkpoint's generation config sets the defaults: temperature 0.6, \code{top_k} 20, \code{top_p} 0.95. The conductor and Laya are on and the narrator is off; the conductor runs its default fit, which is not measured on this model yet. A start loads the pack in 65~s: the weights take 59.95~GiB, 61.16 with the MTP layer, and a start needs 93~GiB of free memory. \code{models/ornith-1.5-122b/measurements/0.13.0-summary.json} has the runs.
+
+\section{What is not measured}
+
+\begin{itemize}
+\item Requests at once: the joint verify of several slots is not built for this trunk yet (SRV-653), so the profile has one slot.
+\item Prompt reading speed, first-token times, images, sampled decoding and repeat runs.
+\item Any task benchmark beyond tool-eval-bench. On the 0.13.0 code, one run a row, it scored 93 and 94 on the raw path at every thinking setting, 96 with the conductor's \code{tools} profile, and 80 raw against 84 with the conductor in hard mode (\code{docs/tool-eval-bench.md}).
+\item The cause of the 14 differences from exllamav3's forward.
+\end{itemize}

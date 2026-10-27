@@ -1,0 +1,1154 @@
+{
+ "skill_dirs": [
+  "~/.config/opencode/skills",
+  "~/.qwen38-spark-engine/conductor/skills",
+  "~/.qwen38-spark-engine/conductor/skills/library",
+  "{repo}/packages/skills",
+  "{repo}/packages/library",
+  "{repo}/packages/everyday"
+ ],
+ "packages": {
+  "ui-design": {
+   "title": "UI design",
+   "kind": "skill",
+   "source": "inline",
+   "description": "Rules for layout, spacing, type, colour, states and responsive checks when building a web or app interface.",
+   "max_tokens": 3000,
+   "enabled": true,
+   "body_from": "inline/ui-design.md"
+  },
+  "pencil-sketch": {
+   "title": "Pencil sketch",
+   "kind": "skill",
+   "source": "skill:pencil-sketch",
+   "description": "Turn a reference image into an animated graphite pencil sketch on a canvas: tone, contours, hatching.",
+   "body": "",
+   "max_tokens": 4000,
+   "enabled": true
+  },
+  "spiral-portrait": {
+   "title": "Spiral portrait",
+   "kind": "skill",
+   "source": "skill:spiral-portrait",
+   "description": "A portrait drawn as one spiral line whose width follows the tone of a reference image.",
+   "body": "",
+   "max_tokens": 4000,
+   "enabled": true
+  },
+  "one-line-portrait": {
+   "title": "One-line portrait",
+   "kind": "skill",
+   "source": "skill:one-line-portrait",
+   "description": "A portrait drawn as one continuous line through a stipple of the image (TSP art).",
+   "body": "",
+   "max_tokens": 4000,
+   "enabled": true
+  },
+  "photo-to-3d": {
+   "title": "Photo to 3D",
+   "kind": "skill",
+   "source": "skill:photo-to-3d",
+   "description": "Rebuild one photo of a real place as a Three.js scene that matches the photo from a hero camera.",
+   "body": "",
+   "max_tokens": 4000,
+   "enabled": true
+  },
+  "voxel-seasons": {
+   "title": "Voxel seasons",
+   "kind": "skill",
+   "source": "skill:voxel-seasons",
+   "description": "Give a voxel island four seasons: palette, snow, particles, weather, sound, timelapse camera.",
+   "body": "",
+   "max_tokens": 4000,
+   "enabled": true
+  },
+  "coding": {
+   "title": "Coding",
+   "kind": "package",
+   "source": "inline",
+   "description": "How programming work must happen: short plan, small steps, run after each, verify by using it, no fake tests, done only with evidence.",
+   "max_tokens": 1500,
+   "enabled": true,
+   "body_from": "inline/coding.md",
+   "requires_tools": [
+    "shell"
+   ],
+   "fallback": "coding-answer"
+  },
+  "coding-answer": {
+   "title": "Coding without a shell",
+   "kind": "package",
+   "source": "inline",
+   "description": "How to write code in a chat that cannot run it: the whole file in the answer, checked by reading; stands in for the coding package when the request has no shell.",
+   "max_tokens": 600,
+   "enabled": true,
+   "body_from": "inline/coding-answer.md"
+  },
+  "files-care": {
+   "title": "The user's files",
+   "kind": "package",
+   "source": "inline",
+   "description": "Never overwrite the user's files: a new folder or file gets a name that is free, an existing file is read before it changes, a file that must be replaced is copied first, and the answer says so. Goes with every class that writes files.",
+   "max_tokens": 400,
+   "enabled": true,
+   "general": true,
+   "body_from": "inline/files-care.md",
+   "requires_tools": [
+    "write"
+   ]
+  },
+  "testing": {
+   "title": "Testing with TandemLLM",
+   "kind": "package",
+   "source": "inline",
+   "description": "How to make software observable and test it so the runtime can judge the evidence; goes with the coding package on every coding turn with tools.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "general": true,
+   "body_from": "inline/testing.md"
+  },
+  "test-web": {
+   "title": "Testing a web app or game",
+   "kind": "skill",
+   "source": "inline",
+   "description": "Testing a web app, a page, a canvas or a game in the browser, the way a user does - anything opened in a browser.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/test-web.md"
+  },
+  "test-cli": {
+   "title": "Testing a CLI",
+   "kind": "skill",
+   "source": "inline",
+   "description": "Testing a command-line program - a script with arguments, a tool that reads files or stdin - by running it on real input.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/test-cli.md",
+   "requires_tools": [
+    "shell"
+   ]
+  },
+  "test-api": {
+   "title": "Testing a backend or API",
+   "kind": "skill",
+   "source": "inline",
+   "description": "Testing a backend or an API - an HTTP service, its routes, a database behind it, a websocket - with real requests against the running server.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/test-api.md",
+   "requires_tools": [
+    "shell"
+   ]
+  },
+  "test-data": {
+   "title": "Testing a data script",
+   "kind": "skill",
+   "source": "inline",
+   "description": "Testing a data script - a transformation, a notebook turned into a script, a report from a file or a query - by proving its numbers.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/test-data.md",
+   "requires_tools": [
+    "shell"
+   ]
+  },
+  "test-lib": {
+   "title": "Testing a library",
+   "kind": "skill",
+   "source": "inline",
+   "description": "Testing a library - a module, a package, functions others call, a public API - with its test suite as the evidence.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/test-lib.md",
+   "requires_tools": [
+    "shell"
+   ]
+  },
+  "tools-opencode": {
+   "title": "opencode's tools: pitfalls",
+   "kind": "package",
+   "source": "inline",
+   "description": "The pitfalls of opencode's tools (browser, shell, files); the client tool card's fixed part for requests from opencode.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/tools-opencode.md"
+  },
+  "tools-hermes": {
+   "title": "Agent tools: pitfalls",
+   "kind": "package",
+   "source": "inline",
+   "description": "The pitfalls of an agent client's tools (terminal, browser, files) for clients other than opencode; the client tool card's fixed part.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/tools-hermes.md"
+  },
+  "tandem-harness": {
+   "title": "The runtime (harness card)",
+   "kind": "package",
+   "source": "inline",
+   "description": "The harness card - what the runtime (TandemLLM) is to the model, its notes, its checks and how to give it evidence; goes in on the first turn of a coding session with tools and after a compaction.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "body_from": "inline/tandem-harness.md",
+   "requires_tools": [
+    "shell"
+   ]
+  },
+  "laya-testing": {
+   "title": "Laya: the test judge you can call",
+   "kind": "package",
+   "source": "inline",
+   "description": "Laya, TandemLLM's fast decision model, is reachable from your scripts through the provider; ask it typed questions about test evidence and use its verdicts before you claim done. Goes with every coding turn that has tools.",
+   "max_tokens": 1200,
+   "enabled": true,
+   "general": true,
+   "body_from": "inline/laya-testing.md"
+  },
+  "laya-scripts": {
+   "title": "Scripts that ask Laya",
+   "kind": "package",
+   "source": "inline",
+   "description": "How to write test scripts (bash, Python, Node, or in the page) that call Laya through TandemLLM to judge logs, outputs, API responses, console and state dumps, many at once and in loops, with recipes for web apps and games, CLIs, APIs, data and regressions.",
+   "max_tokens": 1500,
+   "enabled": true,
+   "general": true,
+   "body_from": "inline/laya-scripts.md"
+  },
+  "algorithm-choice": {
+   "title": "algorithm choice",
+   "kind": "skill",
+   "source": "skill:algorithm-choice",
+   "description": "Choosing a data structure or algorithm for a task - sizing the input, complexity targets, hash maps versus sorted structures, sets, heaps, graphs (BFS, DFS, Dijkstra), dynamic programming, and checking with a brute-force oracle.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "auth-basics": {
+   "title": "auth basics",
+   "kind": "skill",
+   "source": "skill:auth-basics",
+   "description": "Adding login and authorization to a web app or API - password hashing, sessions or short-lived tokens, cookies with the right flags, protecting routes, and keeping secrets out of code and git.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "background-jobs": {
+   "title": "background jobs",
+   "kind": "skill",
+   "source": "skill:background-jobs",
+   "description": "Running work outside the request - queues, workers, scheduled tasks and retries in Python or Node, with idempotent jobs, timeouts and a way to see what ran.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "bash-scripting": {
+   "title": "bash scripting",
+   "kind": "skill",
+   "source": "skill:bash-scripting",
+   "description": "Writing shell scripts that fail loudly and handle paths safely - set -euo pipefail, quoting, arrays, functions, arguments, temp files with trap cleanup, and testing the error paths.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "browser-game": {
+   "title": "browser game",
+   "kind": "skill",
+   "source": "skill:browser-game",
+   "description": "Building a 2D browser game (platformer, shooter, puzzle) - game loop with fixed timestep, keyboard input, tile collisions, camera, HUD, lives and win state.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "canvas-2d": {
+   "title": "canvas 2d",
+   "kind": "skill",
+   "source": "skill:canvas-2d",
+   "description": "Drawing and animating on an HTML canvas with the 2D context - render loop, device pixel ratio, sprites, transforms, text, and keeping 60 fps.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "datetime-timezones": {
+   "title": "datetime timezones",
+   "kind": "skill",
+   "source": "skill:datetime-timezones",
+   "description": "Handling dates, times and time zones in Python and JavaScript - storing UTC, aware datetimes, parsing and formatting ISO-8601, converting for display, durations, DST pitfalls and date arithmetic.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "debug-method": {
+   "title": "debug method",
+   "kind": "skill",
+   "source": "skill:debug-method",
+   "description": "A method for fixing a bug when the cause is unknown - reproduce with the smallest input, read the state before the symptom, bisect by halves (input, code, commits), name one cause, change one thing, re-run the same reproduction.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "docker-basics": {
+   "title": "docker basics",
+   "kind": "skill",
+   "source": "skill:docker-basics",
+   "description": "Writing a Dockerfile and compose file for a service, reading container logs, and running an app in a container - layers, caching, non-root user, ports, volumes, health checks, and the project rule on where images get built.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "dom-events": {
+   "title": "dom events",
+   "kind": "skill",
+   "source": "skill:dom-events",
+   "description": "Vanilla JavaScript in the browser without a framework - DOM queries, event listeners, delegation, rendering state to HTML, and avoiding leaks.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "express-service": {
+   "title": "express service",
+   "kind": "skill",
+   "source": "skill:express-service",
+   "description": "Writing a Node.js HTTP API with Express - routers, JSON bodies, validation, error middleware, status codes, async handlers, environment config, and probing routes with curl.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "fastapi-service": {
+   "title": "fastapi service",
+   "kind": "skill",
+   "source": "skill:fastapi-service",
+   "description": "Writing a Python HTTP API with FastAPI (or Flask) - pydantic models, routers, validation errors, status codes, dependencies, settings from the environment, running with uvicorn and checking routes with curl.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "fetch-client": {
+   "title": "fetch client",
+   "kind": "skill",
+   "source": "skill:fetch-client",
+   "description": "Calling a REST or JSON API from browser or Node JavaScript with fetch - status handling, JSON errors, timeouts with AbortController, retries, auth headers, loading and error state in the UI.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "files-and-formats": {
+   "title": "files and formats",
+   "kind": "skill",
+   "source": "skill:files-and-formats",
+   "description": "Reading and writing files and data formats correctly - text encodings (UTF-8, BOM, latin-1), newlines, binary versus text, JSON, YAML, CSV with quoting, large files streamed, atomic writes, and paths with pathlib.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "git-workflow": {
+   "title": "git workflow",
+   "kind": "skill",
+   "source": "skill:git-workflow",
+   "description": "Day-to-day git for a coding task - small commits with clear messages, a branch per task, reading status and diff before committing, resolving merge conflicts, and never committing secrets or generated files.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "logging-observability": {
+   "title": "logging observability",
+   "kind": "skill",
+   "source": "skill:logging-observability",
+   "description": "Adding useful logs, metrics and a state endpoint to a service or script - structured log lines, levels, request ids, timing, log files the runtime can tail, and counters that answer \"what happened\".",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "matplotlib-plots": {
+   "title": "matplotlib plots",
+   "kind": "skill",
+   "source": "skill:matplotlib-plots",
+   "description": "Making clear charts with matplotlib (line, bar, scatter, histogram, multi-panel) saved to PNG or SVG - figure sizing, labels, units, legends, log axes, and checking the output image.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "numerical-precision": {
+   "title": "numerical precision",
+   "kind": "skill",
+   "source": "skill:numerical-precision",
+   "description": "Avoiding floating-point mistakes in code that computes money, statistics, physics or geometry - when to use integers or Decimal, comparing with tolerances, summation order, catastrophic cancellation, float32 limits, and rounding for display.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "numpy-performance": {
+   "title": "numpy performance",
+   "kind": "skill",
+   "source": "skill:numpy-performance",
+   "description": "Making numeric Python fast with NumPy - vectorizing loops, broadcasting, dtypes and memory, avoiding copies, and measuring with timeit before and after.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "pandas-cleaning": {
+   "title": "pandas cleaning",
+   "kind": "skill",
+   "source": "skill:pandas-cleaning",
+   "description": "Loading and cleaning tabular data with pandas - reading CSV and Excel, types, missing values, duplicates, dates, string normalization, joins, and proving row counts at every step.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "plan-feature": {
+   "title": "plan feature",
+   "kind": "skill",
+   "source": "skill:plan-feature",
+   "description": "Planning a multi-file feature before building it - clarify the outcome, list files and steps in build order, a test for each step, the risks, an estimate, and when to stop planning and start.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "processes-ports": {
+   "title": "processes ports",
+   "kind": "skill",
+   "source": "skill:processes-ports",
+   "description": "Starting servers and long-running commands from an agent shell - background with logs, waiting for a port, health checks, finding and killing stale processes, timeouts, and cleaning up at the end.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "profiling": {
+   "title": "profiling",
+   "kind": "skill",
+   "source": "skill:profiling",
+   "description": "Finding why a program is slow before changing it - timing the real case, Python cProfile and py-spy, Node --cpu-prof, browser performance traces, picking the one hot spot, and proving the gain with numbers.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "pytest-practice": {
+   "title": "pytest practice",
+   "kind": "skill",
+   "source": "skill:pytest-practice",
+   "description": "Writing and running Python tests with pytest - test layout, fixtures, parametrize, tmp_path, monkeypatch and mocking, testing a CLI or API, and reading the summary line.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "python-async": {
+   "title": "python async",
+   "kind": "skill",
+   "source": "skill:python-async",
+   "description": "Using asyncio in Python - async functions, gather with limits, timeouts, cancellation, running blocking code in a thread, async HTTP with httpx, and avoiding the event loop stalls.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "python-cli": {
+   "title": "python cli",
+   "kind": "skill",
+   "source": "skill:python-cli",
+   "description": "Writing a Python command-line tool with argparse or typer - subcommands, flags, stdin and stdout, exit codes, error messages, --dump-state, and a main() that tests can call.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "python-env-packaging": {
+   "title": "python env packaging",
+   "kind": "skill",
+   "source": "skill:python-env-packaging",
+   "description": "Setting up a Python project - virtual environment with venv or uv, pyproject.toml, pinned dependencies, src layout, entry points, and installing it in editable mode.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "react-basics": {
+   "title": "react basics",
+   "kind": "skill",
+   "source": "skill:react-basics",
+   "description": "Writing React components with hooks - useState, useEffect, derived values, lists with keys, forms, lifting state, and the common performance and re-render pitfalls.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "read-codebase": {
+   "title": "read codebase",
+   "kind": "skill",
+   "source": "skill:read-codebase",
+   "description": "Getting oriented in an unfamiliar repository before changing it - project rules files, entry points, build and test commands, the module map, data flow for one feature, and writing down what was learned.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "refactor-safely": {
+   "title": "refactor safely",
+   "kind": "skill",
+   "source": "skill:refactor-safely",
+   "description": "Changing the structure of existing code without changing its behavior - characterization tests first, small verified steps, renames and extractions, keeping the public API, and proving nothing changed.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "regex": {
+   "title": "regex",
+   "kind": "skill",
+   "source": "skill:regex",
+   "description": "Writing and testing regular expressions in Python and JavaScript - anchors, groups, character classes, greedy versus lazy, multiline flags, named groups, and testing against positive and negative examples before use.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "security-basics": {
+   "title": "security basics",
+   "kind": "skill",
+   "source": "skill:security-basics",
+   "description": "Basic security for web apps, APIs and scripts - input validation, SQL and command injection, XSS, path traversal, secrets handling, dependency checks, and the quick probes that prove a hole is closed.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "sql-queries-indexes": {
+   "title": "sql queries indexes",
+   "kind": "skill",
+   "source": "skill:sql-queries-indexes",
+   "description": "Writing correct and fast SQL queries - joins, aggregates, parameters against injection, pagination, N+1 avoidance, and choosing indexes with EXPLAIN in SQLite and PostgreSQL.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "sql-schema-migrations": {
+   "title": "sql schema migrations",
+   "kind": "skill",
+   "source": "skill:sql-schema-migrations",
+   "description": "Designing a relational schema in SQLite or PostgreSQL and changing it with migrations - tables, keys, constraints, timestamps, versioned migration files, applying and rolling back safely.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "svelte-basics": {
+   "title": "svelte basics",
+   "kind": "skill",
+   "source": "skill:svelte-basics",
+   "description": "Building a small app with Svelte 5 - runes ($state, $derived, $effect), components and props, events, each blocks with keys, stores versus runes, and the Vite project setup.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "threejs-scene": {
+   "title": "threejs scene",
+   "kind": "skill",
+   "source": "skill:threejs-scene",
+   "description": "Building a WebGL scene with Three.js - renderer, camera, lights, meshes, controls, resize, animation loop, and performance (draw calls, instancing, disposal).",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "ts-vite-build": {
+   "title": "ts vite build",
+   "kind": "skill",
+   "source": "skill:ts-vite-build",
+   "description": "Setting up TypeScript in a frontend or Node project with Vite or esbuild - tsconfig strict mode, types for props and API data, type narrowing, building and type-checking before done.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "web-a11y": {
+   "title": "web a11y",
+   "kind": "skill",
+   "source": "skill:web-a11y",
+   "description": "Accessibility basics for any web page or app - semantic elements, labels, keyboard focus, contrast, ARIA only when needed, screen-reader names.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "web-audio": {
+   "title": "web audio",
+   "kind": "skill",
+   "source": "skill:web-audio",
+   "description": "Playing and synthesizing sound in the browser with the Web Audio API - AudioContext unlock on a gesture, oscillators, samples, gain envelopes, timing on the audio clock.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "web-forms": {
+   "title": "web forms",
+   "kind": "skill",
+   "source": "skill:web-forms",
+   "description": "HTML forms with client-side validation and submission - input types, required and pattern, custom messages, error display, submit via fetch, and server-side revalidation.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "web-layout": {
+   "title": "web layout",
+   "kind": "skill",
+   "source": "skill:web-layout",
+   "description": "Building an HTML/CSS page layout with flexbox and grid that holds at 1280 px desktop and 390 px phone width - headers, sidebars, cards, columns, spacing.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "web-storage-offline": {
+   "title": "web storage offline",
+   "kind": "skill",
+   "source": "skill:web-storage-offline",
+   "description": "Persisting browser state with localStorage, sessionStorage and IndexedDB, and a minimal service worker for offline caching - versioned keys, try/catch, quotas, cache strategy.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "websockets": {
+   "title": "websockets",
+   "kind": "skill",
+   "source": "skill:websockets",
+   "description": "Realtime two-way messaging between browser and server with WebSockets (FastAPI or Node ws) - message schema, reconnect, heartbeats, broadcast, and testing with a scripted client.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "write-readme": {
+   "title": "write readme",
+   "kind": "skill",
+   "source": "skill:write-readme",
+   "description": "Writing or updating a README for a project or tool - what it is in two lines, install and run commands that were actually executed, configuration, a usage example with real output, and what is not covered.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true
+  },
+  "tandem-library": {
+   "title": "The skill library",
+   "kind": "package",
+   "source": "skill:tandem-library",
+   "description": "The TandemLLM skill library - short rules, pitfalls and snippets for common stacks and practices, and how to search it and read a skill from the shell before unfamiliar work.",
+   "body": "",
+   "max_tokens": 300,
+   "enabled": true
+  },
+  "laya-playtest": {
+   "title": "Laya plays your build",
+   "kind": "package",
+   "source": "inline",
+   "description": "Laya plays the software you built (a game, a UI flow, a CLI, an API sequence) through TandemLLM, one decision every ~250 ms from a fixed action set; the kit logs every decision, death and stuck spot and prints a report to fix the build from. Must be run on every interactive build before done.",
+   "max_tokens": 400,
+   "enabled": true,
+   "general": true,
+   "library": true,
+   "body_from": "inline/laya-playtest.md"
+  },
+  "tandem-memory": {
+   "title": "Memory card",
+   "kind": "package",
+   "source": "inline",
+   "description": "The memory card - how the model writes a note to its own memory with a hidden block, and when; goes in on every turn of a profile with memory on.",
+   "max_tokens": 300,
+   "enabled": true,
+   "body_from": "inline/tandem-memory.md"
+  },
+  "memory": {
+   "title": "memory",
+   "kind": "skill",
+   "source": "skill:memory",
+   "description": "How to use your own memory - when to keep a note, the scopes and kinds, updating instead of adding, forgetting, and searching or reading notes from the shell.",
+   "body": "",
+   "max_tokens": 700,
+   "enabled": true
+  },
+  "tandem-core": {
+   "title": "Core rules",
+   "kind": "package",
+   "source": "inline",
+   "description": "The runtime's own conventions, on every turn: tool arguments in their schema types, no literal think tags, one answer per turn, the size limits and the stop rule for long files, a final answer in plain words.",
+   "max_tokens": 300,
+   "enabled": true,
+   "general": true,
+   "body_from": "system/tandem-core/PACKAGE.md",
+   "requires_tools": []
+  },
+  "render-tools": {
+   "title": "Render tools",
+   "kind": "package",
+   "source": "inline",
+   "description": "How to use the render tool server of SRV-105 (render, audio_probe, package_read, package_search, the render_video interface): when to render, what to fix first, the renders per answer, the CDN allowlist. Goes in whole on every turn of a visual class whose chat offers a render tool.",
+   "max_tokens": 750,
+   "enabled": true,
+   "general": true,
+   "body_from": "system/render-tools/PACKAGE.md",
+   "requires_tools": [
+    "render"
+   ]
+  },
+  "eval-judge": {
+   "title": "Eval judge",
+   "kind": "package",
+   "source": "inline",
+   "description": "The judge prompt and the rubric format for eval runs: five scored items (match, composition, motion, sound, bugs) from three frames and the probes, one JSON object, the same scores for the same input. Named by the eval harness only; no class lists it.",
+   "max_tokens": 900,
+   "enabled": true,
+   "body_from": "system/eval-judge/PACKAGE.md",
+   "requires_tools": []
+  },
+  "workers": {
+   "title": "Workers",
+   "kind": "package",
+   "source": "inline",
+   "description": "The Chat tab's workers (Agents mode): the worker's instructions (PACKAGE.md), the main agent's delegation paragraph, the brief template and the report shape with its send-back, salvage and steer-note texts. chatd sends them to its task runs and its main agent; no class lists it.",
+   "max_tokens": 700,
+   "enabled": true,
+   "body_from": "system/workers/PACKAGE.md",
+   "requires_tools": []
+  },
+  "creative-coding": {
+   "title": "Creative coding",
+   "kind": "skill",
+   "source": "skill:creative-coding",
+   "description": "One-file HTML/JS visuals with sound - canvas or Three.js scenes, particles, simulations, generative art, small animated worlds with WebAudio ambience and effects; plan in three lines, write one file, render, fix the top three findings.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true,
+   "requires_tools": []
+  },
+  "charts": {
+   "title": "Charts",
+   "kind": "skill",
+   "source": "skill:charts",
+   "description": "A chart from data in the prompt (CSV, JSON or numbers in the text) as one SVG block in the house style - dark readout, cobalt series, signal-orange highlight, tabular numbers, units on the axes; line, bar, scatter, histogram, heatmap, sparkline, stat tile.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true,
+   "requires_tools": []
+  },
+  "voxel-worlds": {
+   "title": "Voxel worlds",
+   "kind": "skill",
+   "source": "skill:voxel-worlds",
+   "description": "A Three.js voxel world - an island with a pagoda, gardens, lakes, bridges, creatures with state machines, a day-night cycle, ambient sound, quality presets - built one feature at a time with a render after each, a to-do file and the frame rate held at its baseline.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true,
+   "requires_tools": []
+  },
+  "explainer-video": {
+   "title": "Explainer video",
+   "kind": "skill",
+   "source": "skill:explainer-video",
+   "description": "A short explainer video with synthesised sound rendered to an mp4 through the render_video tool - a scene script (title cards, numbers with their sources, schematic marks) and a sound cue list (bed, whoosh, chime, optional narration); every number on screen names its source.",
+   "body": "",
+   "max_tokens": 500,
+   "enabled": true,
+   "library": true,
+   "requires_tools": [
+    "render_video"
+   ],
+   "fallback": "explainer-video-script"
+  },
+  "explainer-video-script": {
+   "title": "Explainer video: the script",
+   "kind": "package",
+   "source": "inline",
+   "description": "Stands in for explainer-video in a chat without the render_video tool: deliver the scene script and the cue list as two JSON blocks so the video can be rendered later, with the same honesty rules.",
+   "max_tokens": 300,
+   "enabled": true,
+   "body_from": "inline/explainer-video-script.md",
+   "requires_tools": []
+  },
+  "everyday-core": {
+   "title": "Everyday answers",
+   "kind": "package",
+   "source": "skill:everyday-core",
+   "description": "How to answer everyday requests in a plain chat - in the user's language, in plain words, with the whole result in the answer, assumptions stated instead of questions, and the limits that keep advice on health, money and safety honest. Goes with every non-coding class.",
+   "body": "",
+   "max_tokens": 650,
+   "enabled": true,
+   "requires_tools": [],
+   "general": true
+  },
+  "write-message": {
+   "title": "Write message",
+   "kind": "skill",
+   "source": "skill:write-message",
+   "description": "Compose a message from the user to someone they name - an email, a text, a chat or WhatsApp message to a boss, colleague, landlord, teacher, customer, friend or family member - with the right tone (formal, friendly, firm, apologetic) and length, ready for the user to copy and send.",
+   "body": "",
+   "max_tokens": 850,
+   "enabled": true,
+   "requires_tools": [],
+   "deliverable": "send"
+  },
+  "formal-letter": {
+   "title": "Formal letter",
+   "kind": "skill",
+   "source": "skill:formal-letter",
+   "description": "Write an official letter to an authority, company, landlord, insurer, school or employer - a cancellation, complaint, objection, refund request, application, notice or request for information - in the formal layout of the user's country, with the facts, the demand and a deadline.",
+   "body": "",
+   "max_tokens": 950,
+   "enabled": true,
+   "requires_tools": [],
+   "deliverable": "send"
+  },
+  "cv-cover-letter": {
+   "title": "Cv cover letter",
+   "kind": "skill",
+   "source": "skill:cv-cover-letter",
+   "description": "Write or improve a CV (resume), a cover letter, a job application email, a LinkedIn summary or an answer to \"tell me about yourself\" - from the user's experience and the job advert, with results in numbers and nothing invented.",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "rewrite-text": {
+   "title": "Rewrite text",
+   "kind": "skill",
+   "source": "skill:rewrite-text",
+   "description": "Rewrite a text the user gives - make it shorter, longer, simpler, more formal, friendlier, clearer or more persuasive, or change it for a new audience - keeping its meaning and facts, and showing the result ready to use.",
+   "body": "",
+   "max_tokens": 800,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "proofread": {
+   "title": "Proofread",
+   "kind": "skill",
+   "source": "skill:proofread",
+   "description": "Correct spelling, grammar, punctuation and wording in a text the user gives, in any language, without changing its meaning or style - returning the corrected text and a short list of what was fixed.",
+   "body": "",
+   "max_tokens": 750,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "translate": {
+   "title": "Translate",
+   "kind": "skill",
+   "source": "skill:translate",
+   "description": "Translate a text, message, document or phrase between languages (for example German, English, Arabic, Turkish, French, Spanish) keeping the meaning, tone and layout, with a note on words that have no exact match - or explain what a foreign text says.",
+   "body": "",
+   "max_tokens": 950,
+   "enabled": false,
+   "requires_tools": []
+  },
+  "social-post": {
+   "title": "Social post",
+   "kind": "skill",
+   "source": "skill:social-post",
+   "description": "Write a post, caption, bio, announcement or short ad for social media or a group chat - Instagram, LinkedIn, Facebook, X, TikTok, WhatsApp groups, a marketplace listing - in the user's voice, the right length for the platform, with hashtags only where they help.",
+   "body": "",
+   "max_tokens": 750,
+   "enabled": false,
+   "requires_tools": [],
+   "deliverable": "post"
+  },
+  "creative-writing": {
+   "title": "Creative writing",
+   "kind": "skill",
+   "source": "skill:creative-writing",
+   "description": "Write something creative for the user - a bedtime story for a child, a short story, a poem, a song lyric, a birthday or wedding speech, a toast, a greeting-card verse, a riddle, or ideas for names - with the length, age, tone and names the user gives.",
+   "body": "",
+   "max_tokens": 850,
+   "enabled": false,
+   "requires_tools": []
+  },
+  "difficult-conversation": {
+   "title": "Difficult conversation",
+   "kind": "skill",
+   "source": "skill:difficult-conversation",
+   "description": "Help the user prepare a hard conversation or message with a person in their life - a partner, friend, parent, child, neighbour, boss or colleague - about a conflict, a boundary, bad news, an apology, a request for a raise, or a breakup: what to say, in which order, and what to expect back.",
+   "body": "",
+   "max_tokens": 1000,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "summarize-text": {
+   "title": "Summarize text",
+   "kind": "skill",
+   "source": "skill:summarize-text",
+   "description": "Summarise a long text the user pasted or uploaded - an article, report, PDF, email thread, meeting notes, transcript, contract or chat - into the key points, decisions, open questions and next actions, at the length the user wants, without adding anything.",
+   "body": "",
+   "max_tokens": 850,
+   "enabled": false,
+   "requires_tools": []
+  },
+  "explain-simply": {
+   "title": "Explain simply",
+   "kind": "skill",
+   "source": "skill:explain-simply",
+   "description": "Explain a topic, word, idea, process, device, news item or document the user does not understand - as to a smart beginner, with one everyday comparison, the few terms that matter, and an example - at a length that fits the question.",
+   "body": "",
+   "max_tokens": 1000,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "compare-options": {
+   "title": "Compare options",
+   "kind": "skill",
+   "source": "skill:compare-options",
+   "description": "Compare two or more things for the user - products, phones, cars, apps, subscriptions, cities, job offers, insurance plans, ways of doing something - on the points that matter for their case, as a table with a clear recommendation and what it depends on.",
+   "body": "",
+   "max_tokens": 850,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "decision-helper": {
+   "title": "Decision helper",
+   "kind": "skill",
+   "source": "skill:decision-helper",
+   "description": "Help the user make a personal decision they are stuck on - take the job or not, move cities, buy or rent, which course, break up or stay, keep the car or sell it - by setting out their options, what matters to them, the risks, and a reasoned recommendation they can disagree with.",
+   "body": "",
+   "max_tokens": 950,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "fact-check": {
+   "title": "Fact check",
+   "kind": "skill",
+   "source": "skill:fact-check",
+   "description": "Check whether a claim, rumour, forwarded message, news item, statistic, quote or \"did you know\" is true - saying what is established, what is doubtful, what is false, how sure you are and why, and how the user can verify it themselves.",
+   "body": "",
+   "max_tokens": 1000,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "understand-document": {
+   "title": "Understand document",
+   "kind": "skill",
+   "source": "skill:understand-document",
+   "description": "Explain an official or legal paper the user received - a bill, invoice, bank or tax letter, contract, terms, insurance policy, rental agreement, fine, court or authority letter, medical bill, form to fill in - what it says, what it wants from the user, by when, what it costs, and what to do.",
+   "body": "",
+   "max_tokens": 1100,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "trip-plan": {
+   "title": "Trip plan",
+   "kind": "skill",
+   "source": "skill:trip-plan",
+   "description": "Plan a trip, holiday, city break, road trip or day out - a day-by-day itinerary with areas, sights, food, travel times between stops and a rough budget - from the user's dates, place, travellers and interests, with what to book early and what to check before going.",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "weekly-schedule": {
+   "title": "Weekly schedule",
+   "kind": "skill",
+   "source": "skill:weekly-schedule",
+   "description": "Build a weekly or daily plan for the user - fitting work, study, family, sport, chores and rest into real hours - or sort a to-do list by priority into a doable day, with buffers and a plain table they can follow.",
+   "body": "",
+   "max_tokens": 900,
+   "enabled": true,
+   "requires_tools": [],
+   "deliverable": "schedule"
+  },
+  "meal-plan": {
+   "title": "Meal plan",
+   "kind": "skill",
+   "source": "skill:meal-plan",
+   "description": "Make a meal plan for the week or a few days with a matching shopping list - for the user's number of people, budget, diet (vegetarian, halal, no pork, gluten-free, diabetes-friendly), time to cook and what is already in the kitchen - with simple dishes and leftovers used on purpose.",
+   "body": "",
+   "max_tokens": 1000,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "budget-plan": {
+   "title": "Budget plan",
+   "kind": "skill",
+   "source": "skill:budget-plan",
+   "description": "Set up a personal or household budget, a saving plan for a goal (a trip, a car, an emergency fund), a plan to pay off debts, or check whether the user can afford something - from their income and costs, with the numbers worked out and shown, and the limits of what a chat can say about money.",
+   "body": "",
+   "max_tokens": 1150,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "event-plan": {
+   "title": "Event plan",
+   "kind": "skill",
+   "source": "skill:event-plan",
+   "description": "Plan a party or event - a birthday, children's party, dinner, barbecue, wedding part, baby shower, farewell at work, family gathering - with a timeline before the day, a run of the day, food and drink amounts for the number of guests, a shopping and to-do list and a rough budget.",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": true,
+   "requires_tools": [],
+   "deliverable": "schedule"
+  },
+  "checklist-builder": {
+   "title": "Checklist builder",
+   "kind": "skill",
+   "source": "skill:checklist-builder",
+   "description": "Make a complete, ordered checklist for a big life task - moving house, moving to another country, starting a new job, a new baby, a wedding, selling a car, packing for a trip, closing a flat, preparing for surgery or a long absence - with deadlines, documents, who to inform and what is easy to forget.",
+   "body": "",
+   "max_tokens": 1100,
+   "enabled": true,
+   "requires_tools": [],
+   "deliverable": "schedule"
+  },
+  "study-plan": {
+   "title": "Study plan",
+   "kind": "skill",
+   "source": "skill:study-plan",
+   "description": "Make a study plan for an exam, a course, a certificate, a driving test, a language level or a skill the user wants to learn - from the date, the material, the hours available and the current level - with a week-by-week plan, methods that work (recall, spacing, practice tests) and a check each week.",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "flashcards-quiz": {
+   "title": "Flashcards quiz",
+   "kind": "skill",
+   "source": "skill:flashcards-quiz",
+   "description": "Turn a text, chapter, notes, a topic or a vocabulary list into flashcards, a quiz, practice questions with answers, or a question-and-answer test - at the user's level and count - or run a quiz turn by turn: ask one question, wait, grade the answer, explain, continue.",
+   "body": "",
+   "max_tokens": 950,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "language-practice": {
+   "title": "Language practice",
+   "kind": "skill",
+   "source": "skill:language-practice",
+   "description": "Practise a language with the user - German, English, Arabic, French, Spanish, Turkish or another - as a conversation partner at their level, correcting their mistakes gently, explaining a grammar point with examples, or answering \"how do I say\", \"what is the difference between\", \"is this sentence right\".",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": false,
+   "requires_tools": []
+  },
+  "homework-help": {
+   "title": "Homework help",
+   "kind": "skill",
+   "source": "skill:homework-help",
+   "description": "Help a pupil, student or parent with homework or an exercise - maths, physics, chemistry, biology, history, geography, essays, a text analysis - by teaching the method step by step, checking the user's own attempt, and giving the final answer only after the way to it is clear.",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "recipe-cooking": {
+   "title": "Recipe cooking",
+   "kind": "skill",
+   "source": "skill:recipe-cooking",
+   "description": "Give a recipe or cooking help - what to cook from the ingredients the user has, a dish by name, a substitute for a missing ingredient, scaling a recipe for more or fewer people, fixing a dish that went wrong, cooking times and temperatures - with exact amounts and steps a beginner can follow.",
+   "body": "",
+   "max_tokens": 1050,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "home-howto": {
+   "title": "Home howto",
+   "kind": "skill",
+   "source": "skill:home-howto",
+   "description": "Practical help at home - a small repair (a dripping tap, a blocked drain, a loose hinge, a hole in the wall, a bike puncture), cleaning and stains, laundry, organising a room, caring for houseplants and a garden, keeping a cat, dog or small pet well - with the tools and materials, step-by-step instructions, and the point where a professional or vet is needed.",
+   "body": "",
+   "max_tokens": 1150,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "health-info": {
+   "title": "Health info",
+   "kind": "skill",
+   "source": "skill:health-info",
+   "description": "Answer a health question in plain words - a symptom, a cold, a fever in a child, a medicine and its common side effects, a lab value, a diagnosis the user was given, first aid, nutrition, stress or sleep - with what usually helps, the signs that mean see a doctor today or call emergency services now, and the clear limit of what a chat can tell.",
+   "body": "",
+   "max_tokens": 1250,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "fitness-sleep": {
+   "title": "Fitness sleep",
+   "kind": "skill",
+   "source": "skill:fitness-sleep",
+   "description": "Make a fitness, running, strength, stretching, walking, weight or sleep plan for the user - from their level, time, equipment, goal and any injury or condition - with a week-by-week plan, exact sets, reps, minutes and progression, a sleep routine with times, and the signs to stop or see a doctor.",
+   "body": "",
+   "max_tokens": 1200,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "gift-ideas": {
+   "title": "Gift ideas",
+   "kind": "skill",
+   "source": "skill:gift-ideas",
+   "description": "Suggest gifts or ways to celebrate for a person and an occasion - a birthday, anniversary, wedding, new baby, Christmas, Eid, Mother's Day, a thank-you, a farewell, a host gift - from the person's interests, age, relationship and the user's budget, as a short ranked list with why each fits, plus a short card text if asked.",
+   "body": "",
+   "max_tokens": 1000,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "parenting-help": {
+   "title": "Parenting help",
+   "kind": "skill",
+   "source": "skill:parenting-help",
+   "description": "Help a parent with a child or teenager - sleep, tantrums, eating, screen time, school trouble, siblings fighting, bedwetting, a shy or anxious child, homework fights, a teenager who will not talk - with what is normal at that age, a calm step-by-step approach to try for two weeks, and the signs that call for the paediatrician, school or a counsellor.",
+   "body": "",
+   "max_tokens": 1200,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "tech-troubleshoot": {
+   "title": "Tech troubleshoot",
+   "kind": "skill",
+   "source": "skill:tech-troubleshoot",
+   "description": "Help a non-technical person with a phone, computer, tablet, printer, TV, Wi-Fi, router, smart-home device, email, app or online account that does not work - find the likely cause from the symptom, give the steps to try in order with exactly where to tap or click, and say when to stop and call support or a shop.",
+   "body": "",
+   "max_tokens": 1200,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "security-scam": {
+   "title": "Security scam",
+   "kind": "skill",
+   "source": "skill:security-scam",
+   "description": "Tell whether a message, call, email, text, link, website, job offer, shop, investment or request for money is likely a scam, and what to do now - and give plain-language security help - passwords, two-step login, a hacked account, a lost phone, what to share online - for a person who is not technical.",
+   "body": "",
+   "max_tokens": 1300,
+   "enabled": true,
+   "requires_tools": []
+  },
+  "reply-format": {
+   "title": "Reply format",
+   "kind": "skill",
+   "source": "skill:reply-format",
+   "description": "An instruction about the form of your own reply, with nothing to write for anyone else: reply with one word, just OK, yes or no, a number, a set format or language, shorter or longer, no tools.",
+   "body": "",
+   "max_tokens": 290,
+   "enabled": true,
+   "requires_tools": []
+  }
+ }
+}

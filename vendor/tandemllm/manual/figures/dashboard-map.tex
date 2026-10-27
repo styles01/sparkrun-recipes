@@ -1,0 +1,21 @@
+% The dashboard's views and the server routes each reads.
+\begin{tikzpicture}[
+    tab/.style={draw=cobalt, fill=cobaltlight, rounded corners=2pt, font=\sffamily\small,
+      minimum width=24mm, minimum height=7mm},
+    src/.style={font=\ttfamily\scriptsize, text=slate, anchor=west, align=left},
+    node distance=2.4mm]
+  \node[tab] (usage) {Usage};
+  \node[tab, below=of usage] (perf) {Performance};
+  \node[tab, below=of perf] (dev) {Dev};
+  \node[tab, below=of dev] (play) {Playground};
+  \node[tab, below=of play, fill=signallight, draw=signal] (cond) {Conductor};
+  \node[tab, below=of cond] (back) {Backends};
+  \node[tab, below=of back] (sys) {System};
+  \node[src] at ([xshift=4mm]usage.east) {/v1/dashboard/summary, /usage \quad a year of tokens, cost by backend and user};
+  \node[src] at ([xshift=4mm]perf.east) {/v1/dashboard/live (SSE), /requests, /metrics, /parallel};
+  \node[src] at ([xshift=4mm]dev.east) {/v1/dashboard/logs \quad the live log, a request's detail};
+  \node[src] at ([xshift=4mm]play.east) {/v1/chat/completions \quad the OpenAI API itself};
+  \node[src] at ([xshift=4mm]cond.east) {/v1/conductor/* \quad decisions, documents, sessions, memory};
+  \node[src] at ([xshift=4mm]back.east) {/v1/config/* \quad backends, models, prices, rules, users};
+  \node[src] at ([xshift=4mm]sys.east) {/v1/dashboard/system \quad settings, memory plan, hosts};
+\end{tikzpicture}

@@ -1,0 +1,18 @@
+{
+  "package": "budget-plan",
+  "rubric": [
+    "The arithmetic is shown and correct: income minus fixed minus variable, shares in percent, the goal divided by months, debts by interest rate.",
+    "Guides (rent about a third, saving 10 to 20 %, 3 months emergency fund) called guides; two ways given when a goal does not fit.",
+    "3 to 5 moves from the user's own list, each with a monthly amount; one action for this month.",
+    "No product, fund, bank or loan recommended; no invented rates or prices; the limit line names who must confirm (adviser, consumer centre, tax office).",
+    "Money that does not cover the basics is said plainly with the free debt-advice type and the two first steps; no shaming."
+  ],
+  "prompts": [
+    {"id": "budget-plan-1", "lang": "en", "text": "I earn 2,900 net, rent 1,150, insurance and phone 180, car 320, food about 450, going out 300. I want to save for a 15,000 car in 2 years. Does it work?"},
+    {"id": "budget-plan-2", "lang": "de", "text": "Ich habe drei Schulden: Kreditkarte 2.400 Euro bei 18 %, Ratenkredit 6.000 bei 6 %, Handy 500 bei 0 %. Ich kann 350 Euro im Monat extra zahlen. Wie tilge ich am besten?"},
+    {"id": "budget-plan-3", "lang": "ar", "text": "راتبي 4,500 ريال، الإيجار 1,800، الأكل 900، المواصلات 400، أرسل 500 لأهلي. أريد توفير 20,000 لزواجي خلال سنتين. كيف أرتب ميزانيتي؟"},
+    {"id": "budget-plan-4", "lang": "en", "text": "Can I afford a flat at 1,400 a month? I take home 3,100 and have no debts but also no savings."},
+    {"id": "budget-plan-5", "lang": "de", "text": "Wir sind zu zweit, 4.200 netto zusammen, und am Monatsende ist nie was übrig. Wo fängt man an, das zu verstehen?"},
+    {"id": "budget-plan-6", "lang": "en", "text": "Student, 950 a month from my parents and a job, rent 480, I keep overdrawing. Help me make a budget I can actually keep."}
+  ]
+}

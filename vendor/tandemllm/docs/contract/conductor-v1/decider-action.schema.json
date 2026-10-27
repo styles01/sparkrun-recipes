@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor decider action",
+  "description": "POST /v1/conductor/deciders/models/{name}/load (202 started, 409 refused by the residency planner with its decision), .../unload (200), and POST /v1/conductor/deciders/autoload (202, `queued`: the on_start models, loaded one after the other in the background)",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "not_loaded",
+        "loading",
+        "warming",
+        "loaded",
+        "unloading",
+        "failed"
+      ]
+    },
+    "decision": {
+      "$ref": "#/$defs/decision"
+    },
+    "queued": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "message"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "decision": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "server/conductor/residency.py check(): the planner's decision with the numbers it was made on",
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "allowed": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "refused_hold",
+            "refused_load_in_progress",
+            "refused_memory",
+            "refused_unknown_role"
+          ]
+        },
+        "mem_available_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "claim_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "basis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "floor_gib": {
+          "type": "number"
+        },
+        "margin_gib": {
+          "type": "number"
+        },
+        "need_gib": {
+          "type": "number"
+        },
+        "after_gib": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "state": {
+          "enum": [
+            "not_loaded",
+            "loading",
+            "warming",
+            "loaded",
+            "unloading",
+            "failed"
+          ]
+        },
+        "at": {
+          "type": "number"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "ts": {
+          "type": "number"
+        },
+        "engine_peak_gib": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "OPS-47: the engine's declared peak (MEM_PEAK_GIB), GiB"
+        },
+        "engine_now_gib": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "OPS-47: what the engine's allocator holds now (reserved, the decision models left out), GiB"
+        },
+        "engine_growth_gib": {
+          "type": "number",
+          "description": "OPS-47: what the engine may still take, peak minus now (the whole peak with no reading), subtracted before the claim"
+        }
+      },
+      "required": [
+        "allowed",
+        "reason"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,966 @@
+from __future__ import annotations
+
+import math
+from warnings import warn
+from contextlib import contextmanager
+from enum import Enum
+from functools import partial, wraps, cached_property
+import typing
+from typing import Union, Callable, List, Sequence, TypeVar, Optional, Tuple
+from dataclasses import dataclass
+import builtins
+from .. import knobs
+from ..runtime.jit import JITCallable
+import inspect
+
+from .._C.libtriton import ir
+from .._utils import TRITON_MAX_TENSOR_NUMEL, validate_block_shape, get_primitive_bitwidth, _tuple_create
+
+T = TypeVar('T')
+
+TRITON_BUILTIN = "__triton_builtin__"
+
+PropagateNan = ir.PROPAGATE_NAN
+
+
+def must_use_result(x, s=True):
+    """If the result of this function is unused, throw an error."""
+    if isinstance(x, str):
+        return (lambda fn: must_use_result(fn, x))
+    x._must_use_result = s
+    return x
+
+
+def builtin(fn: T) -> T:
+    """Mark a function as a builtin."""
+    assert callable(fn)
+
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if "_semantic" not in kwargs or kwargs["_semantic"] is None:
+            raise ValueError("Did you forget to add @triton.jit ? "
+                             "(`_semantic` argument must be provided outside of JIT functions.)")
+        return fn(*args, **kwargs)
+
+    setattr(wrapper, TRITON_BUILTIN, True)
+    wrapper.signature = inspect.signature(fn)
+
+    return wrapper
+
+
+def _tensor_member_fn(fn: T) -> T:
+    """Decorator that adds this free function as a member fn on class tensor.
+
+    When called as a member function on class tensor, the first argument to `fn`
+    is `self`, i.e. the tensor object.
+
+    If there are multiple decorators on a function, you probably want this one
+    to be the highest one (i.e. furthest from the function's `def`), so it's
+    applied last.
+
+    Unfortunately you still need to add a type stub to the body of class tensor
+    in order for pytype to know about it.
+    """
+    assert callable(fn)
+    orig_sig = inspect.signature(fn)
+    # Does fn take args other than _semantic, _generator, and the tensor itself?
+    has_args = len(orig_sig.parameters.keys() - {"_semantic", "_generator"}) > 1
+
+    if not fn.__doc__:
+        fn.__doc__ = ""
+    fn.__doc__ += f"""
+    This function can also be called as a member function on :py:class:`tensor`,
+    as :code:`x.{fn.__name__}({"..." if has_args else ""})` instead of
+    :code:`{fn.__name__}(x{", ..." if has_args else ""})`.
+    """
+
+    def wrapper(*args, **kwargs):
+        return fn(*args, **kwargs)
+
+    # Match the signature of `fn`, but change the first arg to `self` so the
+    # docs are a little less weird.
+    new_params = list(orig_sig.parameters.values())
+    new_params[0] = new_params[0].replace(name='self')
+    new_sig = orig_sig.replace(parameters=new_params)
+    wrapper.__signature__ = new_sig
+    wrapper.signature = new_sig
+    wrapper.__doc__ = f"Forwards to :py:func:`{fn.__name__}` free function"
+    # If fn is a builtin, mark the wrapper as a builtin too.
+    if is_builtin(fn):
+        setattr(wrapper, TRITON_BUILTIN, True)
+
+    setattr(tensor, fn.__name__, fn if isinstance(fn, JITCallable) else wrapper)
+    return fn
+
+
+def _unwrap_iterable(x):
+    """Returns x[0] if x has one element and x[0] is iterable."""
+    if len(x) == 1:
+        # Determine whether x[0] is iterable.
+        #
+        # You might want to use collections.abc.Iterable instead of this
+        # try/except block.  Unfortunately, this doesn't work with constexpr.
+        #
+        # The problem is that abc.Iterable checks for __iter__ on the *class*.
+        # But we want constexpr to expose an __iter__ method if and only if the
+        # wrapped *object* (i.e. self.value) is iterable.  Therefore there's no
+        # right answer for whether the class constexpr defines __iter__, and
+        # abc.Iterable doesn't work (at least not without some metaclass magic).
+        try:
+            iter(x[0])
+            return x[0]
+        except TypeError:
+            pass
+
+    return x
+
+
+def is_builtin(fn) -> bool:
+    """Is this a registered triton builtin function?"""
+    return getattr(fn, TRITON_BUILTIN, False)
+
+
+@builtin
+def to_tensor(x, _semantic=None):
+    return _semantic.to_tensor(x)
+
+
+# -----------------------
+# constexpr
+# -----------------------
+
+
+class const:
+    """
+    This class is used as a type annotation to mark pointers to constant data.
+    The `store` function cannot be called with a pointer to const. Constness
+    is part of the pointer type and the usual Triton type consistency rules
+    apply. For example you cannot have a function that returns constant pointer
+    in one return statement and non-constant pointer in another.
+    """
+    pass
+
+
+class base_value:
+    """Base class of values that exist in the triton IR (i.e. not constexprs).
+    """
+    type: base_type
+
+    def _flatten_ir(self, handles: List[ir.value]) -> None:
+        """Flatten frontend value into a sequence of mlir handles, which are appended
+        to the output list
+        """
+        raise NotImplementedError
+
+
+class base_type:
+
+    def __eq__(self, other) -> bool:
+        raise NotImplementedError("Types must implement __eq__")
+
+    def __ne__(self, other) -> bool:
+        return not (self == other)
+
+    def _unflatten_ir(self, handles: List[ir.value], cursor: int) -> Tuple[base_value, int]:
+        """Build a frontend value with the current dtype, wrapping a list of existing handles.
+        cursor is the index of the first handle relevant to this value, and the function
+        should return the updated cursor position after any handles consumed by the created value.
+        """
+        raise NotImplementedError
+
+    def mangle(self) -> str:
+        raise NotImplementedError(f"NYI: Type mangling for type {self.__class__}")
+
+    def _flatten_ir_types(self, builder: ir.builder, out: List[ir.type]) -> None:
+        raise NotImplementedError
+
+
+class constexpr_type(base_type):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, constexpr_type) and self.value == other.value
+
+    def __repr__(self) -> str:
+        return f"constexpr_type[{self.value}]"
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def mangle(self) -> str:
+        if hasattr(self.value, "mangle"):
+            val = self.value.mangle()
+        else:
+            val = repr(self.value)
+        return f"c{val}"
+
+    def _flatten_ir_types(self, builder: ir.builder, out: List[ir.type]) -> None:
+        return
+
+    def _unflatten_ir(self, handles: List[ir.value], cursor: int) -> Tuple[base_value, int]:
+        return constexpr(self.value), cursor
+
+
+class constexpr(base_value):
+    """
+    This class is used to store a value that is known at compile-time.
+    """
+
+    def __init__(self, value):
+        while isinstance(value, constexpr):
+            value = value.value
+        self.value = value
+        self.type = constexpr_type(value)
+
+    def __repr__(self) -> str:
+        return f"constexpr[{self.value}]"
+
+    def __hash__(self):
+        return hash((self.value, self.type))
+
+    def _flatten_ir(self, handles: List[ir.value]) -> None:
+        return
+
+    def __index__(self):
+        return self.value
+
+    # In interpreter mode, constant values are not wrapped in constexpr,
+    # and therefore do not have a .value attribute.
+    # As a result, from here and below, we need to call the _unwrap_if_constexpr
+    # function to obtain either constexpr.value or the value itself.
+    def __add__(self, other):
+        return constexpr(self.value + _unwrap_if_constexpr(other))
+
+    def __radd__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) + self.value)
+
+    def __sub__(self, other):
+        return constexpr(self.value - _unwrap_if_constexpr(other))
+
+    def __rsub__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) - self.value)
+
+    def __mul__(self, other):
+        return constexpr(self.value * _unwrap_if_constexpr(other))
+
+    def __mod__(self, other):
+        return constexpr(self.value % _unwrap_if_constexpr(other))
+
+    def __rmul__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) * self.value)
+
+    def __truediv__(self, other):
+        return constexpr(self.value / _unwrap_if_constexpr(other))
+
+    def __rtruediv__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) / self.value)
+
+    def __floordiv__(self, other):
+        return constexpr(self.value // _unwrap_if_constexpr(other))
+
+    def __rfloordiv__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) // self.value)
+
+    def __gt__(self, other):
+        return constexpr(self.value > _unwrap_if_constexpr(other))
+
+    def __rgt__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) > self.value)
+
+    def __ge__(self, other):
+        return constexpr(self.value >= _unwrap_if_constexpr(other))
+
+    def __rge__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) >= self.value)
+
+    def __lt__(self, other):
+        return constexpr(self.value < _unwrap_if_constexpr(other))
+
+    def __rlt__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) < self.value)
+
+    def __le__(self, other):
+        return constexpr(self.value <= _unwrap_if_constexpr(other))
+
+    def __rle__(self, other):
+        return constexpr(_unwrap_if_constexpr(other) <= self.value)
+
+    def __eq__(self, other):
+        return constexpr(self.value == _unwrap_if_constexpr(other))
+
+    def __ne__(self, other):
+        return constexpr(self.value != _unwrap_if_constexpr(other))
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __neg__(self):
+        return constexpr(-self.value)
+
+    def __and__(self, other):
+        return constexpr(self.value & _unwrap_if_constexpr(other))
+
+    def logical_and(self, other):
+        return constexpr(self.value and _unwrap_if_constexpr(other))
+
+    def __or__(self, other):
+        return constexpr(self.value | _unwrap_if_constexpr(other))
+
+    def __xor__(self, other):
+        return constexpr(self.value ^ _unwrap_if_constexpr(other))
+
+    def logical_or(self, other):
+        return constexpr(self.value or _unwrap_if_constexpr(other))
+
+    def __pos__(self):
+        return constexpr(+self.value)
+
+    def __invert__(self):
+        return constexpr(~self.value)
+
+    def __pow__(self, other):
+        return constexpr(self.value**_unwrap_if_constexpr(other))
+
+    def __rpow__(self, other):
+        return constexpr(_unwrap_if_constexpr(other)**self.value)
+
+    def __rshift__(self, other):
+        return constexpr(self.value >> _unwrap_if_constexpr(other))
+
+    def __lshift__(self, other):
+        return constexpr(self.value << _unwrap_if_constexpr(other))
+
+    def __not__(self):
+        return constexpr(not self.value)
+
+    def __iter__(self):
+        return iter(self.value)
+
+    def __call__(self, *args, **kwds):
+        return self.value(*args, **kwds)
+
+    def __getitem__(self, *args):
+        args = (_unwrap_if_constexpr(x) for x in _normalize_tuple(args))
+        return self.value.__getitem__(*args)
+
+
+CONSTEXPR_0 = constexpr(0)
+
+
+def _unwrap_if_constexpr(o):
+    if isinstance(o, list):
+        return [_unwrap_if_constexpr(x) for x in o]
+    if isinstance(o, builtins.tuple):
+        return _tuple_create(o, [_unwrap_if_constexpr(x) for x in o])
+    if isinstance(o, tuple):
+        return tuple([_unwrap_if_constexpr(x) for x in o], o.type)
+    return o.value if isinstance(o, constexpr) else o
+
+
+def _normalize_tuple(t):
+    normalized_tuple = _unwrap_if_constexpr(t)
+    if isinstance(normalized_tuple, (list, builtins.tuple)):
+        normalized_tuple = tuple(normalized_tuple)
+    return normalized_tuple
+
+
+def check_bit_width(value, shift_value):
+    if isinstance(value, tensor) and isinstance(shift_value, constexpr):
+        bitwidth = value.type.scalar.primitive_bitwidth
+        if shift_value.value >= bitwidth:
+            warn(
+                f"Value {shift_value.value} exceeds the maximum bitwidth ({bitwidth}) for type '{value.dtype}'. This may result in undefined behavior."
+            )
+
+
+# -----------------------
+# dtype
+# -----------------------
+
+
+class dtype(base_type):
+    SINT_TYPES = ['int8', 'int16', 'int32', 'int64']
+    UINT_TYPES = ['int1', 'uint8', 'uint16', 'uint32', 'uint64']
+    FP_TYPES = ['fp8e4b15', 'fp8e4nv', 'fp8e4b8', 'fp8e5', 'fp8e5b16', 'fp16', 'bf16', 'fp32', 'fp64']
+    STANDARD_FP_TYPES = ['fp16', 'bf16', 'fp32', 'fp64']
+    OTHER_TYPES = ['void']
+
+    class SIGNEDNESS(Enum):
+        SIGNED = 0
+        UNSIGNED = 1
+
+    class KIND(Enum):
+        BOOLEAN = 0
+        INTEGRAL = 1
+        FLOATING = 2
+
+    def __init__(self, name):
+        name = _unwrap_if_constexpr(name)
+        self.name = name
+        assert name in dtype.SINT_TYPES + dtype.UINT_TYPES + dtype.FP_TYPES + dtype.OTHER_TYPES, name
+        self.primitive_bitwidth = get_primitive_bitwidth(name)
+        self.itemsize = self.primitive_bitwidth // 8
+        if name in dtype.SINT_TYPES:
+            self.int_signedness = dtype.SIGNEDNESS.SIGNED
+            self.int_bitwidth = self.primitive_bitwidth
+        elif name in dtype.UINT_TYPES:
+            self.int_signedness = dtype.SIGNEDNESS.UNSIGNED
+            self.int_bitwidth = self.primitive_bitwidth
+        elif name in dtype.FP_TYPES:
+            if name == 'fp8e4b15':
+                self.fp_mantissa_width = 3
+                self.exponent_bias = 15
+            elif name == 'fp8e4nv':
+                self.fp_mantissa_width = 3
+                self.exponent_bias = 7
+            elif name == 'fp8e4b8':
+                self.fp_mantissa_width = 3
+                self.exponent_bias = 8
+            elif name == 'fp8e5':
+                self.fp_mantissa_width = 2
+                self.exponent_bias = 15
+            elif name == 'fp8e5b16':
+                self.fp_mantissa_width = 2
+                self.exponent_bias = 16
+            elif name == 'fp16':
+                self.fp_mantissa_width = 10
+                self.exponent_bias = 15
+            elif name == 'bf16':
+                self.fp_mantissa_width = 7
+                self.exponent_bias = 127
+            elif name == 'fp32':
+                self.fp_mantissa_width = 23
+                self.exponent_bias = 127
+            elif name == 'fp64':
+                self.fp_mantissa_width = 52
+                self.exponent_bias = 1023
+            else:
+                raise RuntimeError(f'Unsupported floating-point type {name}')
+
+    def is_fp8(self):
+        return 'fp8' in self.name
+
+    def is_fp8e4nv(self):
+        return self.name == 'fp8e4nv'
+
+    def is_fp8e4b8(self):
+        return self.name == 'fp8e4b8'
+
+    def is_fp8e4b15(self):
+        return self.name == 'fp8e4b15'
+
+    def is_fp8e5(self):
+        return self.name == 'fp8e5'
+
+    def is_fp8e5b16(self):
+        return self.name == 'fp8e5b16'
+
+    def is_fp16(self):
+        return self.name == 'fp16'
+
+    def is_bf16(self):
+        return self.name == 'bf16'
+
+    def is_fp32(self):
+        return self.name == 'fp32'
+
+    def is_fp64(self):
+        return self.name == 'fp64'
+
+    def is_int1(self):
+        return self.name == 'int1'
+
+    def is_int8(self):
+        return self.name == 'int8'
+
+    def is_int16(self):
+        return self.name == 'int16'
+
+    def is_int32(self):
+        return self.name == 'int32'
+
+    def is_int64(self):
+        return self.name == 'int64'
+
+    def is_uint8(self):
+        return self.name == 'uint8'
+
+    def is_uint16(self):
+        return self.name == 'uint16'
+
+    def is_uint32(self):
+        return self.name == 'uint32'
+
+    def is_uint64(self):
+        return self.name == 'uint64'
+
+    def is_floating(self):
+        return self.name in dtype.FP_TYPES
+
+    def is_standard_floating(self):
+        return self.name in dtype.STANDARD_FP_TYPES
+
+    def is_int_signed(self):
+        return self.name in dtype.SINT_TYPES
+
+    def is_int_unsigned(self):
+        return self.name in dtype.UINT_TYPES
+
+    def is_int(self):
+        return self.name in dtype.SINT_TYPES + dtype.UINT_TYPES
+
+    def is_bool(self):
+        return self.is_int1()
+
+    def kind(self):
+        # Return int value following the type ordering bool < integer < fp
+        if self.is_bool():
+            return dtype.KIND.BOOLEAN
+        elif self.is_int():
+            return dtype.KIND.INTEGRAL
+        else:
+            assert self.is_floating()
+            return dtype.KIND.FLOATING
+
+    def get_int_max_value(self):
+        if self.is_int_signed():
+            return 2**(self.int_bitwidth - 1) - 1
+        if self.is_int_unsigned():
+            return 2**self.int_bitwidth - 1
+        assert False
+
+    def get_int_min_value(self):
+        if self.is_int_signed():
+            return -2**(self.int_bitwidth - 1)
+        if self.is_int_unsigned():
+            return 0
+        assert False
+
+    @staticmethod
+    def is_dtype(type_str):
+        return type_str in dtype.SINT_TYPES + dtype.UINT_TYPES + dtype.FP_TYPES + dtype.OTHER_TYPES
+
+    @staticmethod
+    def is_void():
+        raise RuntimeError("Not implemented")
+
+    @staticmethod
+    def is_block():
+        return False
+
+    @staticmethod
+    def is_ptr():
+        return False
+
+    @staticmethod
+    def is_const():
+        return False
+
+    def __eq__(self, other) -> bool:
+        other = _unwrap_if_constexpr(other)
+        if not isinstance(other, dtype):
+            return False
+        return self.name == other.name
+
+    def __hash__(self):
+        return hash((self.name, ))
+
+    @property
+    def scalar(self):
+        return self
+
+    def _flatten_ir_types(self, builder: ir.builder, out: List[ir.type]) -> None:
+        out.append(self.to_ir(builder))
+
+    def to_ir(self, builder: ir.builder) -> ir.type:
+        if self.name.startswith("fp8"):
+            if hasattr(builder, "options") and self.name not in builder.options.supported_fp8_dtypes:
+                raise ValueError(f'type {self} not supported in this architecture. '
+                                 f'The supported fp8 dtypes are {builder.options.supported_fp8_dtypes}')
+
+        if self.name == 'void':
+            return builder.get_void_ty()
+        elif self.name == 'int1':
+            return builder.get_int1_ty()
+        elif self.name in ('int8', 'uint8'):
+            return builder.get_int8_ty()
+        elif self.name in ('int16', 'uint16'):
+            return builder.get_int16_ty()
+        elif self.name in ('int32', 'uint32'):
+            return builder.get_int32_ty()
+        elif self.name in ('int64', 'uint64'):
+            return builder.get_int64_ty()
+        elif self.name == 'fp8e5':
+            return builder.get_fp8e5_ty()
+        elif self.name == 'fp8e5b16':
+            return builder.get_fp8e5b16_ty()
+        elif self.name == 'fp8e4nv':
+            return builder.get_fp8e4nv_ty()
+        elif self.name == 'fp8e4b8':
+            return builder.get_fp8e4b8_ty()
+        elif self.name == 'fp8e4b15':
+            return builder.get_fp8e4b15_ty()
+        elif self.name == 'fp16':
+            return builder.get_half_ty()
+        elif self.name == 'bf16':
+            return builder.get_bf16_ty()
+        elif self.name == 'fp32':
+            return builder.get_float_ty()
+        elif self.name == 'fp64':
+            return builder.get_double_ty()
+        raise ValueError(f'fail to convert {self} to ir type')
+
+    def __str__(self):
+        return self.name
+
+    def codegen_name(self):
+        if self.name.startswith("fp"):
+            return "float" + self.name[2:]
+        elif self.name.startswith("bf"):
+            return "bfloat" + self.name[2:]
+        else:
+            return self.name
+
+    @property
+    def cache_key_part(self) -> str:
+        """See cache_key_part() in triton.cc."""
+        return self.name
+
+    def __repr__(self):
+        """Output of repr needs to be an evaluatable expression"""
+        return f'triton.language.{self.codegen_name()}'
+
+    def _unflatten_ir(self, handles: List[ir.value], cursor: int) -> Tuple[base_value, int]:
+        return tensor(handles[cursor], self), cursor + 1
+
+    def mangle(self) -> str:
+        if self.is_int():
+            SIGNED = dtype.SIGNEDNESS.SIGNED
+            prefix = 'i' if self.int_signedness == SIGNED else 'u'
+            return prefix + str(self.int_bitwidth)
+        if self.is_floating():
+            return str(self)
+        if self.is_void():
+            return 'V'
+        return super().mangle()
+
+    def with_element_ty(self, element_ty: dtype):
+        assert not self.is_block()
+        return element_ty
+
+
+# Some functions have a param named `dtype`, which shadows the `dtype` class.
+# We can't change the param name because it is part of function's public API.
+# Declare an alias so those functions can still reference the dtype class.
+_DtypeClass = dtype
+
+
+class pointer_type(dtype):
+
+    def __init__(self, element_ty: dtype, address_space: int = 1, const: bool = False):
+        element_ty = _unwrap_if_constexpr(element_ty)
+        if not isinstance(element_ty, dtype):
+            raise TypeError(f'element_ty has type `{type(element_ty).__name__}`; expected `dtype`.')
+        self.element_ty = element_ty
+        self.address_space = address_space
+        self.const = const
+        self.name = f'pointer<{element_ty}>' if not const else f'const_pointer<{element_ty}>'
+
+    def to_ir(self, builder: ir.builder) -> ir.pointer_type:
+        return builder.get_ptr_ty(self.element_ty.to_ir(builder), self.address_space)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.__str__()
+
+    def is_ptr(self):
+        return True
+
+    def is_const(self):
+        return self.const
+
+    def __eq__(self, other) -> bool:
+        other = _unwrap_if_constexpr(other)
+        if not isinstance(other, pointer_type):
+            return False
+        return self.element_ty == other.element_ty and self.address_space == other.address_space and self.const == other.const
+
+    @property
+    def scalar(self):
+        return self
+
+    def mangle(self) -> str:
+        return f"P{self.element_ty.mangle()}"
+
+
+class block_type(dtype):
+
+    def __init__(self, element_ty: dtype, shape: List):
+        self.element_ty = element_ty
+
+        # Note that block_type's shape is a list of int
+        # while tensor's shape is a list of constexpr.
+        assert (isinstance(shape, (list, tuple)))
+
+        # shape can be empty ([]) when an input is a 0D tensor.
+        self.shape = tuple(_unwrap_shape(shape))
+        if not self.shape:
+            raise TypeError('0d block_type is forbidden')
+
+        self.numel = validate_block_shape(self.shape)
+        self.name = f'<{self.shape}, {self.element_ty}>'
+
+    def to_ir(self, builder: ir.builder) -> ir.block_type:
+        return builder.get_block_ty(self.element_ty.to_ir(builder), self.shape)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.__str__()
+
+    def is_block(self):
+        return True
+
+    def get_block_shapes(self) -> Tuple[int]:
+        return self.shape
+
+    def with_element_ty(self, scalar_ty: dtype) -> block_type:
+        return block_type(scalar_ty, self.shape)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, block_type):
+            return False
+        return self.element_ty == other.element_ty and self.shape == other.shape
+
+    @property
+    def scalar(self):
+        return self.element_ty
+
+    @property
+    def nbytes(self):
+        return self.numel * (self.element_ty.primitive_bitwidth // 8)
+
+    def mangle(self) -> str:
+        elt = self.scalar.mangle()
+        shape = '_'.join(map(str, self.shape))
+        return f'{elt}S{shape}S'
+
+
+class tuple_type(base_type):
+
+    def __init__(self, types, fields=None):
+        self.types = types
+        self.fields = fields
+
+    @cached_property
+    def name(self):
+        if self.fields is None:
+            return '[' + ','.join(str(v) for v in self.types) + ']'
+        return '[' + ','.join([f"{k}:{v}" for k, v in zip(self.fields, self.types)]) + ']'
+
+    def __str__(self):
+        return self.name
+
+    def __iter__(self):
+        return iter(self.types)
+
+    def _flatten_ir_types(self, builder: ir.builder, out: List[ir.type]):
+        for ty in self.types:
+            ty._flatten_ir_types(builder, out)
+
+    def __getitem__(self, index: int) -> dtype:
+        return self.types[index]
+
+    def __eq__(self, other):
+        return type(self) is type(other) and self.types == other.types and self.fields == other.fields
+
+    def _unflatten_ir(self, handles: List[ir.value], cursor: int) -> Tuple[tuple, int]:
+        values = []
+        for ty in self.types:
+            value, cursor = ty._unflatten_ir(handles, cursor)
+            values.append(value)
+        return tuple(values, self), cursor
+
+    def mangle(self):
+        return 'T' + '_'.join(ty.mangle() for ty in self.types) + 'T'
+
+
+class slice_type(dtype):
+
+    def __init__(self):
+        self.name = 'slice_type'
+
+
+# scalar types
+void = dtype('void')
+int1 = dtype('int1')
+int8 = dtype('int8')
+int16 = dtype('int16')
+int32 = dtype('int32')
+int64 = dtype('int64')
+uint8 = dtype('uint8')
+uint16 = dtype('uint16')
+uint32 = dtype('uint32')
+uint64 = dtype('uint64')
+float8e5 = dtype('fp8e5')
+float8e5b16 = dtype('fp8e5b16')
+float8e4nv = dtype('fp8e4nv')
+float8e4b8 = dtype('fp8e4b8')
+float8e4b15 = dtype('fp8e4b15')
+float16 = dtype('fp16')
+bfloat16 = dtype('bf16')
+float32 = dtype('fp32')
+float64 = dtype('fp64')
+# pointer types
+pi32_t = pointer_type(int32)
+
+
+def get_int_dtype(bitwidth: int, signed: bool) -> dtype:
+    if bitwidth == 1:
+        return int1
+    elif bitwidth == 8 and signed:
+        return int8
+    elif bitwidth == 8 and not signed:
+        return uint8
+    elif bitwidth == 16 and signed:
+        return int16
+    elif bitwidth == 16 and not signed:
+        return uint16
+    elif bitwidth == 32 and signed:
+        return int32
+    elif bitwidth == 32 and not signed:
+        return uint32
+    elif bitwidth == 64 and signed:
+        return int64
+    elif bitwidth == 64 and not signed:
+        return uint64
+    else:
+        raise ValueError(f'Unsupported bitwidth {bitwidth} and signedness {signed}')
+
+
+# -----------------------
+# tensor
+# -----------------------
+
+
+class tensor(base_value):
+    """Represents an N-dimensional array of values or pointers.
+
+    :code:`tensor` is the fundamental data structure in Triton programs.  Most
+    functions in :py:mod:`triton.language` operate on and return tensors.
+
+    Most of the named member functions here are duplicates of the free functions
+    in :code:`triton.language`.  For example, :code:`triton.language.sqrt(x)` is
+    equivalent to :code:`x.sqrt()`.
+
+    :code:`tensor` also defines most of the magic/dunder methods, so you can
+    write :code:`x+y`, :code:`x << 2`, etc.
+
+    .. rubric:: Constructors
+    ..
+       For some reason Sphinx includes __init__ before printing the full table
+       of methods.  Not what I want, but I can't figure out how to fix it.  Give
+       it its own section so it looks intentional. :)
+    """
+
+    def __init__(self, handle, type: dtype):
+        """Not called by user code."""
+        super().__init__()
+        # IR handle
+        self.handle = handle
+        # Block shape
+        self.shape = type.shape if type.is_block() else ()
+        self.numel = constexpr(math.prod(self.shape))
+        self.type = type  # Tensor type (can be block_type)
+        # Following the practice in pytorch, dtype is scalar type
+        self.dtype = type.scalar
+        self.shape = tuple([constexpr(s) for s in self.shape])
+
+    def _flatten_ir(self, handles: List[ir.value]) -> None:
+        handles.append(self.handle)
+
+    def __str__(self) -> str:
+        # ex. "float32[16, 32]"
+        return str(self.dtype) + '[' + ', '.join(str(s) for s in self.shape) + ']'
+
+    @builtin
+    def __add__(self, other, _semantic=None):
+        return add(self, other, sanitize_overflow=True, _semantic=_semantic)
+
+    @builtin
+    def __radd__(self, other, _semantic=None):
+        return add(other, self, sanitize_overflow=True, _semantic=_semantic)
+
+    @builtin
+    def __sub__(self, other, _semantic=None):
+        return sub(self, other, sanitize_overflow=True, _semantic=_semantic)
+
+    @builtin
+    def __rsub__(self, other, _semantic=None):
+        return sub(other, self, sanitize_overflow=True, _semantic=_semantic)
+
+    @builtin
+    def __mul__(self, other, _semantic=None):
+        return mul(self, other, sanitize_overflow=True, _semantic=_semantic)
+
+    @builtin
+    def __rmul__(self, other, _semantic=None):
+        return mul(other, self, sanitize_overflow=True, _semantic=_semantic)
+
+    @builtin
+    def __truediv__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.truediv(self, other)
+
+    @builtin
+    def __rtruediv__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.truediv(other, self)
+
+    @builtin
+    def __floordiv__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.floordiv(self, other)
+
+    @builtin
+    def __rfloordiv__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.floordiv(other, self)
+
+    @builtin
+    def __mod__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.mod(self, other)
+
+    @builtin
+    def __rmod__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.mod(other, self)
+
+    # unary operators
+    @builtin
+    def __neg__(self, _semantic=None):
+        return _semantic.minus(self)
+
+    @builtin
+    def __invert__(self, _semantic=None):
+        return _semantic.invert(self)
+
+    # bitwise operators
+
+    @builtin
+    def __and__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.and_(self, other)
+
+    @builtin
+    def __rand__(self, other, _semantic=None):
+        other = _unwrap_if_constexpr(other)
+        return _semantic.and_(other, self)
+
+    @b

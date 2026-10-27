@@ -1,0 +1,30 @@
+% The scheduler: one long turn holds the engine; short guests are served at safe points;
+% a second full turn waits in the queue with comments.
+\begin{tikzpicture}[x=0.8mm, y=1mm]
+  % the long turn: prefill chunks then decode blocks
+  \node[lbl, anchor=east] at (-1,22) {long turn};
+  \foreach \x in {0,7,14,21} \fill[cobalt!45] (\x,19.5) rectangle +(6.4,5);
+  \node[font=\sffamily\scriptsize, text=ink] at (13.5,27) {prefill chunks};
+  \foreach \x in {37,42,...,72} \fill[cobalt] (\x,19.5) rectangle +(4.4,5);
+  \foreach \x in {92,97,...,122} \fill[cobalt] (\x,19.5) rectangle +(4.4,5);
+  \node[font=\sffamily\scriptsize, text=ink] at (107,27) {decode blocks};
+  % guests served at safe points
+  \fill[signal] (28,19.5) rectangle +(8.2,5);
+  \fill[signal] (77,19.5) rectangle +(14.2,5);
+  \node[lbl, anchor=north] at (32,18.8) {guest between\\two chunks};
+  \node[lbl, anchor=north] at (84,18.8) {guest between\\two blocks};
+  % arrival of the guests
+  \draw[dflow, signal] (25,34) node[above, font=\sffamily\scriptsize, text=signal] {title request} -- (29,25);
+  \draw[dflow, signal] (70,34) node[above, font=\sffamily\scriptsize, text=signal] {router question} -- (78,25);
+  % the second full turn
+  \node[lbl, anchor=east] at (-1,6) {second turn};
+  \draw[slate, thick] (40,6) -- (127,6);
+  \fill[slate] (40,6) circle (0.9);
+  \node[lbl, anchor=south] at (40,7.5) {arrives};
+  \foreach \x/\t in {52/{10 s},64/{20 s},76/{30 s},88/{40 s},100/{50 s},112/{60 s}}
+    \draw[slate] (\x,4.5) -- (\x,7.5) node[above, font=\sffamily\tiny, text=slate] {\t};
+  \node[lbl, anchor=north west, text width=70mm] at (46,3.5)
+    {stream opens after 10 s; \texttt{: waiting, position 1, about 40 s} every 10 s};
+  \draw[->, thick, slate] (127,6) -- (131,6) node[right, lbl] {runs when\\the turn ends};
+  \draw[->, slate] (0,-6) -- (131,-6) node[right, lbl] {time};
+\end{tikzpicture}

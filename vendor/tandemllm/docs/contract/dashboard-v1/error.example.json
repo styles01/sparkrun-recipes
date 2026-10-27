@@ -1,0 +1,6 @@
+{
+  "error": {
+    "type": "unauthorized",
+    "message": "a session or an admin token is required"
+  }
+}

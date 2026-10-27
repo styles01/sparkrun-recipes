@@ -1,0 +1,19 @@
+{
+  "package": "recipe-cooking",
+  "rubric": [
+    "Title with portions and time; every ingredient with an exact amount in the order used; 6 to 12 numbered steps, each with heat, time and the cue to look for.",
+    "Done-when, the one mistake to avoid, and what to serve with it; a food-safety line where chicken, mince, eggs, rice or reheating are involved.",
+    "'What can I make with' gives 3 one-line options first, then the full recipe for one.",
+    "Diet rules kept as hard rules (halal, no pork, vegetarian, vegan, gluten-free, allergies) with label-check notes; substitutes come with amounts and the difference they make.",
+    "Fixes and scaling follow the stated rules (salt at 80 % when scaling, no scraping a burnt pot); no story before the recipe, no invented 'traditional' claims."
+  ],
+  "prompts": [
+    {"id": "recipe-cooking-1", "lang": "en", "text": "I have minced beef, a tin of tomatoes, an onion, pasta and some cheese. Dinner for 3 in 30 minutes?"},
+    {"id": "recipe-cooking-2", "lang": "de", "text": "Rezept für einen einfachen Apfelkuchen für eine 26-cm-Springform, ich habe keine Eier mehr, was kann ich stattdessen nehmen?"},
+    {"id": "recipe-cooking-3", "lang": "ar", "text": "كيف أطبخ كبسة دجاج لأربعة أشخاص؟ اكتب المقادير بالغرام والخطوات بالتفصيل، أنا مبتدئ."},
+    {"id": "recipe-cooking-4", "lang": "en", "text": "My curry is way too spicy and I have guests in 20 minutes. What can I do?"},
+    {"id": "recipe-cooking-5", "lang": "en", "text": "How long and at what temperature do I roast a 1.8 kg whole chicken, and how do I know it's done? No thermometer."},
+    {"id": "recipe-cooking-6", "lang": "de", "text": "Ich will das Lasagne-Rezept für 4 Personen auf 12 Personen hochrechnen. Zutaten: 500 g Hack, 400 g Tomaten, 250 g Lasagneblätter, 500 ml Béchamel, 150 g Käse, 1 TL Salz. Was ändert sich bei der Backzeit?"},
+    {"id": "recipe-cooking-7", "lang": "en", "text": "Vegan version of a creamy mushroom pasta for 2, no cashews (allergy)."}
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "package": "reply-format",
+  "rubric": [
+    "The reply has exactly the form the user named (one word, OK, yes or no, a number, one sentence), nothing added.",
+    "Without a named form, one to three short natural sentences in the user's language.",
+    "No message, letter, plan or list written for anyone; no closing offer of more help.",
+    "A factual one-line question gets the correct short answer."
+  ],
+  "prompts": [
+    {
+      "id": "reply-format-1",
+      "lang": "en",
+      "text": "Reply with just: OK. Do not use any tools."
+    },
+    {
+      "id": "reply-format-2",
+      "lang": "en",
+      "text": "Answer in one word: is the sky blue on a clear day?"
+    },
+    {
+      "id": "reply-format-3",
+      "lang": "de",
+      "text": "Antworte nur mit Ja oder Nein: Ist Berlin die Hauptstadt von Deutschland?"
+    },
+    {
+      "id": "reply-format-4",
+      "lang": "ar",
+      "text": "أجب بكلمة واحدة فقط: ما هو لون السماء في يوم صاف؟"
+    },
+    {
+      "id": "reply-format-5",
+      "lang": "en",
+      "text": "Thanks, that was really helpful, have a good evening!"
+    },
+    {
+      "id": "reply-format-6",
+      "lang": "de",
+      "text": "Danke dir, das reicht fuer heute. Bis morgen!"
+    }
+  ]
+}

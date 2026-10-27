@@ -1,0 +1,125 @@
+name: Add a community weight pack
+description: A quantised or fine-tuned pack of a TandemLLM model that you would like listed in the setup guide.
+title: 'community: <name of the pack>'
+labels: [community-weights]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A pack is listed by a pull request that adds one file, `models/<model>/community/<id>.json`
+        (docs/community-weights.md explains every field). Open this issue if you would rather a
+        maintainer write the file, or to agree on the id first.
+
+        Leave a field empty when you do not know it. Nothing here is filled in by guessing.
+
+  - type: input
+    id: name
+    attributes:
+      label: Name of the pack
+      placeholder: ThinkingCap Qwen3.8-27B Kearuga
+    validations:
+      required: true
+
+  - type: input
+    id: id
+    attributes:
+      label: Proposed id (the file name)
+      description: Lowercase letters, digits, dots and dashes.
+      placeholder: thinkingcap-27b-kearuga-exl3-4.00
+    validations:
+      required: true
+
+  - type: dropdown
+    id: base_model
+    attributes:
+      label: Base model in TandemLLM
+      options: [qwen3.8-27b]
+    validations:
+      required: true
+
+  - type: input
+    id: hf_repo
+    attributes:
+      label: Hugging Face repository
+      placeholder: owner/repo
+    validations:
+      required: true
+
+  - type: input
+    id: hf_revision
+    attributes:
+      label: Commit (40 hex characters)
+      description: The exact commit to list. A branch name is not accepted.
+    validations:
+      required: true
+
+  - type: input
+    id: finetune_of
+    attributes:
+      label: Fine-tune of (Hugging Face id)
+      description: Empty for a quantisation of the stock model.
+
+  - type: dropdown
+    id: format
+    attributes:
+      label: Format
+      description: Only EXL3 loads today.
+      options: [exl3]
+    validations:
+      required: true
+
+  - type: input
+    id: bpw
+    attributes:
+      label: Bits per weight
+      placeholder: "4.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: load
+    attributes:
+      label: How it loads
+      options:
+        - standalone (the pack is the whole model)
+        - overlay (EXL3 projections over the base checkpoint)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: modalities_in_pack
+    attributes:
+      label: What the pack contains
+      options:
+        - label: text
+        - label: image
+        - label: audio
+        - label: video
+
+  - type: input
+    id: license
+    attributes:
+      label: License
+      placeholder: Apache-2.0
+    validations:
+      required: true
+
+  - type: input
+    id: github
+    attributes:
+      label: Your GitHub user name
+      description: The card shows your GitHub avatar and links to your profile.
+    validations:
+      required: true
+
+  - type: textarea
+    id: social
+    attributes:
+      label: Social links (optional)
+      description: X, Hugging Face and Bluesky as handles; Mastodon and a website as https URLs.
+
+  - type: textarea
+    id: measurements
+    attributes:
+      label: What you measured (optional)
+      description: Build, device, tok/s per kind of text. A maintainer runs the pack before it is marked verified.

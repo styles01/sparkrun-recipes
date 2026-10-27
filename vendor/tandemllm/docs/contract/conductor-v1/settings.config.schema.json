@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor settings document",
+  "type": "object",
+  "properties": {
+    "default_profile": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+    },
+    "tools_profile": {
+      "type": "string",
+      "pattern": "^$|^[a-z][a-z0-9_-]{0,39}$"
+    },
+    "journal": {
+      "type": "object",
+      "properties": {
+        "retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 400
+        },
+        "digest": {
+          "enum": [
+            "tools",
+            "all",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "retention_days",
+        "digest"
+      ],
+      "additionalProperties": false
+    },
+    "memory": {
+      "type": "object",
+      "properties": {
+        "transcripts": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "enum": [
+                "tools",
+                "all",
+                "none"
+              ]
+            },
+            "retention_days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 400
+            },
+            "clip_chars": {
+              "type": "integer",
+              "minimum": 200,
+              "maximum": 100000
+            },
+            "loop_chars": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4000
+            }
+          },
+          "required": [
+            "scope",
+            "retention_days",
+            "clip_chars",
+            "loop_chars"
+          ],
+          "additionalProperties": false
+        },
+        "disk_cache": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "on",
+                "off"
+              ]
+            },
+            "budget_gb": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 4000
+            },
+            "ttl_days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            },
+            "admit_after": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "min_free_gb": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 4000
+            }
+          },
+          "required": [
+            "mode",
+            "budget_gb",
+            "ttl_days",
+            "admit_after",
+            "min_free_gb"
+          ],
+          "additionalProperties": false
+        },
+        "session_spill": {
+          "type": "object",
+          "properties": {
+            "budget_gb": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 4000
+            },
+            "codec": {
+              "enum": [
+                "zstd",
+                "off"
+              ]
+            },
+            "ttl_hours": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 720
+            },
+            "min_tokens": {
+              "type": "integer",
+              "minimum": 1024,
+              "maximum": 1048576
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "disk_writes": {
+          "type": "object",
+          "properties": {
+            "budget_gb": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "notes": {
+          "type": "object",
+          "properties": {
+            "index_tokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8000
+            },
+            "body_tokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4000
+            },
+            "pinned_tokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2000
+            },
+            "bodies": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "min_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "min_words": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "dedupe_threshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "intent": {
+              "enum": [
+                "off",
+                "shadow",
+                "on"
+              ]
+            },
+            "provisional": {
+              "type": "boolean"
+            },
+            "digest_chars": {
+              "type": "integer",
+              "minimum": 200,
+              "maximum": 20000
+            },
+            "writer": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "off",
+                    "shadow",
+                    "on"
+                  ]
+                },
+                "idle_s": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 86400
+                },
+                "due_idle_s": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 600
+                },
+                "min_new_tokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "max_tokens": {
+                  "type": "integer",
+                  "minimum": 64,
+                  "maximum": 4096
+                },
+                "max_blocks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 8
+                },
+                "gate": {
+                  "type": "boolean"
+                },
+                "after_compaction": {
+                  "enum": [
+                    "idle",
+                    "turn",
+                    "off"
+                  ]
+                },
+                "turn_deadline_s": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 300
+                },
+                "existing": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "ban_tool_call": {
+                  "type": "boolean"
+                },
+                "prefill": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "default_profile",
+    "journal"
+  ],
+  "additionalProperties": false
+}

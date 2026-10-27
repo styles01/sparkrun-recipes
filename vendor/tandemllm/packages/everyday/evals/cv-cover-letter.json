@@ -1,0 +1,18 @@
+{
+  "package": "cv-cover-letter",
+  "rubric": [
+    "Newest experience first; each job has title, employer, city, dates and 2 to 4 verb-first bullets with a result or number where possible.",
+    "The cover letter names the company and the job, gives two examples that match two requirements of the advert, and asks for an interview; 200 to 300 words.",
+    "Nothing invented: no employers, degrees, dates, numbers or certificates the user did not give; missing facts as placeholders.",
+    "Formal layout and greeting of the user's language and country; no buzzwords.",
+    "Three closing lines of advice (what to add, file name, what to check)."
+  ],
+  "prompts": [
+    {"id": "cv-cover-letter-1", "lang": "en", "text": "Write a cover letter for a customer support job at Bluewave Software. I worked 3 years in a call centre for a phone company, I speak English, German and Turkish, I like solving problems."},
+    {"id": "cv-cover-letter-2", "lang": "de", "text": "Mach aus meinen Stichpunkten einen Lebenslauf: Ausbildung Bürokauffrau 2016-2019 bei Müller Logistik Hamburg, dann dort Sachbearbeiterin bis 2023, seit 2024 Teamassistenz bei einer Steuerkanzlei, Excel gut, Englisch B2."},
+    {"id": "cv-cover-letter-3", "lang": "ar", "text": "ساعدني في كتابة سيرة ذاتية لوظيفة محاسب. عملت 4 سنوات في شركة مقاولات في دبي، بكالوريوس محاسبة 2018، أجيد الإكسل وبرنامج QuickBooks."},
+    {"id": "cv-cover-letter-4", "lang": "en", "text": "Rewrite this bullet so it sounds better: 'responsible for the warehouse'. I managed stock for 2,000 products and 5 people."},
+    {"id": "cv-cover-letter-5", "lang": "de", "text": "Ich hatte 2 Jahre Lücke wegen Elternzeit. Wie schreibe ich das in den Lebenslauf, und ein Satz dazu fürs Anschreiben?"},
+    {"id": "cv-cover-letter-6", "lang": "en", "text": "Give me a 3-sentence LinkedIn summary. I am a nurse with 8 years in intensive care, moving into nursing education."}
+  ]
+}

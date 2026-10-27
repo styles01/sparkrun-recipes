@@ -1,0 +1,4 @@
+# Shows GitHub's native Sponsor button while GitHub Sponsors enrollment is pending.
+# GitHub routes this button to the active funding destination below.
+custom:
+  - "https://buymeacoffee.com/aitamedia"

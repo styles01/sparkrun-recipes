@@ -1,0 +1,14 @@
+{
+  "model": "lfm2.5-24b-a2b",
+  "label": "LFM2.5-24B-A2B",
+  "packs": ["lfm25-*"],
+  "context_limit": 131072,
+  "max_output": 32768,
+  "capabilities": {
+    "thinking": true,
+    "tools": true,
+    "vision": false,
+    "structured": true,
+    "parallel_tool_calls": true
+  }
+}

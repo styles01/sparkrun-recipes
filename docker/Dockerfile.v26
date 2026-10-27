@@ -1,0 +1,32 @@
+# Dockerfile.v26 — vLLM v26 (main) + Qwen 122B DFlash patches
+# Build on top of vllm-v26-sm121:latest (built from source for SM121)
+#
+# Build steps:
+#   1. Build vLLM from source: see README-v26-fp8-kv.md
+#   2. Build this image: docker build -f Dockerfile.v26 -t vllm-v26-patched:latest .
+#
+# Patches applied:
+#   - patch_inc_hybrid.py    — hybrid INT4+FP8 checkpoint loading (REQUIRED)
+#   - patch_prefix_align.py  — prefix caching + DFlash align fix (REQUIRED)
+#   - patch_int8_lmhead_v3.py — int8 lm-head GEMV (SKIPPED on v26, anchor changed)
+#   - patch_fla_shmem.py     — FLA shmem fix (SKIPPED on v26, may be native)
+#   - patch_flashinfer_block_stride.py — block stride indexing (SKIPPED on v26, native)
+
+FROM vllm-v26-sm121:latest
+
+USER root
+
+COPY patch_inc_hybrid.py /tmp/patches/patch_inc_hybrid.py
+COPY patch_int8_lmhead_v3.py /tmp/patches/patch_int8_lmhead_v3.py
+COPY patch_fla_shmem.py /tmp/patches/patch_fla_shmem.py
+COPY patch_prefix_align.py /tmp/patches/patch_prefix_align.py
+COPY patch_flashinfer_block_stride.py /tmp/patches/patch_flashinfer_block_stride.py
+
+# Apply patches — inc_hybrid and prefix_align are required, others are best-effort
+RUN chmod +x /tmp/patches/*.py; \
+    python3 /tmp/patches/patch_inc_hybrid.py; \
+    python3 /tmp/patches/patch_int8_lmhead_v3.py || true; \
+    python3 /tmp/patches/patch_fla_shmem.py || true; \
+    python3 /tmp/patches/patch_prefix_align.py || true; \
+    python3 /tmp/patches/patch_flashinfer_block_stride.py || true; \
+    rm -rf /tmp/patches

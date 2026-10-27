@@ -1,0 +1,50 @@
+{
+ "0": {
+  "chain": {
+   "1": 6.976,
+   "2": 9.681,
+   "3": 11.782,
+   "4": 13.688,
+   "5": 15.748,
+   "6": 17.639,
+   "7": 19.617,
+   "8": 20.911,
+   "9": 23.174,
+   "10": 24.675,
+   "11": 26.31,
+   "12": 27.681,
+   "13": 30.291,
+   "14": 31.668,
+   "15": 33.093,
+   "16": 34.981
+  },
+  "plain": {
+   "1": 6.853
+  }
+ },
+ "16384": {
+  "chain": {
+   "1": 7.554,
+   "2": 10.155,
+   "3": 12.662,
+   "4": 14.868,
+   "5": 16.793,
+   "6": 18.556,
+   "7": 20.922,
+   "8": 22.506,
+   "9": 24.194,
+   "10": 26.886,
+   "11": 28.755,
+   "12": 30.652,
+   "13": 32.424,
+   "14": 33.97,
+   "15": 35.886,
+   "16": 38.095
+  },
+  "plain": {
+   "1": 6.853
+  }
+ },
+ "step_ms": 2.21,
+ "measured": "tools/lfm_check.py staircase and bench on stair.json, bench-after.json: chain = a VerifyGraph replay of 1..16 rows (CUDA events, the median), at the staircase's contexts (the lowest as class 0); plain = the captured decode step's ms a token, host wall clock with a sync a token. No spec or prime prior: the cut drafts and learns them online."
+}

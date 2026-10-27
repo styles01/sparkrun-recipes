@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- SparkDash icon: a stylized GPU chip with a lightning spark -->
+  <!-- Rounded square dark background -->
+  <rect width="512" height="512" rx="112" fill="#0a0a0a"/>
+  <!-- Inner chip border (subtle cyan) -->
+  <rect x="96" y="96" width="320" height="320" rx="32" fill="none" stroke="#1a2a3a" stroke-width="6"/>
+  <!-- Chip pins (decorative, subtle) -->
+  <g stroke="#162028" stroke-width="8" stroke-linecap="round">
+    <!-- top -->
+    <line x1="168" y1="72" x2="168" y2="104"/>
+    <line x1="216" y1="72" x2="216" y2="104"/>
+    <line x1="256" y1="72" x2="256" y2="104"/>
+    <line x1="296" y1="72" x2="296" y2="104"/>
+    <line x1="344" y1="72" x2="344" y2="104"/>
+    <!-- bottom -->
+    <line x1="168" y1="408" x2="168" y2="440"/>
+    <line x1="216" y1="408" x2="216" y2="440"/>
+    <line x1="256" y1="408" x2="256" y2="440"/>
+    <line x1="296" y1="408" x2="296" y2="440"/>
+    <line x1="344" y1="408" x2="344" y2="440"/>
+    <!-- left -->
+    <line x1="72" y1="168" x2="104" y2="168"/>
+    <line x1="72" y1="216" x2="104" y2="216"/>
+    <line x1="72" y1="256" x2="104" y2="256"/>
+    <line x1="72" y1="296" x2="104" y2="296"/>
+    <line x1="72" y1="344" x2="104" y2="344"/>
+    <!-- right -->
+    <line x1="408" y1="168" x2="440" y2="168"/>
+    <line x1="408" y1="216" x2="440" y2="216"/>
+    <line x1="408" y1="256" x2="440" y2="256"/>
+    <line x1="408" y1="296" x2="440" y2="296"/>
+    <line x1="408" y1="344" x2="440" y2="344"/>
+  </g>
+  <!-- Lightning bolt spark (the focal element) -->
+  <!-- A bold, modern lightning bolt centered in the chip -->
+  <path d="M 284 112 L 196 276 L 248 276 L 228 400 L 316 236 L 264 236 Z"
+        fill="#00e5ff"
+        stroke="#00e5ff"
+        stroke-width="4"
+        stroke-linejoin="round"/>
+  <!-- Subtle inner glow highlight -->
+  <path d="M 284 112 L 196 276 L 248 276 L 228 400 L 316 236 L 264 236 Z"
+        fill="none"
+        stroke="#7af4ff"
+        stroke-width="2"
+        stroke-linejoin="round"
+        opacity="0.6"/>
+</svg>

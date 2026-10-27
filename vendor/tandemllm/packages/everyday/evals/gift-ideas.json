@@ -1,0 +1,18 @@
+{
+  "package": "gift-ideas",
+  "rubric": [
+    "6 to 8 ranked ideas, each with the gift in a few words, a price band, one line on why it fits this person, and a practical note.",
+    "The kinds are mixed (experience, useful upgrade, consumable, personal or hand-made, a plus-one); each idea ties to a fact the user gave.",
+    "A pick with a reason; cultural and personal fit kept (no alcohol where unwanted, customs for holidays, stated dislikes respected).",
+    "No invented shops, product names or exact prices; budget bands named when the user gave none.",
+    "A card text of 2 to 4 sentences in the user's voice when asked, with the name and one specific memory or trait."
+  ],
+  "prompts": [
+    {"id": "gift-ideas-1", "lang": "en", "text": "Gift for my wife for our 10th anniversary, she loves hiking, reading crime novels and good coffee, budget around 150."},
+    {"id": "gift-ideas-2", "lang": "de", "text": "Was schenke ich meinem Schwiegervater zum 60.? Er hat alles, mag Fußball (Dortmund) und grillt gern. Bis 50 Euro."},
+    {"id": "gift-ideas-3", "lang": "ar", "text": "ما هدية مناسبة لأمي في عيد الأم؟ عمرها 65، تحب الطبخ والقرآن والمشي في الحديقة، ميزانيتي 300 ريال."},
+    {"id": "gift-ideas-4", "lang": "en", "text": "I'm invited to dinner at my new colleague's home tomorrow, they're a Muslim family with two small kids. What do I bring?"},
+    {"id": "gift-ideas-5", "lang": "en", "text": "Last-minute: my friend's birthday is today, she's 30, into plants and yoga, I have 30 euros and two hours."},
+    {"id": "gift-ideas-6", "lang": "de", "text": "Gruppengeschenk für eine Kollegin, die in Rente geht, 20 Leute legen je 15 Euro zusammen. Ideen und ein Text für die Karte."}
+  ]
+}

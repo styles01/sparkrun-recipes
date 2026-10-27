@@ -1,0 +1,18 @@
+{
+  "package": "parenting-help",
+  "rubric": [
+    "The child's age is known or asked for; what is usual at that age is stated calmly without blaming parent or child.",
+    "Numbered steps to try for two weeks: the parent's change, a routine with clock times, the exact words at the child's level, what to do in the moment and after; what better looks like.",
+    "Age defaults given as starting points (sleep hours, screen rules, food, chores) when asked.",
+    "A get-help list with the concrete signs (lasting over a month, not eating or sleeping, self-harm, withdrawal, developmental signs) and who to see; no diagnosis, no doses.",
+    "One line for the parent at the end; the answer in the user's language."
+  ],
+  "prompts": [
+    {"id": "parenting-help-1", "lang": "en", "text": "My 2-year-old has huge tantrums in the supermarket, throws himself on the floor. I'm embarrassed and don't know what to do in the moment."},
+    {"id": "parenting-help-2", "lang": "de", "text": "Meine Tochter (13) sitzt nur noch am Handy, Schulnoten werden schlechter, sie redet kaum mit uns. Wie gehen wir das an?"},
+    {"id": "parenting-help-3", "lang": "ar", "text": "ابني عمره 5 سنوات ويرفض أكل الخضار نهائيًا، كل وجبة تتحول إلى معركة. ماذا أفعل؟"},
+    {"id": "parenting-help-4", "lang": "en", "text": "How much screen time is ok for a 4-year-old, and how do I stop the crying when it's off?"},
+    {"id": "parenting-help-5", "lang": "en", "text": "My 7-year-old started wetting the bed again after being dry for two years. We just moved house. Normal?"},
+    {"id": "parenting-help-6", "lang": "de", "text": "Unsere Kinder (6 und 9) streiten den ganzen Tag, es endet immer mit Geschrei. Gibt es eine Methode, die wirklich funktioniert?"}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "package": "checklist-builder",
+  "rubric": [
+    "The task and its date with a countdown; blocks in time order including the first week after; items as single actions with checkboxes.",
+    "Items ordered by notice period and waiting time; the long-lead items first.",
+    "Groups for documents, people and offices to inform, and money; country-specific items marked 'check' with where to check.",
+    "No invented fees, deadlines or office names; the user's situation (children, pets, car, disability) adds its own items.",
+    "The three most-forgotten items and the one thing to do today."
+  ],
+  "prompts": [
+    {"id": "checklist-builder-1", "lang": "en", "text": "We're moving from Germany to the Netherlands on 1 September for my wife's job, two kids (3 and 7) and a car. Make me a complete checklist."},
+    {"id": "checklist-builder-2", "lang": "de", "text": "Ich starte am 1. März einen neuen Job in einer anderen Stadt. Was muss ich vorher alles erledigen? Ich bleibe erstmal in meiner Wohnung und pendle."},
+    {"id": "checklist-builder-3", "lang": "ar", "text": "زوجتي حامل والولادة متوقعة في شهر مايو. ما قائمة الأشياء التي يجب أن نجهزها قبل الولادة وبعدها في الأسابيع الأولى؟"},
+    {"id": "checklist-builder-4", "lang": "en", "text": "Packing list for 10 days in Norway in September, hiking and some city days, hand luggage plus one checked bag."},
+    {"id": "checklist-builder-5", "lang": "en", "text": "I'm selling my car privately next month. What do I need to do and have ready, step by step?"},
+    {"id": "checklist-builder-6", "lang": "de", "text": "Ich habe nächsten Monat eine Knie-OP und bin danach 6 Wochen eingeschränkt. Checkliste für vorher und für die Zeit danach, ich wohne allein im 3. Stock ohne Aufzug."}
+  ]
+}

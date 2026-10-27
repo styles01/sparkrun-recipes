@@ -1,0 +1,18 @@
+{
+  "package": "proofread",
+  "rubric": [
+    "The corrected text comes first, complete, with the same meaning, length, tone and formatting.",
+    "Only errors are fixed (spelling, grammar, punctuation, wrong words); correct sentences are untouched unless 'polish' was asked.",
+    "A numbered list of fixes 'wrong -> right: why' in 3 to 6 words, repeated error kinds grouped; doubtful items named and left.",
+    "Spelling standard follows the text (British or American, current German rules, correct Arabic hamza and ta marbuta).",
+    "No added greetings, content or lectures."
+  ],
+  "prompts": [
+    {"id": "proofread-1", "lang": "en", "text": "Check this: 'Dear Mr. Smith, I am writing to informed you that me and my colleague will be attend the conference on next tuesday. We looking forward to meet you their.'"},
+    {"id": "proofread-2", "lang": "de", "text": "Korrigiere bitte: 'Ich habe gestern mit meine Schwester ins Kino gegangen, der Film war sehr langweilig, aber das Popcorn hat uns geschmekt. Wir sind dann noch in ein Restaurant gegangen wo wir Pizza gegessen haben.'"},
+    {"id": "proofread-3", "lang": "ar", "text": "صحح هذا النص: 'ذهبت الى السوق واشتريت خضروات و فواكة ثم رجعت الى البيت و طبخت الغداء لاسرتي.'"},
+    {"id": "proofread-4", "lang": "en", "text": "Proofread my message to a customer, keep it friendly: 'Thank you for you're order! Its been shipped today and should arrive within 3-5 business day. Let us no if their is anything else.'"},
+    {"id": "proofread-5", "lang": "de", "text": "Ist dieser Satz richtig? 'Trotz dem Regen sind wir spazieren gegangen, weil wir brauchten frische Luft.'"},
+    {"id": "proofread-6", "lang": "en", "text": "Polish this paragraph of my essay (improve wording too): 'Social media has a lot of effects on young people. Some are good and some are bad. It is important to think about this because young people use it a lot and it changes how they think about things.'"}
+  ]
+}

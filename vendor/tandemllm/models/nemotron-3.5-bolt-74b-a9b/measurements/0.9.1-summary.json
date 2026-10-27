@@ -1,0 +1,179 @@
+{
+ "nemotron-bolt-iq2": {
+  "hub": {
+   "repo": "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF",
+   "revision": "724e3fee41becc4048998e2204748147876ed56b",
+   "file": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf",
+   "bytes": 22018326528,
+   "sha256": "91d63363e782c8a3d5f4be42816eba8e0d42dd2530bd07a7d0d2dc440599af75",
+   "text_files": {
+    "repo": "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16",
+    "revision": "153d4551268566bb7d57681ceded1289e6341fcd"
+   },
+   "measured_from": "nvidia/Nemotron-3.5-Bolt-74B-A9B-IQ2-GGUF at 188282901e3b6f8169aff9de69022a78350259b0, the same file (sha256 on the hub)"
+  },
+  "decode_step": {
+   "tok_s": 27.47,
+   "ms_token": 36.403,
+   "eager_tok_s": 26.52,
+   "decode_bytes": 5166680640,
+   "allocated_gib": 20.92
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 27.47,
+     "per_block": 1.0,
+     "n": 313
+    },
+    "code": {
+     "tok_s": 27.44,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 27.45,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 27.39,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 27.39,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 27.53,
+     "per_block": 1.02,
+     "n": 313
+    },
+    "code": {
+     "tok_s": 29.34,
+     "per_block": 1.17,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 27.31,
+     "per_block": 1.02,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 57.7,
+     "per_block": 4.52,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 58.9,
+     "per_block": 9.46,
+     "n": 512
+    }
+   }
+  },
+  "parallel_lookup_256": {
+   "1": {
+    "total_tok_s": 26.94,
+    "per_request_tok_s": [
+     26.84
+    ],
+    "max_decoding_seen": 1,
+    "texts_equal_alone": [
+     true
+    ]
+   },
+   "2": {
+    "total_tok_s": 32.57,
+    "per_request_tok_s": [
+     16.22,
+     17.07
+    ],
+    "max_decoding_seen": 2,
+    "texts_equal_alone": [
+     true,
+     true
+    ]
+   },
+   "3": {
+    "total_tok_s": 38.3,
+    "per_request_tok_s": [
+     12.72,
+     13.82,
+     13.2
+    ],
+    "max_decoding_seen": 3,
+    "texts_equal_alone": [
+     true,
+     true,
+     true
+    ]
+   }
+  },
+  "long_context": [
+   {
+    "ctx": 32768,
+    "prefill_s": 43.6,
+    "prefill_tok_s": 752.1,
+    "decode_tok_s": 26.06,
+    "peak_allocated_gib": 26.55,
+    "finite": true
+   },
+   {
+    "ctx": 131072,
+    "prefill_s": 187.7,
+    "prefill_tok_s": 698.3,
+    "decode_tok_s": 23.27,
+    "peak_allocated_gib": 27.3,
+    "finite": true
+   },
+   {
+    "ctx": 262000,
+    "prefill_s": 385.4,
+    "prefill_tok_s": 679.8,
+    "decode_tok_s": null,
+    "peak_reserved_gib": 28.86,
+    "min_mem_available_gib": 82.8,
+    "finite": true,
+    "note": "after the SDPA enable_gqa fix (9faafec8); the first run without it was stopped at 5 GiB available"
+   }
+  ],
+  "llamacpp": {
+   "build": "620d2225c (master, #30520)",
+   "llama_bench_tg128": 35.37,
+   "server_greedy_8_prompts": [
+    39.35,
+    39.14,
+    38.62,
+    38.81,
+    38.62,
+    38.84,
+    38.69,
+    38.66
+   ]
+  },
+  "vs_llamacpp_teacher_forced": {
+   "positions": 1024,
+   "argmax_agree": 1001,
+   "agree_pct": 97.75,
+   "near_tie": 23,
+   "other": 0,
+   "top10_logprob_mean_abs_diff": 0.17457
+  },
+  "knobs": {
+   "max_len": 32768,
+   "conductor": "raw",
+   "suffix_store": "off",
+   "parallel": "1 (rows), 3 (parallel)",
+   "kv_pool": "off",
+   "graphs": "on",
+   "skinny_tiles": "ops/skinny-tiles.json",
+   "thinking": "off (rows)"
+  },
+  "date": "2026-10-15",
+  "board": "DGX Spark GB10, the GPU to itself"
+ }
+}

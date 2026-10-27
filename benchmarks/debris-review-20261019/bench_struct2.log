@@ -1,0 +1,37 @@
+[bench] warmup (32 tokens)
+{"tok_s": 80.78399480870495, "ttft_s": 0.20705917800660245, "completion_tokens": 32}
+[bench] run 1/3 phase=live-check2 conc=1
+{"tok_s": 78.44422659284399, "ttft_s": 0.300169176000054, "completion_tokens": 400, "aggregate_tok_s": null, "finish_reason": "length", "nan": false, "accept_ratio": 0.956, "accepted_per_step": 6.692, "mean_draft_tokens_per_step": 7.0, "pos": [1.0, 0.9808, 0.9808, 0.9808, 0.9808, 0.8846, 0.8846]}
+[bench] run 2/3 phase=live-check2 conc=1
+{"tok_s": 83.26469725918012, "ttft_s": 0.29383002799295355, "completion_tokens": 400, "aggregate_tok_s": null, "finish_reason": "length", "nan": false, "accept_ratio": 0.9804, "accepted_per_step": 6.863, "mean_draft_tokens_per_step": 7.0, "pos": [1.0, 1.0, 1.0, 1.0, 1.0, 0.9412, 0.9216]}
+[bench] run 3/3 phase=live-check2 conc=1
+{"tok_s": 79.93532735980703, "ttft_s": 0.2718246090080356, "completion_tokens": 400, "aggregate_tok_s": null, "finish_reason": "length", "nan": false, "accept_ratio": 0.9353, "accepted_per_step": 6.547, "mean_draft_tokens_per_step": 7.0, "pos": [1.0, 0.9811, 0.9811, 0.9623, 0.9623, 0.8302, 0.8302]}
+{
+  "phase": "live-check2",
+  "health_code": 200,
+  "health_body": "",
+  "ts": 1791579538.6053684,
+  "prompt": "structured-count-1-200",
+  "thinking": false,
+  "temperature": 0,
+  "concurrency": 1,
+  "note": "decode_ms_per_draft_step is a serving-cycle ratio, not a kernel timing",
+  "warmup": {
+    "tok_s": 80.78399480870495,
+    "ttft_s": 0.20705917800660245,
+    "completion_tokens": 32
+  },
+  "tok_s_median": 79.93532735980703,
+  "tok_s_min": 78.44422659284399,
+  "tok_s_max": 83.26469725918012,
+  "ttft_median_s": 0.29383002799295355,
+  "completion_tokens_median": 400.0,
+  "accept_ratio_median": 0.956,
+  "accepted_per_step_median": 6.692,
+  "mean_draft_tokens_per_step_median": 7.0,
+  "aggregate_tok_s_median": null,
+  "decode_ms_per_draft_step_median": 94.17990937731273,
+  "any_nan": false,
+  "health_code_after": 200
+}
+wrote /tmp/bench_struct2.json

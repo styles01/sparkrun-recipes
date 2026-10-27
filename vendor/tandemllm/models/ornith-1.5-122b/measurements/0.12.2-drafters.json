@@ -1,0 +1,234 @@
+{
+ "build": "0.12.2",
+ "date": "2026-10-20",
+ "device": "dgx-spark",
+ "method": "tools/q35m_ab.py, one fresh server a row, greedy, thinking off; five kinds at 512 tokens and a game ask at 2,048 through TandemLLM, the long code answer (2,048 tokens) through the raw model",
+ "configs": {
+  "plain": "plain decode",
+  "a": "DFlash2 (BF16, target head) + lookup, StairCut without a price file (the profile as first deployed)",
+  "c": "DFlash2 (NVFP4 projections, hot head 32,768) + lookup + anchor backoff 8 + price file",
+  "d": "c with the cut's sibling leaves (a tree block)",
+  "e": "MTP layer (depth 3) + lookup + anchor backoff 8 + price file (the profile)"
+ },
+ "rows": {
+  "plain": {
+   "prose": {
+    "tok_s": 37.55,
+    "per_block": 1.0,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 38.42,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 37.81,
+    "per_block": 1.0,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 38.03,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 38.13,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 3664
+   },
+   "game": {
+    "tok_s": 38.09,
+    "per_block": 1.0,
+    "n": 134,
+    "prompt": 4597
+   }
+  },
+  "a": {
+   "prose": {
+    "tok_s": 59.22,
+    "per_block": 16.83,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 73.04,
+    "per_block": 10.87,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 58.15,
+    "per_block": 9.94,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 73.03,
+    "per_block": 13.1,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 98.78,
+    "per_block": 10.87,
+    "n": 512,
+    "prompt": 3664
+   },
+   "game": {
+    "tok_s": 51.62,
+    "per_block": 5.54,
+    "n": 134,
+    "prompt": 4597
+   }
+  },
+  "c": {
+   "prose": {
+    "tok_s": 67.29,
+    "per_block": 8.19,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 91.66,
+    "per_block": 9.46,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 92.22,
+    "per_block": 12.89,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 106.87,
+    "per_block": 11.36,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 122.76,
+    "per_block": 12.78,
+    "n": 512,
+    "prompt": 3664
+   },
+   "game": {
+    "tok_s": 119.73,
+    "per_block": 14.78,
+    "n": 134,
+    "prompt": 4597
+   }
+  },
+  "d": {
+   "prose": {
+    "tok_s": 65.71,
+    "per_block": 10.1,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 95.33,
+    "per_block": 9.29,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 94.42,
+    "per_block": 11.6,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 94.09,
+    "per_block": 10.22,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 120.16,
+    "per_block": 12.78,
+    "n": 512,
+    "prompt": 3664
+   },
+   "game": {
+    "tok_s": 120.23,
+    "per_block": 14.78,
+    "n": 134,
+    "prompt": 4597
+   }
+  },
+  "e": {
+   "prose": {
+    "tok_s": 85.3,
+    "per_block": 14.43,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 114.19,
+    "per_block": 10.02,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 110.0,
+    "per_block": 15.82,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 115.87,
+    "per_block": 12.17,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 124.75,
+    "per_block": 15.48,
+    "n": 512,
+    "prompt": 3664
+   },
+   "game": {
+    "tok_s": 85.93,
+    "per_block": 13.3,
+    "n": 134,
+    "prompt": 4597
+   }
+  }
+ },
+ "long": {
+  "plain": {
+   "tok_s": 37.18,
+   "per_block": 1.0,
+   "n": 2048,
+   "prompt": 4714
+  },
+  "e": {
+   "tok_s": 103.28,
+   "per_block": 9.43,
+   "n": 2048,
+   "prompt": 4714
+  },
+  "c": {
+   "tok_s": 96.77,
+   "per_block": 9.52,
+   "n": 2048,
+   "prompt": 4714
+  }
+ },
+ "lossless": {
+  "prose": true,
+  "code": true,
+  "chat": true,
+  "edit": true,
+  "copy": true,
+  "game": true,
+  "long": true
+ }
+}

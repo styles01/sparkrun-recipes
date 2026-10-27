@@ -1,0 +1,184 @@
+{
+ "bf16": {
+  "hub": {
+   "repo": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+   "revision": "a9904d24bcc1d289a1950fa9d2b978c47cf903b9",
+   "bytes": 65845713051,
+   "sha256_verified": true
+  },
+  "decode_step": {
+   "tok_s": 33.63,
+   "ms_token": 29.734,
+   "eager_tok_s": 32.76,
+   "decode_bytes": 6555425152,
+   "allocated_gib": 59.04
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 34.14,
+     "per_block": 1.0,
+     "n": 476
+    },
+    "code": {
+     "tok_s": 33.97,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 33.77,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 33.85,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 33.74,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 33.08,
+     "per_block": 1.01,
+     "n": 476
+    },
+    "code": {
+     "tok_s": 36.21,
+     "per_block": 1.21,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 34.13,
+     "per_block": 1.05,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 105.77,
+     "per_block": 9.83,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 140.74,
+     "per_block": 14.19,
+     "n": 512
+    }
+   },
+   "mtp": {
+    "prose": {
+     "tok_s": 34.17,
+     "per_block": 1.0,
+     "n": 476
+    },
+    "code": {
+     "tok_s": 34.15,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 34.16,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 34.01,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 34.06,
+     "per_block": 1.0,
+     "n": 512
+    }
+   }
+  },
+  "same_text": {
+   "prose": true,
+   "code": true,
+   "chat": true,
+   "edit": true,
+   "copy": true
+  },
+  "llama_cpp_cross_check": {
+   "build": "llama.cpp 5ecbe1ac1, CUDA build on the same board",
+   "tool": "llama-bench -ngl 99 -p 0 -n 256 -r 3",
+   "bf16_gguf": "ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF@8a08a1c8 BF16",
+   "bf16_tg256_tok_s": 33.31,
+   "ud_iq2_xxs_gguf": "unsloth UD-IQ2_XXS@f2d3fe36 (no IQ2_XXS tensors: IQ4_NL/Q5_0 experts)",
+   "ud_iq2_xxs_tg256_tok_s": 79.99
+  },
+  "parallel_lookup": {
+   "1": {
+    "per_request_tok_s": [
+     33.6
+    ],
+    "ttft_s": [
+     0.257
+    ],
+    "total_tok_s": 33.73,
+    "max_decoding_seen": 1,
+    "joint_rounds_added": {},
+    "texts_equal_alone": [
+     true
+    ],
+    "valid": true
+   },
+   "2": {
+    "per_request_tok_s": [
+     22.28,
+     22.88
+    ],
+    "ttft_s": [
+     0.251,
+     0.514
+    ],
+    "total_tok_s": 44.73,
+    "max_decoding_seen": 2,
+    "joint_rounds_added": {
+     "2": 254
+    },
+    "texts_equal_alone": [
+     true,
+     true
+    ],
+    "valid": true
+   },
+   "3": {
+    "per_request_tok_s": [
+     16.82,
+     17.29,
+     17.43
+    ],
+    "ttft_s": [
+     0.275,
+     0.545,
+     0.804
+    ],
+    "total_tok_s": 50.65,
+    "max_decoding_seen": 3,
+    "joint_rounds_added": {
+     "2": 1,
+     "3": 254
+    },
+    "texts_equal_alone": [
+     true,
+     true,
+     true
+    ],
+    "valid": true
+   }
+  },
+  "files": [
+   "ab-plain.json",
+   "ab-lookup.json",
+   "ab-mtp.json",
+   "bench.json",
+   "llamacpp-bf16.json",
+   "parallel-lookup.json"
+  ]
+ }
+}

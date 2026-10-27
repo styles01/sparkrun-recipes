@@ -1,0 +1,42 @@
+% A draft tree in depth-first pre-order, its accepted path, and the ancestor mask the verify uses.
+\begin{tikzpicture}[
+    tn/.style={draw=cobalt, fill=cobaltlight, rounded corners=2pt, font=\sffamily\small,
+      minimum width=12mm, minimum height=6.5mm, inner sep=2pt},
+    acc/.style={draw=signal, fill=signallight, line width=0.9pt},
+    rej/.style={draw=rule, fill=paper, text=slate},
+    idx/.style={font=\sffamily\tiny, text=slate},
+    level distance=12mm, sibling distance=17mm]
+  % the tree
+  \node[tn, acc] (n0) at (0,0) {The};
+  \node[tn, acc] (n1) at (-1.6,-1.25) {cat};
+  \node[tn, rej] (n5) at (1.9,-1.25) {dog};
+  \node[tn, acc] (n2) at (-2.6,-2.5) {sat};
+  \node[tn, rej] (n4) at (-0.6,-2.5) {is};
+  \node[tn, rej] (n3) at (-2.6,-3.75) {in};
+  \node[tn, rej] (n6) at (1.9,-2.5) {ran};
+  \node[tn, rej] (n7) at (1.9,-3.75) {away};
+  \foreach \a/\b in {n0/n1,n1/n2,n2/n3,n1/n4,n0/n5,n5/n6,n6/n7} \draw[thick, draw=slate] (\a) -- (\b);
+  \draw[very thick, draw=signal] (n0) -- (n1) -- (n2);
+  \foreach \n/\i in {n0/0,n1/1,n2/2,n3/3,n4/4,n5/5,n6/6,n7/7} \node[idx, anchor=south east] at (\n.north west) {\i};
+  % the model's own tokens
+  \node[font=\sffamily\scriptsize, text=signal, anchor=west] at ([xshift=1mm]n0.east) {model: cat};
+  \node[font=\sffamily\scriptsize, text=signal, anchor=east] at ([xshift=-1mm]n1.west) {model: sat};
+  \node[font=\sffamily\scriptsize, text=signal, anchor=east] at ([xshift=-1mm]n2.west) {model: on};
+  \node[hot, font=\sffamily\scriptsize, anchor=north, align=center] at (-1.0,-4.55)
+    {committed: \textbf{cat sat} + the model's own \textbf{on}};
+
+  % the ancestor mask
+  \begin{scope}[shift={(4.6,0.35)}, x=4.6mm, y=-4.6mm]
+    \node[lbl, anchor=south west] at (0,-0.6) {ancestor mask (row attends to column)};
+    \foreach \r/\cols in {0/{0},1/{0,1},2/{0,1,2},3/{0,1,2,3},4/{0,1,4},5/{0,5},6/{0,5,6},7/{0,5,6,7}} {
+      \foreach \c in \cols { \fill[cobalt!75] (\c,\r) rectangle +(1,1); }
+    }
+    \draw[rule] (0,0) grid (8,8);
+    \foreach \i in {0,...,7} {
+      \node[idx] at (\i+0.5,-0.25) {\i};
+      \node[idx] at (-0.3,\i+0.5) {\i};
+    }
+    \node[lbl, anchor=north west, text width=40mm] at (0,8.3)
+      {every node sees the committed prefix, its ancestors and itself; a subtree is a contiguous range};
+  \end{scope}
+\end{tikzpicture}

@@ -1,0 +1,18 @@
+{
+  "package": "decision-helper",
+  "rubric": [
+    "The decision as one question with its real options (including wait or do nothing where possible); the user's own criteria in their words.",
+    "Each option scored per criterion with a reason; the biggest risk per option and whether it can be undone.",
+    "A clear view in one or two sentences with the one fact that would change it; never 'only you can decide' as the whole answer.",
+    "One small step for this week; a professional named for health, big money, law or safety without turning the answer into a referral.",
+    "No invented facts about the user's life; one line of acknowledgement first when the user is in distress."
+  ],
+  "prompts": [
+    {"id": "decision-helper-1", "lang": "en", "text": "I can't decide: stay in my safe job at the council or join my friend's startup for 20 % less pay and some equity. I'm 31, no kids, 6 months of savings."},
+    {"id": "decision-helper-2", "lang": "de", "text": "Soll ich mein altes Auto (2011, 180.000 km, braucht neue Bremsen für 900 Euro) reparieren lassen oder verkaufen und für 8.000 Euro ein jüngeres kaufen? Ich fahre 15.000 km im Jahr."},
+    {"id": "decision-helper-3", "lang": "ar", "text": "عرض عليّ والدي أن أنتقل للعيش معه لأساعده بعد وفاة أمي، لكن عملي في مدينة أخرى تبعد 300 كيلومتر. لا أعرف ماذا أفعل."},
+    {"id": "decision-helper-4", "lang": "en", "text": "Should we get a dog? Two adults working from home 3 days a week, flat with no garden, park nearby, we travel twice a year."},
+    {"id": "decision-helper-5", "lang": "en", "text": "My girlfriend wants to move to Spain for her job, I'd have to quit mine and find work there, I don't speak Spanish. We've been together 2 years. What would you do?"},
+    {"id": "decision-helper-6", "lang": "de", "text": "Master direkt nach dem Bachelor oder erst 2 Jahre arbeiten? Informatik, ich habe ein Jobangebot für 48.000 im Jahr."}
+  ]
+}

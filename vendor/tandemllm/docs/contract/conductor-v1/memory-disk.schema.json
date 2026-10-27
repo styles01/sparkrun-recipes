@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor memory disk",
+  "type": "object",
+  "description": "GET /v1/conductor/memory/disk (C1): the disk tier. Always: running, the settings and their version, the flag the server started with, the free-space floor. When running: its numbers, the 20 most-hit entries (a preview only for opencode heads and packages), the last events.",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "running": {
+      "type": "boolean"
+    },
+    "settings_version": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "settings": {
+      "$ref": "#/$defs/settings"
+    },
+    "flag": {
+      "type": "string"
+    },
+    "floor_gb": {
+      "type": "number"
+    },
+    "root": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "free_bytes": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "on": {
+      "type": "boolean"
+    },
+    "chunk": {
+      "type": "integer"
+    },
+    "fingerprint": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "integer"
+    },
+    "chunks": {
+      "type": "integer"
+    },
+    "bytes": {
+      "type": "integer"
+    },
+    "budget": {
+      "type": "integer"
+    },
+    "floor": {
+      "type": "integer"
+    },
+    "staging_bytes": {
+      "type": "integer"
+    },
+    "staging_planned": {
+      "type": "integer"
+    },
+    "head_anchors": {
+      "type": "integer"
+    },
+    "min_tokens": {
+      "type": "integer"
+    },
+    "hit_rate": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "read_bps": {
+      "type": "number"
+    },
+    "counted_lines": {
+      "type": "integer"
+    },
+    "sessions_seen": {
+      "type": "integer"
+    },
+    "open_jobs": {
+      "type": "integer"
+    },
+    "top": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry"
+      },
+      "maxItems": 20
+    },
+    "by_kind": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "integer"
+          },
+          "hits": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "entries",
+          "hits"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "ts"
+        ]
+      },
+      "maxItems": 50
+    },
+    "lookups": {
+      "type": "integer"
+    },
+    "hits": {
+      "type": "integer"
+    },
+    "misses": {
+      "type": "integer"
+    },
+    "declined_slow": {
+      "type": "integer"
+    },
+    "rejected_collisions": {
+      "type": "integer"
+    },
+    "incomplete": {
+      "type": "integer"
+    },
+    "tokens_restored": {
+      "type": "integer"
+    },
+    "bytes_read": {
+      "type": "integer"
+    },
+    "read_ms": {
+      "type": "number"
+    },
+    "last_read_gbs": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "last_restore_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "jobs": {
+      "type": "integer"
+    },
+    "writes_chunk": {
+      "type": "integer"
+    },
+    "writes_anchor": {
+      "type": "integer"
+    },
+    "bytes_written": {
+      "type": "integer"
+    },
+    "write_ms": {
+      "type": "number"
+    },
+    "last_write_gbs": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "evicted": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "dropped": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "corrupt": {
+      "type": "integer"
+    },
+    "failed_restores": {
+      "type": "integer"
+    },
+    "swept_tmp": {
+      "type": "integer"
+    },
+    "swept_fingerprint": {
+      "type": "integer"
+    },
+    "cleared": {
+      "type": "integer"
+    },
+    "direct": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "admitted": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    }
+  },
+  "required": [
+    "contract_version",
+    "running",
+    "settings_version",
+    "settings",
+    "flag",
+    "floor_gb"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "settings": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "on",
+            "off"
+          ]
+        },
+        "budget_gb": {
+          "type": "number"
+        },
+        "ttl_days": {
+          "type": "integer"
+        },
+        "admit_after": {
+          "type": "integer"
+        },
+        "min_free_gb": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "mode",
+        "budget_gb",
+        "ttl_days",
+        "admit_after",
+        "min_free_gb"
+      ],
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "opencode-head",
+            "head",
+            "package",
+            "memory",
+            "prefix"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hits": {
+          "type": "integer"
+        },
+        "used": {
+          "type": "number"
+        },
+        "created": {
+          "type": "number"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "reads_bytes": {
+          "type": "integer"
+        },
+        "value": {
+          "type": "number"
+        },
+        "preview": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "tokens",
+        "kind",
+        "label",
+        "hits",
+        "used",
+        "created",
+        "complete",
+        "reads_bytes",
+        "value",
+        "preview"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

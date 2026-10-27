@@ -1,0 +1,51 @@
+# for the cluster-monitoring repo: `git apply` in its root. Adds dgx_qse_hold_active (and
+# the pause file age) to dgx-exporter, which QseEngineDown in qse-engine-rules.yaml reads. The
+# exporter reads the box through its /host/root bind mount already; ship = edit + restart.
+
+--- a/dgx-exporter.py
++++ b/dgx-exporter.py
+@@ -36,6 +36,14 @@
+ MAINT_MARKER = os.environ.get("MAINT_MARKER", "/host/root/home/user/.serve-stack-maintenance")
+ MAINT_MAX_AGE = float(os.environ.get("MAINT_MAX_AGE", "1500"))  # 25 min
+ 
++# a benchmark hold on the qwen38-spark-engine (its ops/hold.sh) stops the :8000 service on
++# purpose for up to ~2 h and keeps this pause file fresh the whole time (touched every 60 s by the
++# hold's keeper). Fresh = a hold is running; QseEngineDown is muted while it is. Its own marker,
++# not the serve-stack one: that one self-expires at 25 min, and a gate lasts longer.
++QSE_HOLD_FILE = os.environ.get("QSE_HOLD_FILE",
++                               "/host/root/home/user/qwen38-spark-engine/.watchdog.off")
++QSE_HOLD_FRESH = float(os.environ.get("QSE_HOLD_FRESH", "180"))  # 3 keeper periods
++
+ GPU_FIELDS = [
+     ("utilization.gpu", "dgx_gpu_utilization_ratio", "gauge",
+      "GPU utilization as a ratio 0-1", 0.01),
+@@ -224,6 +232,21 @@
+     out.append(("dgx_serving_stack_maintenance_started_seconds", "gauge",
+                 "unix time the open window was declared, 0 if none",
+                 [({}, started)]))
++
++
++def qse_hold_metrics(out):
++    """1 while a qwen38-spark-engine hold keeps its pause file fresh. Never raises."""
++    active, age = 0.0, -1.0
++    try:
++        age = time.time() - os.stat(QSE_HOLD_FILE).st_mtime
++        active = 1.0 if age < QSE_HOLD_FRESH else 0.0
++    except OSError:
++        pass
++    out.append(("dgx_qse_hold_active", "gauge",
++                "1 while a qwen38-spark-engine benchmark hold is running (its pause file is fresh)",
++                [({}, active)]))
++    out.append(("dgx_qse_hold_file_age_seconds", "gauge",
++                "age of the engine's hold pause file, -1 if there is none", [({}, age)]))
+ 
+ 
+ def render():
+@@ -234,6 +257,7 @@
+     stat_metrics(out)
+     disk_metrics(out)
+     maintenance_metrics(out)
++    qse_hold_metrics(out)
+     out.append(("dgx_exporter_scrape_duration_seconds", "gauge",
+                 "Time taken to collect this scrape", [({}, time.time() - started)]))
+ 

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor deciders document",
+  "type": "object",
+  "properties": {
+    "models": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+          },
+          "load": {
+            "enum": [
+              "on_start",
+              "on_demand",
+              "off"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "load"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "questions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+      }
+    },
+    "api": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        },
+        "rate_per_min": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6000
+        },
+        "max_texts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "max_chars": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 1000000
+        },
+        "deadline_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "drive_rate_per_s": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "drive_sessions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "drive_idle_s": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 600
+        },
+        "drive_max_texts": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000000
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "models",
+    "questions"
+  ],
+  "additionalProperties": false
+}

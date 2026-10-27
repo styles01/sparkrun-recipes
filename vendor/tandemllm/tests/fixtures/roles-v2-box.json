@@ -1,0 +1,42 @@
+{
+ "decider": {
+  "endpoint": "self",
+  "model": "auto",
+  "contract": "jev",
+  "timeout_ms": 400,
+  "memory_gb": 5.1,
+  "mode": "on"
+ },
+ "classifier": {
+  "endpoint": "self",
+  "model": "qwen38-spark-engine",
+  "contract": "openai-chat",
+  "timeout_ms": 8000,
+  "memory_gb": 0.0,
+  "mode": "on"
+ },
+ "librarian": {
+  "endpoint": "",
+  "model": "",
+  "contract": "rerank",
+  "timeout_ms": 800,
+  "memory_gb": 0.0,
+  "mode": "off"
+ },
+ "reader": {
+  "endpoint": "",
+  "model": "",
+  "contract": "openai-chat",
+  "timeout_ms": 30000,
+  "memory_gb": 0.0,
+  "mode": "off"
+ },
+ "judge": {
+  "endpoint": "self",
+  "model": "qwen38-spark-engine",
+  "contract": "openai-chat",
+  "timeout_ms": 30000,
+  "memory_gb": 0.0,
+  "mode": "off"
+ }
+}

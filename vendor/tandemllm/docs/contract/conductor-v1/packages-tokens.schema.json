@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /v1/conductor/packages/tokens {texts}: the tokens of each text, in order (G2; a read)",
+  "type": "object",
+  "required": ["contract_version", "tokens", "tokenizer"],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {"type": "string", "enum": ["1.0"]},
+    "tokens": {"type": "array", "items": {"type": "integer"}},
+    "tokenizer": {"enum": ["engine", "estimate"]}
+  }
+}

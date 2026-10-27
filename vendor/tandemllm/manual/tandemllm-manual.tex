@@ -1,0 +1,84 @@
+% The TandemLLM manual. Build: latexmk -lualatex tandemllm-manual.tex (or `make` in manual/).
+\documentclass[paper=a4,fontsize=11pt,DIV=11,twoside=false,open=any,parskip=half-,
+  toc=listof,toc=index,headings=standardclasses,numbers=noenddot]{scrbook}
+
+\input{preamble}
+
+\begin{document}
+
+\frontmatter
+% the cover's logo hook (chapters/titlepage.tex): the mark, top right on the ink page
+\newcommand{\coverlogo}{\usebox{\tandemcoverbox}}
+\input{chapters/titlepage}
+\input{chapters/about}
+
+{\hypersetup{linkcolor=ink}\tableofcontents\listoffigures\listoftables}
+
+\mainmatter
+
+\partintro{%
+Two chapters for every reader. Chapter~\ref{ch:intro} says what TandemLLM is, names the machine and the model every number in this book comes from, says what the repository contains and what runs today, and states the two rules every change has to pass. Chapter~\ref{ch:tour} follows one chat request through all of it, from the proxy to the stream going back, and names the chapter that explains each step.}
+\part{Introduction}
+\input{chapters/intro}
+\input{chapters/tour}
+
+\partintro{%
+How to install and run it. Chapter~\ref{ch:install-engine} starts with the setups that work today, then installs the engine with one command, says who can reach it, and adds the small models and other backends. Chapter~\ref{ch:install-dash} installs the dashboard and proxy on any machine, Chapter~\ref{ch:other-engines} puts other engines and cloud APIs behind it, and Chapter~\ref{ch:operations} is the operator's chapter: the memory rules, the service scripts, the watchdog, how to hold the board for a measurement, where the logs are, and how to upgrade and roll back. Chapter~\ref{ch:community} runs weights other people published, and says how to list your own.}
+\part{Installing and running}
+\input{chapters/install-engine}
+\input{chapters/install-dash}
+\input{chapters/other-engines}
+\input{chapters/operations}
+\input{chapters/community}
+
+\partintro{%
+Why the engine is fast, and why its output is still the model's own text. The chapters go from the model's layers and the byte budget (\ref{ch:architecture}) through the weights (\ref{ch:quantisation}), the kernels (\ref{ch:kernels}), the drafters and StairCut (\ref{ch:speculation}), the exactness contract (\ref{ch:exactness}), the caches (\ref{ch:caches}), the server (\ref{ch:serving}) and the measurement method (\ref{ch:measurement}) to the seams a new model plugs into (\ref{ch:adding-model}), and ends with the second and third models served through them, Qwen3.8-Flash-Next (\ref{ch:flashnext}) and LiquidAI's LFM2.5-24B-A2B (\ref{ch:lfm25}). Every number is labelled measured or arithmetic.}
+\part{How the engine works}
+\input{chapters/architecture}
+\input{chapters/quantisation}
+\input{chapters/kernels}
+\input{chapters/speculation}
+\input{chapters/exactness}
+\input{chapters/caches}
+\input{chapters/serving}
+\input{chapters/measurement}
+\input{chapters/adding-model}
+\input{chapters/flashnext}
+\input{chapters/lfm25}
+\input{chapters/nemotron}
+\input{chapters/ornith}
+
+\partintro{%
+The conductor: the layer in front of the model that plans each turn and watches it run. Profiles and the router (\ref{ch:conductor}), packages, the skill library and the small decision models (\ref{ch:packages}), the session monitor (\ref{ch:monitor}), status lines, the voice and the shadow reader (\ref{ch:lines}), memory notes (\ref{ch:memory}), and the same conductor in front of other backends (\ref{ch:harness-proxy}). Nothing here changes the model's arithmetic; all of it changes what the model reads.}
+\part{The conductor}
+\input{chapters/conductor}
+\input{chapters/packages}
+\input{chapters/monitor}
+\input{chapters/lines}
+\input{chapters/memory}
+\input{chapters/harness-proxy}
+
+\partintro{%
+The dashboard, view by view (\ref{ch:dashboard}), its Chat tab with the sandbox and the permission modes (\ref{ch:chat}), and how it watches several engines at once: the Parallel page, the engines' own metrics pages, the plugins inside vLLM and SGLang, and the host collector (\ref{ch:hosts}). Every figure on it is measured or null, never estimated.}
+\part{The dashboard}
+\input{chapters/dashboard}
+\input{chapters/chat}
+\input{chapters/hosts}
+
+\partintro{%
+The reference. Chapters~\ref{ch:ref-cli} to \ref{ch:ref-metrics} are generated from the code: every flag, variable, route, metric and ledger column, with the value the served profile sets. Then troubleshooting by symptom (\ref{ch:troubleshooting}), questions and answers (\ref{ch:faq}), the roadmap (\ref{ch:roadmap}) and the changelog (\ref{ch:changelog}). The glossary and the index follow.}
+\part{Reference}
+\input{chapters/ref-cli}
+\input{chapters/ref-env}
+\input{chapters/ref-http}
+\input{chapters/ref-metrics}
+\input{chapters/troubleshooting}
+\input{chapters/faq}
+\input{chapters/roadmap}
+\input{chapters/changelog}
+
+\backmatter
+\input{chapters/glossary}
+\printindex
+
+\end{document}

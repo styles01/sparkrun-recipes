@@ -1,0 +1,11 @@
+{
+ "shots": {},
+ "check_output": "taskcheck csvq\nRESULT: PASS\n",
+ "files": [
+  "SPEC.md",
+  "check.py",
+  "csvq",
+  "opencode.json",
+  "tests"
+ ]
+}

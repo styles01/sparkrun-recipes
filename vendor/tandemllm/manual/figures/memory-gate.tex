@@ -1,0 +1,21 @@
+% The memory gate before every prefill: caches are given back cheapest first.
+\begin{tikzpicture}[
+    lvl/.style={draw=cobalt, fill=cobaltlight, rounded corners=2pt, font=\sffamily\scriptsize,
+      minimum height=9mm, text width=13.5mm, align=center, inner sep=2pt},
+    node distance=2.2mm]
+  \node[quiet, text width=20mm, font=\sffamily\scriptsize] (start) {prefill due:\\workspace\\estimated};
+  \node[lvl, right=4mm of start] (l1) {state\\store};
+  \node[lvl, right=of l1] (l2) {body\\anchors};
+  \node[lvl, right=of l2] (l3) {end\\anchor};
+  \node[lvl, right=of l3] (l4) {guest\\stash};
+  \node[lvl, right=of l4] (l5) {parked\\session};
+  \node[lvl, right=of l5] (l6) {pinned\\head};
+  \node[lvl, right=of l6] (l7) {roles'\\pools};
+  \node[hot, below=8mm of l7, text width=15mm, font=\sffamily\scriptsize] (refuse) {503 +\\Retry-After};
+  \node[box, below=8mm of l2, text width=24mm, font=\sffamily\scriptsize] (run) {fits under the peak:\\the prefill runs};
+  \draw[flow] (start) -- (l1);
+  \foreach \a/\b in {l1/l2,l2/l3,l3/l4,l4/l5,l5/l6,l6/l7} \draw[flow] (\a) -- (\b);
+  \draw[flow] (l7) -- (refuse) node[midway, right, lbl] {still over};
+  \draw[dflow] (l1.south) |- (run.west);
+  \node[lbl, anchor=south] at ($(l1.north)!0.5!(l7.north)+(0,1mm)$) {cheapest first; each level only while the prompt's workspace does not fit};
+\end{tikzpicture}

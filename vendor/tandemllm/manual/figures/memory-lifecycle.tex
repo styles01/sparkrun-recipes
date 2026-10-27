@@ -1,0 +1,21 @@
+% The life of a memory note: written, checked, stored provisional, read back, ratified, revised, archived.
+\begin{tikzpicture}[node distance=5mm and 7mm]
+  \node[box, text width=27mm] (block) {a \texttt{<tandem\_memory>}\\block in an answer};
+  \node[box, below=of block, text width=27mm] (writer) {the writer's\\hidden turn};
+  \node[box, below=of writer, text width=27mm] (script) {a script: \texttt{POST /v1/memory}};
+  \node[hot, right=10mm of writer, text width=30mm] (checks) {checks\\[-1pt]{\scriptsize caps refuse, never cut}\\[-3pt]{\scriptsize secret patterns refused}\\[-3pt]{\scriptsize a rule needs the user's words}\\[-3pt]{\scriptsize same fact: a revision}};
+  \node[box, right=10mm of checks, text width=24mm] (prov) {note, provisional\\[-1pt]{\scriptsize one fact, one file}};
+  \node[box, above=9mm of prov, text width=24mm] (rat) {ratified, pinned\\[-1pt]{\scriptsize on the Notes tab}};
+  \node[quiet, below=9mm of prov, text width=24mm] (arch) {archived\\[-1pt]{\scriptsize deleted after 30 days}};
+  \node[box, right=10mm of prov, text width=28mm] (reads) {read back\\[-1pt]{\scriptsize the card, the index,}\\[-3pt]{\scriptsize matching notes}};
+  \node[quiet, below=9mm of checks, text width=30mm] (refused) {refused: the text\\goes out as it was};
+  \draw[flow] (block.east) -- (checks.west);
+  \draw[flow] (writer) -- (checks);
+  \draw[flow] (script.east) -- (checks.west);
+  \draw[flow] (checks) -- (prov);
+  \draw[flow] (prov) -- node[right, lbl] {a person} (rat);
+  \draw[flow] (prov) -- node[right, lbl] {archive} (arch);
+  \draw[flow] (prov) -- (reads);
+  \draw[flow] (rat.east) -| (reads.north);
+  \draw[dflow] (checks) -- (refused);
+\end{tikzpicture}

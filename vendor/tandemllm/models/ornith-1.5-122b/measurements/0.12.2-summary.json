@@ -1,0 +1,280 @@
+{
+ "build": "0.12.2",
+ "date": "2026-10-20",
+ "device": "dgx-spark",
+ "profile": "ornith-1.5-122b-exl3-4.0",
+ "rows": {
+  "plain": {
+   "prose": {
+    "tok_s": 37.46,
+    "per_block": 1.0,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 38.44,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 37.84,
+    "per_block": 1.0,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 38.24,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 38.24,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 3664
+   },
+   "_version": "0.12.2+ornith-tmp-plain"
+  },
+  "mtp": {
+   "prose": {
+    "tok_s": 75.27,
+    "per_block": 11.65,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 36.21,
+    "per_block": 1.13,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 56.91,
+    "per_block": 3.08,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 43.0,
+    "per_block": 1.85,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 33.94,
+    "per_block": 1.0,
+    "n": 512,
+    "prompt": 3664
+   },
+   "_version": "0.12.2+ornith-1.5-122b-exl3-4.0"
+  },
+  "dflash2": {
+   "prose": {
+    "tok_s": 59.48,
+    "per_block": 16.83,
+    "n": 304,
+    "prompt": 3146
+   },
+   "code": {
+    "tok_s": 75.95,
+    "per_block": 11.36,
+    "n": 512,
+    "prompt": 3426
+   },
+   "chat": {
+    "tok_s": 51.05,
+    "per_block": 9.16,
+    "n": 349,
+    "prompt": 3999
+   },
+   "edit": {
+    "tok_s": 78.3,
+    "per_block": 13.81,
+    "n": 512,
+    "prompt": 4165
+   },
+   "copy": {
+    "tok_s": 106.7,
+    "per_block": 11.88,
+    "n": 512,
+    "prompt": 3664
+   },
+   "_version": "0.12.2+ornith-tmp-d2"
+  }
+ },
+ "lossless": {
+  "prose": true,
+  "code": true,
+  "chat": true,
+  "edit": true,
+  "copy": true
+ },
+ "quality_bundle": {
+  "rows": 8,
+  "positions": 8192,
+  "engine_ppl": 7.2674,
+  "vs_bf16": {
+   "kl": 0.13863,
+   "kl_reverse": 0.14228,
+   "top1_pct": 86.18,
+   "ref_ppl": 7.094,
+   "top1_by_margin": {
+    "0.0-0.25": {
+     "positions": 792,
+     "agree": 393
+    },
+    "0.25-0.5": {
+     "positions": 792,
+     "agree": 533
+    },
+    "0.5-1.0": {
+     "positions": 1183,
+     "agree": 935
+    },
+    "1.0-2.0": {
+     "positions": 1575,
+     "agree": 1414
+    },
+    "2.0-4.0": {
+     "positions": 1606,
+     "agree": 1550
+    },
+    "4.0-inf": {
+     "positions": 2244,
+     "agree": 2235
+    }
+   }
+  },
+  "vs_exl3": {
+   "kl": 0.03809,
+   "kl_reverse": 0.039,
+   "top1_pct": 92.69,
+   "ref_ppl": 7.3151,
+   "top1_by_margin": {
+    "0.0-0.25": {
+     "positions": 833,
+     "agree": 528
+    },
+    "0.25-0.5": {
+     "positions": 729,
+     "agree": 576
+    },
+    "0.5-1.0": {
+     "positions": 1198,
+     "agree": 1100
+    },
+    "1.0-2.0": {
+     "positions": 1632,
+     "agree": 1597
+    },
+    "2.0-4.0": {
+     "positions": 1601,
+     "agree": 1594
+    },
+    "4.0-inf": {
+     "positions": 2199,
+     "agree": 2198
+    }
+   }
+  }
+ },
+ "vs_exllamav3_8x64": {
+  "reference": "exllamav3 1.6.0 forward (flash_attn_nc) on the same pack, teacher-forced on the engine's greedy tokens",
+  "positions": 512,
+  "top1_agree": 498,
+  "top1_pct": 97.27,
+  "kl_mean": 0.02671,
+  "abs_max_diff": 14.4492,
+  "abs_mean_diff": 0.68082,
+  "top1_by_margin": {
+   "0.0-0.25": {
+    "positions": 11,
+    "agree": 8
+   },
+   "0.25-0.5": {
+    "positions": 9,
+    "agree": 3
+   },
+   "0.5-1.0": {
+    "positions": 12,
+    "agree": 10
+   },
+   "1.0-2.0": {
+    "positions": 30,
+    "agree": 28
+   },
+   "2.0-4.0": {
+    "positions": 56,
+    "agree": 56
+   },
+   "4.0-inf": {
+    "positions": 394,
+    "agree": 393
+   }
+  }
+ },
+ "engine_check": {
+  "pack": "~/models/ornith-1.5-122b-exl3-4.0",
+  "load_s": 65.1,
+  "allocated_gib": 61.16,
+  "prefill_vs_ref": {
+   "top1_equal": true,
+   "max_abs_diff": 1.6149,
+   "logit_scale": 27.79
+  },
+  "graph_equals_eager": true,
+  "verify_rows_equal_decode": {
+   "chains_2_to_32": true,
+   "first_bad": [],
+   "tree": true
+  },
+  "self_check": {
+   "ok": true,
+   "steps": 16,
+   "layers": 48,
+   "rows_checked": 2400,
+   "first_diff": null
+  },
+  "decode_tok_s": 38.98,
+  "peak_allocated_gib": 63.14,
+  "ok": true
+ },
+ "dflash2_gate": {
+  "taps_entering_layer": [
+   {
+    "prompt": "Explain how a refrigerator keeps food co",
+    "mean_run": 1.571,
+    "positions": 21
+   },
+   {
+    "prompt": "Write a Python function that merges two ",
+    "mean_run": 7.667,
+    "positions": 21
+   },
+   {
+    "prompt": "Give me a packing list for a three-day h",
+    "mean_run": 1.571,
+    "positions": 21
+   }
+  ],
+  "taps_layer_output": [
+   {
+    "prompt": "Explain how a refrigerator keeps food co",
+    "mean_run": 1.619,
+    "positions": 21
+   },
+   {
+    "prompt": "Write a Python function that merges two ",
+    "mean_run": 9.143,
+    "positions": 21
+   },
+   {
+    "prompt": "Give me a packing list for a three-day h",
+    "mean_run": 2.048,
+    "positions": 21
+   }
+  ]
+ }
+}

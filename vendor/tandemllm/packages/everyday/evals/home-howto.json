@@ -1,0 +1,19 @@
+{
+  "package": "home-howto",
+  "rubric": [
+    "The first line says do-it-yourself, maybe (with the condition) or call a professional; gas, mains electricity, structural work, roofs and sick pets go to the professional or vet first.",
+    "Tools and materials with sizes or types and the time needed; numbered steps with the safety step in its place in the order.",
+    "A test of the result and the one next thing to try if it failed, then the professional; rentals get the landlord line.",
+    "Stains follow scrape, cold water, agent, wait, wash with a hidden-spot test; plants get the usual cause from the symptom and a finger-in-soil check; pets get normal ranges and the vet triggers (not eating 24 h, poisons, breathing).",
+    "No brands, no guessed product names or prices; children and pets kept away from chemicals and tools."
+  ],
+  "prompts": [
+    {"id": "home-howto-1", "lang": "en", "text": "The tap in my bathroom drips constantly. Can I fix it myself? I have basic tools."},
+    {"id": "home-howto-2", "lang": "de", "text": "Rotweinfleck auf dem hellen Sofa, ist schon eine Stunde her. Was tun?"},
+    {"id": "home-howto-3", "lang": "ar", "text": "نبتة الزنجبيل المنزلية عندي أوراقها تصفرّ من الأسفل وتتساقط. ما السبب وكيف أعالجها؟"},
+    {"id": "home-howto-4", "lang": "en", "text": "My cat hasn't eaten since yesterday morning and is hiding under the bed. She's 8. Should I worry?"},
+    {"id": "home-howto-5", "lang": "en", "text": "I want to hang a 15 kg mirror on a plasterboard wall. What do I need and how?"},
+    {"id": "home-howto-6", "lang": "de", "text": "Der Abfluss in der Dusche stinkt und läuft langsam ab. Ich wohne zur Miete. Was kann ich selbst machen und wann muss ich den Vermieter informieren?"},
+    {"id": "home-howto-7", "lang": "en", "text": "There's a smell of gas in the kitchen when I come home. What do I do?"}
+  ]
+}

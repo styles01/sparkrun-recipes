@@ -1,0 +1,26 @@
+{
+ "shots": {
+  "S0.png": 318.5,
+  "S1.png": 433.9,
+  "S2.png": 686.9,
+  "S3.png": 861.3,
+  "S4.png": 1689.0,
+  "S5.png": 1766.7,
+  "S6.png": 1881.4,
+  "S7.png": 2327.1,
+  "final.png": 2479.6,
+  "overlay.png": 543.0
+ },
+ "check_output": "scenecheck  {run}/shots/final.png  vs  {run}/ref/photo.jpg   (stage: full)\n  note: canvas found at x 176, y 118, 2048 x 1364 inside the page margin\n  de8 coarse colour    8.50   (<= 10.0; mean delta E, blur 8; fine 10.08, mid de4 9.38)   <- gate\n  de4 mid colour       9.38   (<= 12.0)   <- gate\n  lum layout corr     0.923   (>= 0.85; per scale [0.907, 0.923, 0.94])   <- gate\n  edge structure      0.588   (>= 0.45; silhouettes, shores, cliffs)   <- gate\n  sky colour           6.30   (<= 8.0; delta E inside the photo's sky; sky 11.2 % photo, 11.7 % render)   <- gate\n  skyline              1.11   (<= 3.0; mean distance in % of height; render skyline matches)   <- gate\n  palette              6.23   (<= 9.0; k-means 8, share-weighted nearest delta E)   <- gate\n  missing colour     photo has 7 % #737855 (green); nearest in render #4f5a49 (green), delta E 16\n  worst regions (fix the first one next; worst 14.98 <= 22.0):   <- gate\n    1. r4c5 (bottom right): dE 15.0, too blue; photo is grey #6a746a, render #526f77\n    2. r3c5 (lower-middle right): dE 14.8, too dark by 12 L; photo is grey #71857f, render #566762\n    3. r4c1 (bottom far left): dE 14.8, too light by 5 L, too red; photo is turquoise #3c6465, render #506d75\n    4. r3c2 (lower-middle left): dE 14.0, too dark by 9 L; photo is dark grey #464e48, render #2f393b\n    5. r2c4 (upper-middle centre-right): dE 13.1, too dark by 8 L, too yellow; photo is blue #63798e, render #59646b\n  heatmap            {run}/shots/final.check.png\nRESULT: PASS\n",
+ "files": [
+  "AGENTS.md",
+  "PROGRESS.yaml",
+  "PROMPT.md",
+  "index.html",
+  "js",
+  "opencode.json",
+  "plan-lines.json",
+  "ref",
+  "shots"
+ ]
+}

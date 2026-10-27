@@ -1,0 +1,40 @@
+{
+  "name": "creative-coding",
+  "version": "1.0.0",
+  "title": "Creative coding",
+  "kind": "skill",
+  "set": "first",
+  "description": "One-file HTML/JS visuals with sound - canvas or Three.js scenes, particles, simulations, generative art, small animated worlds with WebAudio ambience and effects; plan in three lines, write one file, render, fix the top three findings.",
+  "source": "skill:creative-coding",
+  "max_tokens": 500,
+  "house_body_tokens": 350,
+  "general": false,
+  "library": true,
+  "requires_tools": [],
+  "fallback": null,
+  "classes": ["drawing", "three_d", "code_edit", "design_ui"],
+  "files": {
+    "body": "SKILL.md",
+    "references": ["references/particles-boids-noise.md", "references/webaudio-patterns.md", "references/pixel-sprites.md", "references/threejs-skeleton.md"],
+    "exemplars": ["exemplars/bouncing-ball.html"]
+  },
+  "overlaps": {
+    "canvas-2d": "the general canvas rules (dpr, loop, layers) stay there; this package adds the plan, the seed and key rules, the sound rule and the defaults",
+    "web-audio": "the general WebAudio rules stay there; this package's reference holds the creative patterns (bed, wind, event sounds, sequencer, voices)",
+    "threejs-scene": "the general Three.js rules stay there and are the three_d class's core; references/threejs-skeleton.md is the one-file creative variant"
+  },
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 24,
+    "thinking": false,
+    "max_tokens": 24000,
+    "seed": 42,
+    "render_calls_max": 3,
+    "checks": ["one_file", "runs", "no_console_errors", "fps_min", "audio_nonsilent", "prompt_terms"],
+    "human_sample": ["cc-01", "cc-02", "cc-05", "cc-09", "cc-13", "cc-14", "cc-19", "cc-21", "cc-23", "cc-24"]
+  },
+  "calibration": {"fps_min": null, "box": null, "build": null, "date": null, "note": "median fps of the exemplar at 640x360 on the box's software WebGL, minus 20 %, written here once by the calibration run"},
+  "measured": null,
+  "signature": null
+}

@@ -1,0 +1,1067 @@
+{
+ "bf16": {
+  "decode_step": {
+   "tok_s": 44.76,
+   "ms_token": 22.344,
+   "decode_bytes": 4915789824,
+   "allocated_gib": 44.95
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 44.61,
+     "per_block": 1.0,
+     "n": 448
+    },
+    "code": {
+     "tok_s": 44.53,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 44.52,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 44.3,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 44.25,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 43.35,
+     "per_block": 1.0,
+     "n": 448
+    },
+    "code": {
+     "tok_s": 44.55,
+     "per_block": 1.11,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 43.3,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 153.74,
+     "per_block": 12.78,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 157.8,
+     "per_block": 13.45,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab3-mtp.json"
+   ]
+  }
+ },
+ "2.5": {
+  "hub": {
+   "repo": "0xBakeer/TandemLLM-LFM2.5-24B-A2B-EXL3-2.5",
+   "revision": "62ee041060eadb5081c3306c7629c7919b187b11",
+   "bytes": 8196432957,
+   "files": {
+    "model.safetensors": "cdd9b8216b386bd8445a7a000a76bb08c34063a5af5623fd7fd1c8f12644d37e"
+   },
+   "local_match": true
+  },
+  "decode_step": {
+   "tok_s": 188.22,
+   "ms_token": 5.313,
+   "decode_bytes": 901689344,
+   "allocated_gib": 7.64,
+   "tok_s_without_splits": 171.19
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 185.61,
+     "per_block": 1.0,
+     "n": 400
+    },
+    "code": {
+     "tok_s": 185.13,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 185.37,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 181.12,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 181.88,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 177.0,
+     "per_block": 1.01,
+     "n": 400
+    },
+    "code": {
+     "tok_s": 179.34,
+     "per_block": 1.12,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 175.57,
+     "per_block": 1.02,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 350.52,
+     "per_block": 8.24,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 271.3,
+     "per_block": 3.04,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab3-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.4192885646224022,
+    "top1_pct": 71.88
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.33637740671634675,
+    "top1_pct": 78.71
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.23988411792864403,
+    "top1_pct": 83.42
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.46306422,
+    "top1_pct": 70.44,
+    "ppl_pack": 22.13787898,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-2.5.log"
+   },
+   "oasst1": {
+    "kl": 0.31279152,
+    "top1_pct": 78.87,
+    "ppl_pack": 7.67179841,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-2.5.log"
+   }
+  },
+  "convert": {
+   "bpw": "2.5",
+   "head_bits": 6,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c"
+  }
+ },
+ "3.0": {
+  "hub": {
+   "repo": "0xBakeer/TandemLLM-LFM2.5-24B-A2B-EXL3-3.0",
+   "revision": "42b0a5b1cf10a53c95b996afe9762288f6731397",
+   "bytes": 9677933351,
+   "files": {
+    "model-00001-of-00002.safetensors": "f263287229c370c988f432d25d9ca6add0075f9561e2b1ea1adf92877ecf7ba6",
+    "model-00002-of-00002.safetensors": "1b659846617d0285dab1f11ff1a4665566da2d54b1ad523decf1b3424caec702"
+   },
+   "local_match": true
+  },
+  "decode_step": {
+   "tok_s": 175.02,
+   "ms_token": 5.714,
+   "decode_bytes": 1038397440,
+   "allocated_gib": 9.4,
+   "tok_s_without_splits": 159.12
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 171.71,
+     "per_block": 1.0,
+     "n": 444
+    },
+    "code": {
+     "tok_s": 171.28,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 171.31,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 168.22,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 168.76,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 165.72,
+     "per_block": 1.01,
+     "n": 444
+    },
+    "code": {
+     "tok_s": 169.18,
+     "per_block": 1.14,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 168.47,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 327.82,
+     "per_block": 11.11,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 413.83,
+     "per_block": 11.61,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab3-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.30419671192765235,
+    "top1_pct": 75.97
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.21748948127031326,
+    "top1_pct": 83.13
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.13886733849843344,
+    "top1_pct": 87.33
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.33476696,
+    "top1_pct": 75.2,
+    "ppl_pack": 20.51300556,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-3.0.log"
+   },
+   "oasst1": {
+    "kl": 0.1945584,
+    "top1_pct": 83.6,
+    "ppl_pack": 7.51746891,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-3.0.log"
+   }
+  },
+  "convert": {
+   "bpw": "3.0",
+   "head_bits": 6,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c"
+  }
+ },
+ "3.5": {
+  "hub": {
+   "repo": "0xBakeer/TandemLLM-LFM2.5-24B-A2B-EXL3-3.5",
+   "revision": "416806bafd1e2bc175934c391cb427738a69f00c",
+   "bytes": 11159441269,
+   "files": {
+    "model-00001-of-00002.safetensors": "d4d22dd4c65a5a8b4c249485b51ffc9b7759c1bea6f12998390b4e5aa812c38c",
+    "model-00002-of-00002.safetensors": "e1dac52df62e67a1c9ebbc4ae6794acce40be3ec880b286bbde12ccbf4ec7593"
+   },
+   "local_match": true
+  },
+  "decode_step": {
+   "tok_s": 153.52,
+   "ms_token": 6.514,
+   "decode_bytes": 1175105536,
+   "allocated_gib": 10.56,
+   "tok_s_without_splits": 143.43
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 151.35,
+     "per_block": 1.0,
+     "n": 426
+    },
+    "code": {
+     "tok_s": 150.91,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 150.93,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 146.95,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 148.77,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 147.54,
+     "per_block": 1.0,
+     "n": 426
+    },
+    "code": {
+     "tok_s": 147.25,
+     "per_block": 1.12,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 143.68,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 268.66,
+     "per_block": 8.66,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 286.58,
+     "per_block": 5.55,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab2-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.22081964910030366,
+    "top1_pct": 79.53
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.15059185810387135,
+    "top1_pct": 86.14
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.0901838040445,
+    "top1_pct": 90.1
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.22563219,
+    "top1_pct": 79.04,
+    "ppl_pack": 20.78798755,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-3.5.log"
+   },
+   "oasst1": {
+    "kl": 0.1363606,
+    "top1_pct": 86.65,
+    "ppl_pack": 7.43844165,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-3.5.log"
+   }
+  },
+  "convert": {
+   "bpw": "3.5",
+   "head_bits": 6,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c",
+   "built_on": "HF Jobs"
+  }
+ },
+ "4.0": {
+  "hub": {
+   "repo": "0xBakeer/TandemLLM-LFM2.5-24B-A2B-EXL3-4.0",
+   "revision": "de1cd3de6d2b022c78abca956f1d3618a525c414",
+   "bytes": 12640949229,
+   "files": {
+    "model-00001-of-00002.safetensors": "5ae834cf60120cd81d78119ead72a80e0b3fe2752e17c713955f4948e3c87aef",
+    "model-00002-of-00002.safetensors": "4850ecd1226777a6f415d65526e4c62d0b127a970c0a973ded936563b3040e12"
+   },
+   "local_match": true
+  },
+  "decode_step": {
+   "tok_s": 145.91,
+   "ms_token": 6.853,
+   "decode_bytes": 1311813632,
+   "allocated_gib": 12.06
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 143.59,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "code": {
+     "tok_s": 143.8,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 143.67,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 141.31,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 141.85,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 140.08,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "code": {
+     "tok_s": 139.23,
+     "per_block": 1.11,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 139.41,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 291.14,
+     "per_block": 11.11,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 326.4,
+     "per_block": 13.45,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab3-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.17595832683146,
+    "top1_pct": 81.88
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.10834903478622436,
+    "top1_pct": 88.3
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.061031135148368776,
+    "top1_pct": 91.93
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.20104084,
+    "top1_pct": 80.73,
+    "ppl_pack": 19.57777004,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-4.0-defcal.log"
+   },
+   "oasst1": {
+    "kl": 0.09804273,
+    "top1_pct": 88.52,
+    "ppl_pack": 7.4954761,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-4.0-defcal.log"
+   }
+  },
+  "convert": {
+   "bpw": "4.0",
+   "head_bits": 6,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c"
+  }
+ },
+ "4.5": {
+  "hub": {
+   "repo": "0xBakeer/TandemLLM-LFM2.5-24B-A2B-EXL3-4.5",
+   "revision": "caad63d339465867d8134bd150648560b2a80f41",
+   "bytes": 14122456591,
+   "files": {
+    "model-00001-of-00002.safetensors": "7c63a1205f67dc5e66666d6cc624754c147bf43f5540078216189180863576cd",
+    "model-00002-of-00002.safetensors": "32610135e6b329412fac06511a3c916d18096cde835a34851beca4a210ec4281"
+   },
+   "local_match": true
+  },
+  "decode_step": {
+   "tok_s": 128.79,
+   "ms_token": 7.765,
+   "decode_bytes": 1519300608,
+   "allocated_gib": 13.31,
+   "tok_s_without_splits": 121.55
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 128.45,
+     "per_block": 1.0,
+     "n": 478
+    },
+    "code": {
+     "tok_s": 128.02,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 128.18,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 126.51,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 126.9,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 123.33,
+     "per_block": 1.0,
+     "n": 478
+    },
+    "code": {
+     "tok_s": 124.55,
+     "per_block": 1.09,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 124.65,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 281.25,
+     "per_block": 11.11,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 339.37,
+     "per_block": 13.45,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab2-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.10120612602680921,
+    "top1_pct": 86.17
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.06967787995934487,
+    "top1_pct": 90.62
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.037834958212139704,
+    "top1_pct": 93.85
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.1130152,
+    "top1_pct": 85.43,
+    "ppl_pack": 21.29966021,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-4.5.log"
+   },
+   "oasst1": {
+    "kl": 0.06327293,
+    "top1_pct": 91.2,
+    "ppl_pack": 7.40746041,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-4.5.log"
+   }
+  },
+  "convert": {
+   "bpw": "4.5",
+   "head_bits": 6,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c",
+   "built_on": "HF Jobs"
+  }
+ },
+ "6.0": {
+  "hub": {
+   "repo": "0xBakeer/TandemLLM-LFM2.5-24B-A2B-EXL3-6.0",
+   "revision": "9c7deb4e44a82b5b7dbdeff608f801f0e970e058",
+   "bytes": 18632511378,
+   "files": {
+    "model-00001-of-00003.safetensors": "d661659449d99c56fc1e1ab9d7a55d57dc4a7d1ff5688b99d2f0e32baab3e42b",
+    "model-00002-of-00003.safetensors": "b835284170d730a2e531deaf3dce7563ab8e6fcde677bd5859bd071eb92eae2c",
+    "model-00003-of-00003.safetensors": "4aee611ddd4a289987964140855a8d2c5dca7688a3cfb4887bc2cffd6c6f63ae"
+   },
+   "local_match": true
+  },
+  "decode_step": {
+   "tok_s": 106.9,
+   "ms_token": 9.355,
+   "decode_bytes": 1924182016,
+   "allocated_gib": 17.37,
+   "tok_s_without_splits": 106.9
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 105.37,
+     "per_block": 1.0,
+     "n": 462
+    },
+    "code": {
+     "tok_s": 105.01,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 105.24,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 104.07,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 102.77,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 104.25,
+     "per_block": 1.01,
+     "n": 462
+    },
+    "code": {
+     "tok_s": 105.54,
+     "per_block": 1.12,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 103.45,
+     "per_block": 1.02,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 209.97,
+     "per_block": 10.65,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 280.11,
+     "per_block": 13.81,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab2-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.0796993350237608,
+    "top1_pct": 88.01
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.04792545717209577,
+    "top1_pct": 92.62
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.022719642690693338,
+    "top1_pct": 95.58
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.07956646,
+    "top1_pct": 88.25,
+    "ppl_pack": 21.00319861,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-6.0.log"
+   },
+   "oasst1": {
+    "kl": 0.03940959,
+    "top1_pct": 93.39,
+    "ppl_pack": 7.43370265,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-6.0.log"
+   }
+  },
+  "convert": {
+   "bpw": "6.0",
+   "head_bits": 8,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c",
+   "built_on": "HF Jobs"
+  }
+ },
+ "4.0-hq": {
+  "decode_step": {
+   "tok_s": 133.81,
+   "ms_token": 7.473,
+   "decode_bytes": 1481945088,
+   "allocated_gib": 12.23,
+   "tok_s_without_splits": 133.73
+  },
+  "rows": {
+   "plain": {
+    "prose": {
+     "tok_s": 131.83,
+     "per_block": 1.0,
+     "n": 430
+    },
+    "code": {
+     "tok_s": 131.66,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 132.0,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 130.2,
+     "per_block": 1.0,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 130.42,
+     "per_block": 1.0,
+     "n": 512
+    }
+   },
+   "lookup": {
+    "prose": {
+     "tok_s": 127.9,
+     "per_block": 1.01,
+     "n": 430
+    },
+    "code": {
+     "tok_s": 131.38,
+     "per_block": 1.16,
+     "n": 512
+    },
+    "chat": {
+     "tok_s": 126.12,
+     "per_block": 1.01,
+     "n": 512
+    },
+    "edit": {
+     "tok_s": 329.72,
+     "per_block": 10.65,
+     "n": 512
+    },
+    "copy": {
+     "tok_s": 348.65,
+     "per_block": 13.81,
+     "n": 512
+    }
+   },
+   "same_text": {
+    "prose": true,
+    "code": true,
+    "chat": true,
+    "edit": true,
+    "copy": true
+   },
+   "files": [
+    "ab2-none.json",
+    "ab2-mtp.json"
+   ]
+  },
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.12064603365957736,
+    "top1_pct": 84.73
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.08606417512521147,
+    "top1_pct": 89.37
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.047595479137574635,
+    "top1_pct": 92.99
+   }
+  },
+  "model_diff": {
+   "method": "exllamav3 eval/model_diff.py, the pack (A) against the BF16 checkpoint (B), 20 rows of 2,048 tokens",
+   "wikitext": {
+    "kl": 0.11869756,
+    "top1_pct": 84.6,
+    "ppl_pack": 21.12996159,
+    "ppl_bf16": 20.99609939,
+    "log": "model_diff-hq-4.0.log"
+   },
+   "oasst1": {
+    "kl": 0.0823083,
+    "top1_pct": 89.7,
+    "ppl_pack": 7.45772001,
+    "ppl_bf16": 7.43122113,
+    "log": "model_diff-chat-hq-4.0.log"
+   }
+  },
+  "convert": {
+   "bpw": "4.0",
+   "head_bits": 6,
+   "embed_bits": 16,
+   "calibration": "default",
+   "exllamav3": "1.6.0 @151539c",
+   "built_on": "HF Jobs"
+  }
+ },
+ "same_window_4.0_4.0hq_4.5": {
+  "method": "one window, the order 4.0 4.0-hq 4.5 4.5 4.0-hq 4.0: tools/lfm_check.py bench (256 tokens) and one fresh server, tools/fn_lookup_ab.py plain",
+  "runs": [
+   {
+    "order": 1,
+    "profile": "4.0",
+    "graph_tok_s": 146.24,
+    "served_plain": {
+     "prose": 143.82,
+     "chat": 144.01,
+     "code": 143.79
+    }
+   },
+   {
+    "order": 2,
+    "profile": "4.0-hq",
+    "graph_tok_s": 132.88,
+    "served_plain": {
+     "prose": 131.57,
+     "chat": 131.17,
+     "code": 131.06
+    }
+   },
+   {
+    "order": 3,
+    "profile": "4.5",
+    "graph_tok_s": 129.4,
+    "served_plain": {
+     "prose": 128.02,
+     "chat": 127.53,
+     "code": 127.67
+    }
+   },
+   {
+    "order": 4,
+    "profile": "4.5",
+    "graph_tok_s": 129.2,
+    "served_plain": {
+     "prose": 127.84,
+     "chat": 127.72,
+     "code": 127.54
+    }
+   },
+   {
+    "order": 5,
+    "profile": "4.0-hq",
+    "graph_tok_s": 132.78,
+    "served_plain": {
+     "prose": 131.25,
+     "chat": 131.14,
+     "code": 131.19
+    }
+   },
+   {
+    "order": 6,
+    "profile": "4.0",
+    "graph_tok_s": 145.8,
+    "served_plain": {
+     "prose": 144.04,
+     "chat": 143.95,
+     "code": 143.79
+    }
+   }
+  ]
+ },
+ "4.0-tracecal": {
+  "quality": {
+   "wikitext": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.18926248364150525,
+    "top1_pct": 81.12
+   },
+   "oasst1": {
+    "rows": 100,
+    "positions": 204800,
+    "kl": 0.10798292748630046,
+    "top1_pct": 88.24
+   },
+   "self": {
+    "rows": 48,
+    "positions": 19951,
+    "kl": 0.05997864273376763,
+    "top1_pct": 92.2
+   }
+  }
+ }
+}

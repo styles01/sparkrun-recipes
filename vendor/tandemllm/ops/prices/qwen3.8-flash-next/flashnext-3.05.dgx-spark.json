@@ -1,0 +1,8 @@
+{
+ "0": {"chain": {"1": 24.0, "2": 27.8, "3": 31.1, "4": 34.7, "5": 38.6, "6": 42.3, "7": 43.8, "10": 52.2, "16": 68.8}, "plain": {"1": 22.0}, "spec": {"1": 17.7}, "prime": {"1": 0.02}},
+ "32768": {"chain": {"2": 33.1, "3": 38.6, "4": 45.7, "5": 46.4}, "plain": {"1": 23.5}, "spec": {"1": 18.9}, "prime": {"1": 0.055}},
+ "131072": {"chain": {"2": 44.0, "3": 49.4, "4": 55.8, "5": 59.7}, "plain": {"1": 24.5}, "spec": {"1": 19.7}, "prime": {"1": 0.15}},
+ "262144": {"chain": {"2": 48.0, "3": 53.0, "4": 58.0, "5": 63.0}, "plain": {"1": 24.7}, "spec": {"1": 25.4}, "prime": {"1": 0.28}},
+ "step_ms": 2.8,
+ "measured": "PROVISIONAL (ENG-155, 2026-10-12). Context classes in tokens (Flash-Next's price_class: 0 while the sparse attention is dense, else the next of 4,096 x 2^k and 6,144 x 2^k at or above the context; a class not here takes the nearest lower one). chain, the price of a round past its draft (a round is priced by its wall time): class 0 is the ENG-229 A/B server's learned prices (about 1k, 600 rounds, row 1 the 2026-10-11 bench); 32768 and 131072 the prices learned at 32,000 and 140,000 tokens on the P0 runs of 2026-10-12 (one request each), 131072 raised by 12 ms, the rest of a round there; 262144 the rounds at 260,800 tokens (about 53 ms a round of 1.9 tokens). plain: the plain step's ms a token on the same runs with --drafter none (22.0 at 1k, 23.5 at 32k, 24.2 at 140k, 24.7 at 260,800). No sweep; the cut follows the live prices online either way. spec: a drafted request's ms a token, its whole wall time without the head's backlog (1k 56.5, 32k 53.0, 140k 50.7, 260,800 39.4 tok/s on those runs); prime: the head's ms a backlog row (0.055 at 32k, 0.28 at 260,800 measured; 0 and 131072 estimated between)."
+}

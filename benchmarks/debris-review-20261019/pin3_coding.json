@@ -1,0 +1,77 @@
+{
+ "phase": "pin3-coding",
+ "prompt": "fastapi-refactor",
+ "thinking": false,
+ "temperature": 0.6,
+ "max_tokens": 512,
+ "runs": [
+  {
+   "phase": "run1",
+   "ttft_s": 0.4595468740153592,
+   "decode_s": 10.749672233010642,
+   "wall_s": 11.209255202003988,
+   "completion_tokens": 512,
+   "tok_s": 47.62935919364353,
+   "text_head": "# Refactored FastAPI Service\n\nHere's the cleaned-up version ",
+   "mean_n": 5.102564102564102,
+   "accept_ratio": 0.661641541038526,
+   "d_drafts": 117.0,
+   "d_draft_tokens": 597.0
+  },
+  {
+   "phase": "run2",
+   "ttft_s": 0.44205449798027985,
+   "decode_s": 11.675674599013291,
+   "wall_s": 12.117761592991883,
+   "completion_tokens": 512,
+   "tok_s": 43.85185589561301,
+   "text_head": "```python\nimport sqlite3\nfrom contextlib import closing\nfrom",
+   "mean_n": 4.837209302325581,
+   "accept_ratio": 0.6121794871794872,
+   "d_drafts": 129.0,
+   "d_draft_tokens": 624.0
+  },
+  {
+   "phase": "run3",
+   "ttft_s": 0.4476835380191915,
+   "decode_s": 11.611554509989219,
+   "wall_s": 12.05929315200774,
+   "completion_tokens": 512,
+   "tok_s": 44.09400994152293,
+   "text_head": "# Refactored FastAPI Service\n\nHere's the improved version wi",
+   "mean_n": 4.890625,
+   "accept_ratio": 0.6118210862619808,
+   "d_drafts": 128.0,
+   "d_draft_tokens": 626.0
+  },
+  {
+   "phase": "run4",
+   "ttft_s": 0.4602192940074019,
+   "decode_s": 10.303370516980067,
+   "wall_s": 10.763629171007778,
+   "completion_tokens": 512,
+   "tok_s": 49.69247676342595,
+   "text_head": "**Refactored code:**\n\n```python\nimport sqlite3\nfrom contextl",
+   "mean_n": 5.513761467889908,
+   "accept_ratio": 0.670549084858569,
+   "d_drafts": 109.0,
+   "d_draft_tokens": 601.0
+  }
+ ],
+ "warmup": {
+  "phase": "warmup32",
+  "ttft_s": 0.44326145498780534,
+  "decode_s": 0.8274448729935102,
+  "wall_s": 1.2707413039752282,
+  "completion_tokens": 32,
+  "tok_s": 38.67327122860907,
+  "text_head": "# Refactored FastAPI Service\n\nHere's the refactored version ",
+  "mean_n": 6.0,
+  "accept_ratio": 0.48148148148148145,
+  "d_drafts": 9.0,
+  "d_draft_tokens": 54.0
+ },
+ "tok_s_median": 45.861684567583225,
+ "mean_n_median": 4.996594551282051,
+ "accept_ratio_median": 0.6369105141090066
+}

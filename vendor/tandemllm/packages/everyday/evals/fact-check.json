@@ -1,0 +1,19 @@
+{
+  "package": "fact-check",
+  "rubric": [
+    "Line one carries the claim, a verdict word (true, mostly true, unclear, misleading, false) and a confidence level.",
+    "What is known is kept apart from what is concluded; the true and false parts of a mixed claim are separated.",
+    "The reason for the confidence is stated (well documented, changes often, after the knowledge date, cannot see the source).",
+    "2 or 3 concrete ways to verify (the kind of source), no invented studies, numbers, names or URLs.",
+    "Chain messages get their warning signs listed; health, money and safety claims get the one practical consequence."
+  ],
+  "prompts": [
+    {"id": "fact-check-1", "lang": "en", "text": "Is it true that you should wait an hour after eating before swimming or you'll get cramps and drown?"},
+    {"id": "fact-check-2", "lang": "de", "text": "Meine Tante hat das geschickt: 'WhatsApp wird ab morgen kostenpflichtig, außer du leitest diese Nachricht an 10 Kontakte weiter.' Stimmt das?"},
+    {"id": "fact-check-3", "lang": "ar", "text": "هل صحيح أن شرب الماء الدافئ مع الليمون على الريق يذيب دهون البطن؟"},
+    {"id": "fact-check-4", "lang": "en", "text": "Someone posted that Germany has the highest electricity prices in the world. True?"},
+    {"id": "fact-check-5", "lang": "en", "text": "Did Einstein really say 'Insanity is doing the same thing over and over and expecting different results'?"},
+    {"id": "fact-check-6", "lang": "de", "text": "Auf Facebook steht, dass man Zecken mit Öl ersticken soll, bevor man sie entfernt. Richtig oder falsch?"},
+    {"id": "fact-check-7", "lang": "en", "text": "Fact check: 'Crime has doubled in the last 5 years in our country.' (I'm in the UK.)"}
+  ]
+}

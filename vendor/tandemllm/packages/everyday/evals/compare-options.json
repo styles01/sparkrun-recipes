@@ -1,0 +1,18 @@
+{
+  "package": "compare-options",
+  "rubric": [
+    "A table with the options as named and 4 to 6 rows of points that matter for this user; cells short, facts and judgements kept apart.",
+    "One recommendation sentence with the condition that flips it; a tie named as a tie with a tie-breaker.",
+    "No invented prices, specifications, ratings or dates; ranges or 'usually' with a note to check.",
+    "The user's own criteria come first in the table; at most one or two added alternatives, named as added.",
+    "Uncertainty line says what to check and where."
+  ],
+  "prompts": [
+    {"id": "compare-options-1", "lang": "en", "text": "Should I get an e-bike or a second-hand small car? I live in a city, commute 8 km, have a kid in kindergarten, budget is tight."},
+    {"id": "compare-options-2", "lang": "de", "text": "Was ist besser für mich: ein Laptop oder ein Tablet mit Tastatur? Ich studiere, schreibe viele Texte, will aber auch Serien schauen und wenig tragen."},
+    {"id": "compare-options-3", "lang": "ar", "text": "ما الفرق بين التأمين الصحي الحكومي والخاص في ألمانيا، وأيهما أفضل لموظف عمره 30 سنة بدون أطفال؟"},
+    {"id": "compare-options-4", "lang": "en", "text": "Renting vs buying a flat in a mid-size European city, I'm 35, stable job, plan to stay 10+ years, have 15 % deposit. Compare."},
+    {"id": "compare-options-5", "lang": "en", "text": "Gas hob or induction hob for a new kitchen? We cook a lot, have two small kids."},
+    {"id": "compare-options-6", "lang": "de", "text": "Spotify, Apple Music oder YouTube Music für eine Familie mit 3 Kindern, wir haben Android-Handys und einen Fernseher mit Google TV?"}
+  ]
+}

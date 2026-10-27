@@ -1,0 +1,25 @@
+# PinkCherry H3 Aurore — NSFW video gen lane (MiniMax H3 fine-tune)
+recipe_id: pinkcherry-h3-aurore
+status: verified              # 2026-09-07 validation clip rendered end-to-end
+runtime: comfyui-native       # ComfyUI v0.34 native MiniMax H3 nodes, no custom nodes
+port: 8189
+occupancy: exclusive           # ~35-45 GiB; NEVER co-resident with the live LLM lane
+model:
+  diffusion: PinkCherry_h3_fl2va_pruned_int8_v0.5-alpha.safetensors   # 21 GB, drop-in for base H3
+  text_encoder: qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors          # CLIPLoader type=minimax
+  vae_video: minimax_h3_video_vae_fp16.safetensors
+  vae_audio: minimax_h3_audio_vae_fp32.safetensors
+  turbo_lora: minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors  # optional, 8-step
+workflow: workflows/pinkcherry-aurore-i2v-api.json     # extracted from native template subgraph
+first_frame: aurore_juggernaut.png                      # approved Aurore portrait (ComfyUI input/)
+verified_run:
+  prompt_id: dcf408c9-597e-4937-a1f9-6a4b05ef5037
+  output: aurore/pinkcherry_test_00001_.mp4             # 1.625s, 39f @24fps, 832x1216, h264+aac
+  date: 2026-09-07
+notes: >
+  PinkCherry is a drop-in swap for the base H3 UNET — same VAEs, encoder, graph.
+  Workflow extracted from ComfyUI v0.34 video_minimax_h3_i2v template subgraph,
+  not hand-built. Audio-video latent: decode slot 0 with video VAE, slot 1 with
+  audio VAE, CreateVideo merges. length snaps to 17k+5 grid (39 = 2x17+5).
+  HARD RULE: stop the live lane via upstream ./stop.sh before ANY H3 render;
+  ComfyUI stop = kill the main.py PID. License unverified — local personal use.

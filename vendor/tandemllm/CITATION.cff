@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use TandemLLM or StairCut, please cite the paper."
+title: "TandemLLM"
+type: software
+authors:
+  - family-names: Bakeer
+    given-names: Khaled
+    orcid: "https://orcid.org/0009-0001-8362-784X"
+repository-code: "https://github.com/0xBakeer/TandemLLM"
+license: AGPL-3.0-only
+commit: c111fa7
+keywords:
+  - speculative decoding
+  - draft trees
+  - NVFP4
+  - Gated DeltaNet
+  - Qwen3.8-27B
+  - DGX Spark
+preferred-citation:
+  type: article
+  title: "StairCut: sizing speculative draft trees on a measured verification-cost staircase"
+  authors:
+    - family-names: Bakeer
+      given-names: Khaled
+      orcid: "https://orcid.org/0009-0001-8362-784X"
+  year: 2026
+  date-published: "2026-09-29"
+  publisher:
+    name: Zenodo
+  doi: "10.5281/zenodo.23045275"
+  url: "https://doi.org/10.5281/zenodo.23045275"

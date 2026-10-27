@@ -1,0 +1,28 @@
+% The request path: client -> proxy -> conductor -> engine -> drafters and verify.
+\begin{tikzpicture}[node distance=5mm and 7mm]
+  \node[quiet, minimum width=22mm] (client) {Client\\[-1pt]{\scriptsize opencode, SDK, curl}};
+  \node[box, right=8mm of client, minimum width=24mm] (proxy) {Proxy\\[-1pt]{\scriptsize route by model id}};
+  \node[box, right=8mm of proxy, minimum width=27mm] (router) {Conductor: router\\[-1pt]{\scriptsize class, effort, notes}};
+  \node[box, below=9mm of router, minimum width=27mm] (queue) {Admission\\[-1pt]{\scriptsize queue, side lane, memory gate}};
+  \node[box, left=8mm of queue, minimum width=24mm] (cache) {Caches\\[-1pt]{\scriptsize resume or prefill}};
+  \node[hot, below=9mm of cache, minimum width=24mm] (draft) {Drafters\\[-1pt]{\scriptsize block + lookup}};
+  \node[hot, right=8mm of draft, minimum width=27mm] (verify) {Target model\\[-1pt]{\scriptsize verify the tree}};
+  \node[box, right=8mm of verify, minimum width=24mm] (monitor) {Conductor: monitor\\[-1pt]{\scriptsize safe points}};
+  \node[quiet, left=8mm of cache, minimum width=22mm] (other) {Other backends\\[-1pt]{\scriptsize vLLM, SGLang, cloud}};
+
+  \draw[flow] (client) -- (proxy);
+  \draw[flow] (proxy) -- (router);
+  \draw[flow] (router) -- (queue);
+  \draw[flow] (queue) -- (cache);
+  \draw[flow] (cache) -- (draft);
+  \draw[flow] ([yshift=1.5mm]draft.east) -- ([yshift=1.5mm]verify.west) node[midway, above, lbl] {tree};
+  \draw[flow] ([yshift=-1.5mm]verify.west) -- ([yshift=-1.5mm]draft.east) node[midway, below, lbl] {accepted};
+  \draw[flow] (verify) -- (monitor);
+  \draw[flow] (monitor.north) |- (router.east) node[pos=0.25, right, lbl, align=left] {committed\\tokens\\stream\\back};
+  \draw[dflow] (proxy.south west) -- (other.north east) node[midway, left, lbl] {relayed};
+
+  \begin{scope}[on background layer]
+    \node[group, fill=cobaltlight!40, inner sep=8pt, fit=(queue) (cache) (draft) (verify) (monitor) (router),
+      label={[lbl, anchor=north east]south east:the engine's server (one or more sequences)}] {};
+  \end{scope}
+\end{tikzpicture}

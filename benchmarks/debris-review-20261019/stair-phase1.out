@@ -1,0 +1,5 @@
+1x-short: streams=5 median=21.62 tok/s min=18.68 max=30.75 | draft=6465 acc=3042 acc%=47.1 draft/step~1293.0
+1x-long40k: streams=5 median=23.07 tok/s min=22.05 max=24.85 | draft=3462 acc=1486 acc%=42.9 draft/step~692.4
+4x-short: streams=20 median=16.70 tok/s min=14.38 max=20.32 | draft=8841 acc=4241 acc%=48.0 draft/step~442.1
+4x-long40k: streams=20 median=19.93 tok/s min=15.75 max=22.96 | draft=11418 acc=5303 acc%=46.4 draft/step~570.9
+PHASE1-DONE

@@ -1,0 +1,14 @@
+{
+  "model": "qwen3.8-27b",
+  "label": "Qwen3.8-27B",
+  "packs": ["exl3-*", "nvfp4", "fp8", "bf16"],
+  "context_limit": 262144,
+  "max_output": 32768,
+  "capabilities": {
+    "thinking": true,
+    "tools": true,
+    "vision": true,
+    "structured": true,
+    "parallel_tool_calls": true
+  }
+}

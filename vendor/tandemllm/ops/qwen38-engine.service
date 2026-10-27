@@ -1,0 +1,33 @@
+# systemd USER unit -- present, working, and NOT INSTALLED on the Spark. A user unit dies with the
+# login session unless `loginctl enable-linger` is set, and that needs root; this account has no
+# passwordless sudo, so the installed mechanism is the `@reboot` cron line in docs/operations.md, which is
+# also what every previous occupant of :8000 used. If linger is ever enabled, install this AND
+# remove that cron line: two supervisors for one port is how a service starts twice.
+#
+# Install with:
+#   mkdir -p ~/.config/systemd/user && cp ops/qwen38-engine.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now qwen38-engine
+#   sudo loginctl enable-linger $USER      # so it survives logout and comes back after a reboot
+#
+# Type=simple with the start script in the foreground would fight start.sh's own backgrounding, so
+# the unit runs the server directly and start.sh stays the manual path. Both read ops/serve.env.
+[Unit]
+Description=Qwen3.8-27B Spark engine, OpenAI-compatible server on :8000
+After=network-online.target
+
+[Service]
+Type=exec
+WorkingDirectory=%h/qwen38-spark-engine
+EnvironmentFile=%h/qwen38-spark-engine/ops/serve.env
+Environment=TZ=Europe/Berlin
+ExecStart=/bin/bash -lc 'export QWEN38_FUSE_PROJ=$FUSE_PROJ PYTHONPATH=$PYTHONPATH; LATCH_FLAG=""; [ "$LEN_LATCH" = "1" ] && LATCH_FLAG=--len-latch; exec $PY -u server/app.py --host $HOST --port $PORT --served-model $SERVED_MODEL --max-len $MAX_LEN --default-max-tokens $DEFAULT_MAX_TOKENS --reasoning-format $REASONING_FORMAT --reasoning-effort $REASONING_EFFORT --drafter lenrouter --len-fixed $LEN_FIXED $LATCH_FLAG --dflash2-path greedy --tree --budget $BUDGET --corpus $CORPUS --dflash2-ckpt $CKPT8 --dflash2-ckpt16 $CKPT16 --nvfp4 $NV --fp8-head $HEAD --cache-budget-gb $CACHE_GB --request-timeout $REQUEST_TIMEOUT --max-queue $MAX_QUEUE --queue-timeout $QUEUE_TIMEOUT --verbose'
+# SIGTERM is the drain signal the server installs; give it room to finish a long generation.
+KillSignal=SIGTERM
+TimeoutStopSec=180
+Restart=on-failure
+RestartSec=20
+StandardOutput=append:%h/qwen38-spark-engine/logs/engine.log
+StandardError=append:%h/qwen38-spark-engine/logs/engine.log
+
+[Install]
+WantedBy=default.target

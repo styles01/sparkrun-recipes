@@ -1,0 +1,483 @@
+{
+ "build": "0.11.0",
+ "device": "dgx-spark",
+ "tree": "the 0.11.0 release (a70eabb6)",
+ "server": "server/app.py --max-len 32768 --conductor raw --suffix-store '' --no-session-cache --no-prefix-cache --cache-budget-gb 0 --drafter mtp --parallel 3 (EXL3: --draft-head lilicorr --depth 3), one fresh server a run, the shipped price files only (2.0 and IQ2; 2.5 to 4.0 ship none)",
+ "client": "tools/fn_lookup_ab.py, 512 greedy tokens, thinking off; tok_s = the server's predicted_per_second, tok_round its tokens a block, ms_round = 1000 x tok_round / tok_s",
+ "profiles": {
+  "nemotron-bolt-iq2": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "version": "0.11.0+nemotron-bolt-iq2",
+     "classes": {
+      "prose": {
+       "tok_s": 28.09,
+       "tok_round": 1.02,
+       "ms_round": 36.31,
+       "tokens": 313
+      },
+      "chat": {
+       "tok_s": 28.15,
+       "tok_round": 1.03,
+       "ms_round": 36.59,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 32.31,
+       "tok_round": 1.22,
+       "ms_round": 37.76,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-iq2",
+     "classes": {
+      "prose": {
+       "tok_s": 27.92,
+       "tok_round": 1.02,
+       "ms_round": 36.53,
+       "tokens": 313
+      },
+      "chat": {
+       "tok_s": 28.09,
+       "tok_round": 1.03,
+       "ms_round": 36.67,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 32.21,
+       "tok_round": 1.22,
+       "ms_round": 37.88,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-iq2",
+     "classes": {
+      "prose": {
+       "tok_s": 27.87,
+       "tok_round": 1.02,
+       "ms_round": 36.6,
+       "tokens": 313
+      },
+      "chat": {
+       "tok_s": 28.0,
+       "tok_round": 1.03,
+       "ms_round": 36.79,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 32.13,
+       "tok_round": 1.22,
+       "ms_round": 37.97,
+       "tokens": 512
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "chat": true,
+    "code": true
+   }
+  },
+  "nemotron-bolt-exl3-2.0": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-2.0",
+     "classes": {
+      "prose": {
+       "tok_s": 65.55,
+       "tok_round": 3.01,
+       "ms_round": 45.92,
+       "tokens": 443
+      },
+      "chat": {
+       "tok_s": 70.45,
+       "tok_round": 3.12,
+       "ms_round": 44.29,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 102.0,
+       "tok_round": 4.91,
+       "ms_round": 48.14,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-2.0",
+     "classes": {
+      "prose": {
+       "tok_s": 65.52,
+       "tok_round": 3.01,
+       "ms_round": 45.94,
+       "tokens": 443
+      },
+      "chat": {
+       "tok_s": 71.61,
+       "tok_round": 3.1,
+       "ms_round": 43.29,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 102.8,
+       "tok_round": 4.87,
+       "ms_round": 47.37,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-2.0",
+     "classes": {
+      "prose": {
+       "tok_s": 66.44,
+       "tok_round": 3.01,
+       "ms_round": 45.3,
+       "tokens": 443
+      },
+      "chat": {
+       "tok_s": 70.57,
+       "tok_round": 3.12,
+       "ms_round": 44.21,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 103.37,
+       "tok_round": 4.87,
+       "ms_round": 47.11,
+       "tokens": 512
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "chat": true,
+    "code": true
+   }
+  },
+  "nemotron-bolt-exl3-2.5": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-2.5",
+     "classes": {
+      "prose": {
+       "tok_s": 42.24,
+       "tok_round": 1.73,
+       "ms_round": 40.96,
+       "tokens": 285
+      },
+      "chat": {
+       "tok_s": 42.59,
+       "tok_round": 1.52,
+       "ms_round": 35.69,
+       "tokens": 405
+      },
+      "code": {
+       "tok_s": 88.57,
+       "tok_round": 4.33,
+       "ms_round": 48.89,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-2.5",
+     "classes": {
+      "prose": {
+       "tok_s": 42.33,
+       "tok_round": 1.79,
+       "ms_round": 42.29,
+       "tokens": 285
+      },
+      "chat": {
+       "tok_s": 40.93,
+       "tok_round": 1.49,
+       "ms_round": 36.4,
+       "tokens": 405
+      },
+      "code": {
+       "tok_s": 87.23,
+       "tok_round": 4.33,
+       "ms_round": 49.64,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-2.5",
+     "classes": {
+      "prose": {
+       "tok_s": 42.59,
+       "tok_round": 1.79,
+       "ms_round": 42.03,
+       "tokens": 285
+      },
+      "chat": {
+       "tok_s": 41.48,
+       "tok_round": 1.49,
+       "ms_round": 35.92,
+       "tokens": 405
+      },
+      "code": {
+       "tok_s": 92.2,
+       "tok_round": 4.69,
+       "ms_round": 50.87,
+       "tokens": 512
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "chat": true,
+    "code": true
+   }
+  },
+  "nemotron-bolt-exl3-3.0": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-3.0",
+     "classes": {
+      "prose": {
+       "tok_s": 31.27,
+       "tok_round": 1.21,
+       "ms_round": 38.7,
+       "tokens": 312
+      },
+      "chat": {
+       "tok_s": 39.68,
+       "tok_round": 1.44,
+       "ms_round": 36.29,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 73.13,
+       "tok_round": 3.76,
+       "ms_round": 51.42,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-3.0",
+     "classes": {
+      "prose": {
+       "tok_s": 31.74,
+       "tok_round": 1.22,
+       "ms_round": 38.44,
+       "tokens": 312
+      },
+      "chat": {
+       "tok_s": 39.62,
+       "tok_round": 1.44,
+       "ms_round": 36.35,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 72.14,
+       "tok_round": 3.6,
+       "ms_round": 49.9,
+       "tokens": 512
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-3.0",
+     "classes": {
+      "prose": {
+       "tok_s": 31.45,
+       "tok_round": 1.21,
+       "ms_round": 38.47,
+       "tokens": 312
+      },
+      "chat": {
+       "tok_s": 39.66,
+       "tok_round": 1.44,
+       "ms_round": 36.31,
+       "tokens": 512
+      },
+      "code": {
+       "tok_s": 75.71,
+       "tok_round": 3.9,
+       "ms_round": 51.51,
+       "tokens": 512
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "chat": true,
+    "code": true
+   }
+  },
+  "nemotron-bolt-exl3-3.5": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-3.5",
+     "classes": {
+      "prose": {
+       "tok_s": 32.86,
+       "tok_round": 1.3,
+       "ms_round": 39.56,
+       "tokens": 369
+      },
+      "chat": {
+       "tok_s": 40.59,
+       "tok_round": 1.52,
+       "ms_round": 37.45,
+       "tokens": 338
+      },
+      "code": {
+       "tok_s": 76.02,
+       "tok_round": 3.59,
+       "ms_round": 47.22,
+       "tokens": 496
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-3.5",
+     "classes": {
+      "prose": {
+       "tok_s": 32.94,
+       "tok_round": 1.3,
+       "ms_round": 39.47,
+       "tokens": 369
+      },
+      "chat": {
+       "tok_s": 40.67,
+       "tok_round": 1.48,
+       "ms_round": 36.39,
+       "tokens": 338
+      },
+      "code": {
+       "tok_s": 77.18,
+       "tok_round": 3.64,
+       "ms_round": 47.16,
+       "tokens": 496
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-3.5",
+     "classes": {
+      "prose": {
+       "tok_s": 32.85,
+       "tok_round": 1.3,
+       "ms_round": 39.57,
+       "tokens": 369
+      },
+      "chat": {
+       "tok_s": 39.73,
+       "tok_round": 1.48,
+       "ms_round": 37.25,
+       "tokens": 338
+      },
+      "code": {
+       "tok_s": 73.54,
+       "tok_round": 3.49,
+       "ms_round": 47.46,
+       "tokens": 496
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "chat": true,
+    "code": true
+   }
+  },
+  "nemotron-bolt-exl3-4.0": {
+   "date": "2026-10-16",
+   "runs": [
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-4.0",
+     "classes": {
+      "prose": {
+       "tok_s": 30.55,
+       "tok_round": 1.21,
+       "ms_round": 39.61,
+       "tokens": 335
+      },
+      "chat": {
+       "tok_s": 39.69,
+       "tok_round": 1.47,
+       "ms_round": 37.04,
+       "tokens": 383
+      },
+      "code": {
+       "tok_s": 85.03,
+       "tok_round": 4.2,
+       "ms_round": 49.39,
+       "tokens": 501
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-4.0",
+     "classes": {
+      "prose": {
+       "tok_s": 31.22,
+       "tok_round": 1.24,
+       "ms_round": 39.72,
+       "tokens": 335
+      },
+      "chat": {
+       "tok_s": 38.81,
+       "tok_round": 1.44,
+       "ms_round": 37.1,
+       "tokens": 383
+      },
+      "code": {
+       "tok_s": 84.24,
+       "tok_round": 4.13,
+       "ms_round": 49.03,
+       "tokens": 501
+      }
+     }
+    },
+    {
+     "version": "0.11.0+nemotron-bolt-exl3-4.0",
+     "classes": {
+      "prose": {
+       "tok_s": 31.1,
+       "tok_round": 1.24,
+       "ms_round": 39.87,
+       "tokens": 335
+      },
+      "chat": {
+       "tok_s": 38.61,
+       "tok_round": 1.43,
+       "ms_round": 37.04,
+       "tokens": 383
+      },
+      "code": {
+       "tok_s": 84.48,
+       "tok_round": 4.13,
+       "ms_round": 48.89,
+       "tokens": 501
+      }
+     }
+    }
+   ],
+   "same_text": {
+    "prose": true,
+    "chat": true,
+    "code": true
+   }
+  }
+ }
+}

@@ -1,0 +1,14 @@
+{
+  "contract_version": "1.0",
+  "lines": [
+    {
+      "seq": 10234,
+      "ts": "2026-09-24T16:39:20.884Z",
+      "level": "info",
+      "source": "req",
+      "msg": "[req] chatcmpl-5b1e2c9a7d0f4e63 stream prompt=1959 completion=412 finish=stop 8261 ms 49.87 tok/s blocks=90 ttft=2240 ms cache=prefix",
+      "request_id": "chatcmpl-5b1e2c9a7d0f4e63"
+    }
+  ],
+  "last_seq": 10234
+}

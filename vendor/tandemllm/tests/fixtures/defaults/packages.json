@@ -1,0 +1,1130 @@
+{
+ "from": "packages v5, the box, 2026-10-03; 0.3.49-test: files-care (SRV-227); 0.3.50-test: requires_tools, coding-answer (SRV-243); packages-first: the first packages of OPS-39 (tandem-core, render-tools, eval-judge, creative-coding, charts, voxel-worlds, explainer-video, explainer-video-script); PKG2 (2026-10-07): the everyday library, packages/everyday; VIS-E15 (2026-10-17): workers, the Chat tab's worker texts (SRV-579)",
+ "doc": {
+  "skill_dirs": [
+   "~/.config/opencode/skills",
+   "~/.qwen38-spark-engine/conductor/skills",
+   "~/.qwen38-spark-engine/conductor/skills/library"
+  ],
+  "packages": {
+   "ui-design": {
+    "title": "UI design",
+    "kind": "skill",
+    "source": "inline",
+    "description": "Rules for layout, spacing, type, colour, states and responsive checks when building a web or app interface.",
+    "body": "# UI design\n\nBuild interfaces that look designed, not assembled.\n\n1. Start from the content. Decide what the user must see first on the page, then second. One primary action per screen; make it the strongest element.\n2. Use a spacing scale (4, 8, 12, 16, 24, 32, 48 px) and nothing between. Align everything to it. Group related items with less space, separate groups with more.\n3. Type: one family for UI text, at most one for display. A scale such as 12, 14, 16, 20, 24, 32 px. Body text 14 to 16 px, line height 1.4 to 1.6, lines at most 75 characters.\n4. Colour: define tokens first (background, surface, border, text, muted text, one accent, success, warning, danger). Text contrast at least 4.5:1. Use the accent for the primary action and the current state only.\n5. Layout: CSS grid or flexbox, no absolute positioning for layout. Mobile first: one column at 390 px with no horizontal scroll, then widen at breakpoints. Tap targets at least 44 px.\n6. States: every component needs hover, focus-visible, active, disabled, loading, empty and error states. Never leave a blank area while data loads.\n7. Motion: 150 to 250 ms, ease-out, only to explain a change. Respect prefers-reduced-motion.\n8. Accessibility: semantic HTML first, labels for every input, visible focus, keyboard reachable controls, alt text.\n9. Check your work: open the page at 390 px and at 1440 px, compare the result with the brief, and fix alignment and spacing before adding features.\n",
+    "max_tokens": 3000,
+    "enabled": true
+   },
+   "pencil-sketch": {
+    "title": "Pencil sketch",
+    "kind": "skill",
+    "source": "skill:pencil-sketch",
+    "description": "Turn a reference image into an animated graphite pencil sketch on a canvas: tone, contours, hatching.",
+    "body": "",
+    "max_tokens": 4000,
+    "enabled": true
+   },
+   "spiral-portrait": {
+    "title": "Spiral portrait",
+    "kind": "skill",
+    "source": "skill:spiral-portrait",
+    "description": "A portrait drawn as one spiral line whose width follows the tone of a reference image.",
+    "body": "",
+    "max_tokens": 4000,
+    "enabled": true
+   },
+   "one-line-portrait": {
+    "title": "One-line portrait",
+    "kind": "skill",
+    "source": "skill:one-line-portrait",
+    "description": "A portrait drawn as one continuous line through a stipple of the image (TSP art).",
+    "body": "",
+    "max_tokens": 4000,
+    "enabled": true
+   },
+   "photo-to-3d": {
+    "title": "Photo to 3D",
+    "kind": "skill",
+    "source": "skill:photo-to-3d",
+    "description": "Rebuild one photo of a real place as a Three.js scene that matches the photo from a hero camera.",
+    "body": "",
+    "max_tokens": 4000,
+    "enabled": true
+   },
+   "voxel-seasons": {
+    "title": "Voxel seasons",
+    "kind": "skill",
+    "source": "skill:voxel-seasons",
+    "description": "Give a voxel island four seasons: palette, snow, particles, weather, sound, timelapse camera.",
+    "body": "",
+    "max_tokens": 4000,
+    "enabled": true
+   },
+   "coding": {
+    "title": "Coding",
+    "kind": "package",
+    "source": "inline",
+    "description": "How programming work must happen: short plan, small steps, run after each, verify by using it, no fake tests, done only with evidence.",
+    "max_tokens": 1500,
+    "enabled": true,
+    "body": "# Coding: how the work must happen\n\nPlan: 3 to 8 lines (files, order, the test for each step). Then start. Never re-plan. If the plan exists and you are still thinking, write the first file now.\n\nBuild small: one file or one function per write, at most ~150 lines. Run after every step (open the page, run the test, run the command). Never write the whole program in one call.\n\nVerify by using it the way the user will:\n- game or interactive app: play it. Send real key events, hold them through real frames, read the state after, walk the level from start to goal. Check landing, collisions, the camera, the HUD.\n- web page: look at it at 1280 px and at 390 px. Read the console.\n- code or CLI: run the tests and the command on real input.\n\nA surprise is a bug: a life lost in 1.5 s, a console error, a blank area, a stuck sprite, an early game over. Find the line that causes it and fix it. Never call it \"working as intended\".\n\nNever fake a test: no setting internal flags instead of input, no teleporting to the goal, no reading your own code as proof, no screenshot from before the last change.\n\nDebug: reproduce with the smallest input; find the one cause; change one thing; run the same reproduction again.\n\n\"Done\" only with evidence in the message, in the user's words: what was run, how long, what state was read, what was seen. Laya's verdicts are yours and stay out of it. Missing evidence means \"not done: <what is missing>\".\nYour plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.\n\n# Coding playbook (first turn, and after a failure)\n\n## 1. Start within one short think\nWrite the plan as a list: files, order, the test for each step. 3 to 8 lines, one pass. The plan changes only when a run shows something new, never before the first run. Thinking in circles (\"let me try a completely different approach\") means: stop, write the first file.\n\n## 2. Build in steps\n- One step = one file or one function, at most ~150 lines per write. Run it before the next step.\n- Order for an app: a skeleton that renders, then input, then the core rule (physics, data, state), then one real feature, then the rest.\n- A part that does not run yet gets a stub, not a guess.\n- Every step ends with one line: what was added, what was run, what was seen.\n\n## 3. Verify by use\nThe test is what the user will do, through the tools you have (browser tools, a shell, a test runner).\n- Game or interactive app: play it. Dispatch real key events (keydown, wait 30 or more frames, keyup), then read position, velocity, lives, score, camera. Walk the level from start to goal with inputs only. Check: the player lands and stays on the ground, does not sink into or pass through tiles, dies once in a pit and respawns, the camera follows and never shows outside the level, the HUD matches the state, enemies and the goal react, the level ends. Screenshot at the start, in the middle, at the end.\n- Web page: screenshots at 1280 px and 390 px. Click the main controls. Console: zero errors.\n- Code or CLI: run the test suite, then the program on real input, and read the output.\n- Run after the LAST change. Evidence from before a fix is not evidence for the fix.\n\n## 4. Surprises are bugs\nA result you did not predict is a defect until the code explains it: lives gone at once, an enemy that kills on spawn, a player who falls through the floor, the game ending early, a blank canvas, a console error. Write what you expected, what you saw, and the line that causes it. Then fix it. \"The damage system works\" after three lives lost in 1.5 s is wrong by definition: nobody loses three lives in 1.5 s on purpose.\n\n## 5. Never fake a test\n- No `keys[...] = true` or any internal flag instead of an input event.\n- No moving the player to the goal to test the win.\n- No reading your own code as proof that it works.\n- No \"verified in-browser\" after one screenshot at 1.5 s.\n- No \"the bot fell into pits, working correctly\" when the bot was you.\n\n## 6. Debug method\n1. Reproduce with the smallest input (one key, one frame, one value).\n2. Read the state just before the symptom.\n3. Name the one cause.\n4. Change one thing.\n5. Run the same reproduction, then the full use test of section 3.\nTwo failed fixes on one bug: stop, re-read the function from the top, write the bug down in one sentence before the next change.\n\n## 7. The done message\n\"Done\" needs this list: files written; commands run; what the use test did (inputs, duration, state read, screenshots), in the user's words; every surprise in the product and its cause. Laya's labels and probabilities, the kit, the scratch folder and state hooks stay out of it, and so do the quirks of your own test tools. If an item is missing, say \"not done: <what is missing>\" instead.",
+    "requires_tools": [
+     "shell"
+    ],
+    "fallback": "coding-answer"
+   },
+   "coding-answer": {
+    "title": "Coding without a shell",
+    "kind": "package",
+    "source": "inline",
+    "description": "How to write code in a chat that cannot run it: the whole file in the answer, checked by reading; stands in for the coding package when the request has no shell.",
+    "max_tokens": 600,
+    "enabled": true,
+    "body": "# Coding in a chat that cannot run code\n\nThis chat has no shell, so the run-after-every-step loop of the coding package does not apply here.\n\n- Plan in 3 to 6 lines (the files, their order), then write. Never re-plan.\n- Write each file complete: never a fragment, never \"the rest stays the same\".\n- Keep to what was asked: one file when one file was asked for, no build step, a library from a CDN only when the task needs it.\n- Check by reading, once: walk the main path (the page loads, the first input, the main rule, the end state) and look for what a run would show: an undefined name, an id or selector that does not match, an off-by-one, a listener that is never attached, a canvas that does not follow the window size.\n- End with what you built, what you checked by reading, and the first thing the user should try.\n"
+   },
+   "files-care": {
+    "title": "The user's files",
+    "kind": "package",
+    "source": "inline",
+    "description": "Never overwrite the user's files: a new folder or file gets a name that is free, an existing file is read before it changes, a file that must be replaced is copied first, and the answer says so. Goes with every class that writes files.",
+    "max_tokens": 400,
+    "enabled": true,
+    "general": true,
+    "body": "# The user's files\n\nWhen you create or change files with tools:\n- \"A new folder\" or \"a new file\" means a name that does not exist yet. List the parent folder first. If the name is taken, use a free one (pagoda-garden-2) and say in the answer that the name was taken and which one you used.\n- `mkdir -p` on a folder that exists does not make it new. Check before you write into it.\n- Never write over a file you have not read in this conversation. To change an existing file, read it first, and say in the answer what you changed.\n- If you must replace a file you did not create, copy it first (index.html.bak) and say so in the answer.\n- Never delete a file or folder you did not create in this conversation (`rm`, `rm -rf`, `git clean`, a move over it), a `.tandem` folder included: one that was there when you started is the user's, whatever it holds.\n",
+    "requires_tools": [
+     "write"
+    ]
+   },
+   "testing": {
+    "title": "Testing with TandemLLM",
+    "kind": "package",
+    "source": "inline",
+    "description": "How to make software observable and test it so the runtime can judge the evidence; goes with the coding package on every coding turn with tools.",
+    "body": "# Testing with TandemLLM\n\nTest with evidence, never with intentions: exit codes, test summaries, console messages, screenshots, state dumps. The runtime reads them, and Laya, its decision model, judges them for you when your test script asks it (the laya-testing package). Give them facts.\n\nMake the software observable before you test it:\n- Scratch: logs, helper scripts and kits go to {tandem_scratch}/, this conversation's own folder. Create it once with `[ -d {tandem_scratch} ] || { mkdir -p {tandem_scratch} && echo made-by-this-run > {tandem_scratch}/.made-by-this-run; }; (git rev-parse --git-dir >/dev/null 2>&1 && echo '{tandem_scratch}/' >> \"$(git rev-parse --git-dir)/info/exclude\"; true)`, so git never lists it. As your last step before \"done\", delete it only when this run made it: `[ -f {tandem_scratch}/.made-by-this-run ] && rm -rf {tandem_scratch}`. Never delete a folder or file you did not create, another `.tandem` folder included: what was there before you started is the user's. The project gets only what the user asked for; never list scratch files as deliverables.\n- Logs: write build and run output to {tandem_scratch}/build.log and {tandem_scratch}/run.log. After a run, `tail -n 60` the log in a tool call.\n- State dump: expose one function or flag that returns a JSON object with the key \"tandem_state\": 1 plus the few numbers that define the state (positions, counts, health, score, rows, status). Keep it under 4 KB. Read it after real input, never before. It is test scaffolding: wrap it in `tandem-test-hook:start` and `tandem-test-hook:end` comments and remove it as your last edit before \"done\" (then run the quick check once more), unless the user asked for a debug or state API. It is yours: the final message does not mention it.\n- Tests: run the real test command and let its summary line appear in the tool result.\n- Runtimes: use what is installed (`command -v node npx python3 bun deno`; for a page, the kit's page check below or your browser tool). Never download a runtime or any executable (no curl or wget of a binary, no install script) unless the user asks; if nothing can run the code, say so and test what you can.\n\nEvery edit is followed by a run that produces one of these. A change with no visible effect in the next run is a bug to explain, not a step done.\n\nWhen a <runtime-note> gives a verdict (no change, regression, error, surprise, test faked), answer it first: what you expected, what the evidence shows, the one cause. Then act.\n\nNever test by writing to the state you then read. Input in, state out.\n\nOrder and budget (the user waits for the deliverable, not for your test rig):\n- A {tandem_scratch} that is there when you start is this conversation's, from a run that was cut off: stop the server its server.pid names (`kill $(cat {tandem_scratch}/server.pid) 2>/dev/null`) and go on using it. Delete nothing at the start, in it or anywhere else.\n- First the deliverable: write the files the user asked for before any test tooling (test pages, servers, browser rigs, installs).\n- Check a page with the kit's page check, the browser here: `mkdir -p {tandem_scratch} && curl -sf {tandem_url}/v1/laya/kit/laya_drive.py -o {tandem_scratch}/laya_drive.py`, then `python3 {tandem_scratch}/laya_drive.py page http://127.0.0.1:8765/index.html --url {tandem_url} --step click:#start --step wait:2000 --step 'read:document.querySelector(\"#time\").textContent'` (a step in single quotes: inside double quotes the shell expands `$`; steps: click:SELECTOR or click:text=Label, key:Space*300, type:#field=text, wait:MS, read:JS, expect:JS, shot:NAME). It starts its own headless Chrome, uses real clicks and keys, reads values back, takes screenshots at 1280 and 390 px, lists the console errors, asks Laya for a verdict and closes Chrome, in about 5 s. Your browser tool, when you have one, does the same.\n- Never write a browser driver of your own (Marionette, WebDriver, Selenium, a DevTools client, `firefox --screenshot`). When the page check says NO BROWSER, or fails twice, read the code instead and say the browser check was not possible. Any other tool that fails twice (an image you cannot read, a server that hangs) is dropped the same way: say so in one sentence and go on.\n- After the deliverable exists, verification is: one page check (or test run) with every main control as a step in the same call, fix what it shows, check again, then the final message, in a few minutes. Write no new test tooling after the first check and no test copies of the product (a page with shorter timers, a patched build); say what a long wait would show instead. The user waits for every extra script.\n- A server you start runs in the background with a time limit and its pid in scratch: `timeout 600 python3 -m http.server 8765 >{tandem_scratch}/server.log 2>&1 & echo $! > {tandem_scratch}/server.pid`. Stop it (`kill $(cat {tandem_scratch}/server.pid)`) before \"done\"; never run a server in the foreground.\n- Everything you create stays inside the project: temporary files, browser profiles and logs go in {tandem_scratch}, never /tmp (a client may refuse a path outside the project and end the run).\n- Enough is: the deliverable loads or runs, zero console errors, and one run with real input passes (a game: start, move, jump; a page: the main controls; code: the tests). A bot that plays a whole game is optional. When your own test tool fails the same way twice, stop tuning it: it is not the deliverable; report that spot as untested.\n- Never change the product only to make your own test pass; if a test made you change its behaviour, say so in the final message.\n- The final message is for the user, who never saw your tools: what you built and where it is (the path, how to open or run it), how to use it, one plain sentence on how you checked it (\"I opened it in a browser: it loads with no errors and the controls respond\"), what is untested, and at most one next step; for a build about 250 words or fewer. Laya and its labels and probabilities, the page check, the kit, state hooks, the scratch folder, draw calls and fps are your tools: leave them out unless the user asks how you tested. Describe what the result shows, never a feature the check did not show.\n- Anything you added only for your check (an fps, draw-call or stats readout on screen, a debug panel, logging every frame) comes out before \"done\", or stays behind a `?debug` URL flag: the delivered page shows only what the user asked for.\n- A quirk of your own test tools (a kit step that behaves oddly, the judge's doubt, a screenshot you could not open) is yours to work around, not news for the user: leave it out of the final message.\n- Your plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.",
+    "max_tokens": 1200,
+    "enabled": true,
+    "general": true
+   },
+   "test-web": {
+    "title": "Testing a web app or game",
+    "kind": "skill",
+    "source": "inline",
+    "description": "Testing a web app, a page, a canvas or a game in the browser, the way a user does - anything opened in a browser.",
+    "body": "# Testing a web app or game\n1. Write the page first. Serve it in the background with a time limit (the testing package's server rule). Open it in your browser tool, else run the kit's page check (`python3 {tandem_scratch}/laya_drive.py page URL --url {tandem_url} --step ...`, the testing package); zero console errors first.\n2. State hook: window.__state() returns {\"tandem_state\":1, ...} with what matters (player x/y, lives, score, level, route); window.__log keeps the last 200 lines.\n3. Real input only: press_key with a hold time, clicks at screenshot coordinates (page check: `--step key:ArrowRight*300`, `--step click:#start` or `--step click:text=Start`). Wait 300 ms or more, then read window.__state() (evaluate_script, or `--step \"read:window.__state()\"`). Never set keys, flags or positions in a script.\n4. A scenario = start state, inputs, expected state, read state; walk the whole flow.\n5. Screenshots at 1280 and 390 px: start, middle, end (the page check takes 1280 and 390 at the end; `--step shot:middle` for more).\n6. After each scenario, ask Laya from the page (evaluate script): `return await (await fetch(\"{tandem_url}/v1/laya/ask\", {method: \"POST\", body: JSON.stringify({question: \"Did the player move right and stay alive?\", text: JSON.stringify(window.__state())})})).json()`. A \"no\" is a bug.\n7. A surprise (lives gone in 2 s, a blank canvas) is a bug: name the line before the next edit.\n8. A game, or a flow of many steps toward a goal: let Laya play it, 3 episodes or more (laya-playtest: `{tandem_scratch}/laya_drive.py browser`); a death or stuck spot that real keys cannot avoid either is a bug. Two runs that end at the same spot: stop and report it as untested. A one-screen tool (a timer, a form, a calculator) needs the page check only.\nYour evidence, for you: console count, scenarios, states, and Laya's verdicts. The final message says in plain words what you ran and what it showed; it never names Laya, a verdict or a probability.\nYour plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.",
+    "max_tokens": 1200,
+    "enabled": true
+   },
+   "test-cli": {
+    "title": "Testing a CLI",
+    "kind": "skill",
+    "source": "inline",
+    "description": "Testing a command-line program - a script with arguments, a tool that reads files or stdin - by running it on real input.",
+    "body": "# Testing a CLI\n1. Build or install it; write the output to {tandem_scratch}/build.log; check the exit code.\n2. Add --dump-state (or --selftest): prints {\"tandem_state\":1, \"version\":…, \"config\":…, \"last_run\":{…}} to stdout and exits 0.\n3. Run it on a real input file you created with known content; compare the output with what the input implies, number by number. Run the error paths too: a missing file, a bad argument, empty input. Each must exit non-zero with one clear line.\n4. Pipe cases: stdin in, stdout out, stderr for errors only.\n5. Keep every run under the bash timeout; long runs go to the background with their log in {tandem_scratch}/run.log and `tail -n 60` after.\n6. Let Laya judge each output against what you expected: `(echo \"expected: 3 rows, total 42\"; ./tool in.csv 2>&1) | python3 {tandem_scratch}/laya.py \"Does the actual output match the expected one?\" match,mismatch`.\nYour evidence, for you: the commands run, their exit codes, the outputs compared, the state dump, and Laya's verdicts. The final message says in plain words what you ran and what it showed; it never names Laya, a verdict or a probability.\nYour plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": [
+     "shell"
+    ]
+   },
+   "test-api": {
+    "title": "Testing a backend or API",
+    "kind": "skill",
+    "source": "inline",
+    "description": "Testing a backend or an API - an HTTP service, its routes, a database behind it, a websocket - with real requests against the running server.",
+    "body": "# Testing a backend or API\n1. Start the server in the background (`cmd > {tandem_scratch}/run.log 2>&1 &`), wait for the port, read the log tail. Use the absolute project path.\n2. Add GET /__state: {\"tandem_state\":1, \"uptime\":…, \"routes\":[…], \"db\":{\"ok\":true,\"rows\":…}, \"last_error\":…}. Add /healthz if missing.\n3. Call every route with curl: a valid request, an invalid body, a missing auth, a not-found id. Read the status code and the body each time. A 500 is a bug; a 200 on bad input is a bug.\n4. State after writes: create, then read back, then /__state. Numbers must agree.\n5. Stop the server you started at the end; say that you did.\n6. Let Laya judge every response: `(echo \"expected: 404 with an error body\"; curl -s -w '\\nHTTP %{http_code}' localhost:8080/items/999) | python3 {tandem_scratch}/laya.py \"Is this response what the request should get?\" right,wrong`.\nYour evidence, for you: the routes called with their codes, the read-back checks, the log tail, and Laya's verdicts. The final message says in plain words what you ran and what it showed; it never names Laya, a verdict or a probability.\nYour plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": [
+     "shell"
+    ]
+   },
+   "test-data": {
+    "title": "Testing a data script",
+    "kind": "skill",
+    "source": "inline",
+    "description": "Testing a data script - a transformation, a notebook turned into a script, a report from a file or a query - by proving its numbers.",
+    "body": "# Testing a data script\n1. Run on a small input you can check by hand (10 rows). Write the expected numbers down before the run.\n2. After each stage, write {tandem_scratch}/state.json: {\"tandem_state\":1, \"stage\":…, \"rows_in\":…, \"rows_out\":…, \"nulls\":{…}, \"checksum\":…}. Print it at the end.\n3. Check: rows out explained by rows in (filters, joins), no silent nulls, totals equal across stages, types as expected, idempotent on a second run.\n4. Then the real input: the same checks, the same file, the time it took.\n5. A number you did not predict is a bug until the code explains it.\n6. Print a summary (row counts, nulls, min and max per column, duplicates) and let Laya read it: `python3 summary.py | python3 {tandem_scratch}/laya.py \"Does this summary show a data problem?\" clean,problem`.\nYour evidence, for you: the expected and the read numbers side by side, the state file, the run time, and Laya's verdict. The final message says in plain words what you ran and what it showed; it never names Laya, a verdict or a probability.\nYour plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": [
+     "shell"
+    ]
+   },
+   "test-lib": {
+    "title": "Testing a library",
+    "kind": "skill",
+    "source": "inline",
+    "description": "Testing a library - a module, a package, functions others call, a public API - with its test suite as the evidence.",
+    "body": "# Testing a library\n1. Run the suite once before any change, with its summary line in the result (pytest -q, npm test, go test ./...). Write the counts down.\n2. For every new function: one test for the normal case, one for the edge (empty, zero, max), one for the error. Write the test before the fix when fixing a bug, and watch it fail first.\n3. Run the whole suite after the last change, in one call, with the summary visible. Never run a subset and call it green.\n4. Run the public example from the README on real input.\n5. Counts: the failed count must be 0 and the passed count at or above the start. Fewer tests than before is a regression.\n6. Let Laya read the suite's tail, a check for you that no line you write names: `pytest -q 2>&1 | tail -n 30 | python3 {tandem_scratch}/laya.py \"Did every test pass?\" passed,failed`.\nYour evidence, for you: the summary lines before and after, the tests added, the example run, and Laya's verdict. The final message says in plain words what you ran and what it showed; it never names Laya, a verdict or a probability.\nYour plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": [
+     "shell"
+    ]
+   },
+   "tools-opencode": {
+    "title": "opencode's tools: pitfalls",
+    "kind": "package",
+    "source": "inline",
+    "description": "The pitfalls of opencode's tools (browser, shell, files); the client tool card's fixed part for requests from opencode.",
+    "body": "- press_key sends real key events; evaluate_script with dispatchEvent or keys[...] = true does not test input.\n- Screenshots return as \"Attached media from tool result\"; take_screenshot shows the viewport only.\n- Use absolute paths in every call. The working directory is the project root given in the system prompt.\n- bash has a timeout. A server or a watcher runs in the background: `cmd > {tandem_scratch}/run.log 2>&1 &`, then tail the log.\n- After every page load: list_console_messages. Zero errors is the bar.\n- One edit per call; read a file before editing it; never write the whole program in one call.\n- A tool error is the tool's answer, not a hint to try the same call again. Change the call.",
+    "max_tokens": 1200,
+    "enabled": true
+   },
+   "tools-hermes": {
+    "title": "Agent tools: pitfalls",
+    "kind": "package",
+    "source": "inline",
+    "description": "The pitfalls of an agent client's tools (terminal, browser, files) for clients other than opencode; the client tool card's fixed part.",
+    "body": "- The terminal tool returns the command's output and its exit code: read the exit code, a non-zero one is a failure even when the output looks fine.\n- A command has a timeout. A server or a watcher runs in the background: `cmd > {tandem_scratch}/run.log 2>&1 &`, then tail the log.\n- Browser input is real only through the browser's own input tools (press a key, click, type); a script that sets variables or dispatches events does not test input.\n- A browser snapshot or screenshot shows the page as it is now; take it after the input and a wait, never before.\n- Use absolute paths in every call.\n- One edit per call; read a file before editing it; never write the whole program in one call.\n- A tool error is the tool's answer, not a hint to try the same call again. Change the call.",
+    "max_tokens": 1200,
+    "enabled": true
+   },
+   "tandem-harness": {
+    "title": "The runtime (harness card)",
+    "kind": "package",
+    "source": "inline",
+    "description": "The harness card - what the runtime (TandemLLM) is to the model, its notes, its checks and how to give it evidence; goes in on the first turn of a coding session with tools and after a compaction.",
+    "body": "# The runtime (TandemLLM)\n- A <runtime-note> comes from the runtime, not from the user. Follow it.\n- Produce evidence the runtime can read: exit codes, test summaries, console messages, screenshots, state dumps with \"tandem_state\". Ask Laya (POST /v1/laya/ask on the provider) to judge it from your test scripts.\n- The runtime may close long thinking, raise your effort after a bad outcome, and ask for a check before \"done\".\n- State lines may appear in the client; they are not your text.\n- Your final message speaks to the user in plain words: what you built, where, how to use it, how you checked it. The runtime's notes, Laya and its scores, hooks and scratch stay out of it.\n- Your plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.\n- When a note gives a verdict, answer it first, then act.",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": [
+     "shell"
+    ]
+   },
+   "laya-testing": {
+    "title": "Laya: the test judge you can call",
+    "kind": "package",
+    "source": "inline",
+    "description": "Laya, TandemLLM's fast decision model, is reachable from your scripts through the provider; ask it typed questions about test evidence and use its verdicts before you claim done. Goes with every coding turn that has tools.",
+    "body": "# Laya: the test judge you can call\n\nTandemLLM serves Laya, a fast decision model (about 30 ms). It reads a short text (about 1,100 characters, head and tail) and answers a typed question with a probability. It writes nothing. Call it from your scripts through the provider:\n\n```\ncurl -sS --max-time 60 \"${TANDEM_URL:-{tandem_url}}/v1/laya/ask\" -H 'Content-Type: application/json' \\\n  -d '{\"question\":\"Does this output show a failure?\",\"choices\":[\"failure\",\"clean\"],\"text\":\"<log tail>\"}'\n# {\"label\":\"failure\",\"p\":0.93,\"sure\":true,...}\n```\n\nAlso `scale` (levels, lowest first), or no choices for a yes-no question; `texts: [...]` judges up to 16. No key. `curl -s .../v1/laya` shows the contract.\n\nYou must use it:\n- After every run that produced evidence (a log, an output, the console, a state dump), your test script asks Laya and prints the verdict. A page checked with the kit's page check has it already (the report's `laya` field): read it, write no Laya script of your own for it.\n- Before \"done\", run the check script and read Laya's verdicts. They are for you: the final message says in plain words what was checked, never a label or a probability.\n- Your plan and every line you write between tool calls reach the user too: name a check by what it checks (\"checking the output against the expected file\", \"running the tests\"), never Laya, a verdict or a probability.\n- failure, no or mismatch is a bug to explain before the next edit; `\"sure\": false` means read the evidence yourself.\n- A call that fails (connection refused, a TLS or certificate error, a timeout, a 5xx) is this machine's network, not your code: print \"Laya unavailable\" once in your check output and go on with your own evidence; it is not news for the user. At most one retry; never debug the transport (no openssl, no CA hunting, no -k).\n- A call refused with a 4xx (the helper prints \"LAYA refused this request\" or \"LAYA not asked\" and exits 2) is your request, not the network: read the message, fix the call (an empty text, a missing question, a bad choices list) and ask again.\n- An interactive build (a game, a UI flow, a CLI): Laya also plays it, step by step, and reports every death and stuck spot (laya-playtest).",
+    "max_tokens": 1200,
+    "enabled": true,
+    "general": true
+   },
+   "laya-scripts": {
+    "title": "Scripts that ask Laya",
+    "kind": "package",
+    "source": "inline",
+    "description": "How to write test scripts (bash, Python, Node, or in the page) that call Laya through TandemLLM to judge logs, outputs, API responses, console and state dumps, many at once and in loops, with recipes for web apps and games, CLIs, APIs, data and regressions.",
+    "body": "# Scripts that ask Laya\n\nLaya gives a fast typed verdict on a short text you cannot check by a plain comparison: log tails, console output, API bodies, CLI output with the expectation written next to it, state dumps after real input, before/after pairs. Where an exact check exists (an exit code, a number, equality), use it; ask Laya about the rest.\n\n- Write the helper `{tandem_scratch}/laya.py` (below) once and call it from every test, or `fetch` from the page.\n- One check, one plain question. Put the expectation inside the text (\"expected: ... / actual: ...\").\n- The passing label comes first: the helper exits 1 on any other label.\n- Judge many outputs at once with `texts`; in a loop (input, wait, read the state, ask), stop at the first failing verdict.\n- Print every verdict, so it is in the tool result. On a failing or unsure verdict, print the evidence's last 40 lines and explain the cause before the next edit.\n\n## Reference: the helper and recipes\n\n```python\n# {tandem_scratch}/laya.py: ask Laya (TandemLLM) a typed question about evidence\nimport json, os, sys, urllib.error, urllib.request\nURL = os.environ.get(\"TANDEM_URL\", \"{tandem_url}\") + \"/v1/laya/ask\"\n\ndef ask(question, text=None, texts=None, **kw):   # kw: choices, scale, threshold\n    if not texts and not (text or \"\").strip():   # nothing to judge: the evidence never arrived\n        print(\"LAYA not asked: the evidence text is empty, so there is nothing to judge. Pass the \"\n              \"output itself (save it to a file and read that; a script fed by a heredoc gets no \"\n              \"piped stdin).\", file=sys.stderr)\n        raise SystemExit(2)\n    body = {\"question\": question, **kw, **({\"texts\": texts} if texts else {\"text\": text})}\n    req = urllib.request.Request(URL, json.dumps(body).encode(), {\"Content-Type\": \"application/json\"})\n    try:\n        return json.load(urllib.request.urlopen(req, timeout=90))\n    except urllib.error.HTTPError as e:   # Laya answered: a 4xx says what was wrong with this request\n        try:\n            err = json.loads(e.read() or b\"{}\").get(\"error\") or {}\n        except ValueError:\n            err = {}\n        if 400 <= e.code < 500 and e.code != 429:\n            print(f\"LAYA refused this request (HTTP {e.code}): {err.get('message') or e.reason}\"\n                  + (f\" (field: {err['param']})\" if err.get(\"param\") else \"\")\n                  + f\". The request is wrong, not the network: fix it and ask again \"\n                  f\"(`curl -s {URL[:-4]}` shows the contract).\", file=sys.stderr)\n            raise SystemExit(2)\n        print(f\"LAYA unavailable (HTTP {e.code}: {err.get('message') or e.reason}). The call failed \"\n              \"on this machine, your code is not the cause: continue with your own evidence; \"\n              \"the user does not need to hear about it.\", file=sys.stderr)\n        raise SystemExit(3)\n    except (OSError, ValueError) as e:   # refused, TLS, timeout, not JSON: this machine's network\n        print(f\"LAYA unavailable ({type(e).__name__}: {e}). The call failed on this machine, \"\n              \"your code is not the cause: do not debug the connection or certificates, \"\n              \"continue with your own evidence; the user does not need to hear about it.\", file=sys.stderr)\n        raise SystemExit(3)\n\nif __name__ == \"__main__\":   # python3 {tandem_scratch}/laya.py \"question\" pass,fail < evidence.txt\n    choices = sys.argv[2].split(\",\")\n    v = ask(sys.argv[1], sys.stdin.read()[-20000:] or \"(empty)\", choices=choices)\n    print(f\"LAYA {v['label']} p={v['p']} {'sure' if v['sure'] else 'unsure'}\")\n    sys.exit(0 if v[\"label\"] == choices[0] else 1)\n```\n\n\nBuild or run log, any language:\n```\nnpm run build > {tandem_scratch}/build.log 2>&1; python3 {tandem_scratch}/laya.py \"Is this build log a success?\" ok,failed,incomplete < {tandem_scratch}/build.log || tail -n 40 {tandem_scratch}/build.log\n```\n\nCLI cases in one call:\n```python\nimport subprocess, sys; sys.path.insert(0, \"{tandem_scratch}\"); from laya import ask\ncases = [(\"calc '2+3*4'\", \"14\"), (\"calc '1/0'\", \"an error line, exit code not 0\")]\ntexts = []\nfor cmd, want in cases:\n    r = subprocess.run(cmd, shell=True, capture_output=True, text=True)\n    texts.append(f\"command: {cmd}\\nexpected: {want}\\nexit: {r.returncode}\\nactual:\\n{r.stdout}{r.stderr}\")\nv = ask(\"Does the actual output match the expected one?\", texts=texts, choices=[\"match\", \"mismatch\"])\nbad = [c for c, a in zip(cases, v[\"answers\"]) if a[\"label\"] != \"match\" or not a[\"sure\"]]\nprint(\"LAYA\", [a[\"label\"] for a in v[\"answers\"]]); assert not bad, bad\n```\n\nAPI responses: `curl -s -w '\\nHTTP %{http_code}'` each route (a valid call, a bad body, a missing id) into `texts`, with the expectation in each text; question \"Is this response what the request should get?\" with `choices: [\"right\", \"wrong\"]`.\n\nWeb app or game, inside the page (browser tool's evaluate script; no Content-Type header, so no preflight):\n```js\nconst ev = JSON.stringify({ state: window.__state(), log: (window.__log || []).slice(-40) });\nconst r = await fetch(\"{tandem_url}/v1/laya/ask\", { method: \"POST\", body: JSON.stringify({\n  question: \"After holding ArrowRight for 1 s, did the player move right and stay alive?\", text: ev }) });\nreturn await r.json();   // {label: \"yes\" | \"no\", p, sure}\n```\nLoop it: press a real key, wait real frames, ask, and stop at the first \"no\".\n\nData: print row counts, null counts, min/max per column and duplicates into a summary; ask \"Does this summary show a data problem?\" with `choices: [\"clean\", \"problem\"]`, and `scale: [\"unusable\", \"partial\", \"complete\"]` for coverage.\n\nRegression: `text = \"before:\\n\" + old + \"\\nafter:\\n\" + new`, question \"Is the after output worse than the before output?\", `choices: [\"same_or_better\", \"worse\"]`; keep the before output in `{tandem_scratch}/` from the run before your edit.",
+    "max_tokens": 1500,
+    "enabled": true,
+    "general": true
+   },
+   "algorithm-choice": {
+    "title": "algorithm choice",
+    "kind": "skill",
+    "source": "skill:algorithm-choice",
+    "description": "Choosing a data structure or algorithm for a task - sizing the input, complexity targets, hash maps versus sorted structures, sets, heaps, graphs (BFS, DFS, Dijkstra), dynamic programming, and checking with a brute-force oracle.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "auth-basics": {
+    "title": "auth basics",
+    "kind": "skill",
+    "source": "skill:auth-basics",
+    "description": "Adding login and authorization to a web app or API - password hashing, sessions or short-lived tokens, cookies with the right flags, protecting routes, and keeping secrets out of code and git.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "background-jobs": {
+    "title": "background jobs",
+    "kind": "skill",
+    "source": "skill:background-jobs",
+    "description": "Running work outside the request - queues, workers, scheduled tasks and retries in Python or Node, with idempotent jobs, timeouts and a way to see what ran.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "bash-scripting": {
+    "title": "bash scripting",
+    "kind": "skill",
+    "source": "skill:bash-scripting",
+    "description": "Writing shell scripts that fail loudly and handle paths safely - set -euo pipefail, quoting, arrays, functions, arguments, temp files with trap cleanup, and testing the error paths.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "browser-game": {
+    "title": "browser game",
+    "kind": "skill",
+    "source": "skill:browser-game",
+    "description": "Building a 2D browser game (platformer, shooter, puzzle) - game loop with fixed timestep, keyboard input, tile collisions, camera, HUD, lives and win state.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "canvas-2d": {
+    "title": "canvas 2d",
+    "kind": "skill",
+    "source": "skill:canvas-2d",
+    "description": "Drawing and animating on an HTML canvas with the 2D context - render loop, device pixel ratio, sprites, transforms, text, and keeping 60 fps.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "datetime-timezones": {
+    "title": "datetime timezones",
+    "kind": "skill",
+    "source": "skill:datetime-timezones",
+    "description": "Handling dates, times and time zones in Python and JavaScript - storing UTC, aware datetimes, parsing and formatting ISO-8601, converting for display, durations, DST pitfalls and date arithmetic.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "debug-method": {
+    "title": "debug method",
+    "kind": "skill",
+    "source": "skill:debug-method",
+    "description": "A method for fixing a bug when the cause is unknown - reproduce with the smallest input, read the state before the symptom, bisect by halves (input, code, commits), name one cause, change one thing, re-run the same reproduction.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "docker-basics": {
+    "title": "docker basics",
+    "kind": "skill",
+    "source": "skill:docker-basics",
+    "description": "Writing a Dockerfile and compose file for a service, reading container logs, and running an app in a container - layers, caching, non-root user, ports, volumes, health checks, and the project rule on where images get built.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "dom-events": {
+    "title": "dom events",
+    "kind": "skill",
+    "source": "skill:dom-events",
+    "description": "Vanilla JavaScript in the browser without a framework - DOM queries, event listeners, delegation, rendering state to HTML, and avoiding leaks.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "express-service": {
+    "title": "express service",
+    "kind": "skill",
+    "source": "skill:express-service",
+    "description": "Writing a Node.js HTTP API with Express - routers, JSON bodies, validation, error middleware, status codes, async handlers, environment config, and probing routes with curl.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "fastapi-service": {
+    "title": "fastapi service",
+    "kind": "skill",
+    "source": "skill:fastapi-service",
+    "description": "Writing a Python HTTP API with FastAPI (or Flask) - pydantic models, routers, validation errors, status codes, dependencies, settings from the environment, running with uvicorn and checking routes with curl.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "fetch-client": {
+    "title": "fetch client",
+    "kind": "skill",
+    "source": "skill:fetch-client",
+    "description": "Calling a REST or JSON API from browser or Node JavaScript with fetch - status handling, JSON errors, timeouts with AbortController, retries, auth headers, loading and error state in the UI.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "files-and-formats": {
+    "title": "files and formats",
+    "kind": "skill",
+    "source": "skill:files-and-formats",
+    "description": "Reading and writing files and data formats correctly - text encodings (UTF-8, BOM, latin-1), newlines, binary versus text, JSON, YAML, CSV with quoting, large files streamed, atomic writes, and paths with pathlib.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "git-workflow": {
+    "title": "git workflow",
+    "kind": "skill",
+    "source": "skill:git-workflow",
+    "description": "Day-to-day git for a coding task - small commits with clear messages, a branch per task, reading status and diff before committing, resolving merge conflicts, and never committing secrets or generated files.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "logging-observability": {
+    "title": "logging observability",
+    "kind": "skill",
+    "source": "skill:logging-observability",
+    "description": "Adding useful logs, metrics and a state endpoint to a service or script - structured log lines, levels, request ids, timing, log files the runtime can tail, and counters that answer \"what happened\".",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "matplotlib-plots": {
+    "title": "matplotlib plots",
+    "kind": "skill",
+    "source": "skill:matplotlib-plots",
+    "description": "Making clear charts with matplotlib (line, bar, scatter, histogram, multi-panel) saved to PNG or SVG - figure sizing, labels, units, legends, log axes, and checking the output image.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "numerical-precision": {
+    "title": "numerical precision",
+    "kind": "skill",
+    "source": "skill:numerical-precision",
+    "description": "Avoiding floating-point mistakes in code that computes money, statistics, physics or geometry - when to use integers or Decimal, comparing with tolerances, summation order, catastrophic cancellation, float32 limits, and rounding for display.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "numpy-performance": {
+    "title": "numpy performance",
+    "kind": "skill",
+    "source": "skill:numpy-performance",
+    "description": "Making numeric Python fast with NumPy - vectorizing loops, broadcasting, dtypes and memory, avoiding copies, and measuring with timeit before and after.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "pandas-cleaning": {
+    "title": "pandas cleaning",
+    "kind": "skill",
+    "source": "skill:pandas-cleaning",
+    "description": "Loading and cleaning tabular data with pandas - reading CSV and Excel, types, missing values, duplicates, dates, string normalization, joins, and proving row counts at every step.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "plan-feature": {
+    "title": "plan feature",
+    "kind": "skill",
+    "source": "skill:plan-feature",
+    "description": "Planning a multi-file feature before building it - clarify the outcome, list files and steps in build order, a test for each step, the risks, an estimate, and when to stop planning and start.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "processes-ports": {
+    "title": "processes ports",
+    "kind": "skill",
+    "source": "skill:processes-ports",
+    "description": "Starting servers and long-running commands from an agent shell - background with logs, waiting for a port, health checks, finding and killing stale processes, timeouts, and cleaning up at the end.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "profiling": {
+    "title": "profiling",
+    "kind": "skill",
+    "source": "skill:profiling",
+    "description": "Finding why a program is slow before changing it - timing the real case, Python cProfile and py-spy, Node --cpu-prof, browser performance traces, picking the one hot spot, and proving the gain with numbers.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "pytest-practice": {
+    "title": "pytest practice",
+    "kind": "skill",
+    "source": "skill:pytest-practice",
+    "description": "Writing and running Python tests with pytest - test layout, fixtures, parametrize, tmp_path, monkeypatch and mocking, testing a CLI or API, and reading the summary line.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "python-async": {
+    "title": "python async",
+    "kind": "skill",
+    "source": "skill:python-async",
+    "description": "Using asyncio in Python - async functions, gather with limits, timeouts, cancellation, running blocking code in a thread, async HTTP with httpx, and avoiding the event loop stalls.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "python-cli": {
+    "title": "python cli",
+    "kind": "skill",
+    "source": "skill:python-cli",
+    "description": "Writing a Python command-line tool with argparse or typer - subcommands, flags, stdin and stdout, exit codes, error messages, --dump-state, and a main() that tests can call.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "python-env-packaging": {
+    "title": "python env packaging",
+    "kind": "skill",
+    "source": "skill:python-env-packaging",
+    "description": "Setting up a Python project - virtual environment with venv or uv, pyproject.toml, pinned dependencies, src layout, entry points, and installing it in editable mode.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "react-basics": {
+    "title": "react basics",
+    "kind": "skill",
+    "source": "skill:react-basics",
+    "description": "Writing React components with hooks - useState, useEffect, derived values, lists with keys, forms, lifting state, and the common performance and re-render pitfalls.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "read-codebase": {
+    "title": "read codebase",
+    "kind": "skill",
+    "source": "skill:read-codebase",
+    "description": "Getting oriented in an unfamiliar repository before changing it - project rules files, entry points, build and test commands, the module map, data flow for one feature, and writing down what was learned.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "refactor-safely": {
+    "title": "refactor safely",
+    "kind": "skill",
+    "source": "skill:refactor-safely",
+    "description": "Changing the structure of existing code without changing its behavior - characterization tests first, small verified steps, renames and extractions, keeping the public API, and proving nothing changed.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "regex": {
+    "title": "regex",
+    "kind": "skill",
+    "source": "skill:regex",
+    "description": "Writing and testing regular expressions in Python and JavaScript - anchors, groups, character classes, greedy versus lazy, multiline flags, named groups, and testing against positive and negative examples before use.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "security-basics": {
+    "title": "security basics",
+    "kind": "skill",
+    "source": "skill:security-basics",
+    "description": "Basic security for web apps, APIs and scripts - input validation, SQL and command injection, XSS, path traversal, secrets handling, dependency checks, and the quick probes that prove a hole is closed.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "sql-queries-indexes": {
+    "title": "sql queries indexes",
+    "kind": "skill",
+    "source": "skill:sql-queries-indexes",
+    "description": "Writing correct and fast SQL queries - joins, aggregates, parameters against injection, pagination, N+1 avoidance, and choosing indexes with EXPLAIN in SQLite and PostgreSQL.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "sql-schema-migrations": {
+    "title": "sql schema migrations",
+    "kind": "skill",
+    "source": "skill:sql-schema-migrations",
+    "description": "Designing a relational schema in SQLite or PostgreSQL and changing it with migrations - tables, keys, constraints, timestamps, versioned migration files, applying and rolling back safely.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "svelte-basics": {
+    "title": "svelte basics",
+    "kind": "skill",
+    "source": "skill:svelte-basics",
+    "description": "Building a small app with Svelte 5 - runes ($state, $derived, $effect), components and props, events, each blocks with keys, stores versus runes, and the Vite project setup.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "threejs-scene": {
+    "title": "threejs scene",
+    "kind": "skill",
+    "source": "skill:threejs-scene",
+    "description": "Building a WebGL scene with Three.js - renderer, camera, lights, meshes, controls, resize, animation loop, and performance (draw calls, instancing, disposal).",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "ts-vite-build": {
+    "title": "ts vite build",
+    "kind": "skill",
+    "source": "skill:ts-vite-build",
+    "description": "Setting up TypeScript in a frontend or Node project with Vite or esbuild - tsconfig strict mode, types for props and API data, type narrowing, building and type-checking before done.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "web-a11y": {
+    "title": "web a11y",
+    "kind": "skill",
+    "source": "skill:web-a11y",
+    "description": "Accessibility basics for any web page or app - semantic elements, labels, keyboard focus, contrast, ARIA only when needed, screen-reader names.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "web-audio": {
+    "title": "web audio",
+    "kind": "skill",
+    "source": "skill:web-audio",
+    "description": "Playing and synthesizing sound in the browser with the Web Audio API - AudioContext unlock on a gesture, oscillators, samples, gain envelopes, timing on the audio clock.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "web-forms": {
+    "title": "web forms",
+    "kind": "skill",
+    "source": "skill:web-forms",
+    "description": "HTML forms with client-side validation and submission - input types, required and pattern, custom messages, error display, submit via fetch, and server-side revalidation.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "web-layout": {
+    "title": "web layout",
+    "kind": "skill",
+    "source": "skill:web-layout",
+    "description": "Building an HTML/CSS page layout with flexbox and grid that holds at 1280 px desktop and 390 px phone width - headers, sidebars, cards, columns, spacing.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "web-storage-offline": {
+    "title": "web storage offline",
+    "kind": "skill",
+    "source": "skill:web-storage-offline",
+    "description": "Persisting browser state with localStorage, sessionStorage and IndexedDB, and a minimal service worker for offline caching - versioned keys, try/catch, quotas, cache strategy.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "websockets": {
+    "title": "websockets",
+    "kind": "skill",
+    "source": "skill:websockets",
+    "description": "Realtime two-way messaging between browser and server with WebSockets (FastAPI or Node ws) - message schema, reconnect, heartbeats, broadcast, and testing with a scripted client.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "write-readme": {
+    "title": "write readme",
+    "kind": "skill",
+    "source": "skill:write-readme",
+    "description": "Writing or updating a README for a project or tool - what it is in two lines, install and run commands that were actually executed, configuration, a usage example with real output, and what is not covered.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true
+   },
+   "tandem-library": {
+    "title": "The skill library",
+    "kind": "package",
+    "source": "skill:tandem-library",
+    "description": "The TandemLLM skill library - short rules, pitfalls and snippets for common stacks and practices, and how to search it and read a skill from the shell before unfamiliar work.",
+    "body": "",
+    "max_tokens": 300,
+    "enabled": true
+   },
+   "laya-playtest": {
+    "title": "Laya plays your build",
+    "kind": "package",
+    "source": "inline",
+    "description": "Laya plays the software you built (a game, a UI flow, a CLI, an API sequence) through TandemLLM, one decision every ~250 ms from a fixed action set; the kit logs every decision, death and stuck spot and prints a report to fix the build from. Must be run on every interactive build before done.",
+    "body": "# Laya plays your build\n\nLaya can play interactive software: per step the kit reads a small state, asks Laya for an action, applies it as real input and logs it.\n\nPlaytest a game, or a UI, CLI or API flow of many steps toward a goal, this way when the kit runs here (a check, not a deliverable; the testing package's budget applies). A one-screen tool (a timer, a form, a calculator) needs only the page check (`laya_drive.py page`):\n\n1. Kit: `mkdir -p {tandem_scratch} && curl -sf {tandem_url}/v1/laya/kit/laya_drive.py -o {tandem_scratch}/laya_drive.py`\n2. A short state: what the next move depends on (distance to the next gap or enemy) plus `lives`, `x`, `over`, `won`, `cause`; in a page `window.tandem_state()` and `tandem_reset()`.\n3. Actions with meanings, 3+ episodes: `python3 {tandem_scratch}/laya_drive.py browser URL --actions \"run=move right,jump=jump forward\" --keys run=ArrowRight,jump=Space --episodes 3` (`proc`, `cmd` for programs).\n4. Report: deaths with place, cause and the decisions before them; stuck spots. A crash, or a death or stuck spot that a player with real keys cannot avoid either, is a bug: fix the build, rerun, read the report. A spot where only the bot fails is not a bug: report it. Two runs that end at the same spot with no change to the build: stop playtesting and report what works and what is untested.\n\nRecipes: `curl -s {tandem_url}/v1/library/laya-playtest`\n\n## Reference\n\n### A browser game\n```js\n// in the game: what Laya sees each step, and a fresh start\nwindow.tandem_state = () => ({\n  x: Math.round(player.x), y: Math.round(player.y), vx: +player.vx.toFixed(1), on_ground: player.onGround,\n  gap_ahead: nextGap ? Math.round(nextGap.x - player.x) : null,\n  enemy_ahead: nearest ? { dx: Math.round(nearest.x - player.x), dy: Math.round(nearest.y - player.y) } : null,\n  lives, score, over: lives <= 0, won: player.x >= level.goal, cause: lastDeathCause,\n});\nwindow.tandem_reset = () => startLevel(1);\n```\n```\npython3 {tandem_scratch}/laya_drive.py browser http://localhost:5173 \\\n  --actions \"run=move right,jump=jump straight up,run_jump=jump forward,back=move left,wait=stand still\" \\\n  --keys run=ArrowRight,jump=Space,run_jump=ArrowRight+Space,back=ArrowLeft,wait= \\\n  --every-ms 250 --episodes 3 --steps 400 --label \"after the gap fix\"\n```\nIt starts its own headless Chrome and presses real keys over the DevTools protocol (a page that checks `isTrusted` works). `--cdp http://127.0.0.1:9222` drives a Chrome you started with `--remote-debugging-port=9222`; `--headed` shows it.\n\n### A UI flow\nThe state lists the controls; Laya picks the next one and the kit clicks it (at x/y, or the selector's center):\n```js\nwindow.tandem_state = () => ({ screen: route(), errors: formErrors(),\n  won: saved, controls: [...document.querySelectorAll(\"button, a, [role=button]\")].filter(visible)\n    .map((e) => ({ id: e.id || e.textContent.trim().slice(0, 30), label: e.textContent.trim().slice(0, 60), selector: cssPath(e) })) });\n```\nRun with `--question \"Which control moves the user toward saving the form?\"` (no `--actions`: the controls are the choices).\n\n### A CLI or a simulation (headless)\nGive the program a mode that prints one JSON state per line and reads one action per line (`reset` restarts):\n```python\nfor line in sys.stdin:          # game.py --headless\n    a = line.strip(); state = reset() if a == \"reset\" else step(state, a)\n    print(json.dumps(view(state)), flush=True)\n```\n`python3 {tandem_scratch}/laya_drive.py proc \"python3 game.py --headless\" --actions \"...\" --episodes 5`\n\n### An API sequence\n`python3 {tandem_scratch}/laya_drive.py cmd --state \"curl -s localhost:3000/debug/state\" --act \"curl -s -XPOST localhost:3000/{action}\" --reset \"curl -s -XPOST localhost:3000/debug/reset\" --actions \"create=create an item,update=edit it,delete=remove it,list=list items\"`; the state says what exists and what the last call returned (`last_status`), `over: true` on a 5xx.\n\n### Only the browser tool\nLoad the in-page kit and start it in the page (the keys are synthetic; the log goes to a local sink):\n```\npython3 {tandem_scratch}/laya_drive.py serve-log --port 8765 &      # appends to {tandem_scratch}/drive-log.jsonl\n```\n```js\neval(await (await fetch(\"{tandem_url}/v1/laya/kit/laya-drive.js\")).text());\nreturn await tandem_drive.start({ actions: {...}, keys: { run: [\"ArrowRight\"], jump: [\" \"] }, everyMs: 250, episodes: 3, logUrl: \"http://127.0.0.1:8765/log\" });\n```\nthen `python3 {tandem_scratch}/laya_drive.py report`.\n\n### Reading the report\n`death 2 (episode 1, step 87) at x=412: fell into the gap` and the decisions before it: was the jump picked in time? If Laya jumped and the player still fell, the jump is too short or the gap too wide (the build's bug); if Laya never jumped, `gap_ahead` may be missing or wrong in the state. `stuck ... at x=1204` is a wall or a missing platform. `fallbacks (busy)`: another request held the engine; rerun. Run again after each fix with a `--label`, and compare the reports.",
+    "max_tokens": 400,
+    "enabled": true,
+    "general": true,
+    "library": true
+   },
+   "tandem-core": {
+    "title": "Core rules",
+    "kind": "package",
+    "source": "inline",
+    "description": "The runtime's own conventions, on every turn: tool arguments in their schema types, no literal think tags, one answer per turn, the size limits and the stop rule for long files, a final answer in plain words.",
+    "max_tokens": 300,
+    "enabled": true,
+    "general": true,
+    "requires_tools": [],
+    "body": "# Core rules (always on)\n\n1. Tool arguments use the schema's types: a number is a number, a boolean is `true` or `false`, a list is a JSON list. Do: `{\"timeout\": 30, \"recursive\": true}`. Don't: `{\"timeout\": \"30\", \"recursive\": \"true\"}`.\n2. Never write `<think>` or `</think>` in an answer or a tool argument. Think in the thinking channel only.\n3. One answer per turn. After a tool call, wait for its result before writing anything else. Never write a second answer.\n4. Size limits: one file write is at most 200 lines; a chat answer at most 400 lines of code. Over that, split into more calls.\n5. The stop rule for long files: when a file passes 200 lines, stop at the end of a function or a block, write that part, and append the rest in the next call. Never cut a line in half.\n6. The final answer speaks to the user in plain words: what was built, where, how to use it, how it was checked. No tool names, scores or runtime notes.\n7. When the request is unclear, build the most likely thing and say in one line what you assumed. Do not stop to ask.\n"
+   },
+   "render-tools": {
+    "title": "Render tools",
+    "kind": "package",
+    "source": "inline",
+    "description": "How to use the render tool server of SRV-105 (render, audio_probe, package_read, package_search, the render_video interface): when to render, what to fix first, the renders per answer, the CDN allowlist. Goes in whole on every turn of a visual class whose chat offers a render tool.",
+    "max_tokens": 750,
+    "enabled": true,
+    "general": true,
+    "requires_tools": [
+     "render"
+    ],
+    "body": "# Render tools\n\nThis chat has a render tool. It opens your page in a hidden browser and sends back what it saw. Use it. Never describe a page you have not rendered.\n\nThe tools, by their exact names:\n- `render(html, frames_at, size)`. `html`: the whole page as one string. `frames_at`: seconds, default `[0.5, 2, 5]`. `size`: `\"640x360\"` (default) or `\"1280x720\"`. Returns one image per frame, the console (errors, warnings, counts), the frame rate, whether the animation stalled, and every external URL.\n- `audio_probe(html, seconds)`. Starts the page's sound as a click would and listens for `seconds` (default 10). Returns whether an AudioContext exists, RMS and peak in dBFS, whether it is a single tone.\n- `package_read(path)`: the text of one reference file of the active package (its rules name the files). `package_search(query)`: the five best passages of its references.\n- `render_video(scenes, cues)`: only when it is listed; the explainer-video package says how.\n\nWhen to render:\n1. After the first complete file. Never render a half-written page.\n2. After every fix. One change, one render.\n3. At most 3 renders per answer. After the third, deliver the best version and say what is still open.\n\nRead a result in this order and fix the first thing that fails, then render again:\n1. Console errors. Zero is required. `x is not defined` means the page is broken: fix it before anything else.\n2. Motion. Frame 2 must differ from frame 1 when the page animates. Same frames: the loop does not run, or runs before the canvas has a size.\n3. Frame rate. Below 30 at 640x360: lower the particle count, remove shadows, set the pixel ratio to 1.\n4. Sound. RMS above -40 dBFS and peak below -1 dBFS. Silence: the AudioContext never started. Clipping: set the master gain to 0.3.\n5. The picture. Does it show what the prompt asked? Composition is fixed last.\n\nRules:\n- Pass the whole page in `html`; the tool reads no files. Render at `640x360`; only the last render may be `1280x720`.\n- External URLs only from: unpkg.com, cdn.jsdelivr.net, cdnjs.cloudflare.com, fonts.googleapis.com, fonts.gstatic.com. Any other host fails the check.\n- Never render the same page twice; change something first.\n- The tool's output is for you. The final answer says what you saw in plain words (\"runs at 58 frames per second, no errors, the leaves fall\"), never the tool's JSON.\n\nDo: render, read \"1 error: ctx is null\", fix the canvas lookup, render, 0 errors, check motion, deliver. Don't: render five times with no change between them, or say \"the page works\" without a render.\n"
+   },
+   "eval-judge": {
+    "title": "Eval judge",
+    "kind": "package",
+    "source": "inline",
+    "description": "The judge prompt and the rubric format for eval runs: five scored items (match, composition, motion, sound, bugs) from three frames and the probes, one JSON object, the same scores for the same input. Named by the eval harness only; no class lists it.",
+    "max_tokens": 900,
+    "enabled": true,
+    "requires_tools": [],
+    "body": "# Eval judge\n\nYou are the judge of an eval run. You receive: the prompt a model got, three frames of the page it made (at 0.5, 2 and 5 seconds), and when they exist, the console summary and the sound probe. You score. You do not fix, advise or praise.\n\nScore five items, each from 1 to 5, each with one sentence of reason:\n1. `match`: the frames show what the prompt asked. 5 = every element the prompt names is visible. 3 = the main thing is there, named details are missing. 1 = a different thing or nothing.\n2. `composition`: the subject is visible and placed with intent, nothing is cut off, text is readable at the frame size. 5 = clear at a glance. 1 = a blank or a cluttered frame.\n3. `motion`: frames 1, 2 and 3 differ the way the prompt implies (leaves fall, water moves). A chart or a still picture needs no motion: score 5 when still is right. 1 = an animation that does not move.\n4. `sound`: only when a probe is given, else `null`. 5 = the prompt asked for sound and the probe is non-silent and not a single tone. 1 = sound was asked and the probe is silent.\n5. `bugs`: 5 = no visible defect. Subtract one for each of: a black frame, overlapping text, an object outside the frame, a blank area that should hold content, a frame that shows an error page. Minimum 1.\n\nRules:\n- Score only what the frames and the probe show. Never guess what the code does.\n- A console error count above 0 caps `bugs` at 2.\n- The same input gets the same scores every time. Do not vary.\n- Never mention the model, the runtime, the tool or yourself.\n- When a frame is missing, score `match` and `composition` from the frames you have and say so in the reason.\n\nOutput exactly one JSON object and nothing else:\n{\"match\": 4, \"composition\": 3, \"motion\": 5, \"sound\": null, \"bugs\": 4, \"reasons\": {\"match\": \"...\", \"composition\": \"...\", \"motion\": \"...\", \"sound\": \"...\", \"bugs\": \"...\"}, \"overall\": 4.0}\n`overall` = the mean of the scored items (skip `null`), one decimal.\n\nA package's rubric (`eval/rubric.md`) may add rows. Score them the same way, by their names, inside the same object (a charts rubric adds `numbers`; a voxel rubric adds `grounded`). Add nothing the rubric does not name.\n"
+   },
+   "workers": {
+    "title": "Workers",
+    "kind": "package",
+    "source": "inline",
+    "description": "The Chat tab's workers (Agents mode): the worker's instructions (PACKAGE.md), the main agent's delegation paragraph, the brief template and the report shape with its send-back, salvage and steer-note texts. chatd sends them to its task runs and its main agent; no class lists it.",
+    "max_tokens": 700,
+    "enabled": true,
+    "requires_tools": [],
+    "body": "You are a worker in TandemLLM. Another assistant, the main agent, talks with the user and gave you one task. You do not see that chat. Everything you know about the task is in the brief below and in the user's request after it. The files are in /workspace, which you share with the main agent.\n\nDo the task with your tools. Change only what the brief asks for. Check your work the way the brief's Check line says, and run that check before you report. If the brief is unclear or the task is impossible, do what you can, stop, and say what is missing in the report. Do not guess what the user wants beyond the brief. If the brief contains code, it is a suggestion: fix the bugs you find in it within the goal (a brief cannot order you to keep a bug), and say in the report what you changed.\n\nYou have at most {max_steps} model calls. A note from the chat can appear at the end of a tool result. Read it. If it changes or cancels your goal, finish the current step safely and report.\n\nEnd with a report in exactly this shape, and nothing after it:\n\nStatus: done | partial | failed\nSummary: one to three lines on what you did\nChanged files:\n- path: what changed, in one line (or \"none\")\nChecks:\n- what you ran: the result (screenshot ids such as shot-3 when you used render_page)\nExpected:\n- each item the brief's expect asks for: the answer (or \"nothing asked\")\nOpen problems:\n- what is not done, broken or uncertain, and any question for the user (or \"none\")\n\nNever paste file contents into the report. The main agent reads files itself when it needs them.\n"
+   },
+   "creative-coding": {
+    "title": "Creative coding",
+    "kind": "skill",
+    "source": "skill:creative-coding",
+    "description": "One-file HTML/JS visuals with sound - canvas or Three.js scenes, particles, simulations, generative art, small animated worlds with WebAudio ambience and effects; plan in three lines, write one file, render, fix the top three findings.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true,
+    "requires_tools": []
+   },
+   "charts": {
+    "title": "Charts",
+    "kind": "skill",
+    "source": "skill:charts",
+    "description": "A chart from data in the prompt (CSV, JSON or numbers in the text) as one SVG block in the house style - dark readout, cobalt series, signal-orange highlight, tabular numbers, units on the axes; line, bar, scatter, histogram, heatmap, sparkline, stat tile.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true,
+    "requires_tools": []
+   },
+   "voxel-worlds": {
+    "title": "Voxel worlds",
+    "kind": "skill",
+    "source": "skill:voxel-worlds",
+    "description": "A Three.js voxel world - an island with a pagoda, gardens, lakes, bridges, creatures with state machines, a day-night cycle, ambient sound, quality presets - built one feature at a time with a render after each, a to-do file and the frame rate held at its baseline.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true,
+    "requires_tools": []
+   },
+   "explainer-video": {
+    "title": "Explainer video",
+    "kind": "skill",
+    "source": "skill:explainer-video",
+    "description": "A short explainer video with synthesised sound rendered to an mp4 through the render_video tool - a scene script (title cards, numbers with their sources, schematic marks) and a sound cue list (bed, whoosh, chime, optional narration); every number on screen names its source.",
+    "body": "",
+    "max_tokens": 500,
+    "enabled": true,
+    "library": true,
+    "requires_tools": [
+     "render_video"
+    ],
+    "fallback": "explainer-video-script"
+   },
+   "explainer-video-script": {
+    "title": "Explainer video: the script",
+    "kind": "package",
+    "source": "inline",
+    "description": "Stands in for explainer-video in a chat without the render_video tool: deliver the scene script and the cue list as two JSON blocks so the video can be rendered later, with the same honesty rules.",
+    "max_tokens": 300,
+    "enabled": true,
+    "requires_tools": [],
+    "body": "# Explainer video: the script without the tool\n\nThis chat has no video tool, so no mp4 can be made here. Deliver the two lists the renderer needs, so the video can be rendered later:\n\n1. `scenes`: a JSON list of scene objects in order. Each has `id`, `kind` (`title`, `number`, `schematic`, `compare`), `seconds`, `title` (3 to 5 words), `lines` (at most 3, each at most 60 characters), and for a number scene `numbers: [{\"value\": \"...\", \"source\": \"...\"}]`.\n2. `cues`: `{\"bed\": {\"chords\": [...], \"seconds_per_chord\": 16}, \"events\": [{\"at\": \"s2\", \"kind\": \"whoosh\"}], \"narration\": []}`.\n\nRules: every number names its `source` (the prompt's data or a named file); a schematic scene says \"schematic\" in its lines; the total seconds match the asked length within 10 %.\n\nAnswer with the two JSON blocks and one line before them: the video itself needs the render tool; here is the script to render.\n"
+   },
+   "everyday-core": {
+    "title": "Everyday answers",
+    "kind": "package",
+    "source": "skill:everyday-core",
+    "description": "How to answer everyday requests in a plain chat - in the user's language, in plain words, with the whole result in the answer, assumptions stated instead of questions, and the limits that keep advice on health, money and safety honest. Goes with every non-coding class.",
+    "body": "",
+    "max_tokens": 650,
+    "enabled": true,
+    "requires_tools": [],
+    "general": true
+   },
+   "write-message": {
+    "title": "Write message",
+    "kind": "skill",
+    "source": "skill:write-message",
+    "description": "Compose a message from the user to someone they name - an email, a text, a chat or WhatsApp message to a boss, colleague, landlord, teacher, customer, friend or family member - with the right tone (formal, friendly, firm, apologetic) and length, ready for the user to copy and send.",
+    "body": "",
+    "max_tokens": 850,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "formal-letter": {
+    "title": "Formal letter",
+    "kind": "skill",
+    "source": "skill:formal-letter",
+    "description": "Write an official letter to an authority, company, landlord, insurer, school or employer - a cancellation, complaint, objection, refund request, application, notice or request for information - in the formal layout of the user's country, with the facts, the demand and a deadline.",
+    "body": "",
+    "max_tokens": 950,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "cv-cover-letter": {
+    "title": "Cv cover letter",
+    "kind": "skill",
+    "source": "skill:cv-cover-letter",
+    "description": "Write or improve a CV (resume), a cover letter, a job application email, a LinkedIn summary or an answer to \"tell me about yourself\" - from the user's experience and the job advert, with results in numbers and nothing invented.",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "rewrite-text": {
+    "title": "Rewrite text",
+    "kind": "skill",
+    "source": "skill:rewrite-text",
+    "description": "Rewrite a text the user gives - make it shorter, longer, simpler, more formal, friendlier, clearer or more persuasive, or change it for a new audience - keeping its meaning and facts, and showing the result ready to use.",
+    "body": "",
+    "max_tokens": 800,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "proofread": {
+    "title": "Proofread",
+    "kind": "skill",
+    "source": "skill:proofread",
+    "description": "Correct spelling, grammar, punctuation and wording in a text the user gives, in any language, without changing its meaning or style - returning the corrected text and a short list of what was fixed.",
+    "body": "",
+    "max_tokens": 750,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "translate": {
+    "title": "Translate",
+    "kind": "skill",
+    "source": "skill:translate",
+    "description": "Translate a text, message, document or phrase between languages (for example German, English, Arabic, Turkish, French, Spanish) keeping the meaning, tone and layout, with a note on words that have no exact match - or explain what a foreign text says.",
+    "body": "",
+    "max_tokens": 950,
+    "enabled": false,
+    "requires_tools": []
+   },
+   "social-post": {
+    "title": "Social post",
+    "kind": "skill",
+    "source": "skill:social-post",
+    "description": "Write a post, caption, bio, announcement or short ad for social media or a group chat - Instagram, LinkedIn, Facebook, X, TikTok, WhatsApp groups, a marketplace listing - in the user's voice, the right length for the platform, with hashtags only where they help.",
+    "body": "",
+    "max_tokens": 750,
+    "enabled": false,
+    "requires_tools": []
+   },
+   "creative-writing": {
+    "title": "Creative writing",
+    "kind": "skill",
+    "source": "skill:creative-writing",
+    "description": "Write something creative for the user - a bedtime story for a child, a short story, a poem, a song lyric, a birthday or wedding speech, a toast, a greeting-card verse, a riddle, or ideas for names - with the length, age, tone and names the user gives.",
+    "body": "",
+    "max_tokens": 850,
+    "enabled": false,
+    "requires_tools": []
+   },
+   "difficult-conversation": {
+    "title": "Difficult conversation",
+    "kind": "skill",
+    "source": "skill:difficult-conversation",
+    "description": "Help the user prepare a hard conversation or message with a person in their life - a partner, friend, parent, child, neighbour, boss or colleague - about a conflict, a boundary, bad news, an apology, a request for a raise, or a breakup: what to say, in which order, and what to expect back.",
+    "body": "",
+    "max_tokens": 1000,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "summarize-text": {
+    "title": "Summarize text",
+    "kind": "skill",
+    "source": "skill:summarize-text",
+    "description": "Summarise a long text the user pasted or uploaded - an article, report, PDF, email thread, meeting notes, transcript, contract or chat - into the key points, decisions, open questions and next actions, at the length the user wants, without adding anything.",
+    "body": "",
+    "max_tokens": 850,
+    "enabled": false,
+    "requires_tools": []
+   },
+   "explain-simply": {
+    "title": "Explain simply",
+    "kind": "skill",
+    "source": "skill:explain-simply",
+    "description": "Explain a topic, word, idea, process, device, news item or document the user does not understand - as to a smart beginner, with one everyday comparison, the few terms that matter, and an example - at a length that fits the question.",
+    "body": "",
+    "max_tokens": 1000,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "compare-options": {
+    "title": "Compare options",
+    "kind": "skill",
+    "source": "skill:compare-options",
+    "description": "Compare two or more things for the user - products, phones, cars, apps, subscriptions, cities, job offers, insurance plans, ways of doing something - on the points that matter for their case, as a table with a clear recommendation and what it depends on.",
+    "body": "",
+    "max_tokens": 850,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "decision-helper": {
+    "title": "Decision helper",
+    "kind": "skill",
+    "source": "skill:decision-helper",
+    "description": "Help the user make a personal decision they are stuck on - take the job or not, move cities, buy or rent, which course, break up or stay, keep the car or sell it - by setting out their options, what matters to them, the risks, and a reasoned recommendation they can disagree with.",
+    "body": "",
+    "max_tokens": 950,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "fact-check": {
+    "title": "Fact check",
+    "kind": "skill",
+    "source": "skill:fact-check",
+    "description": "Check whether a claim, rumour, forwarded message, news item, statistic, quote or \"did you know\" is true - saying what is established, what is doubtful, what is false, how sure you are and why, and how the user can verify it themselves.",
+    "body": "",
+    "max_tokens": 1000,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "understand-document": {
+    "title": "Understand document",
+    "kind": "skill",
+    "source": "skill:understand-document",
+    "description": "Explain an official or legal paper the user received - a bill, invoice, bank or tax letter, contract, terms, insurance policy, rental agreement, fine, court or authority letter, medical bill, form to fill in - what it says, what it wants from the user, by when, what it costs, and what to do.",
+    "body": "",
+    "max_tokens": 1100,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "trip-plan": {
+    "title": "Trip plan",
+    "kind": "skill",
+    "source": "skill:trip-plan",
+    "description": "Plan a trip, holiday, city break, road trip or day out - a day-by-day itinerary with areas, sights, food, travel times between stops and a rough budget - from the user's dates, place, travellers and interests, with what to book early and what to check before going.",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "weekly-schedule": {
+    "title": "Weekly schedule",
+    "kind": "skill",
+    "source": "skill:weekly-schedule",
+    "description": "Build a weekly or daily plan for the user - fitting work, study, family, sport, chores and rest into real hours - or sort a to-do list by priority into a doable day, with buffers and a plain table they can follow.",
+    "body": "",
+    "max_tokens": 900,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "meal-plan": {
+    "title": "Meal plan",
+    "kind": "skill",
+    "source": "skill:meal-plan",
+    "description": "Make a meal plan for the week or a few days with a matching shopping list - for the user's number of people, budget, diet (vegetarian, halal, no pork, gluten-free, diabetes-friendly), time to cook and what is already in the kitchen - with simple dishes and leftovers used on purpose.",
+    "body": "",
+    "max_tokens": 1000,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "budget-plan": {
+    "title": "Budget plan",
+    "kind": "skill",
+    "source": "skill:budget-plan",
+    "description": "Set up a personal or household budget, a saving plan for a goal (a trip, a car, an emergency fund), a plan to pay off debts, or check whether the user can afford something - from their income and costs, with the numbers worked out and shown, and the limits of what a chat can say about money.",
+    "body": "",
+    "max_tokens": 1150,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "event-plan": {
+    "title": "Event plan",
+    "kind": "skill",
+    "source": "skill:event-plan",
+    "description": "Plan a party or event - a birthday, children's party, dinner, barbecue, wedding part, baby shower, farewell at work, family gathering - with a timeline before the day, a run of the day, food and drink amounts for the number of guests, a shopping and to-do list and a rough budget.",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "checklist-builder": {
+    "title": "Checklist builder",
+    "kind": "skill",
+    "source": "skill:checklist-builder",
+    "description": "Make a complete, ordered checklist for a big life task - moving house, moving to another country, starting a new job, a new baby, a wedding, selling a car, packing for a trip, closing a flat, preparing for surgery or a long absence - with deadlines, documents, who to inform and what is easy to forget.",
+    "body": "",
+    "max_tokens": 1100,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "study-plan": {
+    "title": "Study plan",
+    "kind": "skill",
+    "source": "skill:study-plan",
+    "description": "Make a study plan for an exam, a course, a certificate, a driving test, a language level or a skill the user wants to learn - from the date, the material, the hours available and the current level - with a week-by-week plan, methods that work (recall, spacing, practice tests) and a check each week.",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "flashcards-quiz": {
+    "title": "Flashcards quiz",
+    "kind": "skill",
+    "source": "skill:flashcards-quiz",
+    "description": "Turn a text, chapter, notes, a topic or a vocabulary list into flashcards, a quiz, practice questions with answers, or a question-and-answer test - at the user's level and count - or run a quiz turn by turn: ask one question, wait, grade the answer, explain, continue.",
+    "body": "",
+    "max_tokens": 950,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "language-practice": {
+    "title": "Language practice",
+    "kind": "skill",
+    "source": "skill:language-practice",
+    "description": "Practise a language with the user - German, English, Arabic, French, Spanish, Turkish or another - as a conversation partner at their level, correcting their mistakes gently, explaining a grammar point with examples, or answering \"how do I say\", \"what is the difference between\", \"is this sentence right\".",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": false,
+    "requires_tools": []
+   },
+   "homework-help": {
+    "title": "Homework help",
+    "kind": "skill",
+    "source": "skill:homework-help",
+    "description": "Help a pupil, student or parent with homework or an exercise - maths, physics, chemistry, biology, history, geography, essays, a text analysis - by teaching the method step by step, checking the user's own attempt, and giving the final answer only after the way to it is clear.",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "recipe-cooking": {
+    "title": "Recipe cooking",
+    "kind": "skill",
+    "source": "skill:recipe-cooking",
+    "description": "Give a recipe or cooking help - what to cook from the ingredients the user has, a dish by name, a substitute for a missing ingredient, scaling a recipe for more or fewer people, fixing a dish that went wrong, cooking times and temperatures - with exact amounts and steps a beginner can follow.",
+    "body": "",
+    "max_tokens": 1050,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "home-howto": {
+    "title": "Home howto",
+    "kind": "skill",
+    "source": "skill:home-howto",
+    "description": "Practical help at home - a small repair (a dripping tap, a blocked drain, a loose hinge, a hole in the wall, a bike puncture), cleaning and stains, laundry, organising a room, caring for houseplants and a garden, keeping a cat, dog or small pet well - with the tools and materials, step-by-step instructions, and the point where a professional or vet is needed.",
+    "body": "",
+    "max_tokens": 1150,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "health-info": {
+    "title": "Health info",
+    "kind": "skill",
+    "source": "skill:health-info",
+    "description": "Answer a health question in plain words - a symptom, a cold, a fever in a child, a medicine and its common side effects, a lab value, a diagnosis the user was given, first aid, nutrition, stress or sleep - with what usually helps, the signs that mean see a doctor today or call emergency services now, and the clear limit of what a chat can tell.",
+    "body": "",
+    "max_tokens": 1250,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "fitness-sleep": {
+    "title": "Fitness sleep",
+    "kind": "skill",
+    "source": "skill:fitness-sleep",
+    "description": "Make a fitness, running, strength, stretching, walking, weight or sleep plan for the user - from their level, time, equipment, goal and any injury or condition - with a week-by-week plan, exact sets, reps, minutes and progression, a sleep routine with times, and the signs to stop or see a doctor.",
+    "body": "",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "gift-ideas": {
+    "title": "Gift ideas",
+    "kind": "skill",
+    "source": "skill:gift-ideas",
+    "description": "Suggest gifts or ways to celebrate for a person and an occasion - a birthday, anniversary, wedding, new baby, Christmas, Eid, Mother's Day, a thank-you, a farewell, a host gift - from the person's interests, age, relationship and the user's budget, as a short ranked list with why each fits, plus a short card text if asked.",
+    "body": "",
+    "max_tokens": 1000,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "parenting-help": {
+    "title": "Parenting help",
+    "kind": "skill",
+    "source": "skill:parenting-help",
+    "description": "Help a parent with a child or teenager - sleep, tantrums, eating, screen time, school trouble, siblings fighting, bedwetting, a shy or anxious child, homework fights, a teenager who will not talk - with what is normal at that age, a calm step-by-step approach to try for two weeks, and the signs that call for the paediatrician, school or a counsellor.",
+    "body": "",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "tech-troubleshoot": {
+    "title": "Tech troubleshoot",
+    "kind": "skill",
+    "source": "skill:tech-troubleshoot",
+    "description": "Help a non-technical person with a phone, computer, tablet, printer, TV, Wi-Fi, router, smart-home device, email, app or online account that does not work - find the likely cause from the symptom, give the steps to try in order with exactly where to tap or click, and say when to stop and call support or a shop.",
+    "body": "",
+    "max_tokens": 1200,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "security-scam": {
+    "title": "Security scam",
+    "kind": "skill",
+    "source": "skill:security-scam",
+    "description": "Tell whether a message, call, email, text, link, website, job offer, shop, investment or request for money is likely a scam, and what to do now - and give plain-language security help - passwords, two-step login, a hacked account, a lost phone, what to share online - for a person who is not technical.",
+    "body": "",
+    "max_tokens": 1300,
+    "enabled": true,
+    "requires_tools": []
+   },
+   "reply-format": {
+    "title": "Reply format",
+    "kind": "skill",
+    "source": "skill:reply-format",
+    "description": "An instruction about the form of your own reply, with nothing to write for anyone else: reply with one word, just OK, yes or no, a number, a set format or language, shorter or longer, no tools.",
+    "body": "",
+    "max_tokens": 290,
+    "enabled": true,
+    "requires_tools": []
+   }
+  }
+ }
+}

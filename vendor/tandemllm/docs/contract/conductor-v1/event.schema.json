@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /v1/conductor/events/{id}: one decision of the session monitor",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "event": {
+      "$ref": "decisions.schema.json#/$defs/event"
+    }
+  },
+  "required": [
+    "contract_version",
+    "event"
+  ],
+  "additionalProperties": false
+}

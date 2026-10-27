@@ -1,0 +1,91 @@
+# Builds the TandemLLM manual (manual/, LaTeX) into a PDF when a release tag is pushed, and
+# attaches it to that tag's GitHub release as tandemllm-manual-<version>.pdf.
+#
+# Only a tag v* runs it: pushes to a branch and pull requests build nothing. The repository keeps one
+# built copy, manual/tandemllm-manual.pdf, for readers without LaTeX (manual/.gitignore). To build it yourself, run the same commands as the build job:
+#
+#   docker run --rm -v "$PWD":/w -w /w/manual texlive/texlive:latest \
+#       sh -c 'python3 tools/gen_reference.py && latexmk -lualatex -interaction=nonstopmode -halt-on-error tandemllm-manual.tex'
+name: manual
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # TeX Live 2026 with Python 3 and latexmk; pinned to the image the release PDFs are built with
+    container:
+      image: texlive/texlive:latest@sha256:a7ae4dfa9d521b5db14446872fa488b839021d1f604d0a3c74461784895f2a67
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4.2.2
+
+      - name: Check the version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          book="$(sed -n 's/^\\newcommand{\\version}{\(.*\)}$/\1/p' manual/preamble.tex)"
+          repo="$(cat VERSION)"
+          echo "tag ${TAG#v}, VERSION ${repo}, manual ${book}"
+          if [ "${TAG#v}" != "$repo" ] || [ "$book" != "$repo" ]; then
+            echo "::warning::the tag, VERSION and the manual's version line differ"
+          fi
+
+      - name: Regenerate the reference tables from the code
+        working-directory: manual
+        run: |
+          # stale tables only warn (the PDF uses fresh ones); a route, header or error the
+          # HTTP reference lacks fails the build (exit 2)
+          python3 tools/gen_reference.py --check \
+            || echo "::warning::the committed reference tables were stale or incomplete"
+          python3 tools/gen_reference.py
+
+      - name: Build the PDF
+        working-directory: manual
+        run: latexmk -lualatex -interaction=nonstopmode -halt-on-error tandemllm-manual.tex
+
+      - name: Check the log (no undefined references, an index)
+        working-directory: manual
+        run: |
+          if grep -E "undefined references|Citation .* undefined|Reference .* undefined" tandemllm-manual.log; then
+            echo "::error::undefined references in the manual"; exit 1
+          fi
+          test -s tandemllm-manual.ind || { echo "::error::no index was built"; exit 1; }
+
+      - name: Upload the PDF
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: tandemllm-manual
+          path: manual/tandemllm-manual.pdf
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download the PDF
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: tandemllm-manual
+
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cp tandemllm-manual.pdf "tandemllm-manual-${TAG#v}.pdf"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes "See CHANGELOG.md."
+          gh release upload "$TAG" "tandemllm-manual-${TAG#v}.pdf" --repo "$GITHUB_REPOSITORY" --clobber

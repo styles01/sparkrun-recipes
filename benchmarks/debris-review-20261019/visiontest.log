@@ -1,0 +1,13 @@
+ssh: Could not resolve hostname spark: Temporary failure in name resolution
+head 10.200.0.1 10.200.0.1 gid 5 | worker 10.200.0.2 10.200.0.2 gid 5 | image dsv41-serve:v4 | model /home/jaita/models/dsv41-exl3 | load auto
+sudo: a password is required
+drop_caches needs sudo -n on 10.200.0.1
+sudo: a password is required
+drop_caches needs sudo -n on 10.200.0.2
+10.200.0.2 rank 1 started
+10.200.0.1 rank 0 started
+ready after 492 s
+10.200.0.1: used 114 GiB, available 7 GiB
+10.200.0.2: used 112 GiB, available 9 GiB
+LAUNCH-EXIT-0
+{"error":{"message":"Non-base64 digit found","type":"BadRequestError","param":null,"code":400}}VISIONTEST-DONE

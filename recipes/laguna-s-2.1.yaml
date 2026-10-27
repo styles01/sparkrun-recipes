@@ -1,0 +1,89 @@
+recipe_version: "2"
+name: laguna-s-2.1-nvfp4
+description: "Laguna S 2.1 NVFP4 + DFlash k=7 — 3 lanes, 300K context, GMU 0.85, fp8 KV, purpose-built agentic coding"
+model: poolside/Laguna-S-2.1-NVFP4
+draft_model: poolside/Laguna-S-2.1-DFlash
+runtime: vllm
+container: vllm/vllm-openai:v0.25.1
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-07-22"
+  updated: "2026-07-22"
+  tags:
+    - laguna
+    - poolside
+    - nvfp4
+    - dflash
+    - fp8-kv
+    - agentic
+    - 300k-context
+  runbook: runbooks/laguna-s-2.1.md
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.85
+  max_model_len: 300000
+  max_num_seqs: 3
+  kv_cache_dtype: fp8
+  attention_backend: flashinfer
+  served_model_name: laguna
+  tool_call_parser: poolside_v1
+  reasoning_parser: poolside_v1
+  enable_prefix_caching: true
+  trust_remote_code: true
+  enable_auto_tool_choice: true
+  speculative_config: '{"model":"/drafter","num_speculative_tokens":7,"method":"dflash"}'
+
+env:
+  HF_HOME: /root/.cache/huggingface
+  PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+volumes:
+  - ~/models/Laguna-S-2.1-NVFP4:/model:ro
+  - ~/models/Laguna-S-2.1-DFlash:/drafter:ro
+  - ~/.cache/huggingface:/root/.cache/huggingface
+
+benchmark:
+  framework: poolside-benchmarks
+  results:
+    model_load: "69.45 GiB, ~7.5 min"
+    kv_cache_tokens: 918419
+    kv_cache_gib: 32.07
+    concurrency_at_300k: "3.06x"
+    free_ram: "~18 GB"
+    dflash_acceptance: "~5 tokens/pass (34% at k=15)"
+    throughput_speedup: "2.3-3.7x (c1), 1.7-2.7x (c4+)"
+  benchmark_scores:
+    terminal_bench_2_1: 70.2
+    swe_bench_multilingual: 78.5
+    swe_bench_pro: 59.4
+    deepswe: 40.4
+    toolathlon_verified: 49.7
+
+command: |
+  vllm serve /model \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --trust-remote-code \
+    --max-model-len {max_model_len} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --attention-backend {attention_backend} \
+    --enable-prefix-caching \
+    --enable-auto-tool-choice \
+    --tool-call-parser {tool_call_parser} \
+    --reasoning-parser {reasoning_parser} \
+    --speculative-config '{speculative_config}'

@@ -1,0 +1,44 @@
+% One agent conversation over a day, and the cache that answers each of its turns.
+% Rows: what the client did; which tier the prefill resumed from; what was still read cold.
+\begin{tikzpicture}[x=0.78mm, y=1mm,
+    ev/.style={font=\sffamily\scriptsize, text=ink, align=center, anchor=south},
+    tier/.style={draw=cobalt, fill=cobaltlight, rounded corners=1.5pt, font=\sffamily\scriptsize,
+      align=center, inner sep=1.5pt, minimum height=7mm, text width=15.5mm},
+    nvme/.style={tier, draw=signal, fill=signallight},
+    read/.style={font=\sffamily\scriptsize, text=slate, align=center, anchor=north}]
+  % the time axis
+  \draw[->, slate] (0,0) -- (156,0) node[right, lbl] {time};
+  \foreach \x in {10,33,56,79,102,125,148} \draw[slate] (\x,-1) -- (\x,1);
+  % events above the axis
+  \node[ev] at (10,13) {turn 1\\a new\\session};
+  \node[ev] at (33,13) {turn 2\\the answer and\\a tool result};
+  \node[ev] at (56,13) {opencode's\\title call\\(a guest)};
+  \node[ev] at (79,13) {turn 3\\after a 33k\\thinking};
+  \node[ev] at (102,13) {a 10k request\\of another\\session};
+  \node[ev] at (125,13) {a deploy\\restarts\\the engine};
+  \node[ev] at (148,13) {the same\\session, the\\next morning};
+  \foreach \x in {10,33,56,79,102,125,148} \draw[draw=rule, thick] (\x,12.5) -- (\x,1);
+  % the tier that answers
+  \node[tier, anchor=north] at (10,-4) {disk tier\\[-1pt]{\tiny the 24k head}};
+  \node[tier, anchor=north] at (33,-4) {end anchor\\[-1pt]{\tiny of turn 1's answer}};
+  \node[tier, anchor=north] at (56,-4) {guest stash\\[-1pt]{\tiny rows copied aside}};
+  \node[tier, anchor=north] at (79,-4) {end anchor\\[-1pt]{\tiny of the thinking}};
+  \node[tier, anchor=north] at (102,-4) {parked session\\[-1pt]{\tiny the 53k rows}};
+  \node[nvme, anchor=north] at (125,-4) {session spill\\[-1pt]{\tiny written at the drain}};
+  \node[nvme, anchor=north] at (148,-4) {disk tier\\[-1pt]{\tiny the head again}};
+  % what the prefill still has to read
+  \node[read] at (10,-13.5) {the user's\\first message};
+  \node[read] at (33,-13.5) {the tool\\result};
+  \node[read] at (56,-13.5) {its own\\2k prompt};
+  \node[read] at (79,-13.5) {the tool result,\\not the 33k};
+  \node[read] at (102,-13.5) {the other\\session's 10k};
+  \node[read] at (125,-13.5) {the next\\message};
+  \node[read] at (148,-13.5) {everything\\past the head};
+  % labels for the rows
+  \node[lbl, anchor=east, align=right] at (-3,14) {what\\happens};
+  \node[lbl, anchor=east, align=right] at (-3,-7.5) {which cache\\answers};
+  \node[lbl, anchor=east, align=right] at (-3,-16) {read cold};
+  % legend
+  \node[font=\sffamily\scriptsize, text=slate, anchor=north west] at (0,-21.5)
+    {\textcolor{cobalt}{\rule{2.5mm}{2.5mm}} device memory \quad \textcolor{signal}{\rule{2.5mm}{2.5mm}} NVMe};
+\end{tikzpicture}

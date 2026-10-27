@@ -1,0 +1,32 @@
+# ============================================================
+# sparkDash — Development Dockerfile with live reload
+# ============================================================
+
+# See Dockerfile: avoid docker.io IPv6 auth failures on Sparks.
+ARG NODE_IMAGE=public.ecr.aws/docker/library/node:22-bookworm-slim
+FROM ${NODE_IMAGE}
+
+WORKDIR /app
+
+# SSH + sshpass + util-linux (nsenter) + build deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-client sshpass procps util-linux iproute2 gcc g++ make python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files and install
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Copy source (will be overridden by volume mount)
+COPY . .
+
+# Expose dashboard port
+EXPOSE 5555
+
+# Default environment
+ENV PORT=5555
+ENV LLM_PORT=8888
+ENV NODE_ENV=development
+
+# Run dev server with hot reload
+CMD ["npm", "run", "dev"]

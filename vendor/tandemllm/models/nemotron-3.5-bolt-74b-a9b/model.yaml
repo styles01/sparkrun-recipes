@@ -1,0 +1,739 @@
+# NVIDIA Nemotron 3.5 Bolt 74B-A9B in TandemLLM: the setup guide's registry entry (docs/setup.md). Schema 1.
+#
+# NVIDIA's hybrid Mamba2 / mixture-of-experts model for 24 GB, served from NVIDIA's own GGUF (IQ2_XXS experts,
+# NVFP4 Mamba2 projections, Q8_0 head and attention) read as stored (engine/models/nemotron_h, docs/nemotron-h.md),
+# or from our EXL3 packs of the BF16 checkpoint. Profile ops/profiles/nemotron-bolt-iq2.env: its config and tokenizer
+# from the BF16 repository, the GGUF an asset fetched from NVIDIA's repository at a pinned revision, never re-hosted;
+# ops/profiles/nemotron-bolt-exl3-<bpw>.env (2.0 to 6.0): each pack's own public repository. weights_gib: allocated at load
+# (measured 2026-10-15). max_window: the model's whole context, 262,144 tokens: its KV is 8,192 bytes a token (8
+# attention layers, 2 KV heads of 128), 2 GiB at the full window. Rows of the measured table come from real runs only.
+schema: 1
+id: nemotron-3.5-bolt-74b-a9b
+name: Nemotron 3.5 Bolt 74B-A9B
+family: Nemotron 3.5
+params: ~74B, ~9B active a token
+recommended: true
+order: 5
+pitch: NVIDIA's 74B hybrid Mamba2 and mixture-of-experts model in 23 GB, from EXL3 packs at 2.0 to 6.0 bpw or NVIDIA's 2-bit GGUF.
+architecture: 88 layers, 40 Mamba2, 40 mixture-of-experts (240 to 496 experts a layer, 9 a token, one shared, a
+  1,024-wide latent) and 8 attention layers without positional encoding; it thinks in a <think> block and calls
+  tools in the XML form. Text only in TandemLLM so far (the image tower is not served).
+license: The model's license (OpenMDW-1.1) is on its Hugging Face page. TandemLLM itself is AGPL-3.0 or commercial.
+icon: null
+links:
+- label: Model card
+  url: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF
+- label: BF16 checkpoint
+  url: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16
+devices:
+- id: dgx-spark
+  label: NVIDIA DGX Spark (128 GB unified memory)
+  total_gib: 121.63
+  reserved_gib: 10.0
+  note: The GPU and the CPU share this memory. MemTotal reads 121.6 GiB of the 128 GB.
+assets:
+- id: nemotron-bolt-iq2-gguf
+  label: Nemotron 3.5 Bolt 74B-A9B GGUF (NVIDIA)
+  path: ${HOME}/models/nemotron-3.5-bolt-74b-a9b-iq2-gguf/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF
+  fetch:
+  - repo: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF
+    revision: 724e3fee41becc4048998e2204748147876ed56b
+    files:
+    - NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB.gguf
+    to: ${HOME}/models/nemotron-3.5-bolt-74b-a9b-iq2-gguf
+    gb: 22.02
+  source: Public on Hugging Face, NVIDIA's file at the pinned revision (sha256 91d63363...af75 on the hub).
+- id: nemotron-bolt-lilicorr
+  label: LiLiCorr drafter for Nemotron 3.5 Bolt (NVIDIA)
+  path: ${HOME}/models/nemotron-3.5-bolt-lilicorr/model.safetensors
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr
+  fetch:
+  - repo: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr
+    revision: 4c6a5613b6d887194a3a5493e3a18a5b3930bb86
+    files:
+    - config.json
+    - hf_quant_config.json
+    - model.safetensors
+    - LICENSE
+    to: ${HOME}/models/nemotron-3.5-bolt-lilicorr
+    gb: 0.96
+  source: Public on Hugging Face, NVIDIA's NVFP4 drafter at the pinned revision (model.safetensors sha256
+    850c121c...8562 on the hub); the engine reads it as stored (engine/drafters/lilicorr.py).
+- id: qwen3.5-2b
+  label: Qwen3.5-2B (the narrator, and Wren)
+  path: ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b/config.json
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: Qwen/Qwen3.5-2B
+  fetch:
+  - repo: Qwen/Qwen3.5-2B
+    files:
+    - '*.json'
+    - '*.safetensors'
+    - '*.jinja'
+    - merges.txt
+    - LICENSE
+    to: ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b
+    gb: 4.57
+  source: Public on Hugging Face; install.sh --setup downloads it for Wren, the fetch step when the narrator is on (VIS-153).
+- id: laya
+  label: Laya decision models
+  path: ${HOME}/.qwen38-spark-engine/deciders/laya/model.safetensors
+  also: []
+  fetchable: true
+  protected: false
+  hf_repo: convaiinnovations/laya
+  fetch:
+  - repo: convaiinnovations/laya
+    files:
+    - config.json
+    - rl_agent_config.json
+    - model.safetensors
+    - 'encoder/*'
+    - 'tokenizer/*'
+    - 'multilingual/*'
+    - 'typed-decisions/*'
+    to: ${HOME}/.qwen38-spark-engine/deciders/laya
+    gb: 2.35
+  source: Public on Hugging Face (no token needed); the fetch step downloads its three models when Laya is on (VIS-153). Its Python files are not downloaded.
+profiles:
+- id: nemotron-bolt-iq2
+  label: IQ2 GGUF (NVIDIA's 24 GB release)
+  format: gguf
+  bpw: 2.38
+  disk_gb: 22.04
+  weights_gib: 22.19
+  drafters_gib: 0.0
+  hf_repo: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16
+  hf_private: false
+  made_by: {kind: vendor, name: NVIDIA, repo: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF}
+  recommended: false
+  badges:
+  - NVIDIA's own quantization
+  quality:
+    kl_vs_bf16: 0.2588
+    top1_pct: 79.59
+    ppl: 7.48
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, 8 wikitext-2 rows of 1,024 tokens from
+      an HF job, BF16 ppl 5.97); against llama.cpp on the same GGUF, teacher-forced: top-1 97.75 % of 1,024 chat
+      positions, every difference a near tie'
+  assets_required:
+  - nemotron-bolt-iq2-gguf
+  note: 'NVIDIA''s GGUF (revision 724e3fee) read as stored: IQ2_XXS experts, NVFP4 Mamba2 projections with their tensor
+    scales, Q8_0 head, attention and latent projections. A decode token reads about 4.6 GB of it. The config and the
+    tokenizer come from the BF16 repository (revision 153d4551, 17 MB). Weights GiB: allocated at load (measured).
+    Drafts with the lookup alone: with LiLiCorr beside it StairCut kept plain steps on this build (cause not isolated);
+    QSE_NH_HEAD=lilicorr turns the drafter on.'
+  hf_revision: 153d4551268566bb7d57681ceded1289e6341fcd
+  max_window: 262144
+- id: nemotron-bolt-exl3-2.0
+  label: EXL3 2.0 bpw experts, 4-bit dense
+  format: exl3
+  bpw: 2.19
+  disk_gb: 23.48
+  weights_gib: 20.22
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-2.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: true
+  badges:
+  - recommended
+  quality:
+    kl_vs_bf16: 0.1697
+    top1_pct: 84.05
+    ppl: 6.81
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry);
+      exllamav3''s model_diff on 100 wikitext-2 rows of 2,048: KL 0.088, top-1 87.6 %'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch: routed
+    experts at 2 bits, the Mamba2, attention, latent and shared-expert projections at 4, head 6; the RADIO tower is in
+    the pack in BF16 and not loaded. A decode token reads about 4.7 GB. Measured 2026-10-15: 20.22 GiB at load, the decode
+    step 44.2 tok/s (the IQ2 GGUF 27.9). Drafts with NVIDIA''s LiLiCorr drafter and the lookup, a verify block''s rows
+    on one trellis decode (SPD-125). The Hugging Face repository is public: a download needs no token.'
+  hf_revision: 6d05454da1e630f28035a2f433472b7f2df84454
+  max_window: 262144
+- id: nemotron-bolt-exl3-2.5
+  label: EXL3 2.5 bpw
+  format: exl3
+  bpw: 2.5
+  disk_gb: 27.61
+  weights_gib: 24.07
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-2.5
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.0941
+    top1_pct: 87.3
+    ppl: 6.34
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry)'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch at 2.5 bpw, head
+    6; the RADIO tower is in the pack in BF16 and not loaded. Measured 2026-10-15: 27.61 GB, 24.07 GiB at load, the decode step
+    39.92 tok/s (one CTA a row, measured before the rows path). Drafts with NVIDIA''s LiLiCorr drafter and the lookup; no
+    StairCut price file yet (the cut learns its prices online). The Hugging Face repository is public: a download needs
+    no token.'
+  hf_revision: ea3aeebec6b5f43856999d4e008a97c5d7a5ef9e
+  max_window: 262144
+- id: nemotron-bolt-exl3-3.0
+  label: EXL3 3.0 bpw
+  format: exl3
+  bpw: 3.0
+  disk_gb: 31.75
+  weights_gib: 27.92
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-3.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.0611
+    top1_pct: 89.72
+    ppl: 6.21
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry)'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch at 3.0 bpw, head
+    6; the RADIO tower is in the pack in BF16 and not loaded. Measured 2026-10-15: 31.75 GB, 27.92 GiB at load, the decode step
+    39.57 tok/s (one CTA a row, measured before the rows path). Drafts with NVIDIA''s LiLiCorr drafter and the lookup; no
+    StairCut price file yet (the cut learns its prices online). The Hugging Face repository is public: a download needs
+    no token.'
+  hf_revision: 924c71e065ecbfeead376c655668cc7232f2633d
+  max_window: 262144
+- id: nemotron-bolt-exl3-3.5
+  label: EXL3 3.5 bpw
+  format: exl3
+  bpw: 3.5
+  disk_gb: 35.88
+  weights_gib: 32.01
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-3.5
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.0435
+    top1_pct: 91.14
+    ppl: 6.12
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry)'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch at 3.5 bpw, head
+    6; the RADIO tower is in the pack in BF16 and not loaded. Measured 2026-10-15: 35.88 GB, 32.01 GiB at load, the decode step
+    38.66 tok/s (one CTA a row, measured before the rows path). Drafts with NVIDIA''s LiLiCorr drafter and the lookup; no
+    StairCut price file yet (the cut learns its prices online). The Hugging Face repository is public: a download needs
+    no token.'
+  hf_revision: b72058169b75881fabb1397cd10d6d90885bcd31
+  max_window: 262144
+- id: nemotron-bolt-exl3-4.0
+  label: EXL3 4.0 bpw
+  format: exl3
+  bpw: 4.0
+  disk_gb: 40.01
+  weights_gib: 36.18
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-4.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.0339
+    top1_pct: 92.68
+    ppl: 6.1
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry)'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch at 4.0 bpw, head
+    6; the RADIO tower is in the pack in BF16 and not loaded. Measured 2026-10-15: 40.01 GB, 36.18 GiB at load, the decode step
+    38.4 tok/s (one CTA a row, measured before the rows path). Drafts with NVIDIA''s LiLiCorr drafter and the lookup; no
+    StairCut price file yet (the cut learns its prices online). The Hugging Face repository is public: a download needs
+    no token.'
+  hf_revision: 9fbf616ea3bd808f09e3470bb960a12f63b66034
+  max_window: 262144
+- id: nemotron-bolt-exl3-5.0
+  label: EXL3 5.0 bpw
+  format: exl3
+  bpw: 5.0
+  disk_gb: 49.13
+  weights_gib: 44.42
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-5.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.0157
+    top1_pct: 94.75
+    ppl: 6.0
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry)'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch at 5.0 bpw, head
+    6; the RADIO tower is in the pack in BF16 and not loaded. Measured 2026-10-15: 49.13 GB, 44.42 GiB at load, the decode step
+    32.0 tok/s (one CTA a row, measured before the rows path). Drafts with NVIDIA''s LiLiCorr drafter and the lookup; no
+    StairCut price file yet (the cut learns its prices online). The Hugging Face repository is public: a download needs
+    no token.'
+  hf_revision: 2352d1f8c882d4c5b3211aef4f006f99b50a3959
+  max_window: 262144
+- id: nemotron-bolt-exl3-6.0
+  label: EXL3 6.0 bpw
+  format: exl3
+  bpw: 6.0
+  disk_gb: 58.37
+  weights_gib: 53.0
+  drafters_gib: 1.32
+  hf_repo: 0xBakeer/TandemLLM-Nemotron-3.5-Bolt-74B-A9B-EXL3-6.0
+  hf_private: false
+  made_by: {kind: ours, name: 0xBakeer, github: 0xBakeer}
+  recommended: false
+  badges: []
+  quality:
+    kl_vs_bf16: 0.0087
+    top1_pct: 96.15
+    ppl: 5.98
+    date: '2026-10-15'
+    source: 'this engine against the BF16 checkpoint''s logits (tools/nh_quality.py, the same 8 rows as the IQ2 entry)'
+  assets_required:
+  - nemotron-bolt-lilicorr
+  note: 'Converted from the BF16 checkpoint (revision bca0a8cb) by exllamav3 1.6.2 with our Puzzle/Bolt patch at 6.0 bpw, head
+    6; the RADIO tower is in the pack in BF16 and not loaded. Measured 2026-10-15: 58.37 GB, 53.0 GiB at load, the decode step
+    27.77 tok/s (one CTA a row, measured before the rows path). Drafts with NVIDIA''s LiLiCorr drafter and the lookup; no
+    StairCut price file yet (the cut learns its prices online). The Hugging Face repository is public: a download needs
+    no token.'
+  hf_revision: 9cfd11612f08fca7588eb0e7a2e5199796ad943b
+  max_window: 262144
+measurements:
+  build: 0.11.1
+  date: '2026-10-16'
+  method: >-
+    the prose, chat and code asks of tools/fn_lookup_ab.py, one request at a time through one fresh server a run on
+    the DGX Spark, the GPU to itself: greedy, thinking off, 512 new tokens; tok/s and tokens a round are the
+    server's own timings. The profile's drafting (EXL3: NVIDIA's LiLiCorr drafter and the lookup; IQ2: the lookup
+    alone; the cut by StairCut with the release's price files), 3 slots, conductor raw, caches and the suffix store
+    off, max_len 32,768. Three runs a cell, alternating with plain servers (--drafter none, the same shape); every
+    drafted text is the plain run's. Measured on the 0.11.1 tree before its version bump. Not measured yet: sampled,
+    128 tokens, long context, first-token times. Raw data:
+    models/nemotron-3.5-bolt-74b-a9b/measurements/0.11.1-summary.json.
+  source: models/nemotron-3.5-bolt-74b-a9b/measurements/0.11.1-summary.json
+  rows:
+  - profile: nemotron-bolt-iq2
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [27.72, 27.71, 36.8, 1.02, 3], chat: [27.84, 27.81, 37.0, 1.03, 3], code: [31.94, 31.91, 38.2, 1.22, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 27.73 / 27.72 / 27.75 tok/s; edit and copy asks 97.81 and 131.6 drafted (27.61 and 27.62 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-2.0
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [65.63, 65.12, 45.8, 3.0, 3], chat: [71.08, 70.63, 43.4, 3.09, 3], code: [102.11, 101.48, 47.8, 4.88, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 43.34 / 43.27 / 43.3 tok/s; edit and copy asks 163.49 and 247.16 drafted (43.09 and 42.99 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-2.5
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [65.82, 65.67, 49.1, 3.23, 3], chat: [68.88, 68.43, 48.9, 3.37, 3], code: [114.66, 114.51, 49.5, 5.68, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 42.12 / 42.02 / 42.02 tok/s; edit and copy asks 161.93 and 208.68 drafted (41.81 and 41.79 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-3.0
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [58.12, 57.99, 48.7, 2.83, 3], chat: [69.33, 69.11, 47.1, 3.27, 3], code: [100.8, 100.15, 50.2, 5.06, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 41.76 / 41.66 / 41.66 tok/s; edit and copy asks 149.63 and 203.69 drafted (41.49 and 41.44 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-3.5
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [59.53, 59.06, 49.9, 2.97, 3], chat: [65.87, 64.67, 49.3, 3.25, 3], code: [100.98, 99.68, 53.5, 5.4, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 40.76 / 40.69 / 40.69 tok/s; edit and copy asks 129.68 and 217.37 drafted (40.5 and 40.45 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-4.0
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [51.97, 51.86, 47.9, 2.49, 3], chat: [61.97, 61.26, 48.6, 3.01, 3], code: [97.87, 97.77, 55.5, 5.43, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 40.48 / 40.43 / 40.42 tok/s; edit and copy asks 137.36 and 210.25 drafted (40.26 and 40.21 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-5.0
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [51.71, 51.39, 57.6, 2.98, 3], chat: [55.51, 55.26, 56.6, 3.14, 3], code: [81.73, 81.33, 60.1, 4.91, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 33.98 / 33.95 / 33.96 tok/s; edit and copy asks 121.33 and 184.39 drafted (33.79 and 33.75 plain); every text the plain run''s.'
+  - profile: nemotron-bolt-exl3-6.0
+    build: 0.11.1
+    date: '2026-10-16'
+    comparable: true
+    cells:
+      greedy_512: {prose: [40.11, 40.01, 64.0, 2.57, 3], chat: [50.14, 49.79, 60.8, 3.05, 3], code: [76.34, 75.47, 69.7, 5.32, 3]}
+    ttft_s: {}
+    lossless: null
+    note: 'Plain (--drafter none) prose / chat / code 29.16 / 29.12 / 29.07 tok/s; edit and copy asks 110.83 and 157.27 drafted (29.0 and 28.92 plain); every text the plain run''s.'
+
+memory:
+  parts:
+  - id: engine
+    label: Engine state, the decode graphs and warm-up
+    gib: 1.4
+    kind: fixed
+    source: 'an estimate until measured on Bolt (Lightning BF16: 1.4)'
+  - id: allocator
+    label: Allocator reserve
+    gib: 1.5
+    kind: reserve
+    source: an estimate until measured on the Spark
+  sources:
+  - engine/models/nemotron_h/gguf_load.py GGUFIndex.decode_bytes (the GGUF's tensor table, 2026-10-15)
+  per_window_parts:
+  - id: prefill_workspace
+    label: Prefill workspace (a 4,096-token chunk's activations, the SSD chunks and the batched experts)
+    bytes_per_token: 8192
+    max_gib: 3.0
+    kind: reserve
+    source: 'an estimate until measured'
+components:
+- id: conductor
+  label: Conductor
+  group: features
+  what: Gives each request the right instructions and helper packages, and watches long sessions so they do not
+    get stuck.
+  default: true
+  required: false
+  memory_gib: 0.0
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.1
+  depends_on: []
+  conflicts: []
+  knobs:
+    CONDUCTOR:
+      'on': 'on'
+      'off': raw
+    QSE_CONDUCTOR_CONFIG:
+      'on': ${HOME}/.qwen38-spark-engine/conductor
+      'off': 'off'
+  assets: []
+  docs: docs/server.md
+  note: 'On by default, with the model fit LFM2.5 measured (Laya answers the class question, core skill only, no
+    effort sentences, rules or memory notes) until it is measured on NemotronH.'
+- id: narrator
+  label: Narrator
+  group: roles
+  what: A small model that writes short status lines while the big model thinks, so you can see what it is doing.
+  default: false
+  required: false
+  memory_gib: 3.6
+  memory_max_gib: null
+  elastic: true
+  disk_gb: 4.3
+  depends_on:
+  - conductor
+  conflicts: []
+  knobs:
+    QWEN38_NARRATOR_MODEL:
+      'on': qwen3.5-2b
+      'off': ''
+    QWEN38_NARRATOR_DIR:
+      'on': ${HOME}/.qwen38-spark-engine/models/qwen3.5-2b
+      'off': ''
+  assets:
+  - qwen3.5-2b
+  docs: docs/server.md
+  note: Qwen3.5-2B, 3.60 GiB in the live memory split. Off by default under Bolt (the model has the box to itself).
+- id: laya
+  label: Laya decision models
+  group: roles
+  what: Three tiny classifiers that answer the conductor's quick questions, like what kind of request this is, in
+    milliseconds.
+  default: true
+  required: false
+  memory_gib: 1.6
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 2.3
+  depends_on:
+  - conductor
+  conflicts: []
+  knobs:
+    QWEN38_DECIDER_MODELS:
+      'on': laya-english,laya-multilingual,laya-typed-decisions
+      'off': ''
+  assets:
+  - laya
+  docs: docs/server.md
+  note: The class question's answer under the model fit (served_classifier off).
+- id: response_cache
+  label: Response cache
+  group: caches
+  what: Answers an identical greedy request again from memory, without running the model.
+  default: false
+  required: false
+  memory_gib: 0.25
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    RESPONSE_CACHE:
+      'on': 'on'
+      'off': 'off'
+  assets: []
+  docs: docs/caches.md
+  note: Off on the reference box. Useful for scripts that send the same request many times; never for a benchmark.
+- id: proxy
+  label: Other backends
+  group: features
+  what: Lets the dashboard send some model names to other servers or cloud APIs, beside this engine.
+  default: false
+  required: false
+  memory_gib: 0.0
+  memory_max_gib: null
+  elastic: false
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    QSE_BACKENDS:
+      'on': ${HOME}/.qwen38-spark-engine/backends/config.sqlite3
+      'off': ''
+  assets: []
+  docs: docs/proxy.md
+  note: You add the backends later, on the Backends screen.
+- id: prompt_cache
+  label: Conversation cache
+  group: caches
+  what: Keeps the conversation the model is in, so the next turn starts where the last one ended instead of reading
+    everything again.
+  default: true
+  required: false
+  memory_gib: 0.16
+  memory_max_gib: 2.5
+  elastic: true
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    RESIDENT_GB:
+      'on': '2.5'
+      'off': '0'
+  assets: []
+  docs: docs/caches.md
+  note: The resident prefix with its anchors every 4,096 tokens (the prefill's chunk), the end anchor, the pin and
+    the park; an anchor is 194.3 MiB (162.3 MiB of Mamba2 states and 4,096 tokens of KV at 8,192 bytes).
+- id: state_store
+  label: State store
+  group: caches
+  what: Saves the model's state after short chats, so the same start a second time costs nothing.
+  default: true
+  required: false
+  memory_gib: 0.49
+  memory_max_gib: 2.0
+  elastic: true
+  disk_gb: 0.0
+  depends_on: []
+  conflicts: []
+  knobs:
+    CACHE_GB:
+      'on': '2'
+      'off': '0'
+  assets: []
+  docs: docs/caches.md
+  note: null
+parallelism:
+  slots:
+    min: 1
+    max: 3
+    default: 3
+  window:
+    min: 8192
+    max: 262144
+    default: 262144
+    step: 4096
+  side_window:
+    min: 8192
+    max: 262144
+    default: 262144
+    step: 4096
+  kv_pool:
+    default: false
+  floor_gb:
+    min: 10
+    max: 40
+    default: 15
+  kv_hard_floor_gb: 10
+  kv_bytes_per_token: 8192
+  typical_fill_tokens: 32768
+  side_slot_const_gib: 0.0
+  knobs:
+    slots: QSE_PARALLEL
+    window: MAX_LEN
+    side_window: QSE_SIDE_MAX_LEN
+    kv_pool: QSE_KV_POOL
+    floor_gb: QSE_PARALLEL_FLOOR_GB
+  fixed: {}
+methods:
+- id: temperature
+  label: Temperature
+  what: How random the answers are when a client does not say. NVIDIA's generation config sets 1.0.
+  type: number
+  min: 0
+  max: 2
+  default: 1.0
+  recommended: 1.0
+  knob: TEMPERATURE
+  docs: docs/nemotron-h.md
+- id: top_p
+  label: Top-p
+  what: The share of probability a sampled answer draws from, when a client does not say.
+  type: number
+  min: 0
+  max: 1
+  default: 0.95
+  recommended: 0.95
+  knob: TOP_P
+  docs: docs/nemotron-h.md
+- id: default_max_tokens
+  label: Default answer length
+  what: The longest answer, in tokens, when a client does not set max_tokens.
+  type: int
+  min: 1024
+  max: 262144
+  default: 32768
+  recommended: 32768
+  knob: DEFAULT_MAX_TOKENS
+  docs: docs/server.md
+- id: request_timeout
+  label: Request time limit
+  what: Seconds one request may run before the engine stops it.
+  type: int
+  min: 60
+  max: 14400
+  default: 3600
+  recommended: 3600
+  knob: REQUEST_TIMEOUT
+  docs: docs/server.md
+- id: max_queue
+  label: Queue length
+  what: How many requests may wait for a free slot before new ones are turned away.
+  type: int
+  min: 1
+  max: 64
+  default: 8
+  recommended: 8
+  knob: MAX_QUEUE
+  docs: docs/server.md
+- id: queue_timeout
+  label: Queue wait
+  what: Seconds a request may wait in the queue before it gets an error.
+  type: int
+  min: 10
+  max: 3600
+  default: 240
+  recommended: 240
+  knob: QUEUE_TIMEOUT
+  docs: docs/server.md
+advanced:
+- id: port
+  label: Port
+  what: The port the API and the dashboard answer on.
+  type: int
+  min: 1024
+  max: 65535
+  default: 8000
+  recommended: 8000
+  knob: PORT
+  docs: docs/operations.md
+- id: host
+  label: Listen on
+  what: The whole network, or only this machine.
+  type: enum
+  options:
+  - value: 0.0.0.0
+    label: the whole network
+  - value: 127.0.0.1
+    label: this machine only
+  default: 0.0.0.0
+  recommended: 0.0.0.0
+  knob: HOST
+  docs: docs/operations.md
+- id: served_model
+  label: Raw engine name
+  what: The model name of the raw engine. With the conductor on, clients see TandemLLM and this name is a hidden
+    alias.
+  type: string
+  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$
+  default: qwen38-spark-engine
+  recommended: qwen38-spark-engine
+  knob: SERVED_MODEL
+  docs: docs/server.md
+- id: dashboard_login
+  label: Dashboard login
+  what: With an admin password set, on makes the dashboard ask for it too.
+  type: enum
+  options:
+  - value: 'off'
+    label: 'off'
+  - value: 'on'
+    label: 'on'
+  default: 'off'
+  recommended: 'off'
+  knob: QSE_DASHBOARD_LOGIN
+  docs: docs/server.md
+- id: admin_password
+  label: Admin password
+  what: Without one, anyone who reaches the port can change the setup. Generate writes a random one into secrets.env
+    on the box; read it there with cat.
+  type: enum
+  options:
+  - value: keep
+    label: keep as it is
+  - value: generate
+    label: generate one
+  default: keep
+  recommended: keep
+  knob: null
+  docs: docs/operations.md

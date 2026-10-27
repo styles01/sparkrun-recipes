@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /v1/laya/ask with text: one answer (L1, Laya for the model's scripts)",
+  "description": "Errors are the OpenAI API's shape, {error: {message, type, param?}}. level and score come with a scale, yes with a yes-no question. With texts: laya-ask-texts.schema.json.",
+  "type": "object",
+  "required": [
+    "label",
+    "p",
+    "sure",
+    "probs",
+    "chars",
+    "read_chars",
+    "clipped",
+    "model",
+    "ms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "label": {
+      "type": "string"
+    },
+    "p": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "sure": {
+      "type": "boolean"
+    },
+    "probs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "score": {
+      "type": "number"
+    },
+    "yes": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "chars": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "read_chars": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "clipped": {
+      "type": "boolean"
+    },
+    "model": {
+      "type": "string"
+    },
+    "ms": {
+      "type": "number",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "answer": {
+      "type": "object",
+      "required": [
+        "label",
+        "p",
+        "sure",
+        "probs",
+        "chars",
+        "read_chars",
+        "clipped"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "p": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sure": {
+          "type": "boolean"
+        },
+        "probs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "score": {
+          "type": "number"
+        },
+        "yes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "chars": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "read_chars": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "clipped": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

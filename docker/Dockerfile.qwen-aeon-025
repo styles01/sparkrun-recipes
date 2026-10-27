@@ -1,0 +1,59 @@
+# Dockerfile.qwen-aeon-025 — Qwen 122B A10B with aeon patches on vLLM 0.25.1
+# Builds FROM vllm/vllm-openai:v0.25.1 and applies aeon patches at build time.
+#
+# Patches applied (always):
+#   1. patch_fla_shmem.py    — FLA sm121 big-tile shmem gate fix
+#   2. patch_inc_hybrid.py   — hybrid INT4+FP8 dispatch (CRITICAL — enables loading bleysg hybrid checkpoint)
+#   3. patch_int8_lmhead_v3.py — int8 W8A16 lm-head GEMV (frees ~1.4 GiB for KV pool)
+#   4. patch_dflash_mixed_attn.py — DFlash mixed SWA+full attention (new in 0.25.1 — z-lab drafter has 5 SWA + 1 full)
+#
+# Patches applied conditionally (set APPLY_OPTIONAL=1 to include):
+#   5. patch_unify2.py       — DFlash KV page unification (may be fixed natively in 0.25.1)
+#   6. patch_prefix_align.py — prefix caching + DFlash hash_block_size (may be fixed natively in 0.25.1)
+
+FROM vllm/vllm-openai:v0.25.1
+
+# Copy all patch scripts
+COPY patch_fla_shmem.py /tmp/patches/patch_fla_shmem.py
+COPY patch_inc_hybrid.py /tmp/patches/patch_inc_hybrid.py
+COPY patch_int8_lmhead_v3.py /tmp/patches/patch_int8_lmhead_v3.py
+COPY patch_dflash_mixed_attn.py /tmp/patches/patch_dflash_mixed_attn.py
+COPY patch_unify2.py /tmp/patches/patch_unify2.py
+COPY patch_prefix_align.py /tmp/patches/patch_prefix_align.py
+
+# Apply critical patches (always)
+RUN python3 /tmp/patches/patch_fla_shmem.py && \
+    python3 /tmp/patches/patch_inc_hybrid.py && \
+    python3 /tmp/patches/patch_int8_lmhead_v3.py && \
+    python3 /tmp/patches/patch_dflash_mixed_attn.py
+
+# Apply optional patches only if APPLY_OPTIONAL=1
+ARG APPLY_OPTIONAL=0
+RUN if [ "$APPLY_OPTIONAL" = "1" ]; then \
+        python3 /tmp/patches/patch_unify2.py || true; \
+        python3 /tmp/patches/patch_prefix_align.py; \
+        sed -i 's/assert new_spec.page_size_bytes == max_page_size/# assert new_spec.page_size_bytes == max_page_size  # patched: DFlash unify/' /usr/local/lib/python3.12/dist-packages/vllm/v1/core/kv_cache_utils.py; \
+        echo "minimal assert patch only"; \
+    else \
+        echo "Skipping optional patches (unify2, prefix_align) — test without first"; \
+    fi
+
+# Clean up patch scripts
+RUN rm -rf /tmp/patches
+
+# Verify patches were applied
+RUN python3 -c "\
+import vllm.model_executor.layers.quantization.inc.inc as inc_mod; \
+src = open(inc_mod.__file__).read(); \
+assert 'spark-dflash-hybrid-fp8' in src, 'inc_hybrid patch missing!'; \
+print('inc_hybrid: OK'); \
+lp = open('/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/logits_processor.py').read(); \
+assert 'DGX_SPARK_INT8_LMHEAD_V3' in lp, 'int8_lmhead patch missing!'; \
+print('int8_lmhead: OK'); \
+fla = open('/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py').read(); \
+assert 'spark-fla-shmem' in fla, 'fla_shmem patch missing!'; \
+print('fla_shmem: OK'); \
+print('All critical patches verified.')"
+
+# Use the stock vLLM entrypoint
+ENTRYPOINT ["vllm", "serve"]

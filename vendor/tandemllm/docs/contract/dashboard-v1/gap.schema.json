@@ -1,0 +1,15 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://qwen38-spark-engine.local/contract/dashboard-v1/gap.schema.json",
+ "title": "one `data:` payload of `event: gap` on /v1/dashboard/logs",
+ "type": "object",
+ "properties": {
+  "dropped": {
+   "type": "integer"
+  }
+ },
+ "required": [
+  "dropped"
+ ],
+ "additionalProperties": false
+}

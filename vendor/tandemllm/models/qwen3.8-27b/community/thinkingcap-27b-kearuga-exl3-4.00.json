@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "id": "thinkingcap-27b-kearuga-exl3-4.00",
+  "name": "ThinkingCap Qwen3.8-27B Kearuga",
+  "base_model": "qwen3.8-27b",
+  "finetune_of": "bottlecapai/ThinkingCap-Qwen3.8-27B",
+  "author": {
+    "github": "0xWhiteMage",
+    "name": "thewhitemage.",
+    "social": {
+      "x": "0xWhiteMage",
+      "huggingface": "0xWhiteMage",
+      "website": "https://0xWhiteMage.github.io"
+    }
+  },
+  "hf": {
+    "repo": "0xWhiteMage/ThinkingCap-Qwen3.8-27B-Kearuga-EXL3-4.00bpw",
+    "revision": "11447639033dd80a4c04536b5b37ed7d642802ee"
+  },
+  "format": "exl3",
+  "bpw": 4.0,
+  "size_gb": 16.38,
+  "load": "standalone",
+  "modalities": {"text": true, "image": false, "audio": false, "video": false},
+  "modalities_in_pack": ["text", "image"],
+  "drafters": "tandem-exl3",
+  "license": "PolyForm-Small-Business-1.0.0 + Apache-2.0 (Qwen)",
+  "license_url": "https://huggingface.co/0xWhiteMage/ThinkingCap-Qwen3.8-27B-Kearuga-EXL3-4.00bpw/blob/11447639033dd80a4c04536b5b37ed7d642802ee/LICENSE",
+  "description": "BottleCap AI's ThinkingCap fine-tune of Qwen3.8-27B in EXL3 at 4.0 bpw, as one standalone pack. The pack also holds a 6-bit vision tower; TandemLLM serves it as text only for now.",
+  "tags": ["fine-tune", "reasoning", "standalone"],
+  "added": "2026-10-13",
+  "status": "verified",
+  "verified": {
+    "build": "0.8.2",
+    "device": "dgx-spark",
+    "date": "2026-10-13",
+    "tok_s": {"prose": 39.6, "code": 95.9, "chat": 51.3, "plain": 15.2},
+    "tokens_per_round": {"prose": 3.09, "code": 7.69, "chat": 4.11},
+    "notes": "text only; one run per kind"
+  },
+  "links": {"pr": "https://github.com/0xBakeer/TandemLLM-early-access/pull/1"}
+}

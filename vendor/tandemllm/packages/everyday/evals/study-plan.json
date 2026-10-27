@@ -1,0 +1,18 @@
+{
+  "package": "study-plan",
+  "rubric": [
+    "Frame and assumptions stated; the hours arithmetic shown (weeks x hours, the review reserve of 15 to 20 %, a buffer).",
+    "Week by week: topics in a sensible order, hours, and a checkable 'done when' per week; hard topics get 1.5 times the hours and early slots.",
+    "The session method: recall not rereading, 25 to 50 minute blocks, 5 minutes of yesterday first, a weekly self-test, spaced returns.",
+    "The weekly check questions and the rule for falling behind; the exam-week rule (mocks, light last day).",
+    "Honest when the time is not enough, with what to drop or aim for; no more hours planned than the user has."
+  ],
+  "prompts": [
+    {"id": "study-plan-1", "lang": "en", "text": "I have my driving theory test in 3 weeks, I can do 45 minutes a day. Plan it."},
+    {"id": "study-plan-2", "lang": "de", "text": "Abitur in Mathe in 8 Wochen, Themen: Analysis, Stochastik, Vektoren. Stochastik kann ich gar nicht. Ich habe nach der Schule 2 Stunden pro Tag und am Wochenende mehr."},
+    {"id": "study-plan-3", "lang": "ar", "text": "أريد الوصول إلى مستوى B1 في الألمانية خلال 6 أشهر، مستواي الحالي A2، لدي ساعة يوميًا. ما الخطة؟"},
+    {"id": "study-plan-4", "lang": "en", "text": "Learn enough Python in 3 months to automate my Excel reports at work. I work full time, maybe 5 hours a week. I'm a total beginner."},
+    {"id": "study-plan-5", "lang": "en", "text": "University exam in 10 days, 12 lectures, I haven't started, about 6 hours a day possible. Be honest about what's realistic."},
+    {"id": "study-plan-6", "lang": "de", "text": "Ich lerne immer nur am Tag vorher und vergesse alles. Wie plane ich das nächste Semester (4 Klausuren im Februar) so, dass ich dranbleibe?"}
+  ]
+}

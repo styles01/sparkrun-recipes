@@ -1,0 +1,261 @@
+% The manual's preamble: fonts, colours, page furniture, tables, code, figures, index, links.
+% Built with LuaLaTeX (latexmk -lualatex); no shell escape is needed.
+
+\usepackage{fontspec}
+\setmainfont{LibertinusSerif}[
+  Extension=.otf, UprightFont=*-Regular, BoldFont=*-Semibold,
+  ItalicFont=*-Italic, BoldItalicFont=*-SemiboldItalic, Ligatures=TeX]
+\setsansfont{LibertinusSans}[
+  Extension=.otf, UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic,
+  Ligatures=TeX]
+\setmonofont{Inconsolatazi4}[
+  Extension=.otf, UprightFont=*-Regular, BoldFont=*-Bold, Scale=MatchLowercase]
+
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage[dvipsnames,table]{xcolor}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{array,booktabs,longtable,tabularx,multirow}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{float}
+\graphicspath{{screenshots/}}
+% \screenshot[includegraphics options]{file}{caption}{label}: a screenshot of the running application
+\newcommand{\screenshot}[4][]{%
+  \begin{figure}[htbp]\centering
+  \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{.4pt}%
+  \fcolorbox{rule}{white}{\includegraphics[width=\dimexpr\linewidth-1pt\relax,#1]{#2}}%
+  \caption{#3}\label{#4}\end{figure}}
+\usepackage{csquotes}
+\usepackage[obeyspaces,spaces]{url}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage[noautomatic]{imakeidx}
+\usepackage{scrlayer-scrpage}
+
+% ---------------------------------------------------------------------------- colours
+% One palette for the whole book: cobalt for structure and links, signal orange for the one
+% thing a figure is about, ink and slate for text, rule and paper for furniture.
+\definecolor{cobalt}{HTML}{1F4FCC}
+\definecolor{cobaltlight}{HTML}{E8EEFB}
+\definecolor{sky}{HTML}{8FB3FF}
+\definecolor{signal}{HTML}{E8641B}
+\definecolor{signallight}{HTML}{FCEBDD}
+\definecolor{ink}{HTML}{1C2230}
+\definecolor{slate}{HTML}{5A6475}
+\definecolor{rule}{HTML}{C9D0DC}
+\definecolor{paper}{HTML}{F5F7FA}
+\definecolor{moss}{HTML}{2E8B57}
+
+% ---------------------------------------------------------------------------- page and headings
+\setlength{\emergencystretch}{2em}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\addtokomafont{disposition}{\color{ink}}
+\setkomafont{chapterprefix}{\normalfont\sffamily\Large\color{slate}}
+\addtokomafont{chapter}{\color{cobalt}}
+\setkomafont{part}{\normalfont\bfseries\fontsize{30}{36}\selectfont\color{cobalt}}
+\setkomafont{partnumber}{\normalfont\sffamily\LARGE\color{slate}}
+\setkomafont{descriptionlabel}{\normalfont\bfseries}
+\addtokomafont{caption}{\small}
+\addtokomafont{captionlabel}{\sffamily\bfseries\color{cobalt}}
+\setkomafont{pageheadfoot}{\small\sffamily\color{slate}}
+\setkomafont{pagenumber}{\small\sffamily\color{ink}}
+\renewcommand*{\sectionformat}{\textcolor{slate}{\thesection\autodot}\enskip}
+\renewcommand*{\subsectionformat}{\textcolor{slate}{\thesubsection\autodot}\enskip}
+\RedeclareSectionCommand[beforeskip=-2.4ex plus -1ex minus -.2ex,afterskip=1.1ex plus .2ex]{section}
+\RedeclareSectionCommand[beforeskip=-1.8ex plus -1ex minus -.2ex,afterskip=.7ex plus .2ex]{subsection}
+% a signal rule closes every chapter heading
+\renewcommand*{\chapterheadendvskip}{\par\nobreak\vspace{1.6ex}{\color{signal}\hrule height .9pt}\nobreak\vspace{4.5ex}}
+\renewcommand*{\partpagestyle}{empty}
+% \partintro{text}: the short preamble under a part title, after a signal rule
+\newcommand{\partintro}[1]{\setpartpreamble[c][.78\textwidth]{\vspace*{3ex}{\centering\color{signal}\rule{3cm}{1.2pt}\par}\vspace{3.5ex}\small\noindent #1}}
+\setkomafont{partentry}{\sffamily\bfseries\color{cobalt}}
+\setkomafont{chapterentry}{\bfseries}
+\setkomafont{chapterentrypagenumber}{\normalfont}
+
+% running heads: the chapter on the inside, the section on the outside, a hairline under both
+\pagestyle{scrheadings}
+\clearpairofpagestyles
+\ihead{\leftmark}
+\ohead{\rightmark}
+\ofoot*{\pagemark}
+\automark[section]{chapter}
+\KOMAoptions{autooneside=false}
+\renewcommand*{\chaptermarkformat}{\thechapter\autodot\enskip}
+\renewcommand*{\sectionmarkformat}{\thesection\autodot\enskip}
+\KOMAoptions{headsepline=.4pt}
+\setkomafont{headsepline}{\color{rule}}
+\makeatletter\renewcommand\@pnumwidth{2.2em}\makeatother
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+\setlist{itemsep=.2ex,topsep=.6ex}
+\setlist[description]{style=nextline, font=\normalfont\bfseries}
+\captionsetup{font=small,labelfont={sf,bf,color=cobalt},format=plain,justification=raggedright,singlelinecheck=false,skip=6pt}
+
+\renewcommand{\topfraction}{.9}
+\renewcommand{\bottomfraction}{.7}
+\renewcommand{\textfraction}{.08}
+\renewcommand{\floatpagefraction}{.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+% floats on a float page sit at the top, not in the middle
+\makeatletter\setlength{\@fptop}{0pt}\setlength{\@fpbot}{0pt plus 1fil}\makeatother
+
+% ---------------------------------------------------------------------------- inline code and terms
+\urlstyle{tt}
+\makeatletter
+\g@addto@macro{\UrlBreaks}{\do\_\do\-\do\.\do\=\do\,\do\:}
+\makeatother
+\Urlmuskip=0mu plus 1mu
+% \code{...}: identifiers, flags, variables, routes and paths, set in monospace and broken
+% after punctuation; for text with braces, %, # or \ use \texttt with escapes instead.
+\DeclareUrlCommand\code{\urlstyle{tt}}
+% \term{word}: a defined term, set in italics and put in the index
+\newcommand{\term}[1]{\emph{#1}\index{#1}}
+% the three kinds of number (About this manual, "How numbers are labelled")
+\newcommand{\measured}{\textsf{\small measured}}
+\newcommand{\arith}{\textsf{\small arithmetic}}
+% \hd{...}: a table header cell
+\newcommand{\hd}[1]{{\sffamily\color{slate}#1}}
+
+% ---------------------------------------------------------------------------- tables
+\renewcommand{\arraystretch}{1.15}
+\arrayrulecolor{rule}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+% reftable: a long reference table with three columns, a caption, a label and a header
+\newenvironment{reftable}[3]{%
+  \footnotesize
+  \setlength{\LTpre}{.8ex}\setlength{\LTpost}{.8ex}%
+  \longtable{@{}L{.29\linewidth}L{.19\linewidth}L{.445\linewidth}@{}}
+  \caption{#1}\label{#2}\\
+  \toprule #3\\ \midrule \endfirsthead
+  \multicolumn{3}{@{}l}{\textit{\small continued}}\\ \toprule #3\\ \midrule \endhead
+  \bottomrule \endlastfoot
+}{\endlongtable}
+% httptable: the HTTP routes, three columns: method and path, who may call, what it does
+\newenvironment{httptable}[2]{%
+  \footnotesize
+  \setlength{\LTpre}{.8ex}\setlength{\LTpost}{.8ex}%
+  \longtable{@{}L{.31\linewidth}L{.09\linewidth}L{.55\linewidth}@{}}
+  \caption{#1}\label{#2}\\
+  \toprule \hd{route} & \hd{who} & \hd{what, body, answer}\\ \midrule \endfirsthead
+  \multicolumn{3}{@{}l}{\textit{\small continued}}\\ \toprule \hd{route} & \hd{who} & \hd{what, body, answer}\\ \midrule \endhead
+  \bottomrule \endlastfoot
+}{\endlongtable}
+% reftabletwo: the same with two columns, a name and what it is
+\newenvironment{reftabletwo}[3]{%
+  \footnotesize
+  \setlength{\LTpre}{.8ex}\setlength{\LTpost}{.8ex}%
+  \longtable{@{}L{.33\linewidth}L{.62\linewidth}@{}}
+  \caption{#1}\label{#2}\\
+  \toprule #3\\ \midrule \endfirsthead
+  \multicolumn{2}{@{}l}{\textit{\small continued}}\\ \toprule #3\\ \midrule \endhead
+  \bottomrule \endlastfoot
+}{\endlongtable}
+
+% ---------------------------------------------------------------------------- code listings
+% One style for every block of code, commands, output and status lines.
+\lstdefinestyle{tandem}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible, keepspaces=true,
+  breaklines=true, breakatwhitespace=false,
+  postbreak=\mbox{\textcolor{slate}{$\hookrightarrow$}\space},
+  frame=leftline, framerule=1.2pt, rulecolor=\color{cobalt},
+  backgroundcolor=\color{paper},
+  xleftmargin=1.2em, framexleftmargin=.6em, aboveskip=1.2ex, belowskip=1.2ex,
+  showstringspaces=false, upquote=true, extendedchars=true,
+  literate={›}{{\guilsinglright}}1 {µ}{{\textmu}}1 {~}{{\textasciitilde}}1,
+  commentstyle=\color{slate},
+  keywordstyle=\color{cobalt},
+  stringstyle=\color{ink},
+}
+\lstset{style=tandem}
+\lstdefinelanguage{shellx}{morekeywords={export,set,bash,cd,pip,curl,hf,python,python3,docker,sudo,tandem-dash,git,vllm,flock,printf,echo,grep,security,rm,cp,cat,sqlite3,npm,npx},
+  sensitive=true, morecomment=[l]{\#}, morestring=[b]"}
+\lstnewenvironment{shell}{\lstset{language=shellx}}{}
+\lstnewenvironment{plain}{\lstset{language={}}}{}
+\lstnewenvironment{lines}{\lstset{language={}}}{}
+\lstnewenvironment{jsonc}{\lstset{language={},morestring=[b]"}}{}
+
+% ---------------------------------------------------------------------------- figures
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,shapes.misc,fit,backgrounds,calc,
+  decorations.pathreplacing,patterns,matrix,chains}
+\pgfplotsset{compat=1.18}
+\tikzset{
+  >={Stealth[length=2.2mm]},
+  box/.style={draw=cobalt, fill=cobaltlight, rounded corners=2pt, align=center,
+    font=\sffamily\small, inner sep=4pt, minimum height=8mm},
+  hot/.style={draw=signal, fill=signallight, rounded corners=2pt, align=center,
+    font=\sffamily\small, inner sep=4pt, minimum height=8mm},
+  quiet/.style={draw=rule, fill=paper, rounded corners=2pt, align=center,
+    font=\sffamily\small, inner sep=4pt, minimum height=8mm},
+  lbl/.style={font=\sffamily\scriptsize, text=slate, align=center},
+  flow/.style={->, thick, draw=ink},
+  dflow/.style={->, thick, draw=slate, dashed},
+  group/.style={draw=rule, rounded corners=4pt, inner sep=6pt},
+  % the instrument-readout pieces of the dashboard figures
+  panel/.style={draw=rule, fill=white, rounded corners=3pt, inner sep=5pt},
+  readout/.style={font=\sffamily\bfseries\Large, text=ink},
+  unit/.style={font=\sffamily\scriptsize, text=slate},
+}
+% ---------------------------------------------------------------------------- the mark
+% The TandemLLM mark (Scope: a dial, the StairCut step trace inside it, the orange now-rate
+% breaking out on the right), drawn in TikZ from the geometry of docs/media/logo/mark.svg so the
+% build needs no SVG converter. Its own colours, not the book's: brandcobalt and brandsignal.
+\definecolor{brandcobalt}{HTML}{3D63FF}
+\definecolor{brandsignal}{HTML}{FF6B1F}
+% \tandemmark[<unit>]{<dial and trace>}{<now-rate>}: the 64-unit grid at one unit = <unit>;
+% the box is the mark's ink, units 2 to 62.
+\newcommand{\tandemmark}[3][.25mm]{%
+  \begin{tikzpicture}[x=#1, y=-#1]
+    \useasboundingbox (2,2) rectangle (62,62);
+    \draw[draw=#2, line width=\dimexpr#1*4\relax] (32,32) circle[radius=26];
+    \draw[draw=#2, line width=\dimexpr#1*6\relax, line cap=butt, line join=round,
+      rounded corners=\dimexpr#1*3/2\relax]
+      (8,42) -- (22,42) -- (22,30) -- (38,30) -- (38,18) -- (41,18);
+    \draw[draw=#3, line width=\dimexpr#1*6\relax, line cap=round] (40,18) -- (60,18);
+  \end{tikzpicture}}
+% built once, outside any other picture (a tikzpicture inside the cover's overlay would inherit it)
+\newsavebox{\tandemcoverbox}
+\newsavebox{\tandempartbox}
+\AtBeginDocument{%
+  \sbox{\tandemcoverbox}{\tandemmark[.32mm]{brandcobalt}{brandsignal}}%
+  \sbox{\tandempartbox}{\tandemmark[.14mm]{slate}{slate}}}
+% a small mono mark above "Part I" on each part page
+\renewcommand*{\partformat}{\usebox{\tandempartbox}\\[2.2ex]\partname~\thepart\autodot}
+
+\pgfplotsset{
+  tandem/.style={
+    width=\linewidth, height=6.2cm,
+    axis lines*=left, grid=major, grid style={draw=rule!60},
+    tick label style={font=\sffamily\footnotesize}, label style={font=\sffamily\small},
+    legend style={font=\sffamily\footnotesize, draw=none, fill=none},
+    every axis plot/.append style={thick},
+  },
+  % a single stacked bar: no y axis, no empty-range warning
+  onebar/.style={ytick=\empty, axis y line=none, ymin=-1, ymax=1, enlarge y limits=false},
+}
+
+% ---------------------------------------------------------------------------- index and links
+\makeindex[intoc, columns=2, title=Index, options=-s tandem.ist]
+\usepackage[colorlinks=true,linkcolor=cobalt,urlcolor=cobalt,citecolor=cobalt,
+  bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=0,unicode=true,
+  pdftitle={TandemLLM Manual},pdfauthor={The TandemLLM authors},
+  pdfsubject={An inference engine for Qwen3.8-27B on one DGX Spark, its conductor and its dashboard},
+  pdfkeywords={speculative decoding, inference, NVFP4, DGX Spark, StairCut}]{hyperref}
+\usepackage{bookmark}
+\newcommand{\version}{0.13.0}
+\newcommand{\manualdate}{October 2026}
+
+% "see" entries of the index
+\index{lookup store|see{suffix store}}
+\index{n-gram drafter|see{lookup drafter}}
+\index{KV cache|see{resident prefix, state store}}
+\index{queue|see{admission}}

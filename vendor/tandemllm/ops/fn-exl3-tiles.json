@@ -1,0 +1,105 @@
+{
+ "_about": "Flash-Next EXL3 dense splits (tools/fn_tiles.py, M = 1, cold ring, CUDA graph), 2026-10-11 12:53; applied by engine/models/flashnext/load.py",
+ "16384x2560x5": {
+  "S": 1,
+  "wk": 4,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m1_default": 123.77,
+  "us_m1": 117.94,
+  "gb_s": 222.6,
+  "gb_s_default": 212.1
+ },
+ "2560x6144x5": {
+  "S": 2,
+  "wk": 4,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m1_default": 48.11,
+  "us_m1": 45.64,
+  "gb_s": 215.8,
+  "gb_s_default": 204.7
+ },
+ "13312x2560x5": {
+  "S": 1,
+  "wk": 4,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m1_default": 106.87,
+  "us_m1": 92.87,
+  "gb_s": 229.7,
+  "gb_s_default": 199.6
+ },
+ "2560x6144x6": {
+  "S": 2,
+  "wk": 4,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m1_default": 55.98,
+  "us_m1": 53.58,
+  "gb_s": 220.5,
+  "gb_s_default": 211.0
+ },
+ "16384x2560x6": {
+  "S": 1,
+  "wk": 4,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m1_default": 140.65,
+  "us_m1": 134.2,
+  "gb_s": 234.7,
+  "gb_s_default": 223.9
+ },
+ "13312x2560x6": {
+  "S": 1,
+  "wk": 4,
+  "cfg": 4,
+  "cfg2": 2,
+  "us_m1_default": 127.23,
+  "us_m1": 109.84,
+  "gb_s": 233.0,
+  "gb_s_default": 201.1
+ },
+ "640x2560x3": {
+  "S": 4,
+  "wk": 4,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m1_default": 12.71,
+  "us_m1": 8.33,
+  "gb_s": 74.5,
+  "gb_s_default": 48.9
+ },
+ "640x2560x4": {
+  "S": 4,
+  "wk": 4,
+  "cfg": 1,
+  "cfg2": 2,
+  "us_m1_default": 12.49,
+  "us_m1": 8.93,
+  "gb_s": 92.5,
+  "gb_s_default": 66.1
+ },
+ "_248320x2560x5": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 0,
+  "cfg2": 2,
+  "us_m1_default": 1699.32,
+  "us_m1": 1699.32,
+  "gb_s": 234.1,
+  "gb_s_default": 234.1,
+  "kept": "default"
+ },
+ "_248320x2560x6": {
+  "S": 1,
+  "wk": 8,
+  "cfg": 0,
+  "cfg2": 2,
+  "us_m1_default": 2075.55,
+  "us_m1": 2075.55,
+  "gb_s": 230.0,
+  "gb_s_default": 230.0,
+  "kept": "default"
+ }
+}

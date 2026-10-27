@@ -1,0 +1,18 @@
+{
+  "package": "flashcards-quiz",
+  "rubric": [
+    "The count matches the request (default 10, 20 for vocabulary); one fact per card; fronts never contain their own answer; no duplicate facts.",
+    "Backs are short and exact (1 to 15 words, numbers with units, dates with years); vocabulary cards carry the article or gender and an example sentence.",
+    "A quiz mixes types (short answer, multiple choice with plausible wrong options, one-sentence explain) with answers and one-line reasons at the end.",
+    "Turn-by-turn mode asks one question only, then stops; on an answer it grades, explains, gives the score and the next question.",
+    "The paste format line ('front ; back', one per line) is present; facts beyond the source are marked as general knowledge."
+  ],
+  "prompts": [
+    {"id": "flashcards-quiz-1", "lang": "en", "text": "Make 10 flashcards from this: 'The French Revolution began in 1789 with the storming of the Bastille on 14 July. The monarchy was abolished in 1792 and King Louis XVI was executed in January 1793. The Reign of Terror under Robespierre lasted from 1793 to 1794. Napoleon seized power in 1799.'"},
+    {"id": "flashcards-quiz-2", "lang": "de", "text": "Frag mich ab, eine Frage nach der anderen: die Hauptstädte der EU-Länder. Fang an."},
+    {"id": "flashcards-quiz-3", "lang": "ar", "text": "اصنع لي 15 بطاقة مفردات إنجليزية-عربية عن موضوع 'في المطار'، مع جملة مثال لكل كلمة."},
+    {"id": "flashcards-quiz-4", "lang": "en", "text": "A 10-question quiz on the human digestive system for a 14-year-old, with answers at the end."},
+    {"id": "flashcards-quiz-5", "lang": "de", "text": "20 Vokabelkarten Deutsch-Englisch, Thema Arztbesuch, mit Artikel bei Nomen, Niveau A2."},
+    {"id": "flashcards-quiz-6", "lang": "en", "text": "Turn my notes into practice questions: 'Supply and demand: when price rises, quantity demanded falls (law of demand). Supply curve slopes upward. Equilibrium is where the curves meet. A price ceiling below equilibrium causes a shortage; a price floor above it causes a surplus.'"}
+  ]
+}

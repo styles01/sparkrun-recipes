@@ -1,0 +1,119 @@
+\chapter{LFM2.5-24B-A2B}\label{ch:lfm25}
+
+A decode token of LiquidAI's LFM2.5-24B-A2B reads 4.91~GB of its BF16 weights and 1.31~GB of our 4.0-bit EXL3 pack (\arith, from the headers), because only 4 of its 64 experts run in each of 38 layers. On one DGX Spark the engine decodes it at 188.2~tok/s from the 2.5 pack, 153.5~tok/s from the default 3.5 pack and 44.8~tok/s in BF16 (\measured, 2026-10-14). It is the third model TandemLLM serves and the first that is not a Qwen; its support ships in release 0.9.0. This chapter says what is different about it and what is measured; Chapter~\ref{ch:adding-model} describes the adapter path it came in through, and \code{docs/lfm2.5-24b-a2b.md} is the same material for the repository.
+
+\section{The model}\index{LFM2.5}
+
+\begin{table}[htbp]
+\centering\small
+\caption{LFM2.5-24B-A2B beside Flash-Next.}\label{tab:lfm-model}
+\begin{tabularx}{\linewidth}{@{}L{.2\linewidth}YL{.3\linewidth}@{}}
+\toprule
+\hd{part} & \hd{LFM2.5-24B-A2B} & \hd{Flash-Next} \\
+\midrule
+layers & 40: 30 short convolutions, 10 attention & 48: 36 Gated DeltaNet, 12 attention \\
+MLP & 64 experts a layer, 4 run a token, no shared expert; layers 0 and 1 dense & 512 experts, 10 routed and 1 shared \\
+residual stream & one of 2,048 & 4 streams of 2,560 \\
+attention & full, 32 query and 8 KV heads of 64 & sparse past 2,051 tokens \\
+state of a sequence & 240~KiB of convolution inputs plus 20,480 bytes a token & 110.3~MiB plus 29,952 bytes a token \\
+context & 131,072 tokens & 262,144 \\
+draft layer & none & one MTP layer \\
+weights served & BF16, or our EXL3 packs at 2.5 to 6.0 bits a weight & turboderp's EXL3 packs \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A short-convolution layer projects the normed input to three vectors B, C and x of 2,048, takes B times x, runs a depthwise convolution of 3 taps over that product along the sequence, multiplies by C and projects back. Its state is the last two products, so a sequence keeps 30 layers times 2 times 2,048 values. The router takes the sigmoid of each expert's logit, adds a per-expert bias to choose the 4, and renormalises the 4 chosen sigmoids. \code{engine/models/lfm2_moe/config.py} reads the configuration and stops on a field it does not know.
+
+The tokenizer is LiquidAI's own (128,000 ids). The lookup corpus and the suffix store of the Qwen models hold other token ids, so the server refuses them by fingerprint and the LFM2.5 profiles keep a store of their own.
+
+\section{Profiles}
+
+\begin{table}[htbp]
+\centering\small
+\caption[The LFM2.5 profiles]{The LFM2.5 profiles, \measured{} 2026-10-14: the download, the weights on the device at load, the decode step from its graph (tok/s), chat through the server plain / with the lookup (tok/s), and against BF16 on oasst1 chat the KL divergence and the top-1 agreement (exllamav3's \code{model_diff}).}\label{tab:lfm-profiles}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\hd{profile} & \hd{disk} & \hd{weights} & \hd{step} & \hd{chat} & \hd{KL} & \hd{top-1} \\
+\midrule
+\code{lfm25-exl3-2.5} & 8.20~GB & 7.64~GiB & 188.2 & 185.4 / 175.6 & 0.313 & 78.9~\% \\
+\code{lfm25-exl3-3.0} & 9.68~GB & 9.4~GiB & 175.0 & 171.3 / 168.5 & 0.195 & 83.6~\% \\
+\code{lfm25-exl3-3.5} & 11.16~GB & 10.56~GiB & 153.5 & 150.9 / 143.7 & 0.136 & 86.7~\% \\
+\code{lfm25-exl3-4.0} & 12.64~GB & 12.06~GiB & 145.9 & 143.7 / 139.4 & 0.098 & 88.5~\% \\
+\code{lfm25-exl3-4.5} & 14.12~GB & 13.31~GiB & 128.8 & 128.2 / 124.7 & 0.063 & 91.2~\% \\
+\code{lfm25-exl3-6.0} & 18.63~GB & 17.37~GiB & 106.9 & 105.2 / 103.5 & 0.039 & 93.4~\% \\
+\code{lfm25-bf16} & 47.9~GB & 44.95~GiB & 44.8 & 44.5 / 43.3 & 0 & 100~\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every profile fits the Spark preset at the model's whole context: its KV is 2.5~GiB at 131,072 tokens. The quality numbers are exllamav3's \code{model_diff} against the BF16 checkpoint on 20 rows of 2,048 tokens of oasst1 chat; this engine's own comparison (\code{tools/lfm_quality.py}, 100 rows) agrees within 0.02. They are high next to exllamav3 conversions of other models at the same rates: the same recipe on the 8B sibling at 4.10 bits came within 0.01 of a reference conversion, so the 24B is harder at the same rate, for reasons not tested yet. The default is \code{lfm25-exl3-3.5}: the fastest profile in chat as it serves (the lookup on) whose chat top-1 agreement is at least 85~\% (86.7~\% at 143.7~tok/s; 3.0 is faster at 83.6~\%).
+
+\screenshot{lfm25-speed-vs-quality}{Chat decode speed against chat top-1 agreement with BF16, every size (\measured, 2026-10-14; one request, 512 greedy tokens; the data of Table~\ref{tab:lfm-profiles}). The default, 3.5, is the fastest at 85~\% or more.}{fig:lfm-speed-quality}
+
+\screenshot{lfm25-quality-by-size}{Chat KL divergence and top-1 agreement against BF16 by size (exllamav3's \texttt{model\_diff} on oasst1 chat).}{fig:lfm-quality}
+
+Below 4 bits a weight, exllamav3 1.6.0 gives some tensors half-integer rates (1.5, 2.5 or 3.5 bits; a tile is $16K + 8$ int16 wide). In such a tile an odd weight takes one bit more than an even one, so weight $i$'s 16-bit window ends at bit $(i+1)K_a + \lfloor (i+1)/2 \rfloor$ of the tile's ring, $K_a$ the whole part of the rate. The engine's kernels decode these tiles as exllamav3 does, in the decode step, a verify block and the prefill.
+
+\section{One row path and exact rollback}
+
+The decode step and every row of a verify block run the same kernels a row at a time (\code{engine/models/lfm2_moe/kernels.py}): the norms, the short convolution over the row's own window, q and k with their rotary, attention over the row's visible keys in fixed chunks of 512 keys, and the router. The EXL3 projections run on \code{tools/fn_kernels.dense} and the experts on its MoE bank kernels, which Flash-Next uses too; the BF16 projections run on a 16-row tile GEMM. So a row of a verify block has the bits of the decode step at that position. The load-time self-check proves it on the device: a recorded decode of 24 tokens verified as one block, every row bit for bit, before speculation turns on.
+
+A verify block writes nothing into the convolution state. The commit takes the new state from the last two inputs along the accepted path, which are copies of the block's own rows, and moves the path's KV rows down. A rollback is exact by construction.
+
+\begin{table}[htbp]
+\centering\small
+\caption[The LFM2.5 correctness ladder]{The correctness ladder. \measured, 2026-10-14.}\label{tab:lfm-ladder}
+\begin{tabularx}{\linewidth}{@{}L{.36\linewidth}Y@{}}
+\toprule
+\hd{check} & \hd{result} \\
+\midrule
+reference forward against transformers, a tiny random model in fp32 & within 2.1e-5 over a prefill and 3 decode steps \\
+BF16 engine against transformers in BF16, 8 chat prompts, 1,024 positions & top token 98.05~\%; 19 of the 20 differences near ties; KL 0.0064 \\
+4.0 engine against exllamav3's own forward, the same tokens & top token 97.85~\%; all 22 differences near ties \\
+trellis decode against exllamav3's \code{LinearEXL3} & bit for bit \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Speed}
+
+The decode step from its CUDA graph, one greedy request: 188.2~tok/s on 2.5, 145.9 on 4.0 (191~GB/s of the bytes a token reads), 44.8 in BF16 (220~GB/s) (\measured). Each pack has its own dense splits (\code{ops/lfm25-dense-splits.json}; 4.0: 136.1~tok/s without them). Eager launches cost 5~\%. An 8,192-token prompt prefills at 7,360~tok/s on 4.0.
+
+Each verify row adds about 3~ms, because a block reads the union of its rows' experts (Table~\ref{tab:lfm-stair}). A block pays when it is accepted for about 1.4 tokens a row.
+
+\begin{table}[htbp]
+\centering\small
+\caption[The verify staircase on 4.0]{A chain block of $n$ rows on 4.0 from its graph, the median of 20 replays at 1k tokens of context, and the experts its rows read over the 38 MoE layers (of 2,432). \measured, 2026-10-14.}\label{tab:lfm-stair}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+\hd{rows} & 1 & 2 & 3 & 4 & 6 & 8 & 12 & 16 \\
+\midrule
+ms & 7.42 & 10.62 & 13.79 & 16.86 & 21.40 & 27.47 & 36.17 & 45.88 \\
+experts & 152 & 259 & 333 & 391 & 491 & 563 & 664 & 735 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The model has no draft layer. The server drafts with the lookup alone, through the shared tree drafter with no head (\code{NoHead}), cut by StairCut with each profile's price file (\code{ops/prices/lfm2.5-24b-a2b/}). A round with no lookup match is the plain step and is priced as one; each round's own match decides through the cut's calibrated acceptance; the lookup's confidence carries its match length. On 4.0 with the store off, edit and copy asks run at 291.1 and 326.4~tok/s against 141.3 and 141.9 plain; prose, chat and code run within 5~\% of plain; every text equals the plain one (\measured). The 20 requests of \code{tools/fn_server_check.py} give the same answers with and without the lookup, largest logprob difference 0.0.
+
+\screenshot{lfm25-lookup-edit-copy}{Chat plain against edit and copy asks with the lookup, every size (\measured, 2026-10-14).}{fig:lfm-lookup}
+
+\section{Serving}
+
+The chat template is the checkpoint's own and opens a reasoning block at the end of every prompt; a client that turns thinking off gets the block closed right after the generation prompt. Tool calls are a Python list between \code{<|tool_call_start|>} and \code{<|tool_call_end|>}; \code{server/toolcall.py} rewrites each block into the parser's JSON form as the text arrives, with values read as Python literals and never run, so a client gets OpenAI \code{tool_calls}. Liquid's recommended sampling is the default: temperature 0.1, \code{top_k} 50, repetition penalty 1.05. The Setup Guide turns the conductor on, with the model fit below.
+
+\subsection{The conductor}\label{sec:lfm25-conductor}
+The conductor, Laya and the narrator are on by default. The model's adapter declares how the router fits it (\code{Capabilities.conductor}, \code{QWEN38\_CONDUCTOR\_FIT} to switch it off): Laya alone answers the class question, since the model's own one-word answers with thinking off are no class (0 to 2 of 8 right); a turn nobody classified thinks at the profile's default level with nothing added; a class sets the level and the budget with only its core skill in the note. The router's notes sit at the tail of the user's message, and this model reads them as part of the request: the same note texts cost 2.7 times the raw thinking there and 1.38 times as the system message. On 2.5, four short chat asks thought 2,234 reasoning tokens against 2,155 raw and 9,098 under the router as written; seven Chat-tab tasks run twice succeeded 14 of 14 with 9,850 reasoning tokens, against 12 of 14 and 68,170. Raw runs: \code{models/lfm2.5-24b-a2b/measurements/conductor-0.9.0.json}.
+
+Caches: with the prefix resumed at 4,096 and 12,288 tokens, warm answers equal cold ones with equal logprobs (\code{tools/fn_cache_check.py}). The session spill drains 13,650 tokens in 309~ms and reads them back in 163~ms; the disk tier restores 12,288 tokens in 0.96~s against 2.6~s cold; both give the cold answer (\measured). Parallel: three slots over one copy of the weights; a slot's plain step joins the round as one row, from a graph when every slot takes one. On 4.0, 1, 2 and 3 requests at once decode 139.9, 169.1 and 177.8~tok/s in total, every answer equal to its request alone (\measured).
+
+\section{What is not measured}
+
+\begin{itemize}
+\item The cause of the 24B's higher KL than its 8B sibling at the same rate.
+\item Any task benchmark, and the benchmark row of Chapter~\ref{ch:measurement}.
+\item The KV pool on this model: off in its profiles (\code{QSE\_KV\_POOL=off}), so each slot reserves its window at load.
+\end{itemize}
+
+Not supported yet: a draft head (none is published for this model) and the shadow reader, which reads Qwen's token ids and stays off.

@@ -1,0 +1,25 @@
+{
+ "shots": {
+  "overlay.png": 762.5,
+  "s0.png": 423.4,
+  "s1.png": 521.0,
+  "s2.png": 1005.6,
+  "s3.png": 1245.6,
+  "s4.png": 1874.5,
+  "s5.png": 2423.6,
+  "s6.png": 2547.8,
+  "s7.png": 3176.3
+ },
+ "check_output": "scenecheck  {run}/shots/s7.png  vs  {run}/ref/photo.jpg   (stage: full)\n  note: canvas found at x 0, y 0, 2048 x 1364 inside the page margin\n  de8 coarse colour    9.19   (<= 10.0; mean delta E, blur 8; fine 11.06, mid de4 10.27)   <- gate\n  de4 mid colour      10.27   (<= 12.0)   <- gate\n  lum layout corr     0.903   (>= 0.85; per scale [0.889, 0.903, 0.918])   <- gate\n  edge structure      0.630   (>= 0.45; silhouettes, shores, cliffs)   <- gate\n  sky colour           5.50   (<= 8.0; delta E inside the photo's sky; sky 11.2 % photo, 12.2 % render)   <- gate\n  skyline              1.19   (<= 3.0; mean distance in % of height; render skyline 1.1 % LOWER than the photo)   <- gate\n  palette              7.41   (<= 9.0; k-means 8, share-weighted nearest delta E)   <- gate\n  worst regions (fix the first one next; worst 15.28 <= 22.0):   <- gate\n    1. r3c4 (lower-middle centre-right): dE 15.3, too dark by 13 L; photo is blue #7094a0, render #4f757c\n    2. r4c5 (bottom right): dE 15.2, too dark by 7 L, too blue, too green; photo is grey #6a746a, render #476560\n    3. r3c5 (lower-middle right): dE 14.8, too dark by 10 L; photo is grey #71857f, render #606960\n    4. r3c3 (lower-middle centre-left): dE 13.0, wrong colour; photo is blue #4e6a79, render #4c747d\n    5. r2c4 (upper-middle centre-right): dE 13.0, too yellow; photo is blue #63798e, render #6e767d\n  heatmap            {run}/shots/s7.check.png\nRESULT: PASS\n",
+ "files": [
+  "AGENTS.md",
+  "PROGRESS.yaml",
+  "PROMPT.md",
+  "index.html",
+  "js",
+  "opencode.json",
+  "plan-lines.json",
+  "ref",
+  "shots"
+ ]
+}

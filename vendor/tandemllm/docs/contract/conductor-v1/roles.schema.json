@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "conductor roles",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "version": {
+      "type": "integer"
+    },
+    "doc": {
+      "type": "object"
+    },
+    "meta": {
+      "type": "object"
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "up": {
+            "type": "boolean"
+          },
+          "ms": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "mode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": "object"
+          },
+          "limits": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "up",
+          "mode"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "contract": {
+      "type": "object",
+      "description": "SRV-133: what each role's tokenizer hash allows it to share",
+      "properties": {
+        "engine_tokenizer_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "roles": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "sharing_allowed": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "text",
+                    "tokens",
+                    "states"
+                  ]
+                }
+              },
+              "tokenizer_match": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "sharing_allowed",
+              "tokenizer_match"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "engine_tokenizer_sha256",
+        "roles"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "version",
+    "doc",
+    "meta",
+    "health",
+    "contract"
+  ],
+  "additionalProperties": false
+}

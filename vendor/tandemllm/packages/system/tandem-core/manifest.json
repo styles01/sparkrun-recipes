@@ -1,0 +1,29 @@
+{
+  "name": "tandem-core",
+  "version": "1.0.0",
+  "title": "Core rules",
+  "kind": "package",
+  "set": "system",
+  "description": "The runtime's own conventions, on every turn: tool arguments in their schema types, no literal think tags, one answer per turn, the size limits and the stop rule for long files, a final answer in plain words.",
+  "source": "system/tandem-core/PACKAGE.md",
+  "max_tokens": 300,
+  "general": true,
+  "library": false,
+  "requires_tools": [],
+  "fallback": null,
+  "classes": ["code_edit", "debug", "design_ui", "drawing", "three_d", "writing", "plan", "research", "chat"],
+  "files": {"body": "PACKAGE.md", "references": [], "exemplars": []},
+  "eval": {
+    "prompts": "eval/prompts.jsonl",
+    "rubric": "eval/rubric.md",
+    "count": 8,
+    "thinking": false,
+    "max_tokens": 24000,
+    "seed": 42,
+    "checks": ["tool_args_typed", "no_think_tags", "one_answer", "file_lines_max_200", "plain_final_answer"]
+  },
+  "calibration": null,
+  "measured": null,
+  "signature": null,
+  "signing": "OPS-31: the system set is signed at install; the catalog key is not in the repository"
+}

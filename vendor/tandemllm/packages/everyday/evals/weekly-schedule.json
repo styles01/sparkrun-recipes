@@ -1,0 +1,18 @@
+{
+  "package": "weekly-schedule",
+  "rubric": [
+    "Fixed blocks placed first with real clock times; wishes placed with their hours or named as not fitting with the hours missing.",
+    "Buffers kept: 15 minutes between blocks, one free evening, one free half day; no more than 2 planned hours after a full work day.",
+    "A table by time and day that reads in one glance, cells of 2 to 4 words; three rules for the week.",
+    "A to-do list is sorted into today (max 3), this week, later, with time slots for today and the first thing to do now.",
+    "No wishes added that the user did not name; children's or partner's hours never guessed."
+  ],
+  "prompts": [
+    {"id": "weekly-schedule-1", "lang": "en", "text": "Plan my week: work Mon-Fri 8:30-17:00, 30 min commute, I want to run 3 times, cook dinner at home most days, study for a certificate 4 hours, and see my parents on the weekend."},
+    {"id": "weekly-schedule-2", "lang": "de", "text": "Ich bin alleinerziehend, Kind in der Schule 8-15 Uhr, ich arbeite 25 Stunden flexibel von zu Hause. Wie lege ich die Arbeit, den Haushalt und Zeit für mich in die Woche?"},
+    {"id": "weekly-schedule-3", "lang": "ar", "text": "عندي امتحانات بعد 3 أسابيع وأعمل 4 ساعات يوميًا مساءً. رتب لي جدولًا يوميًا للمذاكرة والنوم والرياضة."},
+    {"id": "weekly-schedule-4", "lang": "en", "text": "Here's my to-do list, I'm overwhelmed: call the dentist, finish the tax return (due Friday), buy a birthday present for Sam (party Saturday), fix the bike, reply to 12 emails, book the car service, write the report for Monday, clean the kitchen. What do I do first?"},
+    {"id": "weekly-schedule-5", "lang": "de", "text": "Mach mir einen Tagesplan für morgen: Zahnarzt 10:30, Meeting 14-15 Uhr, 2 Stunden konzentriert am Projekt, Sport, Einkaufen, und ich will um 22 Uhr im Bett sein."},
+    {"id": "weekly-schedule-6", "lang": "en", "text": "I keep planning to write my novel and never do. I have evenings free Mon, Wed, Thu and Sunday mornings. Make me a realistic writing schedule."}
+  ]
+}

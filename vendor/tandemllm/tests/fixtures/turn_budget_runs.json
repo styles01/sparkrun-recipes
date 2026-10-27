@@ -1,0 +1,850 @@
+{
+"_about": "SRV-195: opencode runs on the box (2026-10-06) as step timelines: seconds into the run, the tool, its path or the first 160 characters of its command. pomo1/pomo2: FX2's pomodoro runs (0.3.43-test); the others: clean runs of UT1 and UT2.",
+"pomo2": {
+"end_s": 593.3,
+"steps": [
+[
+18.5,
+"bash",
+{
+"command": "ls -la /home/user/work/pomo2 && command -v node npx python3 bun deno; node --version 2>/dev/null; python3 --version 2>/dev/null"
+}
+],
+[
+22.6,
+"bash",
+{
+"command": "python3 -c \"import playwright; print('playwright ok')\" 2>&1; command -v chromium chromium-browser google-chrome chrome firefox 2>/dev/null; ls /usr/bin | grep -"
+}
+],
+[
+147.7,
+"bash",
+{
+"command": "mkdir -p .tandem && (git rev-parse --git-dir >/dev/null 2>&1 && echo '.tandem/' >> \"$(git rev-parse --git-dir)/info/exclude\"; true)"
+}
+],
+[
+175.6,
+"write",
+{
+"filePath": "/home/user/work/pomo2/index.html"
+}
+],
+[
+181.9,
+"bash",
+{
+"command": "timeout 600 python3 -m http.server 8765 >.tandem/server.log 2>&1 & echo $! > .tandem/server.pid; sleep 1; curl -s -o /dev/null -w '%{http_code}\\n' http://127.0."
+}
+],
+[
+189.4,
+"bash",
+{
+"command": "firefox --headless --no-remote --screenshot=.tandem/shot-1280.png --window-size=1280,800 http://127.0.0.1:8765/index.html 2>&1 | tail -n 5; firefox --headless -"
+}
+],
+[
+194.4,
+"bash",
+{
+"command": "firefox --version; firefox --headless --no-remote --screenshot=.tandem/shot-1280.png --window-size=1280,800 http://127.0.0.1:8765/index.html 2>&1; echo \"exit=$?"
+}
+],
+[
+256.6,
+"edit",
+{
+"filePath": "/home/user/work/pomo2/index.html"
+}
+],
+[
+271.7,
+"write",
+{
+"filePath": "/home/user/work/pomo2/.tandem/marionette.py"
+}
+],
+[
+285.1,
+"write",
+{
+"filePath": "/home/user/work/pomo2/.tandem/test.py"
+}
+],
+[
+308.9,
+"bash",
+{
+"command": "python3 .tandem/test.py 2>&1 | tee .tandem/run.log"
+}
+],
+[
+313.6,
+"bash",
+{
+"command": "timeout 20 firefox --headless --marionette --no-remote -profile .tandem/ffprofile 2>&1 | head -n 30; echo \"exit=$?\""
+}
+],
+[
+343.1,
+"bash",
+{
+"command": "mkdir -p .tandem/ffprofile && timeout 25 firefox --headless --marionette --no-remote -profile .tandem/ffprofile 2>&1 | head -n 30 & sleep 12; python3 - <<'EOF'\n"
+}
+],
+[
+347.1,
+"edit",
+{
+"filePath": "/home/user/work/pomo2/.tandem/marionette.py"
+}
+],
+[
+356.8,
+"bash",
+{
+"command": "python3 .tandem/test.py 2>&1 | tee .tandem/run.log"
+}
+],
+[
+374.9,
+"bash",
+{
+"command": "pgrep -a firefox; echo ---; python3 - <<'EOF'\nimport json, socket, subprocess, time, os\nos.makedirs(\".tandem/ffprofile\", exist_ok=True)\np = subprocess.Popen([\"f"
+}
+],
+[
+502.5,
+"bash",
+{
+"command": "pkill -f 'firefox.*marionette'; sleep 2; pgrep -a firefox; echo \"killed\"; python3 .tandem/test.py 2>&1 | tee .tandem/run.log"
+}
+],
+[
+547.2,
+"bash",
+{
+"command": "pgrep -a firefox; pkill -f 'marionett[e]'; sleep 2; pgrep -a firefox; echo \"clean\""
+}
+],
+[
+552.3,
+"edit",
+{
+"filePath": "/home/user/work/pomo2/.tandem/marionette.py"
+}
+],
+[
+556.6,
+"edit",
+{
+"filePath": "/home/user/work/pomo2/.tandem/marionette.py"
+}
+],
+[
+592.5,
+"bash",
+{
+"command": "python3 .tandem/test.py 2>&1 | tee .tandem/run.log"
+}
+]
+]
+},
+"pomo1": {
+"end_s": 344.9,
+"steps": [
+[
+29.5,
+"bash",
+{
+"command": "ls -la /home/user/work/pomo && command -v node npx python3 bun deno; npx playwright --version 2>/dev/null || echo \"no playwright\""
+}
+],
+[
+33.8,
+"bash",
+{
+"command": "command -v chromium chromium-browser google-chrome firefox 2>/dev/null; python3 -c \"import playwright\" 2>&1 | head -1; ls /usr/bin | grep -iE 'chrom|firefox' | "
+}
+],
+[
+124.7,
+"write",
+{
+"filePath": "/home/user/work/pomo/index.html"
+}
+],
+[
+254.8,
+"bash",
+{
+"command": "mkdir -p .tandem && (git rev-parse --git-dir >/dev/null 2>&1 && echo '.tandem/' >> \"$(git rev-parse --git-dir)/info/exclude\"; true) && timeout 600 python3 -m ht"
+}
+],
+[
+262.8,
+"bash",
+{
+"command": "curl -s -o /dev/null -w '%{http_code}\\n' --max-time 3 http://127.0.0.1:8765/index.html; ls -la .tandem 2>/dev/null; pgrep -af \"http.server\" || echo \"no server\""
+}
+],
+[
+266.5,
+"bash",
+{
+"command": "echo 1800780 > .tandem/server.pid && cat .tandem/server.pid"
+}
+],
+[
+302.4,
+"write",
+{
+"filePath": "/home/user/work/pomo/.tandem/mario.py"
+}
+],
+[
+311.0,
+"write",
+{
+"filePath": "/home/user/work/pomo/.tandem/test_pomo.py"
+}
+],
+[
+335.0,
+"bash",
+{
+"command": "python3 .tandem/test_pomo.py 2>&1 | tee .tandem/run.log"
+}
+],
+[
+340.0,
+"bash",
+{
+"command": "timeout 25 firefox --headless --marionette --no-remote -profile /tmp/ff-dbg --width=1280 --height=800 2>&1 | head -30; echo \"exit: $?\""
+}
+],
+[
+344.7,
+"bash",
+{
+"command": "mkdir -p /tmp/ff-dbg && timeout 25 firefox --headless --marionette --no-remote -profile /tmp/ff-dbg --width=1280 --height=800 2>&1 | head -30; echo \"exit: $?\""
+}
+]
+]
+},
+"ut2_bug": {
+"end_s": 34.1,
+"steps": [
+[
+8.6,
+"bash",
+{
+"command": "ls -la && git log --oneline -5"
+}
+],
+[
+11.9,
+"read",
+{
+"filePath": "/home/user/work/bug/textstats.py"
+}
+],
+[
+12.5,
+"read",
+{
+"filePath": "/home/user/work/bug/test_textstats.py"
+}
+],
+[
+23.5,
+"edit",
+{
+"filePath": "/home/user/work/bug/textstats.py"
+}
+],
+[
+26.2,
+"edit",
+{
+"filePath": "/home/user/work/bug/textstats.py"
+}
+],
+[
+26.3,
+"edit",
+{
+"filePath": "/home/user/work/bug/textstats.py"
+}
+],
+[
+29.4,
+"bash",
+{
+"command": "python3 -m unittest test_textstats -v 2>&1"
+}
+]
+]
+},
+"ut2_refac": {
+"end_s": 151.2,
+"steps": [
+[
+7.7,
+"bash",
+{
+"command": "ls -la /home/user/work/refac"
+}
+],
+[
+10.3,
+"read",
+{
+"filePath": "/home/user/work/refac/report.py"
+}
+],
+[
+11.1,
+"read",
+{
+"filePath": "/home/user/work/refac/sales.csv"
+}
+],
+[
+11.1,
+"read",
+{
+"filePath": "/home/user/work/refac/expected_output.txt"
+}
+],
+[
+24.7,
+"bash",
+{
+"command": "mkdir -p .tandem && (git rev-parse --git-dir >/dev/null 2>&1 && echo '.tandem/' >> \"$(git rev-parse --git-dir)/info/exclude\"; true) && python3 report.py sales.c"
+}
+],
+[
+29.8,
+"write",
+{
+"filePath": "/home/user/work/refac/report.py"
+}
+],
+[
+33.9,
+"bash",
+{
+"command": "python3 report.py sales.csv > .tandem/after.txt 2>&1; echo \"exit=$?\"; diff .tandem/after.txt expected_output.txt && echo \"OUTPUT BYTE-IDENTICAL TO EXPECTED\"; cm"
+}
+],
+[
+54.1,
+"write",
+{
+"filePath": "/home/user/work/refac/test_report.py"
+}
+],
+[
+68.7,
+"bash",
+{
+"command": "python3 -m unittest test_report -v 2>&1 | tee .tandem/tests.log; echo \"exit=${PIPESTATUS[0]}\""
+}
+],
+[
+88.7,
+"bash",
+{
+"command": "python3 -c 'print(repr(\"a\" + \" \"*18 + \"2.00\")); print(repr(\"x\" + \" \"*18 + \"1.00\"))'"
+}
+],
+[
+94.6,
+"edit",
+{
+"filePath": "/home/user/work/refac/test_report.py"
+}
+],
+[
+97.2,
+"edit",
+{
+"filePath": "/home/user/work/refac/test_report.py"
+}
+],
+[
+97.2,
+"edit",
+{
+"filePath": "/home/user/work/refac/report.py"
+}
+],
+[
+103.6,
+"bash",
+{
+"command": "python3 -m unittest test_report -v 2>&1 | tee .tandem/tests.log; echo \"exit=${PIPESTATUS[0]}\""
+}
+],
+[
+108.0,
+"bash",
+{
+"command": "python3 report.py sales.csv > .tandem/final.txt 2>&1; echo \"exit=$?\"; diff .tandem/final.txt expected_output.txt && echo \"FINAL OUTPUT BYTE-IDENTICAL TO EXPECTE"
+}
+],
+[
+116.1,
+"write",
+{
+"filePath": "/home/user/work/refac/.tandem/laya.py"
+}
+],
+[
+122.2,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport sys\nsys.path.insert(0, \".tandem\")\nfrom laya import ask\n\nbefore = open(\".tandem/before.txt\").read()\nafter = open(\".tandem/final.txt\").re"
+}
+],
+[
+133.3,
+"bash",
+{
+"command": "rm -rf .tandem && python3 report.py sales.csv | diff - expected_output.txt && echo \"SCRIPT OUTPUT OK\" && python3 -m unittest test_report 2>&1 | tail -n 3 && git"
+}
+],
+[
+136.2,
+"bash",
+{
+"command": "rm -rf __pycache__ && git status --short"
+}
+]
+]
+},
+"ut1_bugfix": {
+"end_s": 74.1,
+"steps": [
+[
+9.3,
+"bash",
+{
+"command": "find /home/user/work/bugfix -type f -name \"*.py\" | head -50 && echo \"---\" && ls -la /home/user/work/bugfix"
+}
+],
+[
+11.1,
+"read",
+{
+"filePath": "/home/user/work/bugfix/wordstat/core.py"
+}
+],
+[
+12.2,
+"read",
+{
+"filePath": "/home/user/work/bugfix/test_core.py"
+}
+],
+[
+12.2,
+"read",
+{
+"filePath": "/home/user/work/bugfix/wordstat/__init__.py"
+}
+],
+[
+23.7,
+"bash",
+{
+"command": "python3 -m pytest -q 2>&1 | tail -n 30 || python3 -m unittest -v 2>&1 | tail -n 30"
+}
+],
+[
+27.7,
+"bash",
+{
+"command": "pip install pytest 2>&1 | tail -n 2; python3 -m pytest -q 2>&1 | tail -n 30"
+}
+],
+[
+33.7,
+"bash",
+{
+"command": "pip install --user pytest 2>&1 | tail -n 2; python3 -m pytest -q 2>&1 | tail -n 30"
+}
+],
+[
+38.8,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport traceback\nimport test_core\nfails = 0\nfor name in dir(test_core):\n    if name.startswith(\"test_\"):\n        try:\n            getattr(test"
+}
+],
+[
+42.2,
+"edit",
+{
+"filePath": "/home/user/work/bugfix/wordstat/core.py"
+}
+],
+[
+44.3,
+"edit",
+{
+"filePath": "/home/user/work/bugfix/wordstat/core.py"
+}
+],
+[
+44.3,
+"edit",
+{
+"filePath": "/home/user/work/bugfix/wordstat/core.py"
+}
+],
+[
+48.6,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport traceback\nimport test_core\nfails = 0\nfor name in sorted(dir(test_core)):\n    if name.startswith(\"test_\"):\n        try:\n            geta"
+}
+],
+[
+55.7,
+"bash",
+{
+"command": "mkdir -p .tandem && cat > .tandem/laya.py <<'EOF'\nimport json, os, sys, urllib.request\nURL = os.environ.get(\"TANDEM_URL\", \"https://tandem.example\") + \"/v1/lay"
+}
+],
+[
+62.3,
+"bash",
+{
+"command": "git diff"
+}
+]
+]
+},
+"ut1_dupfinder": {
+"end_s": 214.9,
+"steps": [
+[
+29.6,
+"write",
+{
+"filePath": "/home/user/work/dupfinder/dupfinder.py"
+}
+],
+[
+44.6,
+"write",
+{
+"filePath": "/home/user/work/dupfinder/test_dupfinder.py"
+}
+],
+[
+51.1,
+"bash",
+{
+"command": "mkdir -p .tandem && python3 -m unittest test_dupfinder -v 2>&1 | tee .tandem/build.log"
+}
+],
+[
+58.7,
+"bash",
+{
+"command": "rm -rf /tmp/opencode/dupdemo && mkdir -p /tmp/opencode/dupdemo/sub && printf 'same content' > /tmp/opencode/dupdemo/a.txt && printf 'same content' > /tmp/openco"
+}
+],
+[
+69.7,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport sys\nsys.path.insert(0, \".tandem\")\nfrom laya import ask\ntexts = [\n \"command: dupfinder.py on tree with a.txt and sub/b.txt both 'same co"
+}
+],
+[
+75.9,
+"write",
+{
+"filePath": "/home/user/work/dupfinder/.tandem/laya.py"
+}
+],
+[
+81.7,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport sys\nsys.path.insert(0, \".tandem\")\nfrom laya import ask\ntexts = [\n \"command: dupfinder.py on tree with a.txt and sub/b.txt both 'same co"
+}
+],
+[
+92.0,
+"bash",
+{
+"command": "curl -s --max-time 30 \"${TANDEM_URL:-https://tandem.example}/v1/laya/ask\" -H 'Content-Type: application/json' -d '{\"question\":\"Does the actual output match th"
+}
+],
+[
+98.7,
+"bash",
+{
+"command": "curl -sv --max-time 20 \"${TANDEM_URL:-https://tandem.example}/v1/laya\" -o /dev/null 2>&1 | tail -n 15; echo \"curl_exit=$?\""
+}
+],
+[
+106.8,
+"bash",
+{
+"command": "ls -la /etc/ssl/certs/ca-certificates.crt 2>&1; ls /etc/ssl/certs | head -5; python3 -c \"import certifi; print(certifi.where())\" 2>&1"
+}
+],
+[
+112.7,
+"bash",
+{
+"command": "echo | openssl s_client -connect tandem.example:443 -servername tandem.example 2>/dev/null | openssl x509 -noout -issuer -subject -dates 2>&1"
+}
+],
+[
+117.9,
+"bash",
+{
+"command": "echo | openssl s_client -connect tandem.example:443 -servername tandem.example 2>/dev/null | grep -c \"BEGIN CERTIFICATE\""
+}
+],
+[
+133.9,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport json, subprocess, os\ntexts = [\n \"command: dupfinder.py on tree with a.txt and sub/b.txt both same content, c.txt unique\\nexpected: one "
+}
+],
+[
+150.7,
+"bash",
+{
+"command": "printf 'same content' | sha256sum && python3 - <<'EOF'\nimport json, subprocess, os\ntexts = [\n \"command: dupfinder.py on tree with a.txt and sub/b.txt both same "
+}
+],
+[
+164.3,
+"bash",
+{
+"command": "python3 - <<'EOF'\nimport json, subprocess, os\ntext = (\"expected: valid JSON with key duplicate_groups containing exactly one list of two paths \"\n        \"(a.txt"
+}
+]
+]
+},
+"ut1_todo": {
+"end_s": 455.0,
+"steps": [
+[
+30.2,
+"bash",
+{
+"command": "ls -la /home/user/work/todo; which node chromium chromium-browser google-chrome python3 2>/dev/null; node --version 2>/dev/null"
+}
+],
+[
+37.9,
+"bash",
+{
+"command": "which deno bun js d8 qjs nodejs 2>/dev/null; ls /usr/bin | grep -iE '^(node|deno|bun|js|d8)' ; python3 --version"
+}
+],
+[
+75.4,
+"write",
+{
+"filePath": "/home/user/work/todo/index.html"
+}
+],
+[
+93.7,
+"edit",
+{
+"filePath": "/home/user/work/todo/index.html"
+}
+],
+[
+101.3,
+"bash",
+{
+"command": "cd /home/user/work/todo && (python3 -m http.server 8765 >/dev/null 2>&1 &) && sleep 1 && curl -s -o /dev/null -w 'HTTP %{http_code}, %{size_download} byte"
+}
+],
+[
+101.5,
+"bash",
+{
+"command": "curl -sI --max-time 10 https://github.com 2>&1 | head -3; echo ---; curl -sI --max-time 10 https://tandem.example/v1/laya 2>&1 | head -3"
+}
+],
+[
+111.8,
+"bash",
+{
+"command": "mkdir -p /tmp/opencode/bin && curl -sL --max-time 60 -o /tmp/opencode/bin/bun.zip https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip && c"
+}
+],
+[
+114.4,
+"bash",
+{
+"command": "cd /tmp/opencode/bin && ls -la && python3 -c \"import zipfile; print(zipfile.ZipFile('bun.zip').namelist())\" 2>&1 | head -5"
+}
+],
+[
+116.8,
+"bash",
+{
+"command": "chmod +x /tmp/opencode/bin/bun-linux-x64/bun && /tmp/opencode/bin/bun-linux-x64/bun --version"
+}
+],
+[
+120.1,
+"bash",
+{
+"command": "uname -m; file /tmp/opencode/bin/bun-linux-x64/bun 2>/dev/null || head -c 100 /tmp/opencode/bin/bun-linux-x64/bun | od -c | head -3"
+}
+],
+[
+125.9,
+"bash",
+{
+"command": "cd /tmp/opencode/bin && curl -sL --max-time 60 -o bun-arm.zip https://github.com/oven-sh/bun/releases/latest/download/bun-linux-aarch64.zip && python3 -c \"impor"
+}
+],
+[
+205.1,
+"write",
+{
+"filePath": "/home/user/work/todo/.tandem/test.js"
+}
+],
+[
+213.4,
+"bash",
+{
+"command": "cd /home/user/work/todo && /tmp/opencode/bin/bun-linux-aarch64/bun .tandem/test.js > .tandem/run.log 2>&1; echo \"exit=$?\"; cat .tandem/run.log"
+}
+],
+[
+215.6,
+"write",
+{
+"filePath": "/home/user/work/todo/.tandem/laya.py"
+}
+],
+[
+228.7,
+"edit",
+{
+"filePath": "/home/user/work/todo/.tandem/test.js"
+}
+],
+[
+233.4,
+"edit",
+{
+"filePath": "/home/user/work/todo/.tandem/test.js"
+}
+],
+[
+236.9,
+"bash",
+{
+"command": "cd /home/user/work/todo && /tmp/opencode/bin/bun-linux-aarch64/bun .tandem/test.js > .tandem/run.log 2>&1; echo \"exit=$?\"; cat .tandem/run.log"
+}
+],
+[
+241.1,
+"bash",
+{
+"command": "cd /home/user/work/todo && python3 .tandem/laya.py \"This is a test run of a todo app (add, complete, delete, filter, localStorage persistence). Expected: "
+}
+],
+[
+249.3,
+"write",
+{
+"filePath": "/home/user/work/todo/.tandem/laya.py"
+}
+],
+[
+255.3,
+"bash",
+{
+"command": "cd /home/user/work/todo && python3 .tandem/laya.py \"This is a test run of a todo app (add, complete, delete, filter, localStorage persistence). Expected: "
+}
+],
+[
+259.3,
+"bash",
+{
+"command": "curl -s --max-time 30 -w '\\nHTTP %{http_code}\\n' https://tandem.example/v1/laya/ask -H 'Content-Type: application/json' -d '{\"question\":\"Is this a test?\",\"cho"
+}
+],
+[
+263.7,
+"bash",
+{
+"command": "curl -sv --max-time 20 https://tandem.example/v1/laya 2>&1 | tail -15"
+}
+],
+[
+273.0,
+"bash",
+{
+"command": "curl -sk --max-time 30 -w '\\nHTTP %{http_code}\\n' https://tandem.example/v1/laya/ask -H 'Content-Type: application/json' -d '{\"question\":\"Is this a test?\",\"ch"
+}
+],
+[
+276.2,
+"edit",
+{
+"filePath": "/home/user/work/todo/.tandem/laya.py"
+}
+],
+[
+279.7,
+"bash",
+{
+"command": "cd /home/user/work/todo && python3 .tandem/laya.py \"This is a test run of a todo app (add, complete, delete, filter, localStorage persistence). Expected: "
+}
+],
+[
+290.1,
+"bash",
+{
+"command": "cd /home/user/work/todo && python3 -c \"\nimport sys; sys.path.insert(0, '.tandem')\nfrom laya import ask\nlog = open('.tandem/run.log').read()\nv = ask('Count"
+}
+],
+[
+302.9,
+"bash",
+{
+"command": "cd /home/user/work/todo && python3 -c \"\nfrom html.parser import HTMLParser\nclass P(HTMLParser):\n    def __init__(self):\n        super().__init__(); self.s"
+}
+],
+[
+430.0,
+"bash",
+{
+"command": "pkill -f \"http.server 8765\" && echo \"server stopped\""
+}
+],
+[
+435.1,
+"bash",
+{
+"command": "pgrep -af \"http.server\" || echo \"no server running\""
+}
+]
+]
+}
+}

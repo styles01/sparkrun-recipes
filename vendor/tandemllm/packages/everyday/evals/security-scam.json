@@ -1,0 +1,19 @@
+{
+  "package": "security-scam",
+  "rubric": [
+    "Line one: a verdict (likely a scam, suspicious, likely genuine, cannot tell) with the strongest reason; then only the signs really present in the message.",
+    "Do-now steps in order (do not click, pay or install; contact the company through the number on the card or the official app; block; change passwords; call the bank fast if money went; keep screenshots).",
+    "An 'if you already clicked, paid or shared' path without shaming; the pattern named (romance, investment, tech-support call) where it applies.",
+    "Security questions get 3 to 5 steps with where the setting is, and the simplest habits (long unique passwords, a password manager, two-step login on email and bank first, updates).",
+    "Never asks for or accepts a password, code or card number; no invented phone numbers, URLs or company policies; one rule for next time."
+  ],
+  "prompts": [
+    {"id": "security-scam-1", "lang": "en", "text": "I got a call from 'my bank' saying there's fraud on my account and they need me to move my money to a safe account they'll set up. They knew my name and the last 4 digits of my card. Is this real?"},
+    {"id": "security-scam-2", "lang": "de", "text": "SMS: 'Hallo Mama, mein Handy ist kaputt, das ist meine neue Nummer. Kannst du mir kurz 850 Euro überweisen, ich erkläre es später.' Mein Sohn ist 24. Was soll ich tun?"},
+    {"id": "security-scam-3", "lang": "ar", "text": "وصلتني رسالة بريد إلكتروني من 'أرامكس' تقول إن طردي محتجز ويجب دفع 15 ريالًا عبر رابط. هل هذا احتيال؟"},
+    {"id": "security-scam-4", "lang": "en", "text": "I clicked a link in an email from 'PayPal' and entered my password before I realised. What do I do now?"},
+    {"id": "security-scam-5", "lang": "en", "text": "How do I set up good passwords and that two-step thing? I have about 30 accounts and use the same password for most of them. I'm not technical."},
+    {"id": "security-scam-6", "lang": "de", "text": "Ein Mann, den ich seit 3 Monaten online kenne, ist Ingenieur auf einer Ölplattform und braucht jetzt 2.000 Euro für ein Ticket, um mich zu besuchen. Meine Tochter sagt, das ist Betrug. Ist es das?"},
+    {"id": "security-scam-7", "lang": "en", "text": "A job offer by WhatsApp: 300 a day for liking videos, they want 50 as a 'registration fee' first. Real?"}
+  ]
+}

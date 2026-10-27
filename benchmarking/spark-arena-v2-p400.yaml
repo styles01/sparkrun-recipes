@@ -1,0 +1,45 @@
+# Spark Arena Benchmark Profile v2 + P2 measurement fix (2026-09-18)
+# Derived from @official/spark-arena-v2. Changes: tg 128→400 + exact_tg=true
+# (forces min_tokens=tg + ignore_eos → steady-state decode, no short-completion
+# artifacts; see ViC305 2026-09-17 self-correction). Same cells + schedule.
+framework: llama-benchy
+metadata:
+  description: Spark Arena v2 + exact-tg 400 (P2 measurement fix)
+args:
+  depth: [ 0, 4096, 8192, 16384, 32768, 65535, 100000 ]
+  pp: [ 2048 ]
+  tg: [ 400 ]
+  exact_tg: true
+  concurrency: [ 1, 2, 5, 10 ]
+  prefix_caching: true
+  runs: 3
+
+schedule:
+  - { depth: 8192, concurrency: 5 }
+  - { depth: 4096, concurrency: 5 }
+  - { depth: 8192, concurrency: 10 }
+  - { depth: 8192, concurrency: 2 }
+  - { depth: 4096, concurrency: 2 }
+  - { depth: 100000, concurrency: 5 }
+  - { depth: 100000, concurrency: 2 }
+  - { depth: 65535, concurrency: 10 }
+  - { depth: 65535, concurrency: 1 }
+  - { depth: 0, concurrency: 1 }
+  - { depth: 65535, concurrency: 5 }
+  - { depth: 32768, concurrency: 2 }
+  - { depth: 4096, concurrency: 10 }
+  - { depth: 16384, concurrency: 1 }
+  - { depth: 8192, concurrency: 1 }
+  - { depth: 32768, concurrency: 5 }
+  - { depth: 0, concurrency: 10 }
+  - { depth: 16384, concurrency: 10 }
+  - { depth: 32768, concurrency: 1 }
+  - { depth: 0, concurrency: 5 }
+  - { depth: 16384, concurrency: 5 }
+  - { depth: 100000, concurrency: 1 }
+  - { depth: 32768, concurrency: 10 }
+  - { depth: 16384, concurrency: 2 }
+  - { depth: 0, concurrency: 2 }
+  - { depth: 65535, concurrency: 2 }
+  - { depth: 4096, concurrency: 1 }
+  - { depth: 100000, concurrency: 10 }

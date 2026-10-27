@@ -1,0 +1,101 @@
+# qwen38-spark-engine alerts -- the plain rule file promtool tests against. The
+# PrometheusRule CR (qse-engine-rules.yaml) carries the same groups, byte for byte below `spec:`;
+# tests/test_monitoring.py keeps the two equal.
+groups:
+  - name: qse-engine
+    rules:
+      # Down = the PUBLIC liveness page (/metrics/up, job qse-engine-health) cannot be scraped. Not
+      # the metrics page: a wrong or missing token makes that one 401 while the engine is fine,
+      # which is QseMetricsScrapeFailing's business, not a page. A benchmark hold stops :8000 on
+      # purpose for up to ~2 h; ops/hold.sh keeps ~/qwen38-spark-engine/.watchdog.off fresh for the
+      # whole hold, and dgx-exporter publishes that as dgx_qse_hold_active (a patch in this
+      # directory) -- a fresh file mutes the page, a hold that died stops refreshing it and the
+      # page comes back within minutes.
+      - alert: QseEngineDown
+        expr: |
+          (up{job="qse-engine-health"} == 0)
+          unless on () (dgx_qse_hold_active == 1)
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: 'qwen38-spark-engine on DGX :8000 unreachable for >5m (no hold running)'
+          description: >-
+            Prometheus cannot read the engine's public /metrics/up through the metrics proxy. Walk the
+            path: (1) `ssh <engine-host> curl -s localhost:8000/health` -- is the engine up (a restart takes
+            ~100 s to load); (2) `ssh <engine-host> tail -50 ~/qwen38-spark-engine/logs/engine.log`;
+            (3) the tunnel service on the proxy host; (4) `curl -s
+            localhost:19000/metrics/qse-engine-up` on the proxy host. The watchdog is off in this setup:
+            a dead engine stays dead until someone runs ops/start.sh.
+
+      # the target vanished from Prometheus altogether (a ServiceMonitor edit, a renamed path)
+      - alert: QseEngineUnmonitored
+        expr: absent(up{job="qse-engine-health"})
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'qwen38-spark-engine is not a scrape target'
+          description: >-
+            No up{job="qse-engine-health"} series: the qse-engine ServiceMonitor or its nginx path
+            on the proxy host is gone. See ops/monitoring/ in the engine repository.
+
+      # the engine answers, its metrics page does not: the token Secret is wrong or missing
+      - alert: QseMetricsScrapeFailing
+        expr: |
+          (up{job="qse-engine"} == 0)
+          and on (instance) (up{job="qse-engine-health"} == 1)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'qwen38-spark-engine is up but /metrics cannot be scraped (token?)'
+          description: >-
+            The public liveness page answers and the metrics page does not -- almost always the
+            k8s Secret qse-metrics-token no longer matches QSE_METRICS_TOKEN in
+            ~/.qwen38-spark-engine/secrets.env on the box (rotated with ops/make-secrets.sh
+            --rotate?). The target page in Prometheus shows the 401.
+
+      - alert: QseEngineErrors
+        expr: sum(rate(qse_errors_total[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'qwen38-spark-engine generations are ending in errors'
+          description: >-
+            qse_errors_total is rising. The [req] lines with finish=error and their tracebacks
+            are in ~/qwen38-spark-engine/logs/engine.log, and live in the dashboard's Dev tab.
+
+      - alert: QseQueueNearFull
+        expr: qse_requests_waiting > 6
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'qwen38-spark-engine queue near full ({{ $value }} waiting of 8)'
+          description: >-
+            The engine serves one sequence; the ninth caller gets a 503. A long agent run holds
+            the engine -- see the dashboard's requests list for what is running.
+
+      - alert: QseLedgerDropping
+        expr: increase(qse_usage_ledger_dropped_total[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: 'the usage ledger is losing rows'
+          description: >-
+            Rows were dropped (a full queue) or failed to write (the disk). `[ledger]` lines in the
+            engine log say which; `df -h ~` on the box -- the root disk was 88 % full in 2026-09.
+
+      # a hold that never ends keeps QseEngineDown muted: longer than the longest gate is a fault
+      - alert: QseHoldStuck
+        expr: dgx_qse_hold_active == 1
+        for: 150m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'a benchmark hold on the DGX has been open for >150m'
+          description: >-
+            ~/qwen38-spark-engine/.watchdog.off has been kept fresh for 2.5 h. Check `pgrep -af
+            hold.sh` on the box; while it lasts, QseEngineDown cannot page.

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /v1/conductor/events: the session monitor's decisions, newest first",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "decisions.schema.json#/$defs/event"
+      }
+    },
+    "monitor": {
+      "type": "boolean",
+      "description": "a session monitor runs on this server (--conductor shadow or on)"
+    }
+  },
+  "required": [
+    "contract_version",
+    "events",
+    "monitor"
+  ],
+  "additionalProperties": false
+}

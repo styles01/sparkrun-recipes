@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /v1/conductor/packages/catalog: every package with its category, the tokens of the text that goes in, its limit, the classes that list it and each profile's library switch (G2)",
+  "type": "object",
+  "required": ["contract_version", "version", "router_version", "tokenizer", "limits", "library", "packages"],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {"type": "string", "enum": ["1.0"]},
+    "version": {"type": "integer", "description": "the packages document's version"},
+    "router_version": {"type": "integer"},
+    "tokenizer": {"enum": ["engine", "estimate"], "description": "engine: counted on the engine's tokenizer; estimate: 3.5 characters a token (no tokenizer loaded)"},
+    "limits": {
+      "type": "object",
+      "required": ["library", "library_card"],
+      "additionalProperties": false,
+      "properties": {"library": {"type": "integer"}, "library_card": {"type": "integer"}}
+    },
+    "library": {
+      "type": "object",
+      "required": ["card", "profiles"],
+      "additionalProperties": false,
+      "properties": {
+        "card": {"type": ["string", "null"]},
+        "profiles": {"type": "object", "additionalProperties": {"enum": ["off", "shadow", "on"]}}
+      }
+    },
+    "packages": {"type": "object", "additionalProperties": {"$ref": "#/$defs/entry"}}
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["category", "source", "path", "available", "error", "tokens", "body_tokens", "reference_tokens", "chars", "cut", "limit", "limit_source", "over", "classes", "profiles", "fits"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {"enum": ["package", "task_skill", "test_skill", "card", "library"]},
+        "source": {"type": "string"},
+        "path": {"type": ["string", "null"]},
+        "available": {"type": "boolean"},
+        "error": {"type": ["string", "null"]},
+        "tokens": {"type": "integer", "description": "the text that goes in"},
+        "body_tokens": {"type": "integer", "description": "the whole text before the cut (a library skill's part before ## Reference)"},
+        "reference_tokens": {"type": "integer"},
+        "chars": {"type": "integer"},
+        "cut": {"type": "boolean"},
+        "limit": {"type": "integer"},
+        "limit_source": {"enum": ["house", "max_tokens"]},
+        "over": {"type": "boolean"},
+        "classes": {"type": "array", "items": {"type": "string"}},
+        "profiles": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "fits": {"type": ["array", "null"], "items": {"type": "string"}}
+      }
+    }
+  }
+}

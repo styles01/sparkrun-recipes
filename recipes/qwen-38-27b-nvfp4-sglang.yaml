@@ -1,0 +1,143 @@
+recipe_version: "4"
+name: qwen3.8-27b-nvfp4-sglang
+description: "Qwen3.8 27B NVFP4 on SGLang for DGX Spark (GB10, aarch64). Three engines: EAGLE/MTP (default chat), DSpark (code peak), DFlash2 (code + essay win). Opinionated, measured-on-device configs."
+model: RadixArk/Qwen3.8-27B-NVFP4
+runtime: sglang
+container: lmsysorg/sglang:qwen38-27b
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-17"
+  updated: "2026-08-20"
+  tags:
+    - qwen
+    - qwen3.8
+    - 27b
+    - nvfp4
+    - sglang
+    - eagle
+    - dspark
+    - dflash2
+    - gb10
+    - speculative-decoding
+  runbook: runbooks/qwen-38-27b-sglang.md
+  source: https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# CRITICAL: SGLang-specific image. NOT vLLM. GB10-specific optimizations baked in.
+# Ships with modelopt + NVFP4 kernels for sm_121a.
+# The lmsysorg/sglang:qwen38-27b image is multi-arch (includes arm64).
+# DFlash2 requires a derived image built from patch/ on first run (auto-builds).
+
+defaults:
+  port: 8888
+  host: 0.0.0.0
+  model_path: /models
+  tensor_parallel: 1
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.90
+  max_model_len: 262144
+  max_num_seqs: 10
+  kv_cache_dtype: fp8_e4m3
+  attention_backend: flashinfer
+  served_model_name: "qwen3.8-27b-sglang"
+  # CPU pinning: GB10 big.LITTLE — pin to ten 3.9 GHz Cortex-X5 cores
+  cpuset_cpus: "5-9,15-19"
+
+env:
+  FLASHINFER_CUDA_ARCH_LIST: 12.1a
+  FLASHINFER_DISABLE_VERSION_CHECK: "1"
+  SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN: "1"
+
+# NOTES:
+# - Three engine variants below. All use the same base image except DFlash2 (auto-builds).
+# - Model: RadixArk/Qwen3.8-27B-NVFP4 (~22 GB, NOT unsloth/...)
+# - YaRN: native 262K context, extendable to 1M via YARN=1 (MTP-only; DSpark/DFlash2 leak)
+# - GDN state pool: concurrency × 4 slots (default 10 → 40 slots)
+# - KV cache: ~32.8 KB/token, 1M sequence ≈ 33 GB
+# - Thinking ON by default; tool calling via qwen3_coder parser
+# - CPU pinning to X5 cores measured +2-7% decode vs letting scheduler land on A725
+
+# Engine 1: EAGLE/MTP (default, best for long-form writing)
+command_mtp: |
+  python3 -m sglang.launch_server \
+    --model-path {model_path} \
+    --served-model-name {served_model_name} \
+    --host {host} --port {port} \
+    --speculative-algorithm EAGLE \
+    --speculative-num-steps 3 \
+    --speculative-eagle-topk 1 \
+    --speculative-num-draft-tokens 4 \
+    --attention-backend {attention_backend} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --mem-fraction-static {gpu_memory_utilization} \
+    --context-length {max_model_len} \
+    --max-running-requests {max_num_seqs} \
+    --mamba-ssm-dtype bfloat16 \
+    --chunked-prefill-size 8192 \
+    --reasoning-parser qwen3 \
+    --tool-call-parser qwen3_coder \
+    --trust-remote-code
+
+# Engine 2: DSpark (best for code/agents/tools)
+command_dspark: |
+  python3 -m sglang.launch_server \
+    --model-path {model_path} \
+    --served-model-name {served_model_name} \
+    --host {host} --port {port} \
+    --speculative-algorithm EAGLE \
+    --speculative-draft-model-path /models-draft \
+    --speculative-dspark-block-size 7 \
+    --speculative-num-draft-tokens 8 \
+    --attention-backend {attention_backend} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --mem-fraction-static {gpu_memory_utilization} \
+    --context-length {max_model_len} \
+    --max-running-requests {max_num_seqs} \
+    --mamba-ssm-dtype bfloat16 \
+    --chunked-prefill-size 8192 \
+    --num-continuous-decode-steps 2 \
+    --torch-compile \
+    --enable-decode-graph-caps \
+    --reasoning-parser qwen3 \
+    --tool-call-parser qwen3_coder \
+    --trust-remote-code
+
+# Engine 3: DFlash2 (best for code + long-form writing)
+# NOTE: Requires derived image (auto-built from patch/ on first run).
+#       See runbook for build instructions.
+command_dflash2: |
+  python3 -m sglang.launch_server \
+    --model-path {model_path} \
+    --served-model-name {served_model_name} \
+    --host {host} --port {port} \
+    --speculative-algorithm DFLASH \
+    --speculative-draft-model-path /models-draft-dflash2 \
+    --speculative-num-draft-tokens 8 \
+    --attention-backend {attention_backend} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --mem-fraction-static {gpu_memory_utilization} \
+    --context-length {max_model_len} \
+    --max-running-requests {max_num_seqs} \
+    --mamba-ssm-dtype bfloat16 \
+    --chunked-prefill-size 8192 \
+    --torch-compile \
+    --enable-decode-graph-caps \
+    --reasoning-parser qwen3 \
+    --tool-call-parser qwen3_coder \
+    --trust-remote-code
+
+benchmark:
+  framework: sglang-benchy
+  pp: [2048]
+  tg: [128]
+  depth: [0, 4096, 8192, 16384, 32768, 65535, 100000]
+  concurrency: [1, 2, 5, 10]
+  prefix_caching: true
+  runs: 3

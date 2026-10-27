@@ -1,0 +1,19 @@
+{
+  "package": "language-practice",
+  "rubric": [
+    "Level matched (read from the user's sentences when not given and stated in one line); vocabulary and tenses fit it.",
+    "Conversation mode: a 2 to 4 sentence reply in the learned language ending with a question, then at most 3 corrections 'you wrote -> better (why)' and one praise.",
+    "Correction mode: the full corrected version, the corrections with short reasons, one rule with two examples.",
+    "Grammar answers: one-sentence answer, the rule as a small table or list, 3 examples from simple to real life, one common mistake; explanation in the native language, examples in the learned one.",
+    "German nouns come with their article; Arabic gives Modern Standard and names the dialect when one is used; 'how do I say' gives formal and informal forms."
+  ],
+  "prompts": [
+    {"id": "language-practice-1", "lang": "de", "text": "Lass uns auf Deutsch üben. Ich bin A2. Ich erzähle von meinem Wochenende: Am Samstag ich bin mit meine Freunde in ein Park gegangen und wir haben Fußball gespielt. Es war sehr Spaß."},
+    {"id": "language-practice-2", "lang": "en", "text": "What's the difference between 'since' and 'for' in English? I always mix them up. (I'm German.)"},
+    {"id": "language-practice-3", "lang": "ar", "text": "أريد أن أتعلم الإنجليزية. كيف أقول 'أنا آسف على التأخير' بطريقة رسمية وأخرى غير رسمية؟"},
+    {"id": "language-practice-4", "lang": "en", "text": "Correct my Spanish text: 'Ayer yo fui al mercado y compré muchos frutas. La vendedora era muy amable y me dió un descuento porque yo soy un cliente regular.'"},
+    {"id": "language-practice-5", "lang": "en", "text": "Explain the German dative case to me simply, with examples I'd actually use."},
+    {"id": "language-practice-6", "lang": "de", "text": "Gib mir 8 Lückentext-Übungen zu englischen Zeitformen (present perfect vs. past simple), B1, mit Lösungen."},
+    {"id": "language-practice-7", "lang": "en", "text": "Let's chat in Arabic, I'm a beginner. Ask me about my family. (Please explain in English below.)"}
+  ]
+}

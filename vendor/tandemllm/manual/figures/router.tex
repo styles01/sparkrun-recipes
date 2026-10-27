@@ -1,0 +1,22 @@
+% The conductor's router: from a request to a plan.
+\begin{tikzpicture}[
+    q/.style={draw=slate, fill=paper, shape=rounded rectangle, font=\sffamily\scriptsize,
+      align=center, inner sep=3pt, minimum height=9mm, minimum width=24mm}]
+  \node[quiet, minimum width=20mm] (req) at (0,0) {request};
+  \node[box, text width=25mm] (prof) at (3.4,0) {profile\\[-1pt]{\scriptsize header, client, default}};
+  \node[q] (side) at (7.2,0) {a side request's\\shape?};
+  \node[quiet, text width=24mm] (small) at (11.2,0) {small plan\\[-1pt]{\scriptsize no note, capped output}};
+  \node[q] (new) at (7.2,-2) {a new user\\message?};
+  \node[box, text width=30mm] (cls) at (7.2,-4) {Qwen classifies\\[-1pt]{\scriptsize raw, thinking off,}\\[-3pt]{\scriptsize choice grammar}};
+  \node[box, text width=25mm] (keep) at (3.0,-4) {keep the session's\\class (first turn:\\the profile's default)};
+  \node[hot, text width=36mm] (plan) at (5.1,-6.2) {plan\\[-1pt]{\scriptsize effort, cap, note, packages}};
+  \draw[flow] (req) -- (prof);
+  \draw[flow] (prof) -- (side);
+  \draw[flow] (side) -- node[above, lbl] {yes} (small);
+  \draw[flow] (side) -- node[right, lbl] {no} (new);
+  \draw[flow] (new) -- node[right, lbl] {yes} (cls);
+  \draw[flow] (new.west) -| node[pos=0.25, above, lbl] {no: a tool turn} (keep.north);
+  \draw[flow] (cls) -- node[above, lbl] {below} node[below, lbl] {0.45} (keep);
+  \draw[flow] (cls.south) |- node[pos=0.3, right, lbl] {class} (plan.east);
+  \draw[flow] (keep.south) |- (plan.west);
+\end{tikzpicture}

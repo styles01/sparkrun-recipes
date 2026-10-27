@@ -1,0 +1,19 @@
+{
+ "shots": {
+  "s1-tone.png": 321.1,
+  "s2-centre-crop.png": 385.0,
+  "s2-centre-ref.png": 402.2,
+  "s2-path.png": 349.9,
+  "s3-ribbon.png": 436.3,
+  "s4-animated.png": 524.2
+ },
+ "check_output": "sketchcheck  {run}/shots/s4-animated.png   (style: spiral)\n  crop x,y,w,h      400,48,1600,2384\n  gain              1.06   (drawing darkness x gain = target; line art carries tone by spacing)\n  tone_corr         0.981   (>= 0.85; per scale [4, 8, 16] [0.978, 0.98, 0.984])\n  tone_mae          0.040   (<= 0.1; mean darkness sketch 0.388 vs target 0.386)\n  edge_corr         0.931   (>= 0.35; contours/structure in the right places)\n  band              0.0158  (<= 0.02; rows 0.0158 cols 0.0071)\n  paper_pct         0.3    (0.0-100.0; target has 16.6)\n  texture           0.1591  (>= 0.05)\n  blob_pct          0.00   (<= 1.0; solid black areas)\n  worst regions (fix the first one next):\n    1. r3c6: too light by 0.08 (upper-middle right, reference is mid-tone, smooth)\n    2. r3c1: too light by 0.06 (upper-middle left, reference is mid-tone, smooth)\n    3. r7c4: too dark by 0.06 (lower center-right, reference is mid-tone, detailed)\n    4. r1c2: too light by 0.06 (top left, reference is light, smooth)\n    5. r3c2: too light by 0.05 (upper-middle left, reference is mid-tone, smooth)\n  heatmap           {run}/shots/s4-animated.check.png\nRESULT: PASS\n",
+ "files": [
+  "css",
+  "index.html",
+  "js",
+  "opencode.json",
+  "ref",
+  "shots"
+ ]
+}

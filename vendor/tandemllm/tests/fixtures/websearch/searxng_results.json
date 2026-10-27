@@ -1,0 +1,144 @@
+{
+ "query": "lit element",
+ "number_of_results": 0,
+ "results": [
+  {
+   "url": "https://lit.dev/docs/components/overview/",
+   "title": "Components overview – Lit",
+   "content": "A Lit component is a reusable piece of UI. You can think of a Lit component as a container that has some state and that displays a UI based on its state.",
+   "engine": "bing",
+   "template": "default.html",
+   "parsed_url": [
+    "https:",
+    "",
+    "lit.dev"
+   ],
+   "img_src": "",
+   "thumbnail": "",
+   "priority": "",
+   "engines": [
+    "bing",
+    "brave"
+   ],
+   "positions": [
+    1
+   ],
+   "score": 1.0,
+   "category": "general",
+   "publishedDate": null,
+   "iframe_src": null
+  },
+  {
+   "url": "https://github.com/lit/lit",
+   "title": "GitHub - lit/lit: Lit is a simple library for building fast, lightweight web components.",
+   "content": "Lit is a simple library for building fast, lightweight web components.",
+   "engine": "brave",
+   "template": "default.html",
+   "parsed_url": [
+    "https:",
+    "",
+    "github.com"
+   ],
+   "img_src": "",
+   "thumbnail": "",
+   "priority": "",
+   "engines": [
+    "brave"
+   ],
+   "positions": [
+    1
+   ],
+   "score": 1.0,
+   "category": "general",
+   "publishedDate": "2026-09-30T00:00:00",
+   "iframe_src": null
+  },
+  {
+   "url": "https://lit.dev/docs/components/overview",
+   "title": "Components overview – Lit (duplicate)",
+   "content": "The same page with no trailing slash.",
+   "engine": "duckduckgo",
+   "template": "default.html",
+   "parsed_url": [
+    "https:",
+    "",
+    "lit.dev"
+   ],
+   "img_src": "",
+   "thumbnail": "",
+   "priority": "",
+   "engines": [
+    "duckduckgo"
+   ],
+   "positions": [
+    1
+   ],
+   "score": 1.0,
+   "category": "general",
+   "publishedDate": null,
+   "iframe_src": null
+  },
+  {
+   "url": "ftp://mirror.example/lit.tar.gz",
+   "title": "A mirror",
+   "content": "not a web page",
+   "engine": "bing",
+   "template": "default.html",
+   "parsed_url": [
+    "ftp:",
+    "",
+    "mirror.example"
+   ],
+   "img_src": "",
+   "thumbnail": "",
+   "priority": "",
+   "engines": [
+    "bing"
+   ],
+   "positions": [
+    1
+   ],
+   "score": 1.0,
+   "category": "general",
+   "publishedDate": null,
+   "iframe_src": null
+  },
+  {
+   "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_components",
+   "title": "Web Components - Web APIs | MDN",
+   "content": "Web Components is a suite of different technologies allowing you to create reusable custom elements.",
+   "engine": "wikipedia",
+   "template": "default.html",
+   "parsed_url": [
+    "https:",
+    "",
+    "developer.mozilla.org"
+   ],
+   "img_src": "",
+   "thumbnail": "",
+   "priority": "",
+   "engines": [
+    "wikipedia"
+   ],
+   "positions": [
+    1
+   ],
+   "score": 1.0,
+   "category": "general",
+   "publishedDate": null,
+   "iframe_src": null
+  }
+ ],
+ "answers": [],
+ "corrections": [],
+ "infoboxes": [],
+ "suggestions": [
+  "lit element tutorial"
+ ],
+ "unresponsive_engines": [
+  [
+   "google",
+   "Suspended: access denied"
+  ]
+ ]
+}

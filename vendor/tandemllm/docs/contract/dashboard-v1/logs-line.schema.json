@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qwen38-spark-engine/contract/dashboard-v1/logs-line.schema.json",
+  "title": "one `event: log` data payload of GET /v1/dashboard/logs?follow=1",
+  "type": "object",
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ts": {
+      "type": "string"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "warning",
+        "error"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "description": "the line's bracket tag, an open set: req, server, cache, drafter, think, ledger, body, http, ...; stdout / stderr for an untagged line"
+    },
+    "msg": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "seq",
+    "ts",
+    "level",
+    "source",
+    "msg",
+    "request_id"
+  ],
+  "additionalProperties": false
+}

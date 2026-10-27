@@ -1,0 +1,52 @@
+% The Performance view's Live panel as an instrument readout. The numbered marks are
+% explained in the caption. The figures shown are examples, not measurements.
+\begin{tikzpicture}[x=1mm, y=1mm, font=\sffamily\scriptsize,
+    seg/.style={minimum height=2.6mm, inner sep=0pt, outer sep=0pt},
+    callout/.style={circle, draw=cobalt, fill=white, text=cobalt, font=\sffamily\bfseries\scriptsize,
+      inner sep=1pt, minimum size=4.2mm}]
+  % the panel
+  \node[panel, anchor=north west, minimum width=136mm, minimum height=76mm] (p) at (0,0) {};
+  % the state line
+  \node[anchor=west, font=\sffamily\small, text=ink] at (4,-5) {\textbf{Thinking} \quad 49.1 tok/s \quad 4,812 tokens so far};
+  \node[anchor=east, text=slate] at (126,-5) {streaming $\cdot$ 4/s};
+  \node[callout] at (132,-5) {1};
+  \draw[rule] (4,-8.5) -- (132,-8.5);
+  % the two big figures with sparklines
+  \node[anchor=north west, readout] at (4,-10) {49.1};
+  \node[anchor=north west, unit] at (4,-17) {decode tok/s};
+  \draw[cobalt, thick] (26,-17) -- (30,-14) -- (34,-15) -- (38,-12) -- (42,-13.5) -- (46,-11) -- (50,-12) -- (54,-11.5) -- (58,-13) -- (62,-11.5);
+  \node[anchor=north west, unit] at (26,-17.5) {last 5 minutes};
+  \node[anchor=north west, readout] at (70,-10) {742};
+  \node[anchor=north west, unit] at (70,-17) {prefill tok/s};
+  \draw[cobalt, thick] (90,-16) -- (94,-12) -- (98,-12.5) -- (102,-11) -- (106,-16) -- (110,-16) -- (114,-11.5) -- (118,-12) -- (122,-13) -- (126,-12.5);
+  \node[anchor=north west, unit] at (90,-17.5) {last 5 minutes};
+  \node[callout] at (132,-13) {2};
+  % tokens per round and ms per round
+  \node[anchor=west, text=ink] at (4,-23.5) {4.6 tokens a round \quad 93 ms a round \quad {\color{slate} over the last second}};
+  \node[callout] at (132,-23.5) {3};
+  \draw[rule] (4,-26.5) -- (132,-26.5);
+  % one request in flight: the lane
+  \node[anchor=west, text=ink] at (4,-30.5) {\textbf{chatcmpl-9c2e} \quad opencode \quad coding \quad thinking 3,900 + content 912};
+  \node[anchor=east, text=slate] at (126,-30.5) {TTFT 1.8 s};
+  \node[callout] at (132,-32.5) {4};
+  % the timeline strip, one segment per state
+  \node[seg, fill=slate!35, minimum width=14mm, anchor=west] at (4,-35) {};
+  \node[seg, fill=cobalt!45, minimum width=54mm, anchor=west] at (18,-35) {};
+  \node[seg, fill=cobalt, minimum width=26mm, anchor=west] at (72,-35) {};
+  \node[seg, fill=signal!70, minimum width=10mm, anchor=west] at (98,-35) {};
+  \node[unit, anchor=north] at (11,-36.5) {prefill};
+  \node[unit, anchor=north] at (45,-36.5) {thinking};
+  \node[unit, anchor=north] at (85,-36.5) {writing};
+  \node[unit, anchor=north] at (103,-36.5) {tool call};
+  \node[anchor=west, text=slate] at (4,-42) {› writing render.js, 211 lines so far \qquad continues chatcmpl-7f3a after 8.4 s, client ran bash};
+  \node[callout] at (132,-42) {5};
+  \draw[rule] (4,-45.5) -- (132,-45.5);
+  % the last requests
+  \node[anchor=west, unit] at (4,-48.5) {last 20 requests};
+  \node[callout] at (132,-56) {6};
+  \node[anchor=west, text=ink] at (4,-52.5) {\textcolor{moss}{\rule{1.6mm}{1.6mm}}\; stop after 1,204 tokens, 48.7 tok/s, cache \texttt{end}};
+  \node[anchor=west, text=ink] at (4,-56.5) {\textcolor{signal}{\rule{1.6mm}{1.6mm}}\; abandoned by the client after 73 s of silent prefill, 0 tokens sent};
+  \node[anchor=west, text=ink] at (4,-60.5) {\textcolor{moss}{\rule{1.6mm}{1.6mm}}\; tool\_calls after 388 tokens, 51.2 tok/s, side lane};
+  \node[anchor=west, text=ink] at (4,-64.5) {\textcolor{signal!60!yellow}{\rule{1.6mm}{1.6mm}}\; refused: queue full (503, Retry-After 5)};
+  \node[anchor=west, unit] at (4,-70.5) {red: abandoned, failed, timed out, cancelled \quad amber: refused, rejected};
+\end{tikzpicture}

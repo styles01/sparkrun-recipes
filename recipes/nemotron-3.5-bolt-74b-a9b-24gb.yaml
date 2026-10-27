@@ -1,0 +1,49 @@
+recipe_version: "1"
+name: nemotron-3.5-bolt-74b-a9b-24gb
+description: "NVIDIA Nemotron 3.5 Bolt 74B-A9B 24GB (IQ2 2-bit QAT) on 1x DGX Spark — official NVIDIA recipe: b12x linear+moe backends, DFlash/LiLiCorr x7, Mamba-2 FlashInfer, C-RADIO vision, 262K ctx"
+model: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB
+runtime: vllm
+container: vllm/vllm-openai:nightly-77154ca6116ae34cbfe314beef1016bde9b63989
+drafter:
+  model: nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr
+
+executor_config:
+  entrypoint: ""
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+
+command: |
+  pip install -q b12x "vllm[b12x]" && vllm download-kernels && \
+  curl -fsSL https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/resolve/main/ultra_v3_reasoning_parser.py -o /cache/huggingface/ultra_v3_reasoning_parser.py && \
+  export VLLM_USE_V2_MODEL_RUNNER=1 && \
+  vllm serve nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB \
+    --trust-remote-code \
+    --load-format auto \
+    --tensor-parallel-size 1 \
+    --gpu-memory-utilization 0.90 \
+    --max-model-len 262144 \
+    --max-num-seqs 1 \
+    --enable-chunked-prefill \
+    --kv-cache-dtype fp8 \
+    --linear-backend b12x \
+    --moe-backend b12x \
+    --attention-backend FLASHINFER \
+    --mamba-backend flashinfer \
+    --mamba-ssm-cache-dtype bfloat16 \
+    --mamba-cache-dtype bfloat16 \
+    --mamba-cache-mode align \
+    --seed 42 \
+    --limit-mm-per-prompt '{"video":1,"image":1}' \
+    --video-pruning-rate 0.5 \
+    --media-io-kwargs '{"video":{"fps":2,"num_frames":256}}' \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_coder \
+    --reasoning-parser-plugin /cache/huggingface/ultra_v3_reasoning_parser.py \
+    --reasoning-parser ultra_v3 \
+    --speculative-config '{"method":"dflash","model":"nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-LiLiCorr","num_speculative_tokens":7,"rejection_sample_method":"standard","attention_backend":"FLASHINFER","draft_load_config":{"load_format":"auto"}}'
+
+metadata:
+  author: styles01
+  tags: [nemotron, nvidia, bolt, iq2, mamba, latentmoe, dflash, spark, gb10, model-drop-2026-10]

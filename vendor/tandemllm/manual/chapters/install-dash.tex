@@ -1,0 +1,101 @@
+\chapter{The dashboard and proxy on their own}\label{ch:install-dash}
+
+The dashboard\index{dashboard} also runs without the engine, in front of any OpenAI-compatible engine or cloud API. Clients send their requests to one address; the proxy\index{proxy} routes each one by its model id to the backend that serves it, copies the answer back byte for byte, and records tokens, time to first token, decode speed, cached tokens and cost in one ledger. It needs Python 3.11 or newer and one package, \code{cryptography}. No GPU, no torch.
+
+\section{Installing from a checkout}
+
+\begin{shell}
+git clone https://github.com/0xBakeer/TandemLLM.git && cd TandemLLM
+pip install '.[host]'      # the host extra adds psutil and NVML for the System view
+tandem-dash                # http://127.0.0.1:8080/dashboard/ opens on Setup
+\end{shell}
+
+The distribution is called \code{tandemllm}. Its \code{host} extra adds \code{psutil} and \code{nvidia-ml-py}, which the System view uses to read the machine; without them the collector falls back to \code{/proc} and \code{nvidia-smi}. The package is not on PyPI; install it from the checkout, or build the wheel with \code{python -m build --wheel}. \code{python -m proxy} in a checkout does the same as \code{tandem-dash} without installing anything but \code{cryptography}.
+
+The page opens on Setup\index{Setup screen} while no backend exists: add one, test the connection, save. The panels that only an engine fills (caches, speculation, the engine side of the conductor) say that this server has no engine.
+
+\section{The tandem-dash command}\index{tandem-dash}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The subcommands of \texttt{tandem-dash}.}\label{tab:tandem-dash}
+\begin{tabularx}{\linewidth}{@{}L{.3\linewidth}Y@{}}
+\toprule
+\hd{command} & \hd{what it does} \\
+\midrule
+\code{tandem-dash}, \code{tandem-dash serve} & the server: the proxy, the dashboard and the ledger; every flag of Table~\ref{tab:ref-proxy-flags} \\
+\code{tandem-dash check} & reads the environment and a copy of the config database through the schema and prints what would run: backends, key hints, locked fields, routing rules, the listen address. Writes nothing; exits 1 on an error that names the variable \\
+\code{tandem-dash secrets init} & makes the master key file beside the config database (mode 0600) when no master key answers; \code{secrets status} says which source answers \\
+\code{tandem-dash backends list} & one line per backend, from a copy of the database \\
+\code{tandem-dash hostcollect} & the remote host collector (Section~\ref{sec:hostcollect}) \\
+\code{tandem-dash launch vllm|sglang} & starts vLLM or SGLang with TandemLLM's plugin and registers it as a backend (Section~\ref{sec:launch}) \\
+\code{tandem-dash version} & the installed version \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{A first backend}
+
+A backend can be added in the GUI or declared in an env file. The file form suits a headless machine or a container. A local vLLM:
+
+\begin{shell}
+cat > dash.env <<'EOF'
+TANDEM_BACKENDS=vllm1
+TANDEM_BACKEND_VLLM1_KIND=vllm
+TANDEM_BACKEND_VLLM1_URL=http://127.0.0.1:8100/v1
+EOF
+tandem-dash check --env-file dash.env      # prints what would run, writes nothing
+tandem-dash serve --env-file dash.env
+\end{shell}
+
+A cloud API, with the key in the environment, where it stays in memory and is never written to the database:
+
+\begin{shell}
+printf 'TANDEM_BACKENDS=deepseek\nTANDEM_BACKEND_DEEPSEEK_KIND=deepseek\nTANDEM_BACKEND_DEEPSEEK_KEY=%s\n' \
+    "$DEEPSEEK_API_KEY" > dash.env && chmod 600 dash.env
+tandem-dash serve --env-file dash.env &
+curl -s localhost:8080/v1/chat/completions -H 'Content-Type: application/json' \
+    -d '{"model": "deepseek-flash", "messages": [{"role": "user", "content": "Say hi"}]}'
+\end{shell}
+
+Then open \code{http://127.0.0.1:8080/dashboard/#/usage}: the request is one row there, with its tokens, its time to first token and its cost at the model's price. Chapter~\ref{ch:other-engines} has a section for each kind of backend.
+
+\section{In docker}\index{docker}
+
+\code{ops/Dockerfile.dash} builds an image on \code{python:3.12-slim} from the same wheel, with the host extra and the built page inside, and no compiler or torch. It is configured by an env file; \code{ops/dash.env.example} is one to start from.
+
+\begin{shell}
+docker build -f ops/Dockerfile.dash -t tandemllm-dash .
+cp ops/dash.env.example dash.env          # fill in; no quotes around values
+docker run -d --name tandem-dash -p 127.0.0.1:8080:8080 -v tandem-dash:/data \
+    --env-file dash.env tandemllm-dash
+\end{shell}
+
+The config database, the usage ledger and the key file live in the \code{/data} volume. Inside the container the server binds \code{0.0.0.0}, so what the outside reaches is what \code{-p} publishes: \code{127.0.0.1:8080} for this machine only. Keep it that way: no admin password is set by default, and this release has no sign-in screen (Section~\ref{sec:access}). The image runs as an unprivileged user and answers its health check on \code{/health}. The release's tests build and install the wheel; they do not build the image.
+
+Inside a container the host collector sees the container, not the machine. Run it with \code{--pid=host} (and \code{--gpus all} for NVML) for the machine's view, or run \code{tandem-dash hostcollect}\index{tandem-dash hostcollect@\texttt{tandem-dash hostcollect}} on the machine itself.
+
+\section{Where the proxy keeps its files}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The standalone proxy's files.}\label{tab:proxy-files}
+\begin{tabularx}{\linewidth}{@{}L{.18\linewidth}YL{.36\linewidth}@{}}
+\toprule
+\hd{file} & \hd{what} & \hd{default} \\
+\midrule
+config database & backends, encrypted keys, models, prices, routing rules, users, an audit table & \code{~/.tandemllm/config.sqlite3} (\code{--config-db}, \code{TANDEM_CONFIG_DB}) \\
+usage ledger & one row per request: tokens, times, cost; no text & \code{~/.tandemllm/ledger.sqlite3} (\code{--usage-ledger}; \code{off} for none) \\
+master key file & the key the backends' keys are encrypted with, when no other source answers & \code{~/.tandemllm/secrets.key}, mode 0600 \\
+conductor documents & the harness's profiles, router, packages and journal & \code{~/.tandemllm/conductor} (\code{--conductor-config}; \code{off} for none) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{The proxy inside the engine's server}
+
+The engine's own server can relay too. Start it with \code{--backends <config database>} (\code{QSE_BACKENDS}\index{qsebackends@\texttt{QSE\_BACKENDS}} in \code{serve.env}; empty means off). It then serves its own model as before and relays every request whose model belongs to a backend. A relayed request runs on its handler's own thread and never takes the engine's lock or a place in its queue, so a slow cloud answer cannot hold up the engine, and the engine's queue cannot hold up a cloud answer. With \code{--backends}\index{backends@\texttt{-\kern0pt-backends}} off the engine loads none of the proxy's code and serves exactly as without it.
+
+\section{Access}
+
+The standalone proxy follows the engine's access rule (Section~\ref{sec:access}) with its own variable, \code{TANDEM_ADMIN_TOKEN}, and adds user keys for the OpenAI routes (Section~\ref{sec:users}). It binds \code{127.0.0.1} by default.

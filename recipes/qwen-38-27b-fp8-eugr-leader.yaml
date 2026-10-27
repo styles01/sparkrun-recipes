@@ -1,0 +1,79 @@
+recipe_version: "4"
+name: qwen3.8-27b-fp8-eugr-leader
+description: "Qwen3.8 27B FP8 on eugr GB10 nightly (arena leader config). instanttensor load + TP=4 + MTP n=3. 3rd recipe — fallback if DSpark recipe fails."
+model: Qwen/Qwen3.8-27B-FP8
+runtime: vllm
+container: ghcr.io/spark-arena/dgx-vllm-eugr-nightly:latest
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-08-16"
+  updated: "2026-08-16"
+  tags:
+    - qwen
+    - qwen3.8
+    - 27b
+    - fp8
+    - eugr
+    - gb10
+    - leader
+  runbook: runbooks/qwen-38-27b-fp8-eugr-leader.md
+  source: eugr spark-arena leader recipe
+
+solo_only: false
+cluster_only: false
+
+min_nodes: 1
+max_nodes: 1
+
+# eugr's arena leader recipe. Key edges over vanilla vLLM:
+# - load_format: instanttensor (eugr custom fast-load — near-instant model load, big for arena cold-start)
+# - tensor_parallel: 4 (shards across GB10 SM clusters)
+# - MTP n=3 speculative decoding
+# NOTE: requires the eugr image (ghcr.io/spark-arena/dgx-vllm-eugr-nightly) — NOT vanilla vLLM.
+# This is the 3rd recipe — fallback if the DSpark recipe fails.
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 4
+  pipeline_parallel: 1
+  gpu_memory_utilization: 0.8
+  max_model_len: 262144
+  max_num_seqs: 4
+  max_num_batched_tokens: 16384
+  kv_cache_dtype: fp8
+  attention_backend: flashinfer
+  mm_encoder_tp_mode: data
+  load_format: instanttensor
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
+  tool_call_parser: qwen3_coder
+  enable_auto_tool_choice: true
+  served_model_name: "qwen38-27b Qwen/Qwen3.8-27B-FP8"
+
+env:
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+# NOTE: eugr leader recipe. instanttensor load + TP=4 + MTP n=3.
+# Requires eugr image (ghcr.io/spark-arena/dgx-vllm-eugr-nightly) — re-pull if not present.
+
+command: |
+  vllm serve {model} \
+    --served-model-name {served_model_name} \
+    --host {host} \
+    --port {port} \
+    --max-model-len {max_model_len} \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --max-num-seqs {max_num_seqs} \
+    --max-num-batched-tokens {max_num_batched_tokens} \
+    --kv-cache-dtype {kv_cache_dtype} \
+    --attention-backend {attention_backend} \
+    --mm-encoder-tp-mode {mm_encoder_tp_mode} \
+    --load-format {load_format} \
+    --reasoning-parser qwen3 \
+    --tool-call-parser {tool_call_parser} \
+    --enable-auto-tool-choice \
+    --speculative-config '{speculative_config}' \
+    -tp {tensor_parallel} \
+    -pp {pipeline_parallel}

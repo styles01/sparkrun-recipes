@@ -1,0 +1,16 @@
+=== pinned set=[2] at 14:30:24
+k2-short: streams=5 median=22.69 tok/s min=22.04 max=24.28 acc%=44.9
+k2-long40k: streams=5 median=32.61 tok/s min=22.88 max=35.61 acc%=50.9
+k2-4x-short: streams=20 median=17.94 tok/s min=15.67 max=20.09 acc%=44.7
+k2-4x-long40k: streams=20 median=17.17 tok/s min=14.29 max=22.48 acc%=48.9
+=== pinned set=[4] at 14:37:00
+k4-short: streams=5 median=31.61 tok/s min=26.84 max=32.36 acc%=41.3
+k4-long40k: streams=5 median=28.19 tok/s min=21.70 max=32.23 acc%=43.8
+k4-4x-short: streams=20 median=15.83 tok/s min=14.57 max=28.48 acc%=44.6
+k4-4x-long40k: streams=20 median=18.13 tok/s min=16.27 max=26.65 acc%=46.5
+=== pinned set=[7] at 14:50:57
+k7-short: streams=5 median=21.55 tok/s min=20.64 max=21.71 acc%=41.7
+k7-long40k: streams=5 median=20.79 tok/s min=18.93 max=21.48 acc%=41.0
+k7-4x-short: streams=20 median=18.64 tok/s min=14.80 max=21.77 acc%=45.4
+k7-4x-long40k: streams=20 median=20.50 tok/s min=19.27 max=23.22 acc%=45.9
+SWEEP-DONE

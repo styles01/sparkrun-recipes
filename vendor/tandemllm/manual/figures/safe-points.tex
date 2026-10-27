@@ -1,0 +1,22 @@
+% The session monitor's four safe points on one request's timeline.
+\begin{tikzpicture}[x=0.9mm, y=1mm,
+    sp/.style={draw=signal, fill=signallight, rounded corners=2pt, font=\sffamily\scriptsize,
+      align=center, inner sep=2pt, text width=33mm}]
+  \fill[slate!25] (0,0) rectangle (24,6);
+  \foreach \x in {26,36,...,86} \fill[cobalt!45] (\x,0) rectangle +(9,6);
+  \foreach \x in {96,106} \fill[cobalt] (\x,0) rectangle +(9,6);
+  \node[lbl, anchor=north] at (12,-0.8) {prefill};
+  \node[lbl, anchor=north] at (55,-0.8) {reasoning: verify blocks};
+  \node[lbl, anchor=north] at (105.5,-0.8) {answer};
+  \draw[->, slate] (-2,-6) -- (140,-6) node[right, lbl] {time};
+  % markers
+  \draw[signal, very thick] (0,-1) -- (0,9);
+  \foreach \x in {35.5,45.5,55.5,65.5,75.5} \draw[signal, thick] (\x,6) -- (\x,9);
+  \draw[signal, very thick] (115.5,-1) -- (115.5,9);
+  \draw[signal, very thick, dashed] (121,-1) -- (121,-9);
+  \node[sp, anchor=south] at (0,11) {SP4 before the prefill\\note, think budget};
+  \node[sp, anchor=south] at (55,11) {SP1 after each block\\close the reasoning, give up};
+  \node[sp, anchor=south west] at (98,15) {SP2 at the end token\\continue hidden, give up};
+  \node[sp, anchor=north west] at (100,-9) {SP3 the held tool calls\\repair, regenerate, give up};
+  \draw[signal] (115.5,9) -- (115.5,15);
+\end{tikzpicture}

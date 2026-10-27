@@ -1,0 +1,19 @@
+{
+  "package": "tech-troubleshoot",
+  "rubric": [
+    "Device, system and symptom named in one line; the one question (iPhone or Android, Windows or Mac) asked only when the path depends on it, else both paths.",
+    "Likely cause in plain words with how likely; 6 to 8 steps in cost order with exact menu paths and what the user should see after each; restart first.",
+    "The 'if it works, done; if not, tell me what happened at step N' check; a stop line (heat, swelling, data loss without backup, warranty, company device).",
+    "Backup said before anything that deletes or resets; never a command, registry edit, 'cleaner' app, remote-control tool or a number from a pop-up.",
+    "Never asks for passwords or codes; lost accounts and phones go through the service's official recovery path."
+  ],
+  "prompts": [
+    {"id": "tech-troubleshoot-1", "lang": "en", "text": "My phone battery goes from 100 to 20 % by lunchtime, it's about 2 years old. What can I do?"},
+    {"id": "tech-troubleshoot-2", "lang": "de", "text": "Mein Drucker (HP, über WLAN) wird vom Laptop nicht mehr gefunden, gestern ging es noch. Windows 11."},
+    {"id": "tech-troubleshoot-3", "lang": "ar", "text": "نسيت كلمة مرور حساب جيميل الخاص بي ورقم الهاتف القديم لم يعد يعمل. كيف أستعيد الحساب؟"},
+    {"id": "tech-troubleshoot-4", "lang": "en", "text": "My mum's iPad shows a pop-up saying it's infected and to call a number. She called them and they want to connect to it. What should she do?"},
+    {"id": "tech-troubleshoot-5", "lang": "en", "text": "How do I move all my photos from my old Android phone to my new iPhone without losing any?"},
+    {"id": "tech-troubleshoot-6", "lang": "de", "text": "Der Fernseher (Samsung) zeigt bei Netflix nur einen schwarzen Bildschirm mit Ton, andere Apps gehen."},
+    {"id": "tech-troubleshoot-7", "lang": "en", "text": "My laptop is really slow, takes 5 minutes to start. It's a Windows laptop from 2019. Is it dead?"}
+  ]
+}

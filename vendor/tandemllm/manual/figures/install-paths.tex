@@ -1,0 +1,27 @@
+% Which install path: a decision tree over the three paths of Table tab:install-paths.
+\begin{tikzpicture}[node distance=6mm and 8mm,
+    q/.style={draw=slate, fill=paper, shape=rounded rectangle, font=\sffamily\small,
+      align=center, inner sep=4pt, minimum height=9mm},
+    path/.style={draw=cobalt, fill=cobaltlight, rounded corners=2pt, text width=50mm, align=left,
+      font=\sffamily\small, inner sep=5pt}]
+  \node[q] (spark) {a machine with a CUDA GPU?\\{\scriptsize tested: DGX Spark}};
+  \node[q, below right=8mm and 6mm of spark] (others) {other engines or\\cloud APIs too?};
+  \node[q, below left=8mm and 6mm of spark] (py) {Python 3.11 or newer,\\or docker?};
+  \node[path, below=9mm of others] (a) {\textbf{Path A: the engine}\\[2pt]
+    {\normalfont\footnotesize the engine with its models, the conductor and the dashboard at \texttt{:8000}}\\[3pt]
+    {\ttfamily\scriptsize curl -fsSL .../install.sh | bash}\\[2pt]
+    {\footnotesize\color{slate} Chapter~\ref{ch:install-engine}}};
+  \node[path, below=9mm of py] (b) {\textbf{Path B: the dashboard and proxy}\\[2pt]
+    {\normalfont\footnotesize one address, one ledger and one dashboard for backends you already run; no GPU, no torch. In docker: \texttt{ops/Dockerfile.dash}}\\[3pt]
+    {\ttfamily\scriptsize pip install '.[host]' \&\& tandem-dash}\\[2pt]
+    {\footnotesize\color{slate} Chapter~\ref{ch:install-dash}}};
+  \node[path, draw=signal, fill=signallight, text width=70mm, below=10mm of $(a.south)!0.5!(b.south)$] (c) {\textbf{Path C: several engines and cloud APIs behind one address}\\[2pt]
+    {\normalfont\footnotesize A or B, plus the backends. The engine's own server relays (\texttt{QSE\_BACKENDS}), or \texttt{tandem-dash} lists the engine as one backend among others. Chapter~\ref{ch:other-engines}}};
+  \draw[flow] (spark) -- node[right, lbl, pos=.55] {yes} (others);
+  \draw[flow] (spark) -- node[left, lbl, pos=.55] {no} (py);
+  \draw[flow] (others) -- node[right, lbl] {no} (a);
+  \draw[flow] (py) -- node[left, lbl] {yes} (b);
+  \draw[flow] (others.east) -- ++(8mm,0) |- node[pos=.25, right, lbl] {yes} (c.east);
+  \draw[dflow] (a.south) -- node[right, lbl] {add backends} (a.south |- c.north);
+  \draw[dflow] (b.south) -- node[left, lbl] {add backends} (b.south |- c.north);
+\end{tikzpicture}

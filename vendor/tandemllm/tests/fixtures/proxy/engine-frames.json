@@ -1,0 +1,36 @@
+{
+ "_about": "Streams shaped by the engines' own protocol classes at the releases named: vLLM v0.30.0 (vllm/entrypoints/generate/base/protocol.py DeltaMessage.reasoning; serve/engine/protocol.py UsageInfo, PromptTokenUsageInfo, CompletionTokenUsageInfo) and SGLang v0.5.21 (srt/entrypoints/openai/protocol.py DeltaMessage.reasoning_content, UsageInfo.reasoning_tokens default 0, PromptTokensDetails). vLLM sends prompt_tokens_details only with --enable-prompt-tokens-details and completion_tokens_details only with --reasoning-parser; SGLang sends prompt_tokens_details only with --enable-cache-report and always sends reasoning_tokens (0 when not counted). Not recorded from a live server: the night pass (tools/proxy_e2e.sh --engines) checks them against real ones.",
+ "vllm_stream_details": [
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning\":\"The user\"},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning\":\" asks for a word.\"},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\"},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\".\"},\"logprobs\":null,\"finish_reason\":\"stop\"}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[],\"usage\":{\"prompt_tokens\":1040,\"total_tokens\":1052,\"completion_tokens\":12,\"prompt_tokens_details\":{\"cached_tokens\":1024},\"completion_tokens_details\":{\"reasoning_tokens\":9}}}\n\n",
+  "data: [DONE]\n\n"
+ ],
+ "vllm_usage_no_flags": {
+  "prompt_tokens": 1040,
+  "total_tokens": 1052,
+  "completion_tokens": 12
+ },
+ "sglang_stream_counted": [
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":null,\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"Think about it.\"},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[],\"usage\":{\"prompt_tokens\":700,\"total_tokens\":1212,\"completion_tokens\":512,\"prompt_tokens_details\":{\"cached_tokens\":640},\"reasoning_tokens\":508}}\n\n",
+  "data: [DONE]\n\n"
+ ],
+ "sglang_stream_uncounted": [
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"Think.\"},\"logprobs\":null,\"finish_reason\":null}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[],\"usage\":{\"prompt_tokens\":700,\"total_tokens\":712,\"completion_tokens\":12,\"prompt_tokens_details\":null,\"reasoning_tokens\":0}}\n\n",
+  "data: [DONE]\n\n"
+ ],
+ "sglang_stream_no_reasoning": [
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}]}\n\n",
+  "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"created\":1791140000,\"model\":\"Qwen/Qwen3.5-0.8B\",\"choices\":[],\"usage\":{\"prompt_tokens\":700,\"total_tokens\":702,\"completion_tokens\":2,\"prompt_tokens_details\":null,\"reasoning_tokens\":0}}\n\n",
+  "data: [DONE]\n\n"
+ ]
+}

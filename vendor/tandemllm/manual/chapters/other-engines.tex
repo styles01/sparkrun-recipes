@@ -1,0 +1,193 @@
+\chapter{Other engines behind the proxy}\label{ch:other-engines}
+
+This chapter puts other engines and cloud APIs behind the proxy, from vLLM and SGLang to OpenAI, DeepSeek and another TandemLLM. It covers the flags each engine needs, how a request finds its backend, and how keys and costs are kept. Figure~\ref{fig:proxy-topology} shows the whole arrangement.
+
+\begin{figure}[htbp]
+\centering
+\input{figures/proxy-topology}
+\caption[The proxy in front of several backends]{The proxy in front of several backends. Clients send every request to one address; the proxy routes it by the model id and copies the answer back. The plugins inside vLLM and SGLang post each request's own times to the proxy, and the proxy reads each engine's \texttt{/metrics} page and the machine behind each backend.}\label{fig:proxy-topology}
+\end{figure}
+
+\section{Backend kinds}\index{backend kind}
+
+Every backend has a kind. The kind decides the default URL, the routes that are relayed, how the proxy reads cached and reasoning tokens, and what the conductor can do there.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Backend kinds.}\label{tab:backend-kinds}
+\begin{tabularx}{\linewidth}{@{}L{.13\linewidth}L{.26\linewidth}L{.24\linewidth}Y@{}}
+\toprule
+\hd{kind} & \hd{for} & \hd{routes relayed} & \hd{the engine's own figures} \\
+\midrule
+\code{vllm} & a vLLM server & chat, completions, embeddings, Responses & \code{/metrics} every 15 s, and the plugin \\
+\code{sglang} & an SGLang server & the same & \code{/metrics} every 15 s, and the plugin \\
+\code{generic} & llama.cpp, LM Studio, Ollama, any OpenAI-compatible server & the same & none \\
+\code{tandemllm} & another TandemLLM engine & the same & its live board, read through the relay \\
+\code{openai} & OpenAI's API & the same & none \\
+\code{deepseek} & DeepSeek's API & chat, completions & none \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A vLLM or SGLang server also works as \code{generic}. The \code{vllm} and \code{sglang} kinds add the metrics page, the plugin join and the conductor's reasoning close (Chapter~\ref{ch:harness-proxy}).
+
+\section{Two ways to add a backend}
+
+In the GUI, open \code{/dashboard/#/backends}, choose Add backend, pick the kind, give the URL and, for a cloud API, the key. Test connection shows the latency and the models found before anything is saved. The backend's form also holds its label, its models (discovered from \code{GET /models} or a fixed list), fallbacks, the most requests it takes at once, timeouts, where its machine is read, and the conductor's switches. Every change is a row in the audit table with who and when, never a key's value.
+
+In an env file, the same fields are \code{TANDEM_*} variables:
+
+\begin{shell}
+TANDEM_BACKENDS=vllm1,deepseek
+TANDEM_BACKEND_VLLM1_KIND=vllm
+TANDEM_BACKEND_VLLM1_URL=http://gpu-host:8100/v1
+TANDEM_BACKEND_DEEPSEEK_KIND=deepseek          # a cloud kind fills its URL in
+TANDEM_BACKEND_DEEPSEEK_KEY=<your DeepSeek key>
+TANDEM_ROUTE_1="deepseek-*=deepseek"
+TANDEM_PRICE_1="deepseek/deepseek-flash=0.30,0.006,1.2"
+TANDEM_API_KEYS="laptop:tdm-...,ci:tdm-..."
+\end{shell}
+
+\code{<ID>} in a variable name is the backend id in capitals, with \code{-} written as \code{_}. The environment wins field by field\index{environment overlay}: at every start the variables are written over the database's rows, and a backend is created when it is missing. The GUI shows each field a variable sets as locked, with the variable's name on it; a save that changes such a field answers 422 and names the variable. When the variable goes away, the field can be edited again and keeps its last value. An unknown variable, an unknown backend or a value the schema refuses stops the start with a message that names the variable. One schema, \code{proxy/config.schema.json}, checks both ways in. Table~\ref{tab:ref-tandem} lists every variable.
+
+\section{vLLM}\index{vLLM}
+
+Start vLLM with a tool-call parser and the flags the dashboard reads. For a Qwen3.5 or Qwen3.8 model:
+
+\begin{shell}
+vllm serve Qwen/Qwen3.5-4B --port 8100 \
+    --enable-auto-tool-choice --tool-call-parser qwen3_coder \
+    --reasoning-parser qwen3 \
+    --enable-prompt-tokens-details
+\end{shell}
+
+\begin{table}[htbp]
+\centering\small
+\caption{The vLLM flags the proxy needs, and why.}\label{tab:vllm-flags}
+\begin{tabularx}{\linewidth}{@{}L{.42\linewidth}Y@{}}
+\toprule
+\hd{flag} & \hd{why} \\
+\midrule
+\code{--enable-auto-tool-choice --tool-call-parser <p>} & without a tool parser vLLM answers 400 to any request that carries \code{tools}. Coding agents send tools on every turn, and so does the conductor's memory writer (with \code{tool_choice: "none"}) \\
+\code{--enable-prompt-tokens-details} & the cached prompt tokens in each answer's \code{usage}; without it the ledger has no per-request cache figure \\
+\code{--reasoning-parser <p>} & the reasoning arrives as \code{delta.reasoning} and counts as reasoning tokens; without it the reasoning is part of the content \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+vLLM's \code{/metrics} page is always on. Then add the backend with kind \code{vllm} and the URL \code{http://engine-host:8100/v1}. Two facts from vLLM v0.30.0's source matter here: vLLM removed the \code{guided_choice} family of fields and still answers 200 without the constraint, so a constrained question must use \code{structured_outputs.choice}; and vLLM takes a client's \code{X-Request-Id} as the request id, which the plugin join uses.
+
+\section{SGLang}\index{SGLang}
+
+\begin{shell}
+python -m sglang.launch_server --model-path Qwen/Qwen3.5-4B --port 30000 \
+    --enable-metrics --enable-cache-report \
+    --tool-call-parser qwen3_coder --reasoning-parser qwen3
+\end{shell}
+
+\code{--enable-metrics} turns on the \code{/metrics} page; without it the page answers 404, the backend's card says how to turn it on, and the plugin's hooks do not run. \code{--enable-cache-report} puts the cached prompt tokens into each answer's \code{usage}. \code{--tool-call-parser} returns tool calls as OpenAI \code{tool_calls}; without it SGLang returns the model's raw call text, and it does not hold the model to \code{tool_choice: "none"}. \code{--reasoning-parser} returns the reasoning as \code{reasoning_content}; without it SGLang still sends \code{reasoning_tokens: 0}, which the proxy reads as null when the stream carried reasoning.
+
+Add the backend with kind \code{sglang}. The proxy never calls SGLang's \code{/health}: on an idle server that route runs a one-token generation. The health poll reads \code{GET /v1/models} instead.
+
+\section{One command: tandem-dash launch}\label{sec:launch}\index{tandem-dash launch}
+
+On the engine's machine, \code{tandem-dash launch}\index{tandem-dash launch@\texttt{tandem-dash launch}} does the steps above at once. It registers the backend in the config database (kind, \code{http://127.0.0.1:<port>/v1}, host \code{same}), hands the engine the proxy's collect URL and token, adds the flags the dashboard reads (\code{--enable-prompt-tokens-details} on vLLM; \code{--enable-metrics} and \code{--enable-cache-report} on SGLang), checks that the plugin is installed in the engine's Python, and then replaces itself with the engine, so the process id it records is the engine's.
+
+\begin{shell}
+tandem-dash launch vllm --model Qwen/Qwen3.5-4B --port 8100 -- \
+    --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3
+tandem-dash launch sglang --model Qwen/Qwen3.5-4B --port 30000 -- \
+    --tool-call-parser qwen3_coder --reasoning-parser qwen3
+\end{shell}
+
+Everything after \code{--} goes to the engine unchanged. Without the plugin installed, \code{launch} says how to install it and starts the engine without it (layer L1 only). \code{--dry-run} prints the command and starts nothing. Table~\ref{tab:ref-launch-flags} lists the options; Chapter~\ref{ch:hosts} explains the plugins.
+
+\section{Any OpenAI-compatible server}
+
+llama.cpp's\index{llama.cpp} \code{llama-server}, LM Studio\index{LM Studio}, Ollama's\index{Ollama} \code{/v1} API and other servers are kind \code{generic}. Give the base URL including \code{/v1}: \code{http://127.0.0.1:1234/v1} for LM Studio, \code{http://127.0.0.1:11434/v1} for Ollama. What the proxy can measure depends on what the server sends. Tokens come from the answer's \code{usage}; the proxy asks a stream for its usage frame when the client did not and drops that frame before the client sees it. A server that never sends \code{usage} gets null token counts, never estimates. Thinking on or off goes through \code{chat_template_kwargs.enable_thinking}, which Qwen-family templates read and others ignore. \code{llama-server} needs \code{--jinja} for tools.
+
+\section{OpenAI and the Responses API}\index{OpenAI}\index{Responses API}
+
+Kind \code{openai}, with the key in the key field or \code{TANDEM_BACKEND_<ID>_KEY}; the URL is filled in. Chat completions, completions, embeddings and the Responses API (\code{POST /v1/responses}) are relayed. A Responses request goes to the backend as the client sent it, apart from the model id, and the conductor does not act on it. Cached tokens come from \code{prompt_tokens_details.cached_tokens} (chat) and \code{input_tokens_details.cached_tokens} (Responses); reasoning tokens from \code{completion_tokens_details.reasoning_tokens}. The conductor sends \code{reasoning_effort} only to model ids that start with \code{o1}, \code{o3}, \code{o4} or \code{gpt-5}. The adapter is tested on frames written from OpenAI's documented shapes, not on a paid call.
+
+\section{DeepSeek}\index{DeepSeek}
+
+Kind \code{deepseek}. Chat completions and completions are relayed; DeepSeek has no embeddings or Responses API. Cached tokens come from \code{prompt_cache_hit_tokens}, and the reasoning arrives as \code{reasoning_content}. Thinking goes on and off through \code{thinking.type}; DeepSeek has no budget, so an effort level is on or off and never a cap. DeepSeek charges half outside its peak hours (01:00 to 04:00 and 06:00 to 10:00 UTC on weekdays); a price row can carry an \code{offpeak} block, and the adapter picks it by the request's UTC hour. Chinese public holidays count as peak here, so their cost reads high.
+
+\section{Another TandemLLM}
+
+Kind \code{tandemllm}, with the engine's URL. The proxy lists the engine's \code{TandemLLM} model and relays to it. The relay sends \code{X-Tandem-Relay-Id}; the engine files the request under it, and the Parallel view reads the engine's own live counts while requests run there. That read follows the engine's dashboard rule: with the engine's login off it answers anyone who reaches the port, and with the login on only a caller on the engine's own machine.
+
+\section{Routing by model id}\label{sec:routing}\index{routing by model id}
+
+\code{GET /v1/models} lists every backend's real model ids, with \code{owned_by} set to the backend's id and a \code{tandem} block (backend, kind, label, upstream id, context length, switches). A request goes to the first of these that applies:
+
+\begin{enumerate}
+\item an explicit \code{<backend>/<model>} prefix, such as \code{vllm1/Qwen/Qwen3.5-4B};
+\item the first enabled routing rule whose glob matches the id (Backends, Routing, or \code{TANDEM_ROUTE_<n>}, ordered by \code{n});
+\item the one backend that serves the id;
+\item else OpenAI's 404 \code{model_not_found}, which names the prefixed forms when two backends serve the id.
+\end{enumerate}
+
+When two backends serve one id, both are listed as \code{<backend>/<model>} and the bare id is not. A model can get a public id of its own in the GUI. In the engine's own server, \code{TandemLLM} stays the engine's.
+
+A backend or a single model may name fallbacks\index{fallback}. On a connect error, a 429, a 502 or a 503 before any byte reached the client, the proxy tries the next backend at once, or the same one again after 1~s, then 2~s (or its \code{Retry-After}, up to 30~s), at most 2 more tries in all. After the first byte, a failure is an \code{error} frame and \code{[DONE]}. The proxy adds no limit of its own to how many requests a backend takes at once: a cloud API, vLLM or SGLang gets as many as clients send and answers its own 429 or 503 when it is full. A backend's \code{max_inflight} (1 to 4{,}096; empty or \code{none} is no limit, the default) is a cap you set: past it a request goes to a fallback with room, else it gets a 503 with \code{Retry-After: 1}. How many requests TandemLLM's own engine decodes at once is the engine's setting (\code{QSE_PARALLEL}, Section~\ref{sec:parallel-requests}), shown on the Backends screen under its name. Timeouts are per backend: a local engine gets 5~s to connect, 600~s to the first byte and 120~s between frames; a cloud API 10, 120 and 60~s. A client that leaves closes the upstream connection within a quarter second, so the backend stops generating.
+
+\section{Keys at rest}\index{keys at rest}\index{master key}
+
+A backend's key is stored as AES-256-GCM\index{AES-256-GCM} ciphertext in the config database. The master key comes from the first of these sources that answers:
+
+\begin{enumerate}
+\item \code{TANDEM_SECRETS_KEY}\index{tandemsecretskey@\texttt{TANDEM\_SECRETS\_KEY}}, base64 of 32 bytes (\code{openssl rand -base64 32});
+\item the OS keychain\index{keychain} (\code{security} on macOS, \code{secret-tool} on Linux), read only; \code{--no-keychain} skips it;
+\item \code{secrets.key} beside the config database, made once at mode 0600.
+\end{enumerate}
+
+\code{tandem-dash secrets status} says which one answers. No API answer, log line, ledger row or audit row holds a key: the GUI gets whether a key is set, its last 4 characters and 6 hex digits of its sha256, and the key field is write-only.
+
+This protects a copied or backed-up database. It does not protect against a process that runs as the same user, which can read the key file as easily as the proxy can, and a backup of the whole directory carries the key file too. Keep the master key in the environment or the keychain when backups leave the machine. A lost master key means typing the backends' keys in again, nothing else. To move the key file into the macOS keychain:
+
+\begin{shell}
+security add-generic-password -s tandemllm -a secrets-key -w "$(cat ~/.tandemllm/secrets.key)"
+rm ~/.tandemllm/secrets.key
+\end{shell}
+
+\section{Users and their keys}\label{sec:users}\index{users}
+
+Under Backends, Users, the admin makes a key per person or tool. The key, \code{tdm-} and random characters, is shown once and stored as its sha256. From the first key on, the OpenAI routes need one (\code{Authorization: Bearer tdm-...}) for every model, the engine's own included, from any machine other than this one. A request from loopback without proxy headers passes, so the engine's own helpers keep working. The key's label goes into the ledger's \code{user} column, and the Usage view filters by it. \code{TANDEM_API_KEYS}\index{tandemapikeys@\texttt{TANDEM\_API\_KEYS}} adds keys from the environment, in memory only.
+
+The configuration routes (\code{/v1/config}) follow the admin rule. With no admin password (\code{TANDEM_ADMIN_TOKEN}) set, the default, anyone who reaches the port can change the configuration from the Backends and Setup screens, which ask for no password; with one set, a write needs it as a bearer header or a session, or comes from the machine itself. The default bind is \code{127.0.0.1}; keep the port on a trusted network.
+
+Putting one cloud key in front of several people makes you the provider toward them. The provider's terms hold the key holder responsible for what those people send, and most forbid reselling access without an agreement. Per-user keys keep each person's usage visible in the ledger. This is not legal advice.
+
+\section{Prices and cost}\index{cost}
+
+A price row per model holds USD per million tokens for input, cached input, cache write and output. The cost of a request is
+\[
+(\textit{prompt} - \textit{cached})\cdot p_\text{in} + \textit{cached}\cdot p_\text{cached} + \textit{cache write}\cdot p_\text{write} + \textit{completion}\cdot p_\text{out},
+\]
+written into the ledger row when the request ends, at the price of that moment, so a later price change never rewrites history. A model without a price has a null cost. The proxy never fetches a price list: \code{proxy/prices.seed.json} holds OpenAI's and DeepSeek's list prices as read on 2026-10-04, which the model rows offer and apply only on a click. Check the providers' pages before you bill anyone from these numbers.
+
+\section{What the proxy measures}\index{measured at the proxy}
+
+The proxy records what a client could measure, and every figure is measured or null.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Where each figure of a relayed request comes from.}\label{tab:relay-figures}
+\begin{tabularx}{\linewidth}{@{}L{.24\linewidth}Y@{}}
+\toprule
+\hd{figure} & \hd{source} \\
+\midrule
+prompt, completion tokens & the backend's \code{usage}; null when it sends none \\
+cached prompt tokens & \code{prompt_tokens_details.cached_tokens} (OpenAI; vLLM and SGLang with their flags), \code{prompt_cache_hit_tokens} (DeepSeek), \code{input_tokens_details.cached_tokens} (Responses) \\
+reasoning tokens & \code{completion_tokens_details.reasoning_tokens}, SGLang's \code{reasoning_tokens}; a reported 0 beside streamed reasoning is null \\
+TTFT & arrival at the proxy to the first frame with a token; the network and the backend's queue are inside it \\
+decode tok/s & (completion tokens $-$ 1) / (last token frame $-$ first token frame); null without \code{usage}, because a frame is not a token \\
+cost & the model's price when the row is written \\
+proxy overhead & arrival to the upstream send, plus the first frame's delay through the proxy \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+What the proxy adds is small (\measured, the 0.4.0 series). Against a fake backend on one machine it added 0.33~ms to the client's time to first token at the median, its own time was 0.17~ms at p50 and 0.22~ms at p90, and 64 streams at once ended in 5.18~s against 5.22~s for one alone. Against the live engine over the local network, 20 greedy requests gave equal token counts and a decode rate within 0.8~\% of the engine's own.
