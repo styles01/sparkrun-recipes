@@ -1,0 +1,84 @@
+# Recipe: ling30-flash-sante-fp8-tp2 (inclusionAI Ling-3.0-flash-Sante, 2x DGX Spark TP2)
+#
+# Estate serve recipe (owner order 2026-10-27 "serve it now"): Ling-3.0-flash-Sante
+# is bf16-only upstream (255GB / 27 shards, MIT, rev f74bd272) — NO Sante quant
+# pack exists anywhere (verified HF sweep 2026-10-27: llama.cpp GGUF ladders
+# bartowski/AtomicChat + Mac MLX only — none TP2-capable). We serve ONLINE FP8
+# per-tensor quantized-at-load from the bf16 parent (255GB -> ~64GB/rank at TP2).
+#
+# Why not online MXFP4 (the more aggressive 4-bit float scheme): vLLM 0.31.x's
+# mxfp4 MoE path carries ONLY AMD backends (AITER/quark emulation) — no CUDA
+# kernel for GB10 (SM121). GB10 cutlass-MXFP4 MoE = candidate lever for the
+# v0.32 rebuild window; swap EXTRA to `--quantization mxfp4` when it lands.
+#
+# Spec decode: native NEXTN/MTP head is inside the Sante checkpoint — zero extra
+# fetch. k=3 per the Sante card. DSpark drafter (inclusionAI/Ling-3.0-flash-dspark,
+# 2.7GB, d60b0e12) staged on both nodes for a later acceptance A/B; vLLM
+# Ling-DSpark support still unmerged upstream (PR #54174).
+#
+# Context: Sante arch cap = 262,144 (max_position_embeddings). Owner ceiling
+# 275K/seq does NOT apply to this model; serve = 3 slots @ 250K each.
+# KV is small (hybrid KDA: 35 linear layers + 7 gated-MLA layers,
+# ~8.06KB/token bf16 MLA -> ~6.1GB/rank for 3x250K; KDA recurrent state
+# ~37MB/seq). --kv-cache-memory-bytes 6500000000 pins the pool.
+#
+# Boot (canon, spark1):
+#   bash /home/jaita/relaunch-sante-canonical.sh
+# Stop:
+#   cd /home/jaita/dsv41_recipe_ablit && HEAD=10.200.0.1 WORKER=10.200.0.2 \
+#     bash scripts/launch/sante_tp2.sh down
+#
+# Launcher fork: dsv41_tp2.sh stripped of dsv41-family bits (Engram config,
+# deepseek_v41 parsers, EXL3 MoE env). Ling repos ship remote code:
+# --trust-remote-code is REQUIRED.
+#
+# MANDATORY post-boot (or after any reboot, volatile lock):
+#   sudo nvidia-smi -lgc 0,2200      # heat cap, BOTH nodes
+#
+# Verifications (2026-10-27 16:2xZ, both nodes blob-size-verified 27 shards/255GB):
+#   L8: /v1/models [sante, Ling-3.0-flash-Sante] @262144 (endpoint reports
+#   max_model_len on the wire; profiles self-learn from it); live gen
+#   "Paris, Berlin, Rome" finish stop; MTP k=3 drafts firing (22 drafts /
+#   66 draft tokens / 39 accepted = ~1.77 acc/draft, ~2.8 tok/step c=1);
+#   decisiv laya-gguf sidecar :8710 ok (CPU-only, head-side, co-resident legal).
+#   Wall decode c=1: 68.1 / 59.2 tok/s (220/351-token gens); prefill ~33.7K
+#   token prompt in ~10.3s (~3.2K tok/s) — bench-grade numbers at its bench slot.
+#
+# Pickers (loca/medhi/gordon configs): DGX Spark provider models += sante,
+# Ling-3.0-flash-Sante; NO default pinned; entry context 262144.
+
+recipe_version: "1"
+name: ling30-flash-sante-fp8-tp2
+description: >
+  inclusionAI Ling-3.0-flash-Sante (BailingMoeV3 hybrid KDA+MLA) on two DGX
+  Sparks, TP2 vLLM 0.31 (dsv41-serve:v52rc image, no build), online FP8
+  per-tensor quantized-at-load from the bf16 parent, native MTP k=3 spec
+  decode, 3 slots @ 262,144 tokens, decisiv laya-gguf :8710 sidecar.
+cluster_only: true
+runtime: vllm
+container: dsv41-serve:v52rc
+model: inclusionAI/Ling-3.0-flash-Sante
+
+defaults:
+  port: 8000
+  host: "0.0.0.0"
+  tensor_parallel: 2
+  parallel: 3
+  context: 262144
+  max_tokens: 32768
+  served_model_name: "sante Ling-3.0-flash-Sante"
+  tp_master_ip: "10.200.0.1"
+  gpu_memory_utilization: 0.85
+  kv_cache_memory_bytes: 6500000000
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
+  extra_args: "--quantization fp8 --trust-remote-code"
+
+env:
+  NCCL_SOCKET_IFNAME: "enp1s0f0np0"
+  NCCL_IB_HCA: "rocep1s0f0"
+  NCCL_IB_GID_INDEX: "3"
+  NCCL_IB_DISABLE: "0"
+  NCCL_NET: "IB"
+  VLLM_HOST_IP: "10.200.0.1"
+  HF_HUB_OFFLINE: "1"
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
