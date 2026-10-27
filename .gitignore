@@ -42,3 +42,5 @@ vendor/tf-drama3-cuda/
 
 vendor/
 benchmarks/
+
+private/
