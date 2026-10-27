@@ -58,6 +58,5 @@ env:
   TF_MUSE_DRAFTER_DIR: "/home/jaita/models/muse-spark/Muse-Spark-Open-DFlash2-exl3-4.0bpw"
   TF_MUSE_ZIG_DIR: "/home/jaita/muse/tensorfold-zig/zig-out"
 
-benchmark:
-  framework: sparkrun llama-benchy (arena profile)
-  reference: "muspark v1.1 measured: c1 decode 30.1 greedy / 23.2 meta sampling; 4-stream total 43.1; prefill ~200-209 tok/s"
+# measured by the author on their box: c1 decode 30.1 greedy / 23.2 meta
+# sampling; 4-stream total 43.1; prefill ~200-209 tok/s
