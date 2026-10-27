@@ -1,7 +1,0 @@
-- press_key sends real key events; evaluate_script with dispatchEvent or keys[...] = true does not test input.
-- Screenshots return as "Attached media from tool result"; take_screenshot shows the viewport only.
-- Use absolute paths in every call. The working directory is the project root given in the system prompt.
-- bash has a timeout. A server or a watcher runs in the background: `cmd > {tandem_scratch}/run.log 2>&1 &`, then tail the log.
-- After every page load: list_console_messages. Zero errors is the bar.
-- One edit per call; read a file before editing it; never write the whole program in one call.
-- A tool error is the tool's answer, not a hint to try the same call again. Change the call.

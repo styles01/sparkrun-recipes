@@ -1,6 +1,0 @@
-
-  [1;36m┌────────────────────────────────────────────┐[0m
-  [1;36m│[0m  [1mGLM-5.3 Flash EXL3[0m  [2m·  start.sh   [0m        [1;36m│[0m
-  [1;36m└────────────────────────────────────────────┘[0m
-
-[1;31m[glm53-exl3][0m ERROR: another start.sh/restart is already running (pid 289427) — retry after it exits

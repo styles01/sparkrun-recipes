@@ -39,3 +39,6 @@ __pycache__/
 vendor/ming-repo-vendor/
 vendor/slate-studio-repo/
 vendor/tf-drama3-cuda/
+
+vendor/
+benchmarks/
