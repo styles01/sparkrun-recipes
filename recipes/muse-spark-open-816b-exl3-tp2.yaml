@@ -1,0 +1,63 @@
+# Recipe: muse-spark-open-816b-exl3-tp2 (Meta Muse-Spark-Open-816B-A42B, 2x DGX Spark TP2)
+#
+# Source recipe: github.com/ajensenwaud/muspark-2dgx (BSD-3, v1.1, published 2026-10-24)
+# Community recipe followed EXACTLY: the author's TensorFold Zig engine shape —
+# TP over the engine's own one-shot RoCE mailbox (TF_TP_* env), rank0 = HTTP
+# head, rank1 = tf-muse follow; fp16 KV; DFlash2 drafter; prompt cache on.
+# Estate delta vs author's box: identical 2x DGX Spark GB10 pair.
+#
+# In-window staging (spark-lanes receipts, 2026-10-26/27):
+#   - pack ajensenwaud/Muse-Spark-Open-816B-A42B-EXL3-1.8bpw @38ad2925: 194.44 GB,
+#     27 shards, byte/size-verified + md5 spot-checks on BOTH nodes' hub caches,
+#     hardlinked MODEL_DIR trees at /home/jaita/models/muse-spark/Muse-Spark-Open-exl3-1.8s
+#   - drafter RadixArk/Muse-Spark-Open-DFlash2 @46c90f41 (bf16, 9.77 GB source on
+#     both nodes) quantised in-window to EXL3 4.0bpw per scripts/quantise_drafter.sh
+#     (bf16 drafter cannot fit the arena's 100K depths: estimator max 61K ctx)
+#   - Zig build: TensorFold main 40c6406b + 5 patches-zig (tree 71a9f224), sm_121
+#     kernels, TF TP mailbox kernel — built on spark2 only, zig-out mirrored to spark1
+#
+# Context: 4 slots x 196,608 tokens ASKED per the author's multi profile; the
+# estate fit at fire-time is verified with the author's tools/mem/estimate.py
+# before each fire (sparkrun serve is fixed-context, so the number below is
+# pinned to the measured largest-fit, not the ask).
+
+recipe_version: "1"
+name: muse-spark-open-816b-exl3-tp2
+description: >
+  Meta Muse-Spark-Open-816B-A42B (816B MoE, ~42B active) on two DGX Sparks,
+  TP2 over TensorFold's Zig engine with the authors' EXL3 1.8bpw pack and the
+  RadixArk DFlash2 drafter (EXL3 4.0bpw). muspark-2dgx v1.1 shape: fp16 KV,
+  RoCE mailbox TP, prompt cache on.
+cluster_only: true
+runtime: tensorfold
+container: ghcr.io/miaai-lab/glm-5.3-flash-exl3-2x-dgx-sparks-tensorfold@sha256:14f15591eae5d6a540f09218d3852068962fe5381371bbfefe0e9194cd834529
+model: ajensenwaud/Muse-Spark-Open-816B-A42B-EXL3-1.8bpw
+
+executor_config:
+  entrypoint: ""
+  shm_size: 16gb
+
+defaults:
+  port: 8888
+  host: "0.0.0.0"
+  tensor_parallel: 2                       # 1 rank per Spark over the RoCE mailbox
+  parallel: 4                              # the author's multi profile (4 slots)
+  context: 131072                          # PINNED-FIT (verified in-window; must be >= 100,512 for arena depths)
+  max_tokens: 32768
+  served_model_name: ajensenwaud/Muse-Spark-Open-816B-A42B-EXL3-1.8bpw
+  tp_master_ip: "10.200.0.2"               # rank0's CX7 address (rendezvous + RoCE mailbox)
+  tf_tp_port: 29681                        # the Zig TP rendezvous port
+  drafter_arg: /drafter
+
+env:
+  NCCL_SOCKET_IFNAME: "enp1s0f0np0"
+  NCCL_IB_HCA: "rocep1s0f0,roceP2p1s0f0"
+  NCCL_IB_GID_INDEX: "3"
+  NCCL_MAX_NCHANNELS: "4"
+  TF_MUSE_MODEL_DIR: "/home/jaita/models/muse-spark/Muse-Spark-Open-exl3-1.8s"
+  TF_MUSE_DRAFTER_DIR: "/home/jaita/models/muse-spark/Muse-Spark-Open-DFlash2-exl3-4.0bpw"
+  TF_MUSE_ZIG_DIR: "/home/jaita/muse/tensorfold-zig/zig-out"
+
+benchmark:
+  framework: sparkrun llama-benchy (arena profile)
+  reference: "muspark v1.1 measured: c1 decode 30.1 greedy / 23.2 meta sampling; 4-stream total 43.1; prefill ~200-209 tok/s"
