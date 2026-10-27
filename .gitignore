@@ -35,3 +35,7 @@ __pycache__/
 .env
 *.env
 .DS_Store
+
+vendor/ming-repo-vendor/
+vendor/slate-studio-repo/
+vendor/tf-drama3-cuda/
