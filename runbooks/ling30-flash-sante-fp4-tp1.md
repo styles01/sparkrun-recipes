@@ -99,3 +99,19 @@ Measured 2026-10-27: tool call REAL (`get_weather {"city":"Lisbon"}`); trace
 |---|---|---|---|---|
 | 2026-10-27 | #1 v032 TP1 | 315s cold | ~33 tok/s | proof bar pass (tools+trace+262K) |
 | 2026-10-27 | #2 v032 TP1 | 126s warm | ~33 tok/s | parser flags added; proof bar pass |
+| 2026-10-28 | arena bench (06:30Z cron) | — | 34.7–37.8 tok/s | 28/28 cells x3 reps, zero timeouts; prefill 2,456 t/s short / 1,709 @100K; **fails 80 bar** (emulated-FP4 Marlin physics, not an error); submission sub1793169088157; public claim "35+" (floor, n>=4) |
+
+## 7. Weight provenance (2026-10-28: bf16 parent PURGED)
+
+The bf16 parent (`ling30-sante-tree`, 255GB) and both `inclusionAI/Ling-3.0-flash-Sante`
+hub snapshots (238GB each) were deleted on the owner's say ("get rid of the full
+weights for Sante + FP8 pack + any dupes, keep the four quant"). The spark2 bf16
+mirror and the partial spark2 FP4 pack are gone too.
+
+- The quant to keep = `spark1:/home/jaita/models/ling30-sante-fp4-pack` (70.4GB/47
+  files) — that IS the serving tree. Do not treat a missing bf16 as corruption.
+- Re-quantizing means an HF re-fetch of `inclusionAI/Ling-3.0-flash-Sante` (public,
+  ~238GB) plus `produce_fp4_pack.py` (~59 min CPU). Our FP4 is also on HF
+  (`aitamedia/Ling-3.0-flash-Sante-FP4`, rev b6a9cc6e) so the lane is re-stageable
+  from the published repo alone.
+- Local FP8 pack = gone; the HF FP8 repo still exists (owner decision pending).
