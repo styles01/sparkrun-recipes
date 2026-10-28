@@ -1,0 +1,44 @@
+recipe_version: "1"
+name: ling30-flash-sante-fp4-arena
+description: >
+  LG-3.0-flash-Sante as our own Ling-fp4-hybrid pack (MXFP4 experts + fp8-block
+  dense, 70.4GB) on one DGX Spark GB10, vLLM 0.32.0, native MTP k=3, TP1.
+cluster_only: false
+runtime: vllm
+container: ghcr.io/styles01/dsv41-serve:v032
+model: aitamedia/Ling-3.0-flash-Sante-FP4
+
+defaults:
+  port: 8000
+  host: "0.0.0.0"
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.85
+  max_model_len: 262144
+  max_num_seqs: 3
+  max_num_batched_tokens: 2048
+  kv_cache_memory_bytes: 6500000000
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
+  compilation_config: '{"cudagraph_mode":"FULL_DECODE_ONLY"}'
+  kernel_config: '{"enable_flashinfer_autotune":false}'
+  extra_args: "--trust-remote-code --enable-auto-tool-choice --tool-call-parser ling3 --reasoning-parser ling3"
+
+env:
+  HF_HUB_OFFLINE: "1"
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+  VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS: "1800"
+
+command: >
+  vllm serve {model} --served-model-name {model} --host {host} --port {port}
+  --tensor-parallel-size {tensor_parallel} --gpu-memory-utilization {gpu_memory_utilization}
+  --max-model-len {max_model_len} --max-num-seqs {max_num_seqs}
+  --max-num-batched-tokens {max_num_batched_tokens}
+  --kv-cache-memory-bytes {kv_cache_memory_bytes}
+  --speculative-config '{speculative_config}'
+  --compilation-config '{compilation_config}'
+  --kernel-config '{kernel_config}'
+  --trust-remote-code --enable-auto-tool-choice --tool-call-parser ling3 --reasoning-parser ling3
+
+executor_config:
+  user: root
+  shm_size: 16gb
+  entrypoint: ""
