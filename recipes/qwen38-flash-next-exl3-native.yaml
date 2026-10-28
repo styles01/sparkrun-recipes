@@ -21,8 +21,9 @@ model_meta:
   size_gb: 79.29
   local_dir: ~/models/hf/turboderp/Qwen3.8-Flash-Next-exl3  # models rule: ~/models/ ONLY
 
-runtime:
-  kind: bare-venv            # NOT a container — exllamav3 JIT-builds for sm_121
+runtime: bare-venv
+runtime_meta:
+  # NOT a container — exllamav3 JIT-builds for sm_121; driven by scripts/switch-to-qwen38-exl3.sh
   engine: exllamav3-1.5.0
   engine_source: https://github.com/vcruz305/exllamav3  # FORK, pin bf9e10f+
   venv: ~/venvs/exl3-150
