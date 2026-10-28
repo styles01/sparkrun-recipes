@@ -8,7 +8,7 @@
 
 ## Recipe
 
-**Recipe:** [`recipes/pinkcherry-h3-aurore.yaml`](../recipes/pinkcherry-h3-aurore.yaml)
+**Recipe:** not published (operator-side ComfyUI lane; lives in the repo's gitignored working area). Sparkrun treats no file for this lane — `runtime: comfyui-native`, driven by the runbook directly.
 
 Status: verified end-to-end 2026-09-07 (validation clip rendered from `pinkcherry-h3-aurore`).
 

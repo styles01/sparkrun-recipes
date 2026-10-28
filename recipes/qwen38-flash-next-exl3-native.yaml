@@ -15,8 +15,8 @@ description: >
   NOT concurrency-capable — for concurrent multi-stream use the vllm-exl3 variant
   (Path B in the runbook) or stay on NVFP4.
 
-model:
-  source: turboderp/Qwen3.8-Flash-Next-exl3
+model: turboderp/Qwen3.8-Flash-Next-exl3
+model_meta:
   revision: 3.05bpw_h5_ng5
   size_gb: 79.29
   local_dir: ~/models/hf/turboderp/Qwen3.8-Flash-Next-exl3  # models rule: ~/models/ ONLY

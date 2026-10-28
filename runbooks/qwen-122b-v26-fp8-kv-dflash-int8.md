@@ -202,6 +202,11 @@ Actual headroom:
 - int8 w8a16 GEMV reduces to ~175 MB
 - **Frees 1.4 GB** for KV cache
 - **Recovers decode speed** lost to fp8 KV overhead
+- **Spec-decode interplay caveat (GH #2, absorbed 2026-10-28):** head precision is not
+  free of speculation — external Flash-Next MTP k=2 measurement: FP8 head = **+19%
+  decode, −6% relative draft acceptance** (60.3→56.6). Int8 should land between; re-measure
+  DFlash acceptance whenever the head precision changes, and treat sub-10% deltas as
+  unproven (single-run GB10 noise floor = ±6.9%). See `benchmarks/measurement-notes-gb10-external.md`.
 
 ### 4. FlashInfer Attention
 - Native SM121 support in v26
