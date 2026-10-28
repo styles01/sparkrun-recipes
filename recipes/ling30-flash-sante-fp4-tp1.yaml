@@ -1,0 +1,88 @@
+# Recipe: ling30-flash-sante-fp4-tp1 (Ling-3.0-flash-Sante, DGX Spark TP1)
+#
+# Estate FP4 recipe (owner order 2026-10-27 "let's do our repack" + "BOOT the
+# sante FP4"): OUR OWN FP4 pack produced from the Sante bf16 parent — exact
+# replica of inclusionAI/Ling-3.0-flash-fp4's hybrid layout (MXFP4 routed
+# experts e2m1 g32 + e8m0 pow2 scales; fp8-block-128 e4m3+e8m0-ceil dense
+# attn/o-proj; BF16 passthrough MLA/KDA exempt projections, router, norms,
+# lm_head, embeddings; F32 A_log/dt_bias). 70.4GB / 36 shards. Produced by
+# produce_fp4_pack.py (vectorized, ~59 min CPU-only beside serving).
+#
+# WHY TP1: the FP4 pack fits ONE GB10 box (~35GB on device + 6.5GB KV pool)
+# — first Sante quant servable on a single Spark, freeing the second box for
+# the media lane / mirror work. Speed trade: ~33 tok/s single-stream decode
+# (Marlin-emulated kernel class on GB10) vs ~60-68 tok/s for the online-FP8
+# TP2 lane (recipes/ling30-flash-sante-fp8-tp2.yaml) — pick per workload.
+#
+# ENGINE: vLLM 0.32.0 EXACTLY (Ling-4bit hybrid loader lives in the 0.32.0
+# release; 0.31.x CANNOT load this pack). Image dsv41-serve:v032 — v52rc
+# + the official cu130 aarch64 wheel layered in with `pip install --no-deps`
+# (wheel pins torch==2.13.0 = image's torch, unchanged). Wheel:
+#   https://wheels.vllm.ai/5df63a7203.../vllm-0.32.0-cp38-abi3-manylinux_2_28_aarch64.whl
+# (fetch the COMMIT-HASH prefix URL — the pretty /0.32.0/cu130/ URL returns
+# a 301-byte error page; verify the wheel is a real zip after download).
+#
+# PACK CONFIG RULES (mirror of the official pack's loading contract):
+#   - config.json carries the OFFICIAL quantization_config verbatim — do NOT
+#     pass --quantization (the loader auto-routes via the config).
+#   - generation_config.json MUST be in the tree ({"temperature":0.6,
+#     "top_p":0.95,"top_k":20,"repetition_penalty":1.05,"do_sample":true}).
+#     vLLM >=0.32 reads it as wire defaults; Ling-family models DRIFT INTO
+#     MULTILINGUAL SALAD on long thinking traces without it.
+#   - --trust-remote-code REQUIRED (Ling remote-code tree).
+#   - Tool calls live: --enable-auto-tool-choice --tool-call-parser ling3
+#     --reasoning-parser ling3 (verified: get_weather {"city": "Lisbon"}).
+#
+# SPEC DECODE: native NEXTN/MTP head ships inside the Sante checkpoint —
+# {"method":"mtp","num_speculative_tokens":3} (k=3 per the Sante card).
+#
+# LAUNCH (canon, spark1):
+#   cd /home/jaita/dsv41_recipe_ablit && HEAD=10.200.0.1 \
+#     bash scripts/launch/sante_fp4_tp1.sh up
+# Stop:
+#   ... bash scripts/launch/sante_fp4_tp1.sh down
+#
+# MANDATORY post-boot (or after any reboot, volatile lock):
+#   sudo nvidia-smi -lgc 0,2200      # heat cap, BOTH nodes
+#
+# Verifications (2026-10-27, pack 70,428,755,599 bytes exact, boot #2 warm):
+#   /v1/models [sante, Ling-3.0-flash-Sante] @262144; live gen coherent
+#   English; tool_choice=auto function call REAL; long-trace engine-default
+#   probe 14,620 think chars / 11 non-ascii (clean; the English fix holds);
+#   decode ~33 tok/s (100-tok fixed workload, 3.04s); ready 315s cold /
+#   126s warm; 37GB host headroom after load.
+#
+# PICKER NOTE: same served names as the FP8 lane (sante,
+# Ling-3.0-flash-Sante) — pickers need NO reconfig when lanes swap.
+
+recipe_version: "1"
+name: ling30-flash-sante-fp4-tp1
+description: >
+  Ling-3.0-flash-Sante as our own Ling-fp4-hybrid pack (MXFP4 experts +
+  fp8-block dense, 70.4GB) on ONE DGX Spark, TP1, vLLM 0.32.0 (v032 image),
+  native MTP k=3, 262,144 context. Speed-class ~33 tok/s; TP2 version of
+  the same pack possible via sante_tp2.sh when the worker stages the pack.
+cluster_only: false
+runtime: vllm
+container: dsv41-serve:v032
+model: aitamedia/Ling-3.0-flash-Sante-FP4
+
+defaults:
+  port: 8000
+  host: "0.0.0.0"
+  tensor_parallel: 1
+  parallel: 3
+  context: 262144
+  max_tokens: 32768
+  served_model_name: "sante Ling-3.0-flash-Sante"
+  gpu_memory_utilization: 0.85
+  kv_cache_memory_bytes: 6500000000
+  speculative_config: '{"method":"mtp","num_speculative_tokens":3}'
+  compilation_config: '{"cudagraph_mode":"FULL_DECODE_ONLY"}'
+  kernel_config: '{"enable_flashinfer_autotune":false}'
+  extra_args: "--trust-remote-code --enable-auto-tool-choice --tool-call-parser ling3 --reasoning-parser ling3"
+
+env:
+  HF_HUB_OFFLINE: "1"
+  VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+  VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS: "1800"
