@@ -27,6 +27,24 @@
 
 lanes:
 
+  muse-spark:
+    trigger: "switch to muse / Muse Spark"
+    model: "meta-models/Muse-Spark-Open-816B-A42B — 816B MoE, 62 layers (16 full attn / 46 sliding-window), ~42B active"
+    weights:
+      primary: "spark1:/home/jaita/models/muse-spark/Muse-Spark-Open-exl3-1.8s = community EXL3 1.85bpw (author ajensenwaud, repo ajensenwaud/Muse-Spark-Open-816B-A42B-EXL3-1.8bpw @ efcdf2ec4222c4597e291f1b07edd19c3c02c652), 27 shards 194,437,224,433 B, quantized from amd/Muse-Spark-Open-816B-A42B-Quark-MXFP4 @4885eb2a (Meta's own BF16 1.64TB and NVFP4 533GB repos are GATED)"
+      drafter: "Muse-Spark-Open-DFlash2-exl3-4.0bpw (2.6GB) BOTH nodes; source RadixArk/Muse-Spark-Open-DFlash2 in hub cache; drafter splits 1.63GiB/rank"
+      mirror: "spark2:/home/jaita/models/muse-spark/Muse-Spark-Open-exl3-1.8s — 27 shards present BOTH nodes (TP2 needs it on both)"
+    engine: "Muspark (github.com/ajensenwaud/muspark-2dgx v1.1, BSD-3) on TensorFold main 40c6406b + patches-zig 0001-0005 (tree 71a9f224 pinned). Zig 0.17 engine built natively on spark1 2026-10-29 in 13 min (binary e3309b02), copied to spark2. Patched exllamav3 image muse-tf:d11926cec9 (25.2GB) for the muse_spark EXL3 loader. TP2: rank1 tf-muse on spark2, rank0 server on spark1."
+    port: 8888
+    context_per_lane: "446464 (CONTEXT_AUTO trimmed from 1M: per-rank estimate 131.6GiB vs 116.3 available; largest fitting = 446,464)"
+    served_names: ["Muse-Spark-Open"]
+    launch: "cd /home/jaita/src/muspark-2dgx && ./start.sh   # PROFILE=long default (1 slot, drafter on, prompt cache on, fp16 KV). PROFILE=multi = 4 slots x ~110K. scripts/local.sh holds HEAD=larryspark WORKER=jaita@10.200.0.2 MASTER=10.200.0.1. Start does its own mem estimate + CONTEXT_AUTO trim + refuses a rank under MEM_MIN_FREE_GIB."
+    stop: "cd /home/jaita/src/muspark-2dgx && ./stop.sh"
+    heat_cap: "MANDATORY L9 after boot/reset/switch"
+    measured: "2026-10-29 09:38-09:45Z FIRST EVER BOOT here (TP2, 446464 ctx, drafter on): loaded in 317.6s, /health ok warming:false. DECODE IS BELOW THE 60 BAR — server-side rows: prose thinking-off 260 tok = 19.1 tok/s (accepted 120/324 drafts); thinking-on 128 tok = 25.9; warm-up = 24.4. Matches the author's own 23.2 @Meta sampling, nowhere near 60. Prompt read fine (155-token prompt, ttft 1.24s). Not crowned, never to be a daily driver at this rate."
+    status: "DOWN 2026-10-29 09:45Z — boot probe complete, stopped, dsv41 canon relit and verified. ARENA BENCH NOT RUN (deferred: first boot finished 05:43 ET, past the owner's 6am line). Ready to fire: everything is built and staged, a bench window is now fire-and-verify."
+    notes: "Gotchas: (1) start.sh serves on :8888 NOT :8000 and rank 0 is on spark1 — the Mac door is http://192.168.2.185:8888, spark2's IP has no listener; (2) 'error: checkpoint has no tensor mask_embedding' appears in the container log on boot and is NON-FATAL (engine served fine); (3) libtfgrammar.so missing = structured output / required tool calls would 400 — restore the xgrammar lib if tool calls are ever needed; (4) a reply that hits max_tokens while thinking returns empty content with everything in reasoning_content — send chat_template_kwargs {enable_thinking:false} or raise max_tokens; (5) the 2026-10-27 cron run for this model FABRICATED its whole session (wrote scripts, executed nothing, invented numbers) — nothing from that night exists; this 10/29 boot is the first real one; (6) /health reports max_batch_size 1."
+
   dsv41:
     trigger: "switch to deepseek 4.1 / ds4.1 / dsv41"
     weights:
