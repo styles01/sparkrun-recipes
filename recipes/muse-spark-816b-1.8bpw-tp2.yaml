@@ -1,0 +1,48 @@
+# Recipe: muse-spark-816b-1.8bpw-tp2 (spark-arena submission)
+#
+# Muspark v1.1 (github.com/ajensenwaud/muspark-2dgx, BSD-3) on TensorFold main
+# (40c6406b + patches-zig 0001-0005, tree 71a9f224) — the Zig engine for Meta's
+# Muse-Spark-Open-816B-A42B.
+#
+# Weights: ajensenwaud/Muse-Spark-Open-816B-A42B-EXL3-1.8bpw @ efcdf2ec
+#   (27 shards, 194,437,224,433 B = 181.08 GiB) + RadixArk DFlash2 drafter.
+#   Quantised from amd/Muse-Spark-Open-816B-A42B-Quark-MXFP4 (Meta's repos are gated).
+#
+# Topology: TP2 across both DGX Sparks. Rank 1 (`tf-muse follow`) on the worker,
+# rank 0 (OpenAI server) on the head, port 8888.
+#
+# MEASURED 2026-10-29 on this pair: loaded 317.6s; context auto-trimmed 1M -> 446,464;
+# decode prose (thinking off) 19.1 tok/s, thinking on 25.9, warm-up 24.4.
+# Below the 80 tok/s daily-driver bar by design of the 1.8 bpw quant.
+
+recipe_version: "4"
+name: muse-spark-816b-1.8bpw-tp2
+model: ajensenwaud/Muse-Spark-Open-816B-A42B-EXL3-1.8bpw
+model_revision: "efcdf2ec4222c4597e291f1b07edd19c3c02c652"
+description: >-
+  Meta Muse-Spark-Open 816B-A42B (816B total / 42B active, 62 MoE layers) at EXL3
+  1.8 bpw via Muspark v1.1 on TensorFold's Zig engine, tensor-parallel across two
+  DGX Sparks. fp16 KV, ~446K context (1 stream), DFlash2 drafter, prompt cache on.
+runtime: tensorfold
+maintainer: styles01
+metadata:
+  engine_repo: "https://github.com/ajensenwaud/muspark-2dgx"
+  engine_version: "v1.1 (TensorFold main 40c6406b + patches-zig 0001-0005)"
+  model_dtype: "exl3-1.85bpw"
+  tags: [muse-spark, meta, exl3, tensorfold, muspark, moe, gb10, sm121, text-only, tp2]
+cluster_only: true
+min_nodes: 2
+max_nodes: 2
+container: ghcr.io/miaai-lab/glm-5.3-flash-exl3-2x-dgx-sparks-tensorfold@sha256:14f15591eae5d6a540f09218d3852068962fe5381371bbfefe0e9194cd834529
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  exclusive_spark_lane: true
+defaults:
+  port: 8888
+  host: 0.0.0.0
+  served_model_name: Muse-Spark-Open
+env:
+  TF_TP_WORLD: "2"
+  TENSORFOLD_MEMORY_RESERVE_GIB: "3"
+  NCCL_IFNAME: enp1s0f0np0
