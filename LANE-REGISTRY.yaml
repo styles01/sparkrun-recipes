@@ -57,7 +57,32 @@ lanes:
     lanes: 4
     context_per_lane: 262144
     spec_decode: "dspark k=6 ADAPTIVE (conf policy with the MEASURED TP2 table RECIPE ROUND_MS=31.9,35.2,38.6,42.6,45.3,48.1,51.0), TP2 DRAFT (draft_parallel_config tp=2 — TP1 drafter serializes 3 MoE stages), FULL_DECODE_ONLY, engram disk offload"
-    served_names: ["dsv41", "DeepSeek-4.1-Flash", "DeepSeek-4.1-Flash-Ablit", "GLM-5.3-Flash-EXL3", "vision"]  # "vision" = STABLE alias for Hermes auxiliary.vision — EVERY vision-capable lane must serve it so aux config never pins a model name. Ablit pack aliases BOTH canon names so pickers/aux keep working
+    served_names: ["dsv41", "DeepSeek-4.1-Flash", "DeepSeek-4.1-Flash-Ablit", "GLM-5.3-Flash-EXL3", "vision"]
+    alias_shims: |
+      ALIAS SHIMS — READ THIS BEFORE CHANGING ANY PROFILE'S MODEL NAME.
+      All five names are served by ONE process (the dsv41 lane). They are not different models.
+        1. "vision"                 = STABLE alias for Hermes auxiliary.vision. EVERY vision-capable lane
+                                     MUST serve a name called "vision", so no profile ever pins a model
+                                     name and the aux slot never breaks on a lane swap. All 20 Hermes
+                                     profiles are configured `auxiliary.vision: {model: vision,
+                                     provider: larryspark, timeout: 600}`.
+        2. "GLM-5.3-Flash-EXL3"     = COMPATIBILITY SHIM, NOT A GLM MODEL. It exists so older configs,
+                                     pickers and profile tiles written when our daily driver WAS a real
+                                     GLM lane keep working after the swap to dsv41. A request naming it
+                                     is correctly served BY DSV41 (a DeepSeek-V4.1-Flash-1017). The
+                                     320B GLM is NOT loaded and does not answer this name.
+       WHY THIS MATTERS: the shim hides which model is running. Config that says "use GLM for vision"
+       reads as though a GLM does vision, when dsv41's vision tower does. That is safe while dsv41 is
+       genuinely vision-capable (measured: 2-colour probe answered correctly on every alias, 2026-10-30)
+       and becomes a LIE the moment the alias points at something that cannot see — which is exactly what
+       happened on 2026-10-29 when the aux vision call timed out at 120s, fell back to the profile's MAIN
+       model (glm-5.3:cloud on Ollama, text-only) and returned "this model does not support image input".
+       The failure was the TIMEOUT, not the alias.
+       RULES: (a) new profiles point vision at "vision", never at a model-shaped name; (b) do not drop the
+       GLM shim while any profile or picker still names it — prune it only when a real GLM lane is serving
+       again and every consumer has been migrated; (c) any lane that replaces dsv41 must keep serving
+       "vision" or every profile's vision breaks silently; (d) never read this alias list as a model
+       inventory — it is a compatibility contract.
     launch: "cd /home/jaita/dsv41_recipe_ablit && HEAD=10.200.0.1 WORKER=10.200.0.2 MODEL_DIR=/home/jaita/models/dsv41-ablit-tree TEXT_ONLY=0 SPEC='{\"method\":\"dspark\",\"num_speculative_tokens\":6,\"draft_parallel_config\":{\"tensor_parallel_size\":2}}' UTIL=0.85 MAX_SEQS=3 KV_BYTES=2820000000 DOCKER_ENV='VLLM_EXL3_MOE_SMOE_SHARED=1 VLLM_EXL3_MOE_FUSED=1' IMAGE=dsv41-serve:v52rc SERVED='dsv41 DeepSeek-4.1-Flash DeepSeek-4.1-Flash-Ablit GLM-5.3-Flash-EXL3 vision' bash scripts/launch/dsv41_tp2.sh up   # ABLIT TWIN = PROMOTED SERVING WEIGHTS per owner (10/20 KEPT, re-asserted 10/26: the ablit version was promoted last time it ran) x 2026-10-22 RESPEC (MAX_SEQS 3 + KV_BYTES 2.82e9 = 3x250k + decisiv laya-gguf :8710 sidecar). Head/Worker required; KV_BYTES plain bytes; SERVED carries vision stable-alias + Ablit canon name. ROLLBACK to non-ablit = /home/jaita/relaunch-dsv41-canonical.sh.pre-ablit.bak (dsv41-1017-ours v51) — that rollback is a downgrade of an owner promotion, ask first"
     stop: "same command with 'down'"
     heat_cap: "MANDATORY L9: after boot/reset/switch run PW=\"$SUDO_PASSWORD\" /home/jaita/heatcap.sh (lock -lgc 0,2200 both nodes + validate)"
