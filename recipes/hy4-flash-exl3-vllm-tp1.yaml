@@ -24,6 +24,7 @@ metadata:
     - 256k
     - single-lane
   runbook: runbooks/hy4-flash-exl3-vllm-tp1.md
+  overlay_repo: "https://github.com/styles01/hy4-exl3-vllm-serving (drop-in vllm_exl3+hy4 model overlay, pack converters, launcher)"
   canonical_launcher: scripts/launch/hy4-tp1.sh
   hf_pack: "https://huggingface.co/aitamedia/Hy4-flash-EXL3-3.0bpw"
   upstream_runtime: "vllm/vllm-openai:hy4-flash + vcruz305 vllm_exl3 plugin (v0.1.dev25463)"

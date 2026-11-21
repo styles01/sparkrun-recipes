@@ -20,7 +20,7 @@ metadata:
     - research-port
   runbook: runbooks/hy4-flash-exl3-tensorfold-cuda-port.md
   upstream: "https://github.com/ashhart/TensorFold v1.3.2 (Hy4-flash serve is Metal-only upstream)"
-  source_repo: "our fork/worktree /home/jaita/tensorfold/tf132 (see runbook for file list)"
+  source_repo: "https://github.com/styles01/tensorfold-hy4-cuda (our public fork; estate worktree /home/jaita/tensorfold/tf132)"
 
 solo_only: true
 cluster_only: false

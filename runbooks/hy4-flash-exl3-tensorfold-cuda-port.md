@@ -5,6 +5,11 @@ degenerates into repeated-token loops after ~30 tokens → **not quality-cleared
 real work yet**. The Metal path upstream is correct; this doc records what the CUDA port is and
 where the remaining bug lives.
 
+**Published:** the full fork (v1.3.2 + port) is at
+[`styles01/tensorfold-hy4-cuda`](https://github.com/styles01/tensorfold-hy4-cuda) — PORT-README.md
+has the file list, build/serve commands, and the debug evidence for the loop. The vLLM
+quality-cleared alternative: [`styles01/hy4-exl3-vllm-serving`](https://github.com/styles01/hy4-exl3-vllm-serving).
+
 ## Why a port exists
 
 TensorFold releases through v1.3.2 (2026-11-20) serve `hy_v4_flash` only on Metal (M5 Ultra

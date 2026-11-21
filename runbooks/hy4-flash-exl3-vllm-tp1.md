@@ -1,5 +1,13 @@
 # Hy4-flash EXL3 3.0-bit — vLLM TP1 on GB10 (runbook)
 
+**Published code:** the drop-in vLLM overlay (patched `vllm_exl3` + Hy4 model tree, FP8 pack
+converter chain `pack_build/`, launcher) lives at
+[`styles01/hy4-exl3-vllm-serving`](https://github.com/styles01/hy4-exl3-vllm-serving) — the
+companion **TensorFold CUDA port** fork is
+[`styles01/tensorfold-hy4-cuda`](https://github.com/styles01/tensorfold-hy4-cuda). Base pack:
+[`aitamedia/Hy4-flash-EXL3-3.0bpw`](https://huggingface.co/aitamedia/Hy4-flash-EXL3-3.0bpw).
+Files referenced below by estate path (`/home/jaita/...`) are also in that repo's `overlay/`.
+
 **Lane shape:** one DGX Spark GB10, vLLM `vllm/vllm-openai:hy4-flash` + the `vllm_exl3` plugin
 (vcruz305-lineage build, `v0.1.dev25463`), Tencent Hy4-flash (model type `hy_v4_flash`) at
 3.0-bit EXL3 (MCG codebook) routed experts, **FP8-native dense linears**, 262144 max context,
