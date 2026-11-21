@@ -1,0 +1,37 @@
+recipe_version: "4"
+name: hy4-flash-exl3-tensorfold-cuda-port
+description: "Tencent Hy4-flash (hy_v4_flash) EXL3 on TensorFold v1.3.2 CUDA — upstream is Metal-only for Hy4, so this recipe carries our in-repo CUDA port: a cuda_native.zig family shim + ported family modules, built against Zig 0.17 + nvcc on GB10. Serving LIVE end-to-end (87.5 GiB resident, API up, 10.7 tok/s decode measured) but output degenerates into loops after a few dozen tokens — port NOT yet quality-cleared; use the vLLM recipe for real work."
+model: aitamedia/Hy4-flash-EXL3-3.0bpw (local pack path exl3-3.0bpw-dq2)
+runtime: tensorfold-native (custom build, Hy4 CUDA port)
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-11-21"
+  status: "experimental-port-garbles"
+  tags:
+    - hy4
+    - tensorfold
+    - cuda
+    - exl3
+    - engram
+    - gb10
+    - native-engine
+    - research-port
+  runbook: runbooks/hy4-flash-exl3-tensorfold-cuda-port.md
+  upstream: "https://github.com/ashhart/TensorFold v1.3.2 (Hy4-flash serve is Metal-only upstream)"
+  source_repo: "our fork/worktree /home/jaita/tensorfold/tf132 (see runbook for file list)"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  disk_free_gib_before_download: 260
+  exclusive_spark_lane: true
+  zig: "0.17.0"
+  nvcc: "CUDA 13 (sm_121)"

@@ -1,0 +1,53 @@
+recipe_version: "4"
+name: hy4-flash-exl3-vllm-tp1
+description: "Tencent Hy4-flash (HYV4Flash, HY4) 3.0-bit EXL3 TP1 on one DGX Spark GB10 through the vcruz305/atakann vLLM EXL3 runtime + FP8-native dense pack. 256K context, c3 concurrency, engram table streamed from disk (O_DIRECT). Coherent single-stream 16.1 tok/s (no spec), 34.3 tok/s aggregate at c3. Speculative decoding (DFly) currently net-negative — drafter loader bug identified."
+model: aitamedia/Hy4-flash-EXL3-3.0bpw
+runtime: vllm-custom-exl3
+container: vllm/vllm-openai:hy4-flash
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-11-21"
+  status: "live-serving"
+  tags:
+    - hy4
+    - hy4-flash
+    - tencent
+    - exl3
+    - exllamav3
+    - vllm-fork
+    - fp8
+    - engram
+    - gb10
+    - dgx-spark
+    - 256k
+    - single-lane
+  runbook: runbooks/hy4-flash-exl3-vllm-tp1.md
+  canonical_launcher: scripts/launch/hy4-tp1.sh
+  hf_pack: "https://huggingface.co/aitamedia/Hy4-flash-EXL3-3.0bpw"
+  upstream_runtime: "vllm/vllm-openai:hy4-flash + vcruz305 vllm_exl3 plugin (v0.1.dev25463)"
+  model_revision: "2026-11-19T22:24Z re-upload"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+
+# Not an Arena-recognized public recipe path (custom EXL3 plugin).
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  python: "3.12"
+  disk_free_gib_before_download: 260
+  exclusive_spark_lane: true
+
+# Facts that ARE verified on GB10:
+#  - pack: EXL3 3.0-bit MCG routed experts + FP8-native dense linears (128x128 scales in-pack)
+#  - sm_121 FP8-blockwise kernel = cutlass ONLY (torch DSM kernel is SM90-only)
+#  - weights that must stay BF16: vit/visual tower, indexer projections, kv_a_proj_with_mqa (N=576
+#    not 128-aligned, cutlass rejects), q_a_proj + fused_qkv_a_proj (merged layer takes one quant_config)
+#  - spec (DFly, depth 3 and 5): acceptance length 1.00 — drafter loader skips weight_scale_inv; fix
+#    applied in dfly.py, retest pending
