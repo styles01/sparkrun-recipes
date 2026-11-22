@@ -69,7 +69,11 @@ Build chain (scripts in the estate scratch, reproducible):
 Full launcher: `scripts/launch/hy4-tp1.sh` in this repo (paths are estate-specific; keep the argv
 continuation chain intact — one orphaned `\` silently drops later flags).
 
-## Speculative decoding — why it's currently off
+**DFly spec retune (2026-11-22):** scale-loader fix landed → acceptance 1.96. Depth sweep:
+d1=12.5 · d2=10.9 · **d3=16.9 tok/s (beats no-spec 16.1)** · d4=9.2 · d7=7.5. The spec lane
+launcher is `hy4-tp1-spec-d3.sh` in the overlay repo. **Default stays no-spec** because d3 only
+wins marginally on this prompt class; the dsv41-style adaptive policy (per-round cost table +
+early exit) is the intended next step before making spec canonical.
 
 DFly2 = 5 trained draft layers (targets 25/29/33/37/41), KV-share + index-share, greedy drafts only.
 Card's own recipe: `--speculative-config '{"num_speculative_tokens":5,"method":"dfly"}'` — matches what
