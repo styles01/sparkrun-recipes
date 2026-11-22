@@ -1,0 +1,42 @@
+recipe_version: "4"
+name: hy4-flash-exl3-dfly-adaptive-spec
+description: "Tencent Hy4-flash 3.0-bit EXL3 TP1 on DGX Spark GB10 with DFly2 adaptive speculative decoding (dsv41-pattern: measured per-depth round-cost table chooses the draft depth at boot; verified d3). 21.4 tok/s single-stream decode (+38.5% over no-spec), 256K context, c3 concurrency, engram table streamed from disk. The drafter required a scale-loader fix (fp8-native draft linears were getting unit-scale params); without it acceptance is 1.00."
+model: aitamedia/Hy4-flash-EXL3-3.0bpw (local FP8-native dense build exl3-3.0bpw-fp8lin)
+runtime: vllm-custom-exl3
+container: vllm/vllm-openai:hy4-flash
+maintainer: styles01
+
+metadata:
+  author: styles01
+  created: "2026-11-22"
+  status: "production"
+  tags:
+    - hy4
+    - hy4-flash
+    - tencent
+    - exl3
+    - fp8
+    - dfly
+    - speculative
+    - adaptive-depth
+    - gb10
+    - dgx-spark
+  runbook: runbooks/hy4-flash-exl3-dfly-adaptive-spec.md
+  base_recipe: recipes/hy4-flash-exl3-vllm-tp1.yaml
+  overlay_repo: "https://github.com/styles01/hy4-exl3-vllm-serving"
+  depth_table: "d1 131.7/1.65, d2 173.8/1.90, d3 116.0/1.96, d4 244.0/2.24, d7 305.6/2.30 (ms/round, acceptance)"
+
+solo_only: true
+cluster_only: false
+min_nodes: 1
+max_nodes: 1
+arena_submission_allowed: false
+
+requirements:
+  architecture: aarch64
+  gpu_compute_capability: "12.1"
+  disk_free_gib_before_download: 260
+  exclusive_spark_lane: true
+
+# NOT the card's num_speculative_tokens=5 — on GB10 depth 5 measures 9.2 t/s (WORSE than no-spec).
+# The drafter's KV-share + index-share is why depth 3 wins and why depth must be re-measured per boot.
