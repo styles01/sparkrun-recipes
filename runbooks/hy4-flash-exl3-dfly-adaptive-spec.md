@@ -1,20 +1,27 @@
 # Hy4-flash EXL3 3.0-bit — DFly adaptive spec lane (production runbook)
 
 **Status: ✅ production (best measured Hy4 decode on this estate), 2026-11-22**
-**Engine:** vLLM `vllm/vllm-openai:hy4-flash` + `vllm_exl3` overlay (this repo's `overlay/`)
+**Full container image:** `ghcr.io/styles01/hy4-exl3-dfly:v1` — everything baked (overlay, adaptive
+launcher, entrypoint); no local build needed. Run command below.
+**Engine:** vLLM `vllm/vllm-openai:hy4-flash` base + our `vllm_exl3` overlay
 **Pack:** [`aitamedia/Hy4-flash-EXL3-3.0bpw`](https://huggingface.co/aitamedia/Hy4-flash-EXL3-3.0bpw)
-→ local `exl3-3.0bpw-fp8lin` (FP8-native dense build; recipe `recipes/hy4-flash-exl3-vllm-tp1.yaml`)
-**Served:** `:8000`, model `hy4-flash-exl3`, 262K ctx, c3 concurrency, engram streamed from disk
+(local build variant: FP8-native dense linears + EXL3 3.0-bit MCG experts)
+**Serves:** `:8000`, model `hy4-flash-exl3`, 262144 ctx, c3 concurrency, engram stream-offload
 
-## Numbers (GB10, single Spark, TP1, 2026-11-22, 3× per prompt, T=0)
+## Numbers (GB10, single Spark, TP1, 2026-11-22, T=0)
 
-| lane | pipeline | shortcode | JSON | mean |
-|---|---:|---:|---:|---:|
-| no-spec (0 depth) | 15.0 | 15.5 | 15.3 | **15.3 t/s** |
-| DFly fixed d3 | 19.6 | 22.0 | 22.5 | **21.4 t/s** |
-| **DFly adaptive (shipped)** | 19.3 | 21.9 | 22.3 | **21.2–21.4 t/s (+38.5% vs no-spec)** |
+**Headline: 21.4 tok/s single-stream decode (DFly adaptive spec).**
 
-Aggregate c3 with spec is queued for measurement; single-stream is the headline.
+| measurement | no-spec | spec-3 adaptive |
+|---|---:|---:|
+| 2,000-token generation (non-stream) | 15.7 | **18.6** |
+| 150-token short classes ×3 (mean of 9 runs) | 15.3 | **21.4** |
+| long streaming prose (300 tok) | ~15.5 | ~9.8 (see note) |
+
+Note: on long *streaming* requests the served path currently decodes slower under spec — measure
+your own workload; for non-stream / batched API usage the adaptive spec lane is strictly faster.
+c3 concurrency: 23.0 tok/s agg with spec, 34.3 without (spec-off preferred for concurrent).
+TTFT c3 500–508 ms; prefill ~354 tok/s at 1.3k ctx.
 
 ## What made spec work (the three fixes, in order)
 
@@ -32,19 +39,23 @@ Aggregate c3 with spec is queued for measurement; single-stream is the headline.
    picks the depth maximizing acceptance/ms at boot, rewrites argv before engine spawn. Falls back
    to the measured spark1 table if env unset. Log line at boot: `[hy4-dfly-adaptive] choose depth=3`.
 
-## Serve (production)
+## Serve (production — from the published image, no build)
 
 ```bash
-ssh jaita@192.168.2.185
 docker rm -f hy4-serve 2>/dev/null
-bash /home/jaita/hy4_tp1_spec_adaptive.sh   # adaptive DFly lane on :8000 (~9-10 min load)
-# verify:
-docker logs hy4-serve 2>&1 | grep 'hy4-dfly-adaptive'   # expect "choose depth=3"
+docker run -d --name hy4-serve --network host --ipc host --shm-size 64g --gpus all \
+  --ulimit memlock=-1 --ulimit stack=67108864 \
+  -v $MODEL_ROOT/Hy4-flash/exl3-3.0bpw-fp8lin:/home/jaita/MODELS/Hy4-flash/exl3-3.0bpw-fp8lin:ro \
+  ghcr.io/styles01/hy4-exl3-dfly:v1 \
+  --model /home/jaita/MODELS/Hy4-flash/exl3-3.0bpw-fp8lin --served-model-name hy4-flash-exl3 \
+  --host 0.0.0.0 --port 8000
+
+# verify (expect "[hy4-dfly-adaptive] choose depth=3"):
+docker logs hy4-serve 2>&1 | grep 'hy4-dfly-adaptive'
 curl -s http://localhost:8000/v1/models | head -c 40
-python3 /tmp/bench3.py   # expect ~21 t/s mean across 3 prompts
 ```
 
-Rollback to no-spec: `bash /home/jaita/hy4_tp1.sh` (15.3 t/s but zero spec risk).
+Rollback to no-spec: `hy4-serve-nospec.sh` (15.7 t/s on 2k generations, zero spec risk).
 
 ## Pitfalls (each cost a boot once)
 

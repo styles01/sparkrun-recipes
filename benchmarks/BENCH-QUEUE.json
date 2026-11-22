@@ -7,7 +7,7 @@
       "added": "2026-11-22",
       "status": "staged",
       "model": "Tencent Hy4-flash (HYV4FlashVL) 3.0-bit EXL3 (aitamedia/Hy4-flash-EXL3-3.0bpw -> exl3-3.0bpw-fp8lin FP8-dense)",
-      "lane": "vLLM vllm/vllm-openai:hy4-flash + overlay; launcher /home/jaita/hy4_tp1_spec_adaptive.sh (DFly adaptive, depth-3 chosen); no-spec variant hy4_tp1.sh",
+      "lane": "vLLM (vllm/vllm-openai:hy4-flash + overlay); launcher hy4-serve.sh (DFly adaptive, depth-3 chosen); no-spec variant hy4-serve-nospec.sh; container ghcr.io/styles01/hy4-exl3-dfly:v1",
       "staged_evidence": {
         "serving_verified": "adaptive lane LIVE on :8000 2026-11-22 (mean 21.1-21.4 tok/s over 3 prompt classes x 3 runs; drafter acceptance 1.96; pipeline/code/JSON 19.3/21.9/22.3)",
         "no_spec_ref": "15.0-15.5 tok/s",
