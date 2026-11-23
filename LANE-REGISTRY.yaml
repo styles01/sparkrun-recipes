@@ -42,7 +42,7 @@ lanes:
     stop: "docker rm -f hy4-serve"
     heat_cap: "MANDATORY L9 after boot/reset/switch"
     measured: "2026-11-22: single-stream decode 15.3 no-spec -> 21.4 adaptive d3 (+38.5%, headline); 2,000-token generation 15.7 -> 18.6; c3 23.0 spec / 34.3 no-spec (concurrent prefers spec-off); TTFT c3 500-508ms; prefill ~354 tok/s @1.3k; acceptance 1.96; 3x3 runs verified. Long STREAMING prose slower under spec (~9.8) - workloads vary"
-    status: "UP 2026-11-22 (adaptive lane live on :8000); published sparkrun-recipes e606dc3/c92e8c7 + ghcr hy4-exl3-dfly:v1"
+    status: "DOWN/WEDGED 2026-11-23 ~06:35Z: canonical relaunch during bench window wedged spark1 (lingbuild CPU pip-install concurrent with hy4 weight load -> kswapd userland starve; ping alive, sshd/sparkDash/app-dead). Needs PHYSICAL power button - no BMC. Registry copy NOT yet synced to spark1 (unreachable). Post-cycle: rm hy4-serve, check lingbuild, heatcap, re-relaunch. Prior: UP 2026-11-22 (adaptive live, 21.4 tok/s); published e606dc3/c92e8c7 + ghcr hy4-exl3-dfly:v1"
 
   muse-spark:
     trigger: "switch to muse / Muse Spark"
