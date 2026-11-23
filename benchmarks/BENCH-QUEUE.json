@@ -5,7 +5,7 @@
     {
       "id": "hy4-flash-exl3-dfly-adaptive",
       "added": "2026-11-22",
-      "status": "staged",
+      "status": "failed",
       "model": "Tencent Hy4-flash (HYV4FlashVL) 3.0-bit EXL3 (aitamedia/Hy4-flash-EXL3-3.0bpw -> exl3-3.0bpw-fp8lin FP8-dense)",
       "lane": "vLLM (vllm/vllm-openai:hy4-flash + overlay); launcher hy4-serve.sh (DFly adaptive, depth-3 chosen); no-spec variant hy4-serve-nospec.sh; container ghcr.io/styles01/hy4-exl3-dfly:v1",
       "staged_evidence": {
@@ -18,7 +18,21 @@
         "published": "sparkrun-recipes e606dc3 (runbook hy4-flash-exl3-dfly-adaptive-spec.md + recipe); overlay repo hy4-exl3-vllm-serving 22d5df2",
         "arena_note": "custom EXL3 plugin runtime = NOT an Arena-recognized submission path; bench is estate-recorded, not Arena-submitted"
       },
-      "how": "bench_gate-style single-Spark probe set: /tmp/bench3.py (3 prompts x 3 runs, T=0) on the adaptive lane + canon-no-spec A/B on the same boot day; capture 262K-context handling + c3; write results to benchmarks/ and runbook history table."
+      "how": "bench_gate-style single-Spark probe set: /tmp/bench3.py (3 prompts x 3 runs, T=0) on the adaptive lane + canon-no-spec A/B on the same boot day; capture 262K-context handling + c3; write results to benchmarks/ and runbook history table.",
+      "results": {
+        "attempted": "2026-11-23 01:00-03:30 EST (06:00-08:30 UTC)",
+        "outcome": "spark1 wedged mid-boot; bench never reached a serving lane",
+        "timeline": [
+          "01:05 EST: port 8000 free, no LLM lane up; only 'lingbuild' container (CPU pip-install of Ling editable, no GPU use) + sparkDash",
+          "01:10 EST: fired registry-canonical ~/launchers/hy4-canonical.sh detached (PID 2580125); hy4-serve container Up, weight load in progress (69G used at 8/10 step)",
+          "~01:35 EST: spark1 stopped answering sshd banners; ping alive, TCP:22 accepts, but :8000 and :5555 (sparkDash, previously Up 7 days) both went CLOSED -> userland starve signature (kernel alive, applications dead)",
+          "01:35-03:30 EST: 120+ ssh retries over 90 min, zero recovery; box still ping-alive, app-dead"
+        ],
+        "suspected_cause": "vLLM hy4 weight load (~90G unified-mem pressure) concurrent with the lingbuild CPU compile/pip build -> kswapd thrash starved userland; classic wedge exhibit",
+        "recovery": "NO remote path (DGX Spark has no BMC/IPMI). Requires James's physical power button on spark1.",
+        "post_recovery_actions": "power-cycle, read uptime first, docker rm -f hy4-serve + inspect lingbuild, re-run heatcap.sh, then re-queue this bench entry",
+        "note": "no numbers were fabricated; no probes ran this fire. Staged evidence from 2026-11-22 remains the standing record."
+      }
     }
   ]
 }
