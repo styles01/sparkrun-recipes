@@ -30,19 +30,20 @@ lanes:
   hy4-flash-exl3:
     trigger: "switch to hy4 / hy4-flash / hy4-flash-exl3"
     model: "Tencent Hy4-flash (HYV4FlashVL) 3.0-bit EXL3 MCG experts — pack aitamedia/Hy4-flash-EXL3-3.0bpw, our FP8-native dense build variant exl3-3.0bpw-fp8lin (FP8-block-128 dense + untouched EXL3 experts; vit/indexer/kv_a/q_a stay BF16 — see runbook hard list)"
+    pack: "PRIMARY NOW: Q4-ENGRAM pack spark1-local /home/jaita/models/Hy4-flash/exl3-3.0bpw-fp8lin-q4 — fp8lin pack w/ the 4 engram-table shards replaced by *q4engram 54B/row ggml q4_0 (126.7->35.6GB, cosine 0.9963), config engram_q4_embedding:true; source spark2 exl3-3.0bpw-fp8lin-q4engram. Q4 tables MUST be LOCAL NVMe (NFS caches server-side; fadvise-DONTNEED cannot drop them)"
     weights:
-      primary: "spark1 + spark2:/home/jaita/MODELS/Hy4-flash (exl3-3.0bpw-clean verified source 254GB; exl3-3.0bpw-fp8lin converted pack; dq2 BF16-dense variant)"
+      primary: "spark1-local q4 pack (above); spark2 mirrors: exl3-3.0bpw-fp8lin (NFS fsid=77 BF16-table — usable but BF16 engram spikes 79->118GB host RAM and wedges), exl3-3.0bpw-fp8lin-q4engram"
     engine: "vLLM vllm/vllm-openai:hy4-flash + vllm_exl3 overlay (full container ghcr.io/styles01/hy4-exl3-dfly:v1 — overlay + adaptive DFly launcher baked). sm_121 facts: FP8-blockwise = cutlass only; VLLM_USE_DEEP_GEMM=0; zz_oracle.pth overlay force-load; engram disk-offload; kernel-config pins fp8_block_w8a8:cutlass"
     port: 8000
-    lanes: 3
+    lanes: 2
     context_per_lane: 262144
     spec_decode: "DFly2 ADAPTIVE (dsv41-pattern): measured per-depth round-cost table d1 131.7/1.65, d2 173.8/1.90, d3 116.0/1.96, d4 244.0/2.24, d7 305.6/2.30 -> chooser pins depth 3 at boot. Drafter REQUIRED the scale-loader fix (fp8 draft linears must receive checkpoint weight_scale_inv params — in overlay dfly.py). Card default depth 5 = 9.2 tok/s on GB10, do NOT ship"
     served_names: ["hy4-flash-exl3"]
-    launch: "bash ~/launchers/hy4-canonical.sh            # full 10-step standalone (sparkDash, sidecars, pulls, caps, keepalive, live gen) — image ghcr.io/styles01/hy4-exl3-dfly:v1"
+    launch: "SEE runbooks/hy4-flash-exl3-q4engram-serving.md (canonical Q4 boot verbatim; hy4-canonical.sh is STALE for the Q4 pack). Key flags: --quantization exl3, --reasoning-parser hy_v4, --tool-call-parser hy_v4, --dtype bfloat16, --max-num-seqs 2, --enforce-eager, env VLLM_FLASH_FP8_NONEXPERT=1 + CUTE_DSL_ARCH=sm_121a + EXL3_FUSED_MOE=1; binds: q4 pack local, engram.py + model.py + cudainc + torch_extensions cache"
     stop: "docker rm -f hy4-serve"
     heat_cap: "MANDATORY L9 after boot/reset/switch"
     measured: "2026-11-22: single-stream decode 15.3 no-spec -> 21.4 adaptive d3 (+38.5%, headline); 2,000-token generation 15.7 -> 18.6; c3 23.0 spec / 34.3 no-spec (concurrent prefers spec-off); TTFT c3 500-508ms; prefill ~354 tok/s @1.3k; acceptance 1.96; 3x3 runs verified. Long STREAMING prose slower under spec (~9.8) - workloads vary"
-    status: "2026-11-23 20:20Z: air-VL continuation torn down (text-garbage verdict, see workspace/plans/AIRVL-SERVE-HUNT.md); hy4 restored via ~/launchers/hy4-canonical.sh 19:47:49Z — restore IN FLIGHT, box showed starve signature (ping/TCP ok, sshd banner dead) at 20:23Z, 4th starve of the day. VERIFY state before touching: /tmp/hy4-restore.log + :8000/v1/models + live gen; if starved, needs PHYSICAL power button then re-run hy4-canonical.sh + heatcap. Prior: UP 2026-11-22 (adaptive live, 21.4 tok/s); published e606dc3/c92e8c7 + ghcr hy4-exl3-dfly:v1"
+    status: "2026-11-24 ~20:00Z: UP on spark1 with Q4-engram pack — CLEAN OUTPUT verified (SPARK-ONLINE), RAM bounded 93-97/121G. Canonical recipe = runbooks/hy4-flash-exl3-q4engram-serving.md (6e0577f): --quantization exl3 + --reasoning-parser hy_v4 + FP8_NONEXPERT/ALL envs mandatory (legacy stash path GARBLES); TORCH_CUDA_ARCH_LIST=12.1a one-shot JIT w/ cudainc bind; --enforce-eager until pinned-staging lands. Measured now: 4.9 tok/s cold eager; next levers: graphs (pinned staging), DirectIO, DFly d3. Older: 11-22 sane 16.1 single / 21.4 adaptive / c3 34.3."
 
   muse-spark:
     trigger: "switch to muse / Muse Spark"
