@@ -101,3 +101,24 @@ last week, so dense weights are probably fine → check the Q4 row decode first.
 while :; do sleep 15; U=$(free -g | awk '/Mem:/{print $3}'); T=$(free -g | awk '/Mem:/{print $2}');
 [ $U -gt $((T*96/100)) ] && { docker rm -f hy4-serve; echo KILLED-at-${U}G; break; }; done
 ```
+
+## TandemEngine (0xbakeer) — reference implementation, adopted/ported (11-24)
+
+Repo cloned: /Volumes/1TBSSDClawd/TandemEngine (AGPL-3.0, Python, GB10-native, updated daily).
+He serves OUR EXL3 format (exllamav3 1.6.7 + convert/ patch) on ONE Spark with the exact
+architecture we converged on. His hy4-flash numbers: weights stage 58.52 GiB @ 262k ctx,
+4 engram tables = 40.92 GB (5-bit values vs our Q4 35.6 GB), 8 lanes full-window turning,
+DFly2 drafting integrated WITH the engram lookup, up to 262k ctx. Packs private for now.
+
+Three engine learnings to port into our overlay (confirmed in engine/disk_cache.py):
+1. **O_DIRECT row reads with page-aligned buffers** (fs fallback = fadvise DONTNEED) —
+   `_open_direct()` pattern; better than our preadv+fadvise-per-row (same effect, less work).
+2. **Pinned staging buffer allocated once** for the device copies — likely also the fix
+   for our CUDA-graph capture failure (CPU->CUDA copy needs pinned during capture).
+3. **2 GiB hot-row LRU cache** in front of the SSD table reads (his model.yaml: "the
+   Engram tables, read past the page cache through a 2 GiB hot-row cache") — big SSD
+   traffic cut; our row store currently reads every row from NVMe.
+
+Also available: TandemEngine as the alternate/back-to-back engine later — same port 8000
+behind an OpenAI-compatible API; our pack may need his convert/ layout (4-table 5-bit
+engram files) rather than the vLLM-style in-shard tables.

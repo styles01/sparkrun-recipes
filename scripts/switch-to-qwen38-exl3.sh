@@ -82,7 +82,9 @@ if (( DO_CHECK )); then
   [[ -d "$FORK_DIR/examples" ]] || { echo "Missing fork: $FORK_DIR" >&2; exit 1; }
   [[ -f "$SHIM" ]] || { echo "Missing shim: $SHIM" >&2; exit 1; }
   [[ -d "$MODEL_DIR" ]] || { echo "Missing model pack: $MODEL_DIR" >&2; exit 1; }
-  "$VENV/bin/python" -c 'import exllamav3, torch; print("exllamav3", exllamav3.__version__, "| torch", torch.__version__)'
+  # The vcruz305 fork does not define exllamav3.__version__ — never assert on it.
+  # ninja must be on PATH or torch.utils.cpp_extension refuses to JIT-build for sm_121.
+  PATH="$VENV/bin:$PATH" "$VENV/bin/python" -c 'import exllamav3, torch; print("exllamav3 OK | torch", torch.__version__)'
   echo "[exl3] preflight OK"
   exit 0
 fi

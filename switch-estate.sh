@@ -71,9 +71,8 @@ stop_media() {
 start_decider() {
   # d3-mini decider on spark2 :8715 (llama.cpp in dsv41-serve:v4 container, CUDA)
   if wport 8715; then echo ">> [decider] :8715 already UP"; return; fi
-  SSH2="ssh -o BatchMode=yes $WORKER"
   echo ">> [decider] d3-mini GGUF on spark2 :8715"
-  "$SSH2" "docker rm -f llama-d3 2>/dev/null;
+  ssh -o BatchMode=yes "$WORKER" "docker rm -f llama-d3 2>/dev/null;
 docker run -d --name llama-d3 --network host --gpus all --entrypoint sleep \
   -v /home/jaita/MODELS:/home/jaita/MODELS -v /home/jaita/work:/home/jaita/work \
   dsv41-serve:v4 infinity >/dev/null && \
@@ -88,8 +87,8 @@ docker exec llama-d3 bash -c 'nohup /home/jaita/work/llama.cpp/build/bin/llama-s
 start_media_spark2() {
   echo ">> [media/spark2] TTS :8020 (cb venv) + IMAGE :8030 (qimg venv) + music(YuE2 CLI) + decider"
   ssh -o BatchMode=yes "$WORKER" "mkdir -p $LOGD
-pgrep -f chatterbox_server >/dev/null || nohup /home/jaita/venvs/cb/bin/python /home/jaita/media/chatterbox_server.py --host 0.0.0.0 --port 8020 > $LOGD/chatterbox.log 2>&1 &
-pgrep -f qwen_image_server >/dev/null || nohup /home/jaita/venvs/qimg/bin/python /home/jaita/media/qwen_image_server.py --host 0.0.0.0 --port 8030 \
+pgrep -f '[c]hatterbox_server' >/dev/null || nohup /home/jaita/venvs/cb/bin/python /home/jaita/media/chatterbox_server.py --host 0.0.0.0 --port 8020 > $LOGD/chatterbox.log 2>&1 &
+pgrep -f '[q]wen_image_server' >/dev/null || nohup /home/jaita/venvs/qimg/bin/python /home/jaita/media/qwen_image_server.py --host 0.0.0.0 --port 8030 \
   --model-dir /home/jaita/media/qwen-image-2.1-turbo > $LOGD/qwen-image.log 2>&1 &
 echo launched"
   start_decider
