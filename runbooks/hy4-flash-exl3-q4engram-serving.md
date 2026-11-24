@@ -122,3 +122,29 @@ Three engine learnings to port into our overlay (confirmed in engine/disk_cache.
 Also available: TandemEngine as the alternate/back-to-back engine later — same port 8000
 behind an OpenAI-compatible API; our pack may need his convert/ layout (4-table 5-bit
 engram files) rather than the vLLM-style in-shard tables.
+
+## RESOLVED 11-24 ~15:30 ET: CLEAN OUTPUT. The canonical boot (supersedes everything above)
+
+Garble root cause (by elimination matrix): NOT the pack, NOT Q4, NOT the engram, NOT the
+dequant — it was the serving invocation. The clean boot = the published hy4-tp1.sh pattern:
+`--quantization exl3` explicit + `--reasoning-parser hy_v4` / `--tool-call-parser hy_v4`
++ FP8_NONEXPERT=1/FP8_ALL=1 (entry.sh env) + kernel-config torch/cutlass + dtype bfloat16
++ /opt overlay (zz_oracle.pth style) + cudainc + torch_extensions cache bind
++ TORCH_CUDA_ARCH_LIST=12.1a for the one cold JIT build. Legacy stash-dequant path
+(no quantization flag or wrong parser/env) garbles; do not use.
+
+Verified: "Reply with exactly: SPARK-ONLINE" -> reasoning = coherent English, content =
+"SPARK-ONLINE". Decode 4.9 tok/s cold/eager (graphs intentionally off: engram disk row
+streaming needs a pinned staging buffer to be graph-capture-safe - TandemEngine's
+engine/disk_cache.py pattern; that is the next lever, expect ~2x). Spec d3 after graphs.
+
+Canonical working docker command (Q4 pack): see the "Bugs fixed" list + this command -
+docker run ... -v /home/jaita/models/Hy4-flash/exl3-3.0bpw-fp8lin-q4:/home/jaita/MODELS/Hy4-flash/exl3-3.0bpw-fp8lin:ro
+-v /home/jaita/hy4serve/site-packages:/opt/hy4-serve/site-packages:ro
+-v engram.py + model.py overlays -v cudainc:/usr/local/cuda/include:ro
+-v torch_extensions cache -e TORCH_CUDA_ARCH_LIST='12.1a' -e CUTE_DSL_ARCH=sm_121a
+-e EXL3_FUSED_MOE=1 -e VLLM_USE_DEEP_GEMM=0 -e VLLM_TRITON_MLA_SPARSE=1
+-e VLLM_FLASH_FP8_NONEXPERT=1 (and/or FP8_ALL=1)
+ghcr.io/styles01/hy4-exl3-dfly:v1 --model .../exl3-3.0bpw-fp8lin --quantization exl3
+--dtype bfloat16 --max-model-len 262144 --max-num-seqs 2 --enforce-eager
+--reasoning-parser hy_v4 --tool-call-parser hy_v4 --kernel-config torch/cutlass ...
