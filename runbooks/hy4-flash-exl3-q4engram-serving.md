@@ -148,3 +148,41 @@ docker run ... -v /home/jaita/models/Hy4-flash/exl3-3.0bpw-fp8lin-q4:/home/jaita
 ghcr.io/styles01/hy4-exl3-dfly:v1 --model .../exl3-3.0bpw-fp8lin --quantization exl3
 --dtype bfloat16 --max-model-len 262144 --max-num-seqs 2 --enforce-eager
 --reasoning-parser hy_v4 --tool-call-parser hy_v4 --kernel-config torch/cutlass ...
+
+## 2026-11-25: depth sweep + THE ENV GOTCHA (silent 2.4x regression) + graphs status
+
+### GOTCHA #1 (silent 2.4x throughput regression, cost us a full session):
+If `EXL3_FUSED_MOE=1`, `CUTE_DSL_ARCH=sm_121a`, `VLLM_TRITON_MLA_SPARSE=1`,
+`VLLM_FLASH_FP8_NONEXPERT=1`/`FP8_ALL=1` are missing from the serving container env, the
+MoE silently runs PER-EXPERT DISPATCH LOOPS and dense runs legacy stash-dequant: base
+decode 5.3 tok/s instead of 12.5, and NO error is printed. The custom-entrypoint boots
+(`--entrypoint bash /tmp/serve.sh`) BYPASS the baked entry.sh that sets these - any custom
+entrypoint boot MUST export them all explicitly. Verify with
+docker exec hy4-serve env | grep EXL3_FUSED_MOE.
+
+### Spec-depth sweep on the Q4 pack (full envs, eager, clean text gated each boot):
+| DFly depth | mean acceptance | drafted decode |
+|---|---|---|
+| d3 | 4.00/4 | 10.2 tok/s |
+| d5 | 6.00/6 | 11.5 tok/s |
+| d7 | 7.89/8 | 12.4 tok/s |
+| d9 | 9.88/10 | 12.8 tok/s |
+Base decode with full envs, no spec: **12.5 tok/s**. The drafter is near-perfectly
+accepted at every depth - but in EAGER mode a spec round costs ~10 forward passes and
+returns ~10 tokens, so drafted ~= base. Spec decoding pays off ONLY under CUDA graphs
+(fixed step cost). Locking d7-d9 as the operating point.
+
+### Graphs status (the 2x+ lever):
+Three capture blockers found: (1) engram gather `.cpu()` in forward - FIXED in overlay
+(persistent buffers + eager_break_during_capture); (2) exl3 MoE python-loop torch.unique
+sync - FIXED (overlay-exl3/exl3.py capture-safe rewrite); (3) torch allocator internal
+assert `num_active_captures_ > 0` in BreakableCUDAGraphCapture._end_segment - OPEN,
+inside torch itself. Hunt record: workspace/plans/HUNT-hy4-engram-cudagraph.md. Next
+lever after that: hot-row cache (bounded GPU LRU, misses still stream from SSD).
+
+### A/B vs TandemEngine (same pack, same box):
+- TandemEngine h4d-mcg (our adapter, commit 0ed7f1a): plain 11.1, drafted 20.9 (acc 0.756),
+  prefill 36-115 tok/s, CLEAN text after (1) fn-kernels mcg flag fix (2) expert alpha gain
+  (pack suh/svh under-scale ~1.12-1.14x vs tencent source).
+- vLLM ours: base 12.5, drafted ~= base in eager (see table).
+- llama.cpp AngelSlim GGUF + MTP-4 (reference): ~40 drafted - NOT an EXL3/vLLM datapoint.
