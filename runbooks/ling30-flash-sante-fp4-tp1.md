@@ -31,7 +31,7 @@ decode (Marlin-emulated class on GB10) in exchange for TP1 (one box free).
 
 The Ling-fp4 hybrid loader (`Mxfp4MoEMethod` Ling route, `float8_e8m0`)
 exists only in the **v0.32.0 release**; 0.31.x cannot load this pack. Image
-`dsv41-serve:v032` = v52rc + official cu130 aarch64 wheel layered with
+`spark-vllm:0.32.0` = v52rc + official cu130 aarch64 wheel layered with
 `pip install --no-deps` (torch 2.13.0+cu130 unchanged — wheel METADATA pins
 torch==2.13.0 = match). Gotchas:
 - Fetch the wheel from the **commit-hash URL prefix**, not the pretty index
